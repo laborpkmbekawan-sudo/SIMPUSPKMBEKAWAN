@@ -42,3 +42,44 @@ async function logout() {
   await supabaseClient.auth.signOut();
   window.location.href = "login.html";
 }
+
+// ============================================================
+// KONTROL AKSES PER HALAMAN BERDASARKAN ROLE
+// admin       -> semua halaman
+// petugas     -> index.html (Pendaftaran) saja
+// dokter/perawat/bidan -> rekam-medis.html saja (dibatasi ke klaster tempat ditugaskan)
+// farmasi     -> apotek.html saja
+// ============================================================
+const AKSES_HALAMAN = {
+  admin: ["index.html", "rekam-medis.html", "apotek.html"],
+  petugas: ["index.html"],
+  dokter: ["rekam-medis.html"],
+  perawat: ["rekam-medis.html"],
+  bidan: ["rekam-medis.html"],
+  farmasi: ["apotek.html"]
+};
+
+// Panggil setelah getProfilSaya(). Kalau role gak punya izin ke halaman ini,
+// otomatis dilempar ke halaman yang sesuai role-nya.
+function cekAksesHalaman(profil, halamanIni) {
+  if (!profil) return;
+  const izin = AKSES_HALAMAN[profil.role] || [];
+  if (izin.includes(halamanIni)) return;
+
+  if (izin.length > 0) {
+    window.location.href = izin[0];
+  } else {
+    alert("Role akun kamu belum diberi akses ke halaman manapun. Hubungi admin.");
+    logout();
+  }
+}
+
+// Sembunyikan tab navigasi yang gak diizinkan buat role ini
+function sesuaikanTabNav(profil) {
+  if (!profil) return;
+  const izin = AKSES_HALAMAN[profil.role] || [];
+  document.querySelectorAll(".tab-nav a").forEach(a => {
+    const href = a.getAttribute("href");
+    if (!izin.includes(href)) a.style.display = "none";
+  });
+}

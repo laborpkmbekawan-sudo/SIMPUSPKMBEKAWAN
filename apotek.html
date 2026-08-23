@@ -50,7 +50,11 @@
     <div class="grid-3">
       <div>
         <label>Nama Obat *</label>
-        <input type="text" id="oNama" placeholder="Contoh: Paracetamol 500mg">
+        <input type="text" id="oNama" placeholder="Contoh: Paracetamol">
+      </div>
+      <div>
+        <label>Dosis *</label>
+        <input type="text" id="oDosis" placeholder="Contoh: 500mg">
       </div>
       <div>
         <label>Satuan</label>
@@ -64,15 +68,25 @@
           <option value="ampul">Ampul</option>
         </select>
       </div>
+    </div>
+    <div class="grid-3">
       <div>
-        <label>Stok</label>
-        <input type="number" id="oStok" min="0" placeholder="0">
+        <label>Merk / Produsen</label>
+        <input type="text" id="oMerk" placeholder="Contoh: Kimia Farma">
+      </div>
+      <div>
+        <label>No. Lot / Batch</label>
+        <input type="text" id="oNoLot" placeholder="Opsional">
+      </div>
+      <div>
+        <label>Tanggal Kadaluwarsa (Exp)</label>
+        <input type="date" id="oExp">
       </div>
     </div>
     <div class="grid-2">
       <div>
-        <label>Kode Obat (opsional)</label>
-        <input type="text" id="oKode" placeholder="Kode internal / e-katalog">
+        <label>Stok</label>
+        <input type="number" id="oStok" min="0" placeholder="0">
       </div>
       <div>
         <label>Keterangan</label>
@@ -80,7 +94,7 @@
       </div>
     </div>
     <button class="btn-primary" onclick="simpanObat()">Simpan Obat</button>
-    <p style="font-size:12px; color:#6b7280; margin-top:8px;">Kalau nama obat sudah ada di daftar bawah, isi nama yang sama persis lalu simpan — stok akan ditambahkan (bukan menimpa).</p>
+    <p style="font-size:12px; color:#6b7280; margin-top:8px;">Kode obat dibuat otomatis (OB-0001, dst). Kalau Nama+Dosis+Merk+No.Lot+Exp sama persis dengan yang sudah ada, stok akan ditambahkan ke batch itu (bukan bikin baris baru).</p>
   </div>
 
   <div class="card">
@@ -89,14 +103,17 @@
       <thead>
         <tr>
           <th>Nama Obat</th>
+          <th>Dosis</th>
           <th>Satuan</th>
+          <th>Merk</th>
+          <th>No. Lot</th>
+          <th>Exp</th>
           <th>Stok</th>
           <th>Kode</th>
-          <th>Update Terakhir</th>
         </tr>
       </thead>
       <tbody id="tabelObat">
-        <tr><td colspan="5">Memuat...</td></tr>
+        <tr><td colspan="8">Memuat...</td></tr>
       </tbody>
     </table>
   </div>
@@ -112,6 +129,8 @@ let profilSaya = null;
   if (!session) return;
 
   profilSaya = await getProfilSaya();
+  cekAksesHalaman(profilSaya, "apotek.html");
+  sesuaikanTabNav(profilSaya);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
   }
@@ -122,27 +141,34 @@ let profilSaya = null;
 
 async function muatDaftarObat() {
   const tbody = document.getElementById("tabelObat");
-  const { data, error } = await supabaseClient.from("obat").select("*").order("nama_obat");
+  const { data, error } = await supabaseClient.from("obat").select("*").order("nama_obat").order("exp_date");
 
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="5">Gagal muat data: ${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8">Gagal muat data: ${error.message}</td></tr>`;
     return;
   }
 
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="5">Belum ada obat terdaftar.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8">Belum ada obat terdaftar.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = data.map(o => `
+  const today = new Date().toISOString().split("T")[0];
+  tbody.innerHTML = data.map(o => {
+    const expSoon = o.exp_date && o.exp_date < today;
+    return `
     <tr>
       <td>${o.nama_obat}</td>
+      <td>${o.dosis || "-"}</td>
       <td>${o.satuan}</td>
+      <td>${o.merk || "-"}</td>
+      <td>${o.no_lot || "-"}</td>
+      <td>${o.exp_date ? new Date(o.exp_date).toLocaleDateString("id-ID") : "-"}${expSoon ? ' <span class="badge badge-batal">Expired</span>' : ""}</td>
       <td>${o.stok}</td>
       <td>${o.kode_obat || "-"}</td>
-      <td>${new Date(o.updated_at).toLocaleString("id-ID")}</td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
 }
 
 async function simpanObat() {
@@ -150,22 +176,30 @@ async function simpanObat() {
   msgBox.innerHTML = "";
 
   const nama = document.getElementById("oNama").value.trim();
+  const dosis = document.getElementById("oDosis").value.trim();
   const satuan = document.getElementById("oSatuan").value;
+  const merk = document.getElementById("oMerk").value.trim();
+  const noLot = document.getElementById("oNoLot").value.trim();
+  const exp = document.getElementById("oExp").value || null;
   const stokInput = parseInt(document.getElementById("oStok").value) || 0;
-  const kode = document.getElementById("oKode").value.trim();
   const keterangan = document.getElementById("oKeterangan").value.trim();
 
-  if (!nama) {
-    msgBox.innerHTML = `<div class="msg msg-error">Isi nama obat dulu.</div>`;
+  if (!nama || !dosis) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi nama obat dan dosis dulu.</div>`;
     return;
   }
 
-  // Cek apakah obat dengan nama sama sudah ada, kalau ada tambahkan stoknya
-  const { data: existing } = await supabaseClient
+  // Batch dianggap sama kalau nama+dosis+merk+no_lot+exp identik -> stok ditambahkan.
+  // Beda salah satu (misal exp beda) -> dianggap batch baru.
+  let query = supabaseClient
     .from("obat")
     .select("*")
     .eq("nama_obat", nama)
-    .maybeSingle();
+    .eq("dosis", dosis)
+    .eq("merk", merk || "")
+    .eq("no_lot", noLot || "");
+  query = exp ? query.eq("exp_date", exp) : query.is("exp_date", null);
+  const { data: existing } = await query.maybeSingle();
 
   let error;
   if (existing) {
@@ -174,7 +208,6 @@ async function simpanObat() {
       .update({
         stok: existing.stok + stokInput,
         satuan,
-        kode_obat: kode || existing.kode_obat,
         keterangan: keterangan || existing.keterangan,
         updated_by: profilSaya.id,
         updated_at: new Date().toISOString()
@@ -183,9 +216,12 @@ async function simpanObat() {
   } else {
     ({ error } = await supabaseClient.from("obat").insert({
       nama_obat: nama,
+      dosis,
       satuan,
+      merk,
+      no_lot: noLot,
+      exp_date: exp,
       stok: stokInput,
-      kode_obat: kode,
       keterangan,
       updated_by: profilSaya.id
     }));
@@ -196,10 +232,13 @@ async function simpanObat() {
     return;
   }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Obat "${nama}" tersimpan.</div>`;
+  msgBox.innerHTML = `<div class="msg msg-success">Obat "${nama} ${dosis}" tersimpan.</div>`;
   document.getElementById("oNama").value = "";
+  document.getElementById("oDosis").value = "";
+  document.getElementById("oMerk").value = "";
+  document.getElementById("oNoLot").value = "";
+  document.getElementById("oExp").value = "";
   document.getElementById("oStok").value = "";
-  document.getElementById("oKode").value = "";
   document.getElementById("oKeterangan").value = "";
   await muatDaftarObat();
 }
@@ -238,27 +277,38 @@ async function serahkanResep(resep) {
   const msgBox = document.getElementById("msgResep");
   msgBox.innerHTML = "";
 
-  // Kurangi stok tiap obat di resep. Kalau ada obat yang gak ketemu/stok kurang, tetap lanjut tapi kasih peringatan.
+  // Kurangi stok tiap obat di resep, dari batch yang paling dekat expired dulu (FEFO).
   const peringatan = [];
   for (const item of (resep.daftar_obat || [])) {
-    const { data: obatData } = await supabaseClient
+    let query = supabaseClient
       .from("obat")
       .select("*")
       .eq("nama_obat", item.nama_obat)
-      .maybeSingle();
+      .gt("stok", 0)
+      .order("exp_date", { ascending: true, nullsFirst: false });
+    if (item.dosis) query = query.eq("dosis", item.dosis);
 
-    if (!obatData) {
-      peringatan.push(`${item.nama_obat}: tidak ditemukan di data stok`);
+    const { data: batches } = await query;
+
+    if (!batches || !batches.length) {
+      peringatan.push(`${item.nama_obat}${item.dosis ? " " + item.dosis : ""}: tidak ditemukan di data stok`);
       continue;
     }
-    if (obatData.stok < item.jumlah) {
-      peringatan.push(`${item.nama_obat}: stok kurang (tersedia ${obatData.stok}, butuh ${item.jumlah})`);
+
+    let sisaButuh = item.jumlah;
+    for (const batch of batches) {
+      if (sisaButuh <= 0) break;
+      const potong = Math.min(batch.stok, sisaButuh);
+      await supabaseClient
+        .from("obat")
+        .update({ stok: batch.stok - potong, updated_by: profilSaya.id, updated_at: new Date().toISOString() })
+        .eq("id", batch.id);
+      sisaButuh -= potong;
     }
 
-    await supabaseClient
-      .from("obat")
-      .update({ stok: obatData.stok - item.jumlah, updated_by: profilSaya.id, updated_at: new Date().toISOString() })
-      .eq("id", obatData.id);
+    if (sisaButuh > 0) {
+      peringatan.push(`${item.nama_obat}${item.dosis ? " " + item.dosis : ""}: stok kurang ${sisaButuh} ${item.jumlah > sisaButuh ? "(sebagian diambil)" : ""}`);
+    }
   }
 
   const { error } = await supabaseClient

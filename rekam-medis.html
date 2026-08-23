@@ -93,20 +93,35 @@
         <div class="grid-3">
           <div>
             <label>Obat</label>
-            <input type="text" id="rObatNama" list="daftarObatList" placeholder="Ketik nama obat">
+            <input type="text" id="rObatNama" list="daftarObatList" placeholder="Ketik nama obat" oninput="muatDosisUntukObat()">
             <datalist id="daftarObatList"></datalist>
           </div>
           <div>
             <label>Dosis</label>
-            <input type="text" id="rObatDosis" placeholder="Contoh: 500mg">
+            <select id="rObatDosis"><option value="">Pilih obat dulu</option></select>
           </div>
           <div>
             <label>Jumlah</label>
             <input type="number" id="rObatJumlah" min="1" placeholder="10">
           </div>
         </div>
-        <label>Aturan Pakai</label>
-        <input type="text" id="rObatAturan" placeholder="Contoh: 3x1 sesudah makan">
+        <div class="grid-2">
+          <div>
+            <label>Frekuensi</label>
+            <input type="text" id="rObatFrekuensi" placeholder="Contoh: 3x1">
+          </div>
+          <div>
+            <label>Waktu Minum</label>
+            <select id="rObatWaktu" onchange="toggleWaktuLain()">
+              <option value="Sebelum makan">Sebelum makan</option>
+              <option value="Sesudah makan">Sesudah makan</option>
+              <option value="Saat makan">Saat makan</option>
+              <option value="Kapan saja">Kapan saja (tidak tergantung makan)</option>
+              <option value="lainnya">Lainnya...</option>
+            </select>
+          </div>
+        </div>
+        <input type="text" id="rObatWaktuLain" placeholder="Tulis aturan waktu minum lain" style="display:none;">
         <button type="button" class="btn-secondary" onclick="tambahObatResep()">+ Tambah ke Resep</button>
 
         <table style="margin-top:12px;">
@@ -209,6 +224,8 @@ function isiOtomatisIcd() {
   if (!session) return;
 
   profilSaya = await getProfilSaya();
+  cekAksesHalaman(profilSaya, "rekam-medis.html");
+  sesuaikanTabNav(profilSaya);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
   }
@@ -219,10 +236,40 @@ function isiOtomatisIcd() {
 })();
 
 async function muatDaftarObat() {
-  const { data, error } = await supabaseClient.from("obat").select("nama_obat, stok").order("nama_obat");
+  const { data, error } = await supabaseClient.from("obat").select("nama_obat, dosis, stok").gt("stok", 0).order("nama_obat");
   if (error) { console.error(error); return; }
+
+  // Kelompokkan per nama obat, dan per dosis (jumlahkan stok kalau ada beberapa batch dosis sama)
+  const perNama = {};
+  data.forEach(o => {
+    if (!perNama[o.nama_obat]) perNama[o.nama_obat] = {};
+    const key = o.dosis || "-";
+    perNama[o.nama_obat][key] = (perNama[o.nama_obat][key] || 0) + o.stok;
+  });
+  window._daftarObatPerNama = perNama;
+
   const dl = document.getElementById("daftarObatList");
-  dl.innerHTML = data.map(o => `<option value="${o.nama_obat}">Stok: ${o.stok}</option>`).join("");
+  dl.innerHTML = Object.keys(perNama).map(nama => `<option value="${nama}">`).join("");
+}
+
+function muatDosisUntukObat() {
+  const nama = document.getElementById("rObatNama").value.trim();
+  const selectDosis = document.getElementById("rObatDosis");
+  const dosisMap = (window._daftarObatPerNama || {})[nama];
+
+  if (!dosisMap) {
+    selectDosis.innerHTML = `<option value="">Pilih obat dulu</option>`;
+    return;
+  }
+
+  selectDosis.innerHTML = Object.entries(dosisMap)
+    .map(([dosis, stok]) => `<option value="${dosis}">${dosis} (stok: ${stok})</option>`)
+    .join("");
+}
+
+function toggleWaktuLain() {
+  const lainnya = document.getElementById("rObatWaktu").value === "lainnya";
+  document.getElementById("rObatWaktuLain").style.display = lainnya ? "block" : "none";
 }
 
 function toggleResepSection() {
@@ -232,22 +279,39 @@ function toggleResepSection() {
 
 function tambahObatResep() {
   const nama = document.getElementById("rObatNama").value.trim();
-  const dosis = document.getElementById("rObatDosis").value.trim();
+  const dosis = document.getElementById("rObatDosis").value;
   const jumlah = parseInt(document.getElementById("rObatJumlah").value);
-  const aturan = document.getElementById("rObatAturan").value.trim();
+  const frekuensi = document.getElementById("rObatFrekuensi").value.trim();
+  const waktuSelect = document.getElementById("rObatWaktu").value;
+  const waktu = waktuSelect === "lainnya" ? document.getElementById("rObatWaktuLain").value.trim() : waktuSelect;
 
-  if (!nama || !jumlah || jumlah < 1) {
-    alert("Isi nama obat dan jumlah dulu.");
+  if (!nama || !dosis || !jumlah || jumlah < 1) {
+    alert("Isi nama obat, dosis, dan jumlah dulu.");
     return;
   }
 
-  daftarObatResep.push({ nama_obat: nama, dosis, jumlah, aturan_pakai: aturan });
+  const dosisMap = (window._daftarObatPerNama || {})[nama];
+  const stokTersedia = dosisMap ? dosisMap[dosis] : undefined;
+  if (stokTersedia === undefined) {
+    alert(`Obat "${nama} ${dosis}" tidak ada di daftar / stok kosong. Pilih dari saran yang muncul saat mengetik.`);
+    return;
+  }
+  if (jumlah > stokTersedia) {
+    alert(`Stok "${nama} ${dosis}" cuma tersisa ${stokTersedia}, gak bisa minta ${jumlah}.`);
+    return;
+  }
+
+  const aturanPakai = [frekuensi, waktu].filter(Boolean).join(" — ");
+  daftarObatResep.push({ nama_obat: nama, dosis, jumlah, aturan_pakai: aturanPakai });
   renderTabelResep();
 
   document.getElementById("rObatNama").value = "";
-  document.getElementById("rObatDosis").value = "";
+  document.getElementById("rObatDosis").innerHTML = `<option value="">Pilih obat dulu</option>`;
   document.getElementById("rObatJumlah").value = "";
-  document.getElementById("rObatAturan").value = "";
+  document.getElementById("rObatFrekuensi").value = "";
+  document.getElementById("rObatWaktu").value = "Sebelum makan";
+  document.getElementById("rObatWaktuLain").value = "";
+  document.getElementById("rObatWaktuLain").style.display = "none";
 }
 
 function hapusObatResep(idx) {
@@ -276,12 +340,24 @@ async function muatAntrian() {
   const tbody = document.getElementById("tabelAntrian");
   const today = new Date().toISOString().split("T")[0];
 
-  const { data, error } = await supabaseClient
+  let query = supabaseClient
     .from("kunjungan")
     .select("*, pasien(nama, nik, no_rm, riwayat_obat, alergi_obat), klaster(nama, kode)")
     .eq("tanggal", today)
     .in("status", ["menunggu", "dipanggil", "diperiksa"])
     .order("no_antrian");
+
+  // Dokter/perawat/bidan cuma lihat antrian di klaster/poli tempat mereka ditugaskan.
+  // Admin lihat semua klaster.
+  if (profilSaya.role !== "admin") {
+    if (!profilSaya.klaster_id) {
+      tbody.innerHTML = `<tr><td colspan="7">Akun kamu belum diatur klaster/poli-nya. Hubungi admin.</td></tr>`;
+      return;
+    }
+    query = query.eq("klaster_id", profilSaya.klaster_id);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     tbody.innerHTML = `<tr><td colspan="7">Gagal muat data: ${error.message}</td></tr>`;

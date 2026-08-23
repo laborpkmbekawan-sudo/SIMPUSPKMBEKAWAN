@@ -226,6 +226,8 @@ let pasienTerpilih = null;
   if (!session) return;
 
   const profil = await getProfilSaya();
+  cekAksesHalaman(profil, "index.html");
+  sesuaikanTabNav(profil);
   if (profil) {
     document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;
   }
