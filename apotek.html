@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apotek - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>SIMPUS UPTD PUSKESMAS BEKAWAN — Apotek</h1>
+  <div class="user-info">
+    <span id="namaUser">Memuat...</span>
+    <button onclick="logout()">Keluar</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="tab-nav">
+    <a href="index.html">Pendaftaran</a>
+    <a href="rekam-medis.html">Rekam Medis</a>
+    <a href="apotek.html" class="active">Apotek</a>
+  </div>
+
+  <div class="card">
+    <h2>Resep Menunggu Disiapkan</h2>
+    <div id="msgResep"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>No. Kunjungan</th>
+          <th>Nama Pasien</th>
+          <th>Klaster</th>
+          <th>Daftar Obat</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tabelResepMenunggu">
+        <tr><td colspan="5">Memuat...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Tambah / Update Stok Obat</h2>
+    <div id="msgObat"></div>
+    <div class="grid-3">
+      <div>
+        <label>Nama Obat *</label>
+        <input type="text" id="oNama" placeholder="Contoh: Paracetamol 500mg">
+      </div>
+      <div>
+        <label>Satuan</label>
+        <select id="oSatuan">
+          <option value="tablet">Tablet</option>
+          <option value="kapsul">Kapsul</option>
+          <option value="botol">Botol</option>
+          <option value="tube">Tube</option>
+          <option value="strip">Strip</option>
+          <option value="sachet">Sachet</option>
+          <option value="ampul">Ampul</option>
+        </select>
+      </div>
+      <div>
+        <label>Stok</label>
+        <input type="number" id="oStok" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div>
+        <label>Kode Obat (opsional)</label>
+        <input type="text" id="oKode" placeholder="Kode internal / e-katalog">
+      </div>
+      <div>
+        <label>Keterangan</label>
+        <input type="text" id="oKeterangan" placeholder="Opsional">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="simpanObat()">Simpan Obat</button>
+    <p style="font-size:12px; color:#6b7280; margin-top:8px;">Kalau nama obat sudah ada di daftar bawah, isi nama yang sama persis lalu simpan — stok akan ditambahkan (bukan menimpa).</p>
+  </div>
+
+  <div class="card">
+    <h2>Daftar Obat & Stok</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Nama Obat</th>
+          <th>Satuan</th>
+          <th>Stok</th>
+          <th>Kode</th>
+          <th>Update Terakhir</th>
+        </tr>
+      </thead>
+      <tbody id="tabelObat">
+        <tr><td colspan="5">Memuat...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+let profilSaya = null;
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  profilSaya = await getProfilSaya();
+  if (profilSaya) {
+    document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+  }
+
+  await muatResepMenunggu();
+  await muatDaftarObat();
+})();
+
+async function muatDaftarObat() {
+  const tbody = document.getElementById("tabelObat");
+  const { data, error } = await supabaseClient.from("obat").select("*").order("nama_obat");
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="5">Gagal muat data: ${error.message}</td></tr>`;
+    return;
+  }
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="5">Belum ada obat terdaftar.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(o => `
+    <tr>
+      <td>${o.nama_obat}</td>
+      <td>${o.satuan}</td>
+      <td>${o.stok}</td>
+      <td>${o.kode_obat || "-"}</td>
+      <td>${new Date(o.updated_at).toLocaleString("id-ID")}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanObat() {
+  const msgBox = document.getElementById("msgObat");
+  msgBox.innerHTML = "";
+
+  const nama = document.getElementById("oNama").value.trim();
+  const satuan = document.getElementById("oSatuan").value;
+  const stokInput = parseInt(document.getElementById("oStok").value) || 0;
+  const kode = document.getElementById("oKode").value.trim();
+  const keterangan = document.getElementById("oKeterangan").value.trim();
+
+  if (!nama) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi nama obat dulu.</div>`;
+    return;
+  }
+
+  // Cek apakah obat dengan nama sama sudah ada, kalau ada tambahkan stoknya
+  const { data: existing } = await supabaseClient
+    .from("obat")
+    .select("*")
+    .eq("nama_obat", nama)
+    .maybeSingle();
+
+  let error;
+  if (existing) {
+    ({ error } = await supabaseClient
+      .from("obat")
+      .update({
+        stok: existing.stok + stokInput,
+        satuan,
+        kode_obat: kode || existing.kode_obat,
+        keterangan: keterangan || existing.keterangan,
+        updated_by: profilSaya.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", existing.id));
+  } else {
+    ({ error } = await supabaseClient.from("obat").insert({
+      nama_obat: nama,
+      satuan,
+      stok: stokInput,
+      kode_obat: kode,
+      keterangan,
+      updated_by: profilSaya.id
+    }));
+  }
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Obat "${nama}" tersimpan.</div>`;
+  document.getElementById("oNama").value = "";
+  document.getElementById("oStok").value = "";
+  document.getElementById("oKode").value = "";
+  document.getElementById("oKeterangan").value = "";
+  await muatDaftarObat();
+}
+
+async function muatResepMenunggu() {
+  const tbody = document.getElementById("tabelResepMenunggu");
+
+  const { data, error } = await supabaseClient
+    .from("resep")
+    .select("*, kunjungan(no_kunjungan, pasien(nama), klaster(nama, kode))")
+    .eq("status", "menunggu")
+    .order("created_at");
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="5">Gagal muat data: ${error.message}</td></tr>`;
+    return;
+  }
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="5">Tidak ada resep menunggu.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${r.kunjungan?.no_kunjungan || "-"}</td>
+      <td>${r.kunjungan?.pasien?.nama || "-"}</td>
+      <td>${r.kunjungan?.klaster?.kode || "-"}</td>
+      <td>${(r.daftar_obat || []).map(o => `${o.nama_obat} (${o.jumlah}${o.dosis ? " — " + o.dosis : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""})`).join("<br>")}</td>
+      <td><button class="btn-primary" onclick='serahkanResep(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Siapkan & Serahkan</button></td>
+    </tr>
+  `).join("");
+}
+
+async function serahkanResep(resep) {
+  const msgBox = document.getElementById("msgResep");
+  msgBox.innerHTML = "";
+
+  // Kurangi stok tiap obat di resep. Kalau ada obat yang gak ketemu/stok kurang, tetap lanjut tapi kasih peringatan.
+  const peringatan = [];
+  for (const item of (resep.daftar_obat || [])) {
+    const { data: obatData } = await supabaseClient
+      .from("obat")
+      .select("*")
+      .eq("nama_obat", item.nama_obat)
+      .maybeSingle();
+
+    if (!obatData) {
+      peringatan.push(`${item.nama_obat}: tidak ditemukan di data stok`);
+      continue;
+    }
+    if (obatData.stok < item.jumlah) {
+      peringatan.push(`${item.nama_obat}: stok kurang (tersedia ${obatData.stok}, butuh ${item.jumlah})`);
+    }
+
+    await supabaseClient
+      .from("obat")
+      .update({ stok: obatData.stok - item.jumlah, updated_by: profilSaya.id, updated_at: new Date().toISOString() })
+      .eq("id", obatData.id);
+  }
+
+  const { error } = await supabaseClient
+    .from("resep")
+    .update({
+      status: "diserahkan",
+      diserahkan_oleh: profilSaya.id,
+      diserahkan_at: new Date().toISOString()
+    })
+    .eq("id", resep.id);
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal update resep: ${error.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = peringatan.length
+    ? `<div class="msg msg-error">Resep diserahkan, tapi ada catatan: ${peringatan.join("; ")}</div>`
+    : `<div class="msg msg-success">Resep berhasil diserahkan, stok terpotong otomatis.</div>`;
+
+  await muatResepMenunggu();
+  await muatDaftarObat();
+}
+</script>
+
+</body>
+</html>

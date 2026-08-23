@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rekam Medis - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>SIMPUS UPTD PUSKESMAS BEKAWAN — Rekam Medis</h1>
+  <div class="user-info">
+    <span id="namaUser">Memuat...</span>
+    <button onclick="logout()">Keluar</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="tab-nav">
+    <a href="index.html">Pendaftaran</a>
+    <a href="rekam-medis.html" class="active">Rekam Medis</a>
+    <a href="apotek.html">Apotek</a>
+  </div>
+
+  <div class="card">
+    <h2>Antrian Menunggu Pemeriksaan</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>No. Antrian</th>
+          <th>Nama Pasien</th>
+          <th>NIK</th>
+          <th>Klaster</th>
+          <th>Keluhan Awal</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tabelAntrian">
+        <tr><td colspan="7">Memuat...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" id="cardFormRM" style="display:none;">
+    <h2>Isi Rekam Medis — <span id="namaPasienAktif"></span></h2>
+
+    <div class="card" style="background:#f9fafb; box-shadow:none; padding:16px; margin-bottom:16px;">
+      <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:8px;">Data dari Pendaftaran (Triase Awal)</div>
+      <div id="vitalDisplay" style="font-size:14px; color:#1f2937; line-height:1.8;"></div>
+      <div id="riwayatDisplay" style="font-size:14px; color:#1f2937; margin-top:6px;"></div>
+    </div>
+
+    <div id="msgBox"></div>
+
+    <form id="formRM">
+      <label>Subjektif (keluhan pasien)</label>
+      <textarea id="rmSubjektif" required></textarea>
+
+      <label>Objektif (hasil pemeriksaan)</label>
+      <textarea id="rmObjektif"></textarea>
+
+      <div class="grid-2">
+        <div>
+          <label>Assessment (Diagnosa)</label>
+          <input type="text" id="rmAssessment" list="diagnosaBpjsList" placeholder="Ketik nama diagnosa" oninput="isiOtomatisIcd()">
+        </div>
+        <div>
+          <label>Kode ICD-10 (otomatis ikut daftar Kapitasi BPJS FKTP)</label>
+          <input type="text" id="rmIcd10" placeholder="Contoh: J06.9" readonly style="background:#f3f4f6;">
+        </div>
+      </div>
+      <div id="peringatanIcd"></div>
+      <datalist id="diagnosaBpjsList"></datalist>
+
+      <label>Plan (Rencana Tindakan / Terapi)</label>
+      <textarea id="rmPlan" required></textarea>
+
+      <div class="grid-2">
+        <div>
+          <label><input type="checkbox" id="rmButuhLab" style="width:auto; display:inline-block;"> Perlu rujukan Laboratorium</label>
+        </div>
+        <div>
+          <label><input type="checkbox" id="rmButuhObat" style="width:auto; display:inline-block;" onchange="toggleResepSection()"> Perlu resep obat</label>
+        </div>
+      </div>
+
+      <div id="resepSection" style="display:none; border-top:1px solid #e5e7eb; padding-top:16px; margin-bottom:16px;">
+        <h2>Tulis Resep</h2>
+        <div class="grid-3">
+          <div>
+            <label>Obat</label>
+            <input type="text" id="rObatNama" list="daftarObatList" placeholder="Ketik nama obat">
+            <datalist id="daftarObatList"></datalist>
+          </div>
+          <div>
+            <label>Dosis</label>
+            <input type="text" id="rObatDosis" placeholder="Contoh: 500mg">
+          </div>
+          <div>
+            <label>Jumlah</label>
+            <input type="number" id="rObatJumlah" min="1" placeholder="10">
+          </div>
+        </div>
+        <label>Aturan Pakai</label>
+        <input type="text" id="rObatAturan" placeholder="Contoh: 3x1 sesudah makan">
+        <button type="button" class="btn-secondary" onclick="tambahObatResep()">+ Tambah ke Resep</button>
+
+        <table style="margin-top:12px;">
+          <thead>
+            <tr><th>Obat</th><th>Dosis</th><th>Jumlah</th><th>Aturan Pakai</th><th></th></tr>
+          </thead>
+          <tbody id="tabelResep"><tr><td colspan="5" style="color:#9ca3af;">Belum ada obat ditambahkan.</td></tr></tbody>
+        </table>
+      </div>
+
+      <button type="submit" class="btn-primary">Simpan Rekam Medis & Selesaikan</button>
+      <button type="button" class="btn-secondary" onclick="batalkanForm()">Batal</button>
+    </form>
+  </div>
+
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+let kunjunganAktif = null;
+let profilSaya = null;
+let daftarObatResep = [];
+
+// Daftar diagnosa Kompetensi 4A (wajib tuntas FKTP, sesuai Panduan Kapitasi BPJS).
+// Bukan daftar lengkap resmi — tambah/sesuaikan sendiri lewat SK Kepala Puskesmas / Permenkes terbaru kalau ada penambahan.
+const DAFTAR_DIAGNOSA_BPJS = [
+  { nama: "ISPA / Nasofaringitis akut (common cold)", icd10: "J00" },
+  { nama: "Faringitis akut", icd10: "J02.9" },
+  { nama: "Tonsilitis akut", icd10: "J03.9" },
+  { nama: "Bronkitis akut", icd10: "J20.9" },
+  { nama: "Asma bronkial (tanpa status asmatikus)", icd10: "J45.9" },
+  { nama: "Pneumonia, ringan", icd10: "J18.9" },
+  { nama: "TB paru tanpa komplikasi", icd10: "A15.0" },
+  { nama: "Hipertensi esensial (primer)", icd10: "I10" },
+  { nama: "Diabetes Melitus Tipe 2 tanpa komplikasi", icd10: "E11.9" },
+  { nama: "Dislipidemia", icd10: "E78.5" },
+  { nama: "Diare akut / gastroenteritis", icd10: "A09" },
+  { nama: "Gastritis", icd10: "K29.7" },
+  { nama: "Dispepsia", icd10: "K30" },
+  { nama: "Demam Tifoid", icd10: "A01.0" },
+  { nama: "Cephalgia / nyeri kepala", icd10: "R51" },
+  { nama: "Migrain", icd10: "G43.9" },
+  { nama: "Vertigo (Benign paroxysmal positional vertigo)", icd10: "H81.1" },
+  { nama: "Konjungtivitis", icd10: "H10.9" },
+  { nama: "Otitis eksterna", icd10: "H60.9" },
+  { nama: "Otitis media akut", icd10: "H66.9" },
+  { nama: "Dermatitis kontak alergi", icd10: "L23.9" },
+  { nama: "Dermatitis atopik", icd10: "L20.9" },
+  { nama: "Skabies", icd10: "B86" },
+  { nama: "Tinea korporis", icd10: "B35.4" },
+  { nama: "Urtikaria", icd10: "L50.9" },
+  { nama: "Reaksi anafilaktik ringan", icd10: "T78.2" },
+  { nama: "Nyeri Punggung Bawah (Low Back Pain)", icd10: "M54.5" },
+  { nama: "Myalgia", icd10: "M79.1" },
+  { nama: "Artritis, tidak spesifik", icd10: "M13.9" },
+  { nama: "Sefalgia akibat tegang otot", icd10: "G44.2" },
+  { nama: "Anemia defisiensi besi", icd10: "D50.9" },
+  { nama: "Obesitas", icd10: "E66.9" },
+  { nama: "Insomnia", icd10: "G47.0" },
+  { nama: "Gangguan Ansietas", icd10: "F41.9" },
+  { nama: "ISK (Infeksi Saluran Kemih) bawah", icd10: "N39.0" },
+  { nama: "Vaginitis / Vulvovaginitis", icd10: "N76.0" },
+  { nama: "Kehamilan normal, ANC", icd10: "Z34.9" },
+  { nama: "Imunisasi / vaksinasi", icd10: "Z27.9" },
+  { nama: "KB / Kontrasepsi, konsultasi", icd10: "Z30.9" },
+  { nama: "Luka lecet / vulnus ekskoriasi", icd10: "T14.8" },
+  { nama: "Luka sayat ringan / vulnus laseratum", icd10: "S01.9" },
+  { nama: "Combustio (luka bakar) grade I", icd10: "T30.0" },
+  { nama: "Karies gigi", icd10: "K02.9" },
+  { nama: "Pulpitis", icd10: "K04.0" },
+  { nama: "Gingivitis", icd10: "K05.0" }
+];
+
+function muatDaftarDiagnosaBpjs() {
+  const dl = document.getElementById("diagnosaBpjsList");
+  dl.innerHTML = DAFTAR_DIAGNOSA_BPJS.map(d => `<option value="${d.nama}">`).join("");
+}
+
+function isiOtomatisIcd() {
+  const nilai = document.getElementById("rmAssessment").value.trim();
+  const cocok = DAFTAR_DIAGNOSA_BPJS.find(d => d.nama.toLowerCase() === nilai.toLowerCase());
+  const peringatan = document.getElementById("peringatanIcd");
+
+  if (cocok) {
+    document.getElementById("rmIcd10").value = cocok.icd10;
+    peringatan.innerHTML = "";
+  } else {
+    document.getElementById("rmIcd10").value = "";
+    if (nilai) {
+      peringatan.innerHTML = `<div class="msg msg-error">Diagnosa tidak ada di daftar Kompetensi 4A BPJS FKTP. Kalau memang bukan diagnosa yang wajib tuntas di puskesmas, pertimbangkan rujuk ke FKTL — kode ICD-10 harus diisi manual sesuai kondisi.</div>`;
+      document.getElementById("rmIcd10").readOnly = false;
+    } else {
+      document.getElementById("rmIcd10").readOnly = true;
+    }
+  }
+}
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  profilSaya = await getProfilSaya();
+  if (profilSaya) {
+    document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+  }
+
+  muatDaftarDiagnosaBpjs();
+  await muatDaftarObat();
+  await muatAntrian();
+})();
+
+async function muatDaftarObat() {
+  const { data, error } = await supabaseClient.from("obat").select("nama_obat, stok").order("nama_obat");
+  if (error) { console.error(error); return; }
+  const dl = document.getElementById("daftarObatList");
+  dl.innerHTML = data.map(o => `<option value="${o.nama_obat}">Stok: ${o.stok}</option>`).join("");
+}
+
+function toggleResepSection() {
+  const tampil = document.getElementById("rmButuhObat").checked;
+  document.getElementById("resepSection").style.display = tampil ? "block" : "none";
+}
+
+function tambahObatResep() {
+  const nama = document.getElementById("rObatNama").value.trim();
+  const dosis = document.getElementById("rObatDosis").value.trim();
+  const jumlah = parseInt(document.getElementById("rObatJumlah").value);
+  const aturan = document.getElementById("rObatAturan").value.trim();
+
+  if (!nama || !jumlah || jumlah < 1) {
+    alert("Isi nama obat dan jumlah dulu.");
+    return;
+  }
+
+  daftarObatResep.push({ nama_obat: nama, dosis, jumlah, aturan_pakai: aturan });
+  renderTabelResep();
+
+  document.getElementById("rObatNama").value = "";
+  document.getElementById("rObatDosis").value = "";
+  document.getElementById("rObatJumlah").value = "";
+  document.getElementById("rObatAturan").value = "";
+}
+
+function hapusObatResep(idx) {
+  daftarObatResep.splice(idx, 1);
+  renderTabelResep();
+}
+
+function renderTabelResep() {
+  const tbody = document.getElementById("tabelResep");
+  if (!daftarObatResep.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#9ca3af;">Belum ada obat ditambahkan.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = daftarObatResep.map((o, i) => `
+    <tr>
+      <td>${o.nama_obat}</td>
+      <td>${o.dosis || "-"}</td>
+      <td>${o.jumlah}</td>
+      <td>${o.aturan_pakai || "-"}</td>
+      <td><button type="button" class="btn-secondary" onclick="hapusObatResep(${i})">Hapus</button></td>
+    </tr>
+  `).join("");
+}
+
+async function muatAntrian() {
+  const tbody = document.getElementById("tabelAntrian");
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("*, pasien(nama, nik, no_rm, riwayat_obat, alergi_obat), klaster(nama, kode)")
+    .eq("tanggal", today)
+    .in("status", ["menunggu", "dipanggil", "diperiksa"])
+    .order("no_antrian");
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="7">Gagal muat data: ${error.message}</td></tr>`;
+    return;
+  }
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="7">Tidak ada pasien menunggu.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${k.no_antrian}</td>
+      <td>${k.pasien?.nama || "-"}</td>
+      <td>${k.pasien?.nik || "-"}</td>
+      <td>${k.klaster?.kode || "-"}</td>
+      <td>${k.keluhan_awal || "-"}</td>
+      <td><span class="badge badge-${k.status}">${k.status}</span></td>
+      <td><button class="btn-primary" onclick='bukaFormRM(${JSON.stringify(k).replace(/'/g, "&#39;")})'>Periksa</button></td>
+    </tr>
+  `).join("");
+}
+
+function bukaFormRM(kunjungan) {
+  kunjunganAktif = kunjungan;
+  document.getElementById("namaPasienAktif").textContent = `${kunjungan.pasien.nama} (No. Antrian ${kunjungan.no_antrian})`;
+  document.getElementById("cardFormRM").style.display = "block";
+  document.getElementById("msgBox").innerHTML = "";
+  document.getElementById("formRM").reset();
+  document.getElementById("rmIcd10").value = "";
+  document.getElementById("peringatanIcd").innerHTML = "";
+  daftarObatResep = [];
+  renderTabelResep();
+  document.getElementById("resepSection").style.display = "none";
+
+  document.getElementById("vitalDisplay").innerHTML = `
+    TD: <strong>${kunjungan.tekanan_darah || "-"}</strong> &nbsp;|&nbsp;
+    Suhu: <strong>${kunjungan.suhu || "-"}</strong> &nbsp;|&nbsp;
+    Nadi: <strong>${kunjungan.nadi || "-"}</strong> &nbsp;|&nbsp;
+    Respirasi: <strong>${kunjungan.respirasi || "-"}</strong> &nbsp;|&nbsp;
+    BB: <strong>${kunjungan.berat_badan || "-"}</strong> &nbsp;|&nbsp;
+    TB: <strong>${kunjungan.tinggi_badan || "-"}</strong>
+  `;
+
+  const riwayatObat = kunjungan.pasien?.riwayat_obat || "-";
+  const alergi = kunjungan.pasien?.alergi_obat || "-";
+  document.getElementById("riwayatDisplay").innerHTML = `
+    Riwayat Obat Rutin: <strong>${riwayatObat}</strong><br>
+    Alergi Obat: <strong>${alergi}</strong>
+  `;
+
+  window.scrollTo({ top: document.getElementById("cardFormRM").offsetTop - 20, behavior: "smooth" });
+}
+
+function batalkanForm() {
+  kunjunganAktif = null;
+  document.getElementById("cardFormRM").style.display = "none";
+}
+
+document.getElementById("formRM").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msgBox = document.getElementById("msgBox");
+
+  if (!kunjunganAktif || !profilSaya) {
+    msgBox.innerHTML = `<div class="msg msg-error">Data kunjungan atau petugas tidak ditemukan.</div>`;
+    return;
+  }
+
+  const payload = {
+    kunjungan_id: kunjunganAktif.id,
+    subjektif: document.getElementById("rmSubjektif").value.trim(),
+    objektif: document.getElementById("rmObjektif").value.trim(),
+    tekanan_darah: kunjunganAktif.tekanan_darah || "",
+    suhu: kunjunganAktif.suhu || "",
+    nadi: kunjunganAktif.nadi || "",
+    respirasi: kunjunganAktif.respirasi || "",
+    berat_badan: kunjunganAktif.berat_badan || "",
+    tinggi_badan: kunjunganAktif.tinggi_badan || "",
+    assessment: document.getElementById("rmAssessment").value.trim(),
+    kode_icd10: document.getElementById("rmIcd10").value.trim(),
+    plan: document.getElementById("rmPlan").value.trim(),
+    butuh_lab: document.getElementById("rmButuhLab").checked,
+    butuh_obat: document.getElementById("rmButuhObat").checked,
+    petugas_id: profilSaya.id
+  };
+
+  // 1. Simpan rekam medis
+  const { data: dataRM, error: errRM } = await supabaseClient.from("rekam_medis").insert(payload).select().single();
+  if (errRM) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan rekam medis: ${errRM.message}</div>`;
+    return;
+  }
+
+  // 2. Kalau perlu resep dan sudah ada obat ditambahkan, simpan ke tabel resep
+  if (document.getElementById("rmButuhObat").checked && daftarObatResep.length > 0) {
+    const { error: errResep } = await supabaseClient.from("resep").insert({
+      kunjungan_id: kunjunganAktif.id,
+      rekam_medis_id: dataRM.id,
+      dokter_id: profilSaya.id,
+      daftar_obat: daftarObatResep,
+      status: "menunggu"
+    });
+    if (errResep) {
+      msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi gagal simpan resep: ${errResep.message}</div>`;
+      return;
+    }
+  }
+
+  // 3. Update status kunjungan jadi selesai
+  const { error: errStatus } = await supabaseClient
+    .from("kunjungan")
+    .update({ status: "selesai" })
+    .eq("id", kunjunganAktif.id);
+
+  if (errStatus) {
+    msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi gagal update status kunjungan: ${errStatus.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Rekam medis tersimpan, tercatat atas nama ${profilSaya.nama}.</div>`;
+  document.getElementById("cardFormRM").style.display = "none";
+  kunjunganAktif = null;
+  daftarObatResep = [];
+  await muatAntrian();
+});
+</script>
+
+</body>
+</html>

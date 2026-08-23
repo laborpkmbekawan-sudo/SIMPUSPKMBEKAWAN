@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pendaftaran - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>SIMPUS UPTD PUSKESMAS BEKAWAN — Pendaftaran</h1>
+  <div class="user-info">
+    <span id="namaUser">Memuat...</span>
+    <button onclick="logout()">Keluar</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="tab-nav">
+    <a href="index.html" class="active">Pendaftaran</a>
+    <a href="rekam-medis.html">Rekam Medis</a>
+    <a href="apotek.html">Apotek</a>
+  </div>
+
+  <div class="card">
+    <h2>Daftarkan Pasien</h2>
+    <div id="msgBox"></div>
+
+    <div class="grid-2">
+      <div>
+        <label>Cari Pasien (NIK / No. RM / No. BPJS)</label>
+        <input type="text" id="cariNik" placeholder="Ketik NIK, No. RM, atau No. BPJS">
+      </div>
+      <div style="display:flex; align-items:flex-end;">
+        <button class="btn-primary" onclick="cariPasien()" style="margin-bottom:12px;">Cari Pasien</button>
+      </div>
+    </div>
+
+    <div id="hasilCari"></div>
+
+    <form id="formPasienBaru" style="display:none; margin-top:16px; border-top:1px solid #e5e7eb; padding-top:16px;">
+      <h2>Data Pasien Baru</h2>
+      <div class="grid-2">
+        <div>
+          <label>NIK *</label>
+          <input type="text" id="pNik" maxlength="16" required placeholder="16 digit NIK">
+        </div>
+        <div>
+          <label>No. RM (kosongkan kalau pasien baru, isi kalau sudah punya RM lama)</label>
+          <input type="text" id="pNoRmManual" placeholder="Kosongkan = auto-generate">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label>Nama Lengkap *</label>
+          <input type="text" id="pNama" required>
+        </div>
+        <div>
+          <label>Jenis Kelamin *</label>
+          <select id="pJk" required>
+            <option value="">Pilih</option>
+            <option value="L">Laki-laki</option>
+            <option value="P">Perempuan</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label>Tempat Lahir</label>
+          <input type="text" id="pTempatLahir">
+        </div>
+        <div>
+          <label>Tanggal Lahir *</label>
+          <input type="date" id="pTglLahir" required onchange="hitungUmur()">
+        </div>
+      </div>
+      <div>
+        <label>Umur (otomatis)</label>
+        <input type="text" id="pUmur" readonly style="background:#f3f4f6;">
+      </div>
+      <div class="grid-2">
+        <div>
+          <label>No. HP</label>
+          <input type="text" id="pHp">
+        </div>
+        <div>
+          <label>No. KK</label>
+          <input type="text" id="pNoKk">
+        </div>
+      </div>
+      <label>Alamat Lengkap</label>
+      <input type="text" id="pAlamat" placeholder="Jalan / dusun">
+      <div class="grid-3">
+        <div>
+          <label>RT/RW</label>
+          <input type="text" id="pRtRw">
+        </div>
+        <div>
+          <label>Desa/Kelurahan</label>
+          <input type="text" id="pDesa">
+        </div>
+        <div>
+          <label>Kecamatan</label>
+          <input type="text" id="pKecamatan">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label>Status BPJS</label>
+          <select id="pStatusBpjs">
+            <option value="tidak_ada">Tidak Ada</option>
+            <option value="aktif">Aktif</option>
+            <option value="tidak_aktif">Tidak Aktif</option>
+          </select>
+        </div>
+        <div>
+          <label>No. BPJS</label>
+          <input type="text" id="pNoBpjs">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label>Pekerjaan</label>
+          <input type="text" id="pPekerjaan">
+        </div>
+        <div>
+          <label>Golongan Darah</label>
+          <select id="pGolDarah">
+            <option value="">Tidak tahu</option>
+            <option>A</option><option>B</option><option>AB</option><option>O</option>
+          </select>
+        </div>
+      </div>
+      <label>Alergi Obat (kalau ada)</label>
+      <textarea id="pAlergi" placeholder="Contoh: Amoxicillin, Penisilin"></textarea>
+
+      <label>Riwayat Obat yang Sedang/Rutin Diminum</label>
+      <textarea id="pRiwayatObat" placeholder="Contoh: Amlodipine 5mg 1x1 (sejak 2023), Metformin 500mg 2x1"></textarea>
+
+      <button type="submit" class="btn-primary">Simpan Data Pasien</button>
+    </form>
+  </div>
+
+  <div class="card" id="cardDaftarKunjungan" style="display:none;">
+    <h2>Buat Kunjungan Baru</h2>
+    <div class="grid-2">
+      <div>
+        <label>Klaster / Poli Tujuan *</label>
+        <select id="kKlaster" required></select>
+      </div>
+      <div>
+        <label>Jenis Pembayaran *</label>
+        <select id="kJenisBayar" required>
+          <option value="BPJS">BPJS</option>
+          <option value="Umum">Umum</option>
+        </select>
+      </div>
+    </div>
+    <label>Keluhan Awal</label>
+    <textarea id="kKeluhan" placeholder="Keluhan singkat saat pendaftaran"></textarea>
+
+    <h2 style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:16px;">Tanda Vital (Triase Awal)</h2>
+    <div class="grid-3">
+      <div>
+        <label>Tekanan Darah</label>
+        <input type="text" id="kTd" placeholder="120/80 mmHg">
+      </div>
+      <div>
+        <label>Suhu</label>
+        <input type="text" id="kSuhu" placeholder="36.5 °C">
+      </div>
+      <div>
+        <label>Nadi</label>
+        <input type="text" id="kNadi" placeholder="80 x/menit">
+      </div>
+    </div>
+    <div class="grid-3">
+      <div>
+        <label>Respirasi</label>
+        <input type="text" id="kRespirasi" placeholder="20 x/menit">
+      </div>
+      <div>
+        <label>Berat Badan</label>
+        <input type="text" id="kBb" placeholder="kg">
+      </div>
+      <div>
+        <label>Tinggi Badan</label>
+        <input type="text" id="kTb" placeholder="cm">
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="buatKunjungan()">Daftarkan Kunjungan</button>
+  </div>
+
+  <div class="card">
+    <h2>Antrian Hari Ini</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>No. Antrian</th>
+          <th>No. Kunjungan</th>
+          <th>No. RM</th>
+          <th>Nama Pasien</th>
+          <th>Klaster</th>
+          <th>Bayar</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tabelAntrian">
+        <tr><td colspan="7">Memuat...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+let pasienTerpilih = null;
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  const profil = await getProfilSaya();
+  if (profil) {
+    document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;
+  }
+
+  await muatKlaster();
+  await muatAntrian();
+})();
+
+async function muatKlaster() {
+  const { data, error } = await supabaseClient.from("klaster").select("*").order("id");
+  if (error) { console.error(error); return; }
+
+  const select = document.getElementById("kKlaster");
+  select.innerHTML = '<option value="">Pilih klaster</option>' +
+    data.map(k => `<option value="${k.id}">${k.kode} — ${k.nama}</option>`).join("");
+}
+
+function hitungUmur() {
+  const tglLahir = document.getElementById("pTglLahir").value;
+  if (!tglLahir) { document.getElementById("pUmur").value = ""; return; }
+
+  const lahir = new Date(tglLahir);
+  const now = new Date();
+  let tahun = now.getFullYear() - lahir.getFullYear();
+  let bulan = now.getMonth() - lahir.getMonth();
+  if (bulan < 0 || (bulan === 0 && now.getDate() < lahir.getDate())) {
+    tahun--;
+    bulan += 12;
+  }
+  document.getElementById("pUmur").value = `${tahun} tahun ${bulan} bulan`;
+}
+
+async function cariPasien() {
+  const kunci = document.getElementById("cariNik").value.trim();
+  const msgBox = document.getElementById("msgBox");
+  const hasilDiv = document.getElementById("hasilCari");
+  msgBox.innerHTML = "";
+  hasilDiv.innerHTML = "";
+  document.getElementById("formPasienBaru").style.display = "none";
+  document.getElementById("cardDaftarKunjungan").style.display = "none";
+  pasienTerpilih = null;
+
+  if (!kunci) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau No. BPJS dulu.</div>`;
+    return;
+  }
+
+  // Cari cocok di salah satu: NIK, No. RM, atau No. BPJS
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},no_bpjs.eq.${kunci}`)
+    .maybeSingle();
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`;
+    return;
+  }
+
+  if (data) {
+    pasienTerpilih = data;
+    hasilDiv.innerHTML = `<div class="msg msg-success">Pasien ditemukan: <strong>${data.nama}</strong> — No. RM ${data.no_rm || "-"} — NIK ${data.nik}</div>`;
+    document.getElementById("cardDaftarKunjungan").style.display = "block";
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-error">Pasien belum terdaftar. Isi form di bawah untuk mendaftarkan pasien baru (No. RM baru otomatis dibuat).</div>`;
+    // Kalau yang dicari 16 digit angka, anggap NIK, prefill.
+    if (/^\d{16}$/.test(kunci)) {
+      document.getElementById("pNik").value = kunci;
+    }
+    document.getElementById("formPasienBaru").style.display = "block";
+  }
+}
+
+document.getElementById("formPasienBaru").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msgBox = document.getElementById("msgBox");
+  const nik = document.getElementById("pNik").value.trim();
+
+  if (!/^\d{16}$/.test(nik)) {
+    msgBox.innerHTML = `<div class="msg msg-error">NIK harus 16 digit angka.</div>`;
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  const payload = {
+    nik: nik,
+    no_rm: document.getElementById("pNoRmManual").value.trim() || null,
+    nama: document.getElementById("pNama").value.trim(),
+    jenis_kelamin: document.getElementById("pJk").value,
+    tempat_lahir: document.getElementById("pTempatLahir").value.trim(),
+    tanggal_lahir: document.getElementById("pTglLahir").value,
+    no_hp: document.getElementById("pHp").value.trim(),
+    no_kk: document.getElementById("pNoKk").value.trim(),
+    alamat: document.getElementById("pAlamat").value.trim(),
+    rt_rw: document.getElementById("pRtRw").value.trim(),
+    desa_kelurahan: document.getElementById("pDesa").value.trim(),
+    kecamatan: document.getElementById("pKecamatan").value.trim(),
+    status_bpjs: document.getElementById("pStatusBpjs").value,
+    no_bpjs: document.getElementById("pNoBpjs").value.trim(),
+    pekerjaan: document.getElementById("pPekerjaan").value.trim(),
+    gol_darah: document.getElementById("pGolDarah").value,
+    alergi_obat: document.getElementById("pAlergi").value.trim(),
+    riwayat_obat: document.getElementById("pRiwayatObat").value.trim(),
+    created_by: user.id
+  };
+
+  const { data, error } = await supabaseClient.from("pasien").insert(payload).select().single();
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`;
+    return;
+  }
+
+  pasienTerpilih = data;
+  msgBox.innerHTML = `<div class="msg msg-success">Pasien baru berhasil disimpan: ${data.nama}</div>`;
+  document.getElementById("formPasienBaru").style.display = "none";
+  document.getElementById("cardDaftarKunjungan").style.display = "block";
+});
+
+async function buatKunjungan() {
+  const msgBox = document.getElementById("msgBox");
+  if (!pasienTerpilih) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih atau daftarkan pasien dulu.</div>`;
+    return;
+  }
+
+  const klasterId = document.getElementById("kKlaster").value;
+  const jenisBayar = document.getElementById("kJenisBayar").value;
+  const keluhan = document.getElementById("kKeluhan").value.trim();
+
+  if (!klasterId) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih klaster tujuan.</div>`;
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  // Generate nomor kunjungan & antrian lewat fungsi DB
+  const { data: noKunjunganData, error: errNo } = await supabaseClient.rpc("generate_no_kunjungan");
+  const { data: noAntrianData, error: errAntrian } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: parseInt(klasterId) });
+
+  if (errNo || errAntrian) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal generate nomor: ${(errNo || errAntrian).message}</div>`;
+    return;
+  }
+
+  const payload = {
+    no_kunjungan: noKunjunganData,
+    pasien_id: pasienTerpilih.id,
+    klaster_id: parseInt(klasterId),
+    jenis_bayar: jenisBayar,
+    no_antrian: noAntrianData,
+    keluhan_awal: keluhan,
+    tekanan_darah: document.getElementById("kTd").value.trim(),
+    suhu: document.getElementById("kSuhu").value.trim(),
+    nadi: document.getElementById("kNadi").value.trim(),
+    respirasi: document.getElementById("kRespirasi").value.trim(),
+    berat_badan: document.getElementById("kBb").value.trim(),
+    tinggi_badan: document.getElementById("kTb").value.trim(),
+    status: "menunggu",
+    created_by: user.id
+  };
+
+  const { error } = await supabaseClient.from("kunjungan").insert(payload);
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal daftar kunjungan: ${error.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Kunjungan berhasil dibuat. No. antrian: ${noAntrianData}</div>`;
+  document.getElementById("cardDaftarKunjungan").style.display = "none";
+  document.getElementById("cariNik").value = "";
+  document.getElementById("hasilCari").innerHTML = "";
+  pasienTerpilih = null;
+
+  await muatAntrian();
+}
+
+async function muatAntrian() {
+  const tbody = document.getElementById("tabelAntrian");
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("*, pasien(nama, no_rm), klaster(nama, kode)")
+    .eq("tanggal", today)
+    .order("no_antrian");
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="7">Gagal muat data: ${error.message}</td></tr>`;
+    return;
+  }
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="7">Belum ada kunjungan hari ini.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${k.no_antrian}</td>
+      <td>${k.no_kunjungan}</td>
+      <td>${k.pasien?.no_rm || "-"}</td>
+      <td>${k.pasien?.nama || "-"}</td>
+      <td>${k.klaster?.kode || "-"} — ${k.klaster?.nama || "-"}</td>
+      <td>${k.jenis_bayar}</td>
+      <td><span class="badge badge-${k.status}">${k.status}</span></td>
+    </tr>
+  `).join("");
+}
+</script>
+
+</body>
+</html>
