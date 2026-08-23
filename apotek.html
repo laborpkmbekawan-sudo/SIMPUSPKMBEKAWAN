@@ -36,6 +36,73 @@
 
     <div class="dash-content">
 
+  <div class="subtab-nav">
+    <button id="subtabBtn-beranda" class="active" onclick="gantiSubtab('beranda')">Beranda</button>
+    <button id="subtabBtn-pelayanan" onclick="gantiSubtab('pelayanan')">Pelayanan Obat & Resep</button>
+    <button id="subtabBtn-stok" onclick="gantiSubtab('stok')">Stok & Inventaris</button>
+  </div>
+
+  <div id="panelBeranda">
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="label">Resep Menunggu</div>
+      <div class="value" id="statResepMenunggu">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Resep Disiapkan</div>
+      <div class="value" id="statResepDisiapkan">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Resep Diserahkan Hari Ini</div>
+      <div class="value" id="statResepDiserahkan">-</div>
+    </div>
+  </div>
+
+  <div class="dash-grid-2col">
+
+    <div class="card alert-card warn">
+      <h2>Notifikasi Stok Alert</h2>
+      <div id="alertStok">
+        <div class="alert-row">Memuat...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Menu Cepat</h2>
+      <div class="quick-grid">
+        <button class="quick-btn" onclick="gantiSubtab('pelayanan')">📋 Verifikasi & Siapkan Resep</button>
+        <button class="quick-btn" onclick="gantiSubtab('stok')">💊 Tambah / Update Stok Obat</button>
+        <button class="quick-btn" onclick="gantiSubtab('stok'); document.getElementById('ksObatSelect').focus();">📊 Lihat Kartu Stok</button>
+        <button class="quick-btn" onclick="gantiSubtab('stok'); document.getElementById('tabelObat').scrollIntoView({behavior:'smooth'});">📄 Daftar Obat & Stok</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card">
+    <h2>Stok Hampir Kedaluwarsa (≤ 90 hari)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Nama Obat</th>
+          <th>Batch / No. Lot</th>
+          <th>Tgl Expired</th>
+          <th>Sisa Stok</th>
+          <th>Satuan</th>
+        </tr>
+      </thead>
+      <tbody id="tabelExpSoon">
+        <tr><td colspan="5">Memuat...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  </div>
+  <!-- /panelBeranda -->
+
+  <div id="panelPelayanan" style="display:none;">
+
   <div class="card">
     <h2>Resep Menunggu Disiapkan</h2>
     <div id="msgResep"></div>
@@ -54,6 +121,11 @@
       </tbody>
     </table>
   </div>
+
+  </div>
+  <!-- /panelPelayanan -->
+
+  <div id="panelStok" style="display:none;">
 
   <div class="card">
     <h2>Tambah / Update Stok Obat</h2>
@@ -189,6 +261,9 @@
     </table>
   </div>
 
+  </div>
+  <!-- /panelStok -->
+
     </div>
 
   </div>
@@ -212,7 +287,67 @@ let profilSaya = null;
 
   await muatResepMenunggu();
   await muatDaftarObat();
+  await muatDashboardApotek();
 })();
+
+// ---------- Sub-tab Beranda / Pelayanan / Stok ----------
+function gantiSubtab(tab) {
+  ["beranda", "pelayanan", "stok"].forEach(t => {
+    document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? "block" : "none";
+    document.getElementById("subtabBtn-" + t).classList.toggle("active", t === tab);
+  });
+}
+
+// ---------- Beranda: statistik resep hari ini + notifikasi stok ----------
+async function muatDashboardApotek() {
+  const awalHariIni = new Date(); awalHariIni.setHours(0, 0, 0, 0);
+
+  const [menunggu, disiapkan, diserahkan] = await Promise.all([
+    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "menunggu"),
+    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "disiapkan"),
+    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "diserahkan").gte("diserahkan_at", awalHariIni.toISOString())
+  ]);
+  document.getElementById("statResepMenunggu").textContent = menunggu.count ?? 0;
+  document.getElementById("statResepDisiapkan").textContent = disiapkan.count ?? 0;
+  document.getElementById("statResepDiserahkan").textContent = diserahkan.count ?? 0;
+
+  const { data: semuaObat, error } = await supabaseClient.from("obat").select("*");
+  const alertBox = document.getElementById("alertStok");
+  const tbodyExp = document.getElementById("tabelExpSoon");
+
+  if (error || !semuaObat) {
+    alertBox.innerHTML = `<div class="alert-row">Gagal muat data stok.</div>`;
+    tbodyExp.innerHTML = `<tr><td colspan="5">Gagal muat data.</td></tr>`;
+    return;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  const dalam90Hari = new Date(); dalam90Hari.setDate(dalam90Hari.getDate() + 90);
+  const dalam90HariStr = dalam90Hari.toISOString().split("T")[0];
+
+  const stokKosong = semuaObat.filter(o => o.stok === 0);
+  const stokMinimum = semuaObat.filter(o => o.stok > 0 && o.stok <= (o.stok_minimum ?? 10));
+  const akanExpired = semuaObat.filter(o => o.exp_date && o.exp_date >= today && o.exp_date <= dalam90HariStr);
+
+  const baris = [];
+  if (stokMinimum.length) baris.push(`<div class="alert-row"><span class="icon">⚠️</span><div><strong>${stokMinimum.length} item</strong>Stok minimum</div></div>`);
+  if (akanExpired.length) baris.push(`<div class="alert-row"><span class="icon">⚠️</span><div><strong>${akanExpired.length} item</strong>Akan expired ≤ 3 bulan</div></div>`);
+  if (stokKosong.length) baris.push(`<div class="alert-row"><span class="icon">🔴</span><div><strong>${stokKosong.length} item</strong>Stok kosong</div></div>`);
+  alertBox.innerHTML = baris.length ? baris.join("") : `<div class="alert-row">Tidak ada peringatan stok saat ini.</div>`;
+
+  const expSoonSorted = akanExpired.sort((a, b) => a.exp_date.localeCompare(b.exp_date)).slice(0, 10);
+  tbodyExp.innerHTML = expSoonSorted.length
+    ? expSoonSorted.map(o => `
+        <tr>
+          <td>${o.nama_obat} ${o.dosis || ""}</td>
+          <td>${o.no_lot || "-"}</td>
+          <td>${new Date(o.exp_date).toLocaleDateString("id-ID")}</td>
+          <td>${o.stok}</td>
+          <td>${o.satuan}</td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="5">Tidak ada obat yang mendekati expired dalam 90 hari.</td></tr>`;
+}
 
 const LABEL_KATEGORI = {
   bebas: "Bebas", bebas_terbatas: "Bebas Terbatas", keras: "Keras",

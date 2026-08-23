@@ -129,6 +129,30 @@ th { background: #f9fafb; font-weight: 600; color: #374151; font-size: 13px; }
 }
 .tab-nav a.active { color: #0f766e; border-bottom-color: #0f766e; }
 
+.subtab-nav { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; }
+.subtab-nav button {
+  background: none; border: none; cursor: pointer;
+  padding: 10px 16px; font-size: 14px; font-weight: 600; color: #6b7280;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+}
+.subtab-nav button:hover { color: #0f766e; }
+.subtab-nav button.active { color: #0f766e; border-bottom-color: #0f766e; }
+
+.alert-card { border-radius: 10px; padding: 16px 18px; }
+.alert-card.warn { background: #fffbeb; border: 1px solid #fde68a; }
+.alert-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 13px; }
+.alert-row:last-child { border-bottom: none; }
+.alert-row .icon { font-size: 16px; }
+.alert-row strong { display: block; font-size: 14px; }
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.quick-btn {
+  background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px;
+  text-align: left; cursor: pointer; font-size: 13px; font-weight: 600; color: #111827;
+}
+.quick-btn:hover { border-color: #0f766e; color: #0f766e; }
+.dash-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; align-items: start; }
+@media (max-width: 800px) { .dash-grid-2col { grid-template-columns: 1fr; } }
+
 .login-wrap {
   min-height: 100vh;
   display: flex;
