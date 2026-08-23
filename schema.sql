@@ -114,6 +114,9 @@ create index if not exists idx_rm_kunjungan on rekam_medis(kunjungan_id);
 -- ------------------------------------------------------------
 -- 6. TABEL RESEP (link ke apotek, disiapkan buat modul lanjut)
 -- ------------------------------------------------------------
+-- Catatan: kolom daftar_obat (jsonb) tiap item sekarang bisa punya field
+-- tambahan: diserahkan (boolean), diserahkan_at (timestamptz text), diserahkan_oleh (uuid text).
+-- Ini dipakai buat konfirmasi penyerahan per obat, bukan per resep utuh.
 create table if not exists resep (
   id uuid primary key default gen_random_uuid(),
   kunjungan_id uuid not null references kunjungan(id),
@@ -353,6 +356,16 @@ create index if not exists idx_kartu_stok_tanggal on kartu_stok(tanggal);
 
 alter table kartu_stok enable row level security;
 create policy "authenticated_all_kartu_stok" on kartu_stok for all to authenticated using (true) with check (true);
+
+-- ============================================================
+-- 17. KONFIRMASI PENYERAHAN PER OBAT: status resep tambah state
+--     "sebagian" (sebagian obat di resep sudah diserahkan, belum semua).
+--     Tiap item di daftar_obat (jsonb) sekarang bisa punya field
+--     tambahan: diserahkan (boolean), diserahkan_at, diserahkan_oleh (uuid text).
+-- ============================================================
+alter table resep drop constraint if exists resep_status_check;
+alter table resep add constraint resep_status_check
+  check (status in ('menunggu', 'disiapkan', 'sebagian', 'diserahkan'));
 
 -- ============================================================
 -- SELESAI. Setelah run schema ini:
