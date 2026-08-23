@@ -6,354 +6,271 @@
 <title>Apotek - SIMPUS Bekawan</title>
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
-/* ==========================================================
-   SIMPUS BEKAWAN - FARMASI UPGRADE
-   CSS tambahan saja. Tidak mengganti class lama.
-   ========================================================== */
+/* ================= REDESAIN DASHBOARD APOTEK ================= */
+/* CSS khusus halaman ini saja — gak nyentuh style.css / halaman lain. */
 
-.ph-subtab-nav {
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.ph-subtab-nav button {
-  white-space: nowrap;
-}
-
-.ph-module-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.ph-module-card {
-  position: relative;
-}
-
-.ph-module-icon {
-  width: 42px;
-  height: 42px;
+.ph-shell .sidebar {
+  background: linear-gradient(180deg, #0f4c3a 0%, #0a3a2c 100%);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: #e8f7f5;
-  margin-bottom: 10px;
-  font-size: 20px;
+  flex-direction: column;
+  padding-bottom: 16px;
+  overflow-y: auto;
 }
-
-.ph-module-card h2,
-.ph-dispensing-card h2,
-.ph-report-card h2 {
-  margin-bottom: 7px;
+.ph-shell .sidebar .brand { border-bottom: 1px solid rgba(255,255,255,.12); }
+.ph-group-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.45);
+  text-transform: uppercase; padding: 16px 20px 6px;
 }
-
-.ph-module-card p,
-.ph-report-card p {
-  color: #6b7280;
-  font-size: 12px;
-  line-height: 1.55;
-  margin-bottom: 14px;
+.ph-nav-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 20px; color: rgba(255,255,255,.85); font-size: 14px;
+  text-decoration: none; cursor: pointer; border-left: 3px solid transparent;
 }
-
-.ph-note {
-  margin-top: 12px;
-  padding: 10px 12px;
-  border-radius: 7px;
-  background: #f5f8f8;
-  border: 1px solid #e5eeee;
-  color: #596568;
-  font-size: 11px;
-  line-height: 1.5;
+.ph-nav-link:hover { background: rgba(255,255,255,.06); }
+.ph-nav-link.active { background: rgba(255,255,255,.12); border-left-color: #34d399; color: #fff; font-weight: 600; }
+.ph-nav-link.disabled { opacity: .4; cursor: default; }
+.ph-nav-link.disabled:hover { background: none; }
+.ph-nav-link .ico { width: 18px; text-align: center; }
+.ph-badge-soon {
+  margin-left: auto; font-size: 10px; background: rgba(255,255,255,.12); color: rgba(255,255,255,.7);
+  padding: 2px 6px; border-radius: 999px;
 }
+.ph-nav-link.crossapp { color: rgba(255,255,255,.6); font-size: 13px; }
 
-.ph-checklist {
-  display: grid;
-  gap: 8px;
-  margin: 12px 0 15px;
+.ph-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 28px; background: #fff; border-bottom: 1px solid #eef0ee;
 }
-
-.ph-checklist label {
-  padding: 8px 10px;
-  background: #f8fafb;
-  border-radius: 7px;
-  font-size: 12px;
+.ph-topbar h1 { font-size: 20px; margin: 0; }
+.ph-topbar p { margin: 2px 0 0; color: #6b7280; font-size: 13px; }
+.ph-topbar-right { display: flex; align-items: center; gap: 18px; }
+.ph-bell { position: relative; font-size: 18px; }
+.ph-bell .dot-count {
+  position: absolute; top: -6px; right: -8px; background: #dc2626; color: #fff;
+  font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 999px;
 }
+.ph-user { text-align: right; font-size: 13px; line-height: 1.3; }
+.ph-user strong { display: block; font-size: 13px; }
+.ph-user span { color: #6b7280; font-size: 12px; }
 
-.ph-checklist input {
-  margin-right: 7px;
+.ph-kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+.ph-kpi-card {
+  background: #fff; border: 1px solid #eef0ee; border-radius: 12px; padding: 18px;
+  display: flex; align-items: center; gap: 14px;
 }
-
-.ph-dispensing-card {
-  margin-bottom: 16px;
+.ph-kpi-icon {
+  width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center;
+  justify-content: center; font-size: 20px; flex-shrink: 0;
 }
+.ph-kpi-icon.blue { background: #e8f1ff; }
+.ph-kpi-icon.amber { background: #fff4d6; }
+.ph-kpi-icon.green { background: #e5f7ef; }
+.ph-kpi-value { font-size: 26px; font-weight: 700; line-height: 1.1; }
+.ph-kpi-label { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.ph-kpi-link { font-size: 12px; color: #0f7a5c; text-decoration: none; cursor: pointer; }
 
-.ph-section-title {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 15px;
-  margin-bottom: 15px;
+.ph-grid-3 { display: grid; grid-template-columns: 1.1fr 1fr 1.3fr; gap: 16px; margin-bottom: 16px; align-items: stretch; }
+.ph-card { background: #fff; border: 1px solid #eef0ee; border-radius: 12px; padding: 18px; }
+.ph-card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: #374151; margin: 0 0 14px; }
+
+.ph-notif-row {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: 10px; margin-bottom: 8px;
 }
+.ph-notif-row.danger { background: #fde7e9; }
+.ph-notif-row.warn { background: #fff4d6; }
+.ph-notif-row .ico { font-size: 16px; }
+.ph-notif-row strong { display: block; font-size: 15px; }
+.ph-notif-row .sub { font-size: 12px; color: #6b7280; }
+.ph-notif-row a { font-size: 12px; color: #0f7a5c; text-decoration: none; margin-left: auto; white-space: nowrap; }
 
-.ph-section-title p {
-  margin: 5px 0 0;
-  color: #6b7280;
-  font-size: 12px;
+.ph-quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.ph-quick-tile {
+  border: 1px solid #eef0ee; border-radius: 10px; padding: 12px 8px; text-align: center;
+  cursor: pointer; background: #fafbfa; font-size: 12px; color: #374151;
 }
+.ph-quick-tile:hover { background: #f0f4f2; }
+.ph-quick-tile.disabled { opacity: .4; cursor: default; }
+.ph-quick-tile .ico { font-size: 20px; display: block; margin-bottom: 6px; }
 
-.ph-etiket-preview {
-  max-width: 430px;
-  padding: 16px;
-  border: 1px dashed #9ca3af;
-  background: #fff;
-  font-size: 12px;
-  line-height: 1.8;
-}
+.ph-info-grid { display: flex; flex-direction: column; gap: 12px; }
+.ph-info-row { display: flex; justify-content: space-between; font-size: 13px; }
+.ph-info-row span:first-child { color: #6b7280; }
+.ph-info-row span:last-child { font-weight: 600; text-align: right; }
 
-.ph-etiket-head {
-  text-align: center;
-  font-weight: 700;
-  margin-bottom: 7px;
-}
+.ph-chart-card canvas { max-height: 220px; }
+.ph-donut-wrap { display: flex; align-items: center; gap: 18px; }
+.ph-donut-wrap canvas { max-width: 140px; max-height: 140px; }
+.ph-donut-legend { font-size: 13px; display: flex; flex-direction: column; gap: 8px; }
+.ph-donut-legend .row { display: flex; align-items: center; gap: 8px; }
+.ph-donut-legend .sw { width: 10px; height: 10px; border-radius: 3px; }
 
-.ph-etiket-rule {
-  margin-top: 8px;
-  padding: 7px;
-  background: #f3f4f6;
-  font-weight: 600;
-}
-
-.ph-kpi-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin: 15px 0;
-}
-
-.ph-kpi-row > div {
-  padding: 12px 8px;
-  text-align: center;
-  background: #f7faf9;
-  border: 1px solid #e6eeee;
-  border-radius: 8px;
-}
-
-.ph-kpi-row strong {
-  display: block;
-  font-size: 20px;
-  color: #087f73;
-}
-
-.ph-kpi-row span {
-  display: block;
-  margin-top: 3px;
-  font-size: 10px;
-  color: #6b7280;
-}
-
-.ph-info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.ph-info-grid > div {
-  padding: 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fbfcfc;
-}
-
-.ph-info-grid strong,
-.ph-info-grid span {
-  display: block;
-}
-
-.ph-info-grid strong {
-  margin-bottom: 5px;
-  font-size: 12px;
-}
-
-.ph-info-grid span {
-  color: #6b7280;
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-.ph-report-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.ph-report-card {
-  min-height: 190px;
-}
-
-.ph-report-icon {
-  display: inline-flex;
-  width: 40px;
-  height: 40px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9px;
-  background: #e8f7f5;
-  margin-bottom: 10px;
-}
-
-.ph-report-summary {
-  min-height: 150px;
-}
-
-.ph-report-result {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  color: #6b7280;
-  font-size: 12px;
-}
-
-.ph-report-number {
-  min-width: 130px;
-  padding: 15px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  text-align: center;
-  background: #fbfcfc;
-}
-
-.ph-report-number strong {
-  display: block;
-  font-size: 24px;
-  color: #087f73;
-}
-
-.ph-report-number span {
-  font-size: 10px;
-}
-
-@media (max-width: 900px) {
-  .ph-module-grid,
-  .ph-report-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .ph-info-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 650px) {
-  .ph-kpi-row {
-    grid-template-columns: 1fr;
-  }
-
-  .ph-section-title {
-    flex-direction: column;
-  }
+@media (max-width: 1100px) {
+  .ph-kpi-row, .ph-grid-3 { grid-template-columns: 1fr; }
+  .ph-quick-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
-
 </head>
 <body>
 
-<div class="app-shell">
+<div class="app-shell ph-shell">
 
   <aside class="sidebar">
     <div class="brand">
       <span class="dot"></span>
       <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
     </div>
-    <nav>
-      <a href="index.html">Pendaftaran</a>
-      <a href="rekam-medis.html">Rekam Medis</a>
-      <a href="apotek.html" class="active">Apotek</a>
-      <a href="pengaturan.html">Pengaturan</a>
-    </nav>
+
+    <div class="ph-group-title">Petugas Farmasi</div>
+    <a class="ph-nav-link active" id="navBeranda" onclick="gantiSubtab('beranda')"><span class="ico">🏠</span> Dashboard</a>
+
+    <div class="ph-group-title">Pelayanan Obat & Resep</div>
+    <a class="ph-nav-link" id="navPelayanan" onclick="gantiSubtab('pelayanan')"><span class="ico">📋</span> Verifikasi & Penyerahan Resep</a>
+    <a class="ph-nav-link disabled"><span class="ico">📝</span> Entri Resep Manual <span class="ph-badge-soon">Segera</span></a>
+    <a class="ph-nav-link disabled"><span class="ico">🧪</span> Racikan Obat <span class="ph-badge-soon">Segera</span></a>
+
+    <div class="ph-group-title">Pengelolaan Stok</div>
+    <a class="ph-nav-link" id="navStok" onclick="gantiSubtab('stok')"><span class="ico">💊</span> Master Data Obat</a>
+    <a class="ph-nav-link" onclick="gantiSubtab('stok'); setTimeout(()=>document.getElementById('ksObatSelect').focus(),50)"><span class="ico">📊</span> Kartu Stok Digital</a>
+    <a class="ph-nav-link disabled"><span class="ico">📦</span> Stok Opname <span class="ph-badge-soon">Segera</span></a>
+    <a class="ph-nav-link disabled"><span class="ico">🚚</span> Mutasi & Penerimaan <span class="ph-badge-soon">Segera</span></a>
+
+    <div class="ph-group-title">Pengadaan & Laporan</div>
+    <a class="ph-nav-link disabled"><span class="ico">📑</span> LPLPO <span class="ph-badge-soon">Segera</span></a>
+    <a class="ph-nav-link disabled"><span class="ico">📈</span> Laporan <span class="ph-badge-soon">Segera</span></a>
+
+    <div class="ph-group-title">Modul Lain</div>
+    <a class="ph-nav-link crossapp" href="index.html"><span class="ico">🧾</span> Pendaftaran</a>
+    <a class="ph-nav-link crossapp" href="rekam-medis.html"><span class="ico">🩺</span> Rekam Medis</a>
+    <a class="ph-nav-link crossapp" href="pengaturan.html"><span class="ico">⚙️</span> Pengaturan</a>
   </aside>
 
   <div class="main-wrap">
 
-    <div class="topbar">
-      <h1>Apotek</h1>
-      <div class="user-info">
-        <span id="namaUser">Memuat...</span>
+    <div class="ph-topbar">
+      <div>
+        <h1>Dashboard Petugas Farmasi</h1>
+        <p>Ringkasan pelayanan dan informasi penting hari ini.</p>
+      </div>
+      <div class="ph-topbar-right">
+        <div class="ph-bell">🔔<span class="dot-count" id="phBellCount">0</span></div>
+        <div class="ph-user">
+          <strong id="namaUser">Memuat...</strong>
+        </div>
         <button onclick="logout()">Keluar</button>
       </div>
     </div>
 
     <div class="dash-content">
 
-  <div class="subtab-nav ph-subtab-nav">
-    <button id="subtabBtn-beranda" class="active" onclick="gantiSubtab('beranda')">🏠 Beranda</button>
-    <button id="subtabBtn-pelayanan" onclick="gantiSubtab('pelayanan')">💊 Pelayanan Obat & Resep</button>
-    <button id="subtabBtn-stok" onclick="gantiSubtab('stok')">📦 Stok & Inventaris</button>
-    <button id="subtabBtn-pengadaan" onclick="gantiSubtab('pengadaan')">📋 Pengadaan & Perencanaan</button>
-    <button id="subtabBtn-laporan" onclick="gantiSubtab('laporan')">📊 Laporan & Akuntabilitas</button>
-  </div>
-
   <div id="panelBeranda">
 
-  <div class="stat-grid">
-    <div class="stat-card">
-      <div class="label">Resep Menunggu</div>
-      <div class="value" id="statResepMenunggu">-</div>
+  <div class="ph-kpi-row">
+    <div class="ph-kpi-card">
+      <div class="ph-kpi-icon blue">📄</div>
+      <div>
+        <div class="ph-kpi-value" id="statResepMenunggu">-</div>
+        <div class="ph-kpi-label">Resep Masuk Hari Ini</div>
+      </div>
     </div>
-    <div class="stat-card">
-      <div class="label">Resep Sebagian Diserahkan</div>
-      <div class="value" id="statResepDisiapkan">-</div>
+    <div class="ph-kpi-card">
+      <div class="ph-kpi-icon amber">⏳</div>
+      <div>
+        <div class="ph-kpi-value" id="statResepDisiapkan">-</div>
+        <div class="ph-kpi-label">Sedang Diproses (Sebagian)</div>
+      </div>
     </div>
-    <div class="stat-card">
-      <div class="label">Resep Diserahkan Hari Ini</div>
-      <div class="value" id="statResepDiserahkan">-</div>
+    <div class="ph-kpi-card">
+      <div class="ph-kpi-icon green">✅</div>
+      <div>
+        <div class="ph-kpi-value" id="statResepDiserahkan">-</div>
+        <div class="ph-kpi-label">Selesai Diserahkan Hari Ini</div>
+      </div>
     </div>
   </div>
 
-  <div class="dash-grid-2col">
+  <div class="ph-grid-3">
 
-    <div class="card alert-card warn">
+    <div class="ph-card">
       <h2>Notifikasi Stok Alert</h2>
-      <div id="alertStok">
-        <div class="alert-row">Memuat...</div>
+      <div id="alertStok"><div class="ph-notif-row">Memuat...</div></div>
+    </div>
+
+    <div class="ph-card">
+      <h2>Menu Cepat</h2>
+      <div class="ph-quick-grid">
+        <div class="ph-quick-tile" onclick="gantiSubtab('pelayanan')"><span class="ico">📋</span>Verifikasi Resep</div>
+        <div class="ph-quick-tile" onclick="gantiSubtab('stok')"><span class="ico">💊</span>Master Data Obat</div>
+        <div class="ph-quick-tile" onclick="gantiSubtab('stok'); setTimeout(()=>document.getElementById('ksObatSelect').focus(),50)"><span class="ico">📊</span>Kartu Stok</div>
+        <div class="ph-quick-tile disabled"><span class="ico">🧾</span>LPLPO</div>
+        <div class="ph-quick-tile disabled"><span class="ico">📦</span>Stok Opname</div>
+        <div class="ph-quick-tile disabled"><span class="ico">🚚</span>Penerimaan Obat</div>
+        <div class="ph-quick-tile disabled"><span class="ico">🧪</span>Racikan Obat</div>
+        <div class="ph-quick-tile disabled"><span class="ico">📈</span>Laporan</div>
       </div>
     </div>
 
-    <div class="card">
-      <h2>Menu Cepat</h2>
-      <div class="quick-grid">
-        <button class="quick-btn" onclick="gantiSubtab('pelayanan')">📋 Verifikasi & Siapkan Resep</button>
-        <button class="quick-btn" onclick="gantiSubtab('pelayanan'); document.getElementById('ph-manual-resep')?.scrollIntoView({behavior:'smooth'});">📝 Entri Resep Manual</button>
-        <button class="quick-btn" onclick="gantiSubtab('stok')">💊 Tambah / Update Stok Obat</button>
-        <button class="quick-btn" onclick="gantiSubtab('stok'); document.getElementById('ksObatSelect').focus();">📊 Lihat Kartu Stok</button>
-        <button class="quick-btn" onclick="gantiSubtab('stok'); document.getElementById('tabelObat').scrollIntoView({behavior:'smooth'});">📄 Master Obat & BMHP</button>
-        <button class="quick-btn" onclick="gantiSubtab('pengadaan')">📦 LPLPO & RKO</button>
-        <button class="quick-btn" onclick="gantiSubtab('laporan')">📈 Laporan Farmasi</button>
+    <div class="ph-card ph-chart-card">
+      <h2>Ringkasan Resep Diserahkan (7 Hari Terakhir)</h2>
+      <canvas id="chartRingkasan"></canvas>
+      <div class="ph-info-grid" style="margin-top:12px;">
+        <div class="ph-info-row"><span>Total resep diserahkan</span><span id="ringkasanTotal">-</span></div>
+        <div class="ph-info-row"><span>BPJS</span><span id="ringkasanBpjs">-</span></div>
+        <div class="ph-info-row"><span>Non-BPJS</span><span id="ringkasanNonBpjs">-</span></div>
       </div>
     </div>
 
   </div>
 
-  <div class="card">
-    <h2>Stok Hampir Kedaluwarsa (≤ 90 hari)</h2>
+  <div class="ph-card" style="margin-bottom:16px;">
+    <h2>Ringkasan Stok Kritis</h2>
     <table>
       <thead>
         <tr>
+          <th>No</th>
           <th>Nama Obat</th>
-          <th>Batch / No. Lot</th>
-          <th>Tgl Expired</th>
           <th>Sisa Stok</th>
-          <th>Satuan</th>
+          <th>Bentuk</th>
+          <th>Status</th>
+          <th>Tgl Expired</th>
         </tr>
       </thead>
-      <tbody id="tabelExpSoon">
-        <tr><td colspan="5">Memuat...</td></tr>
+      <tbody id="tabelStokKritis">
+        <tr><td colspan="6">Memuat...</td></tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="ph-grid-3" style="grid-template-columns: 1.3fr 1fr 1fr;">
+
+    <div class="ph-card ph-chart-card">
+      <h2>Grafik Pemakaian Obat — Top 5 (30 Hari Terakhir)</h2>
+      <canvas id="chartPemakaian"></canvas>
+    </div>
+
+    <div class="ph-card">
+      <h2>Persentase Obat Generik</h2>
+      <div class="ph-donut-wrap">
+        <canvas id="chartGenerik"></canvas>
+        <div class="ph-donut-legend">
+          <div class="row"><span class="sw" style="background:#0f7a5c"></span> Generik <strong id="legGenerik">-</strong></div>
+          <div class="row"><span class="sw" style="background:#f5b93d"></span> Non Generik <strong id="legNonGenerik">-</strong></div>
+        </div>
+      </div>
+      <p style="font-size:11px; color:#9ca3af; margin-top:10px;">Dihitung dari jumlah item obat di master data, bukan volume transaksi.</p>
+    </div>
+
+    <div class="ph-card">
+      <h2>Informasi Sistem</h2>
+      <div class="ph-info-grid">
+        <div class="ph-info-row"><span>Metode Stok</span><span>FEFO</span></div>
+        <div class="ph-info-row"><span>Tanggal Sistem</span><span id="infoTanggal">-</span></div>
+        <div class="ph-info-row"><span>Total Item Obat</span><span id="infoTotalObat">-</span></div>
+        <div class="ph-info-row"><span>User Login</span><span id="infoUser">-</span></div>
+      </div>
+    </div>
+
   </div>
 
   </div>
@@ -380,66 +297,6 @@
     </table>
   </div>
 
-    <div class="ph-module-grid">
-      <div class="card ph-module-card" id="ph-manual-resep">
-        <div class="ph-module-icon">📝</div>
-        <h2>Entri Resep Manual</h2>
-        <p>Digunakan bila resep fisik atau resep dari luar perlu dicatat ke SIMPUS. Form ini merupakan antarmuka input; penyimpanan ke struktur resep perlu disesuaikan dengan skema database yang sudah ada.</p>
-        <div class="grid-2">
-          <div>
-            <label>No. Kunjungan</label>
-            <input id="phManualKunjungan" type="text" placeholder="Contoh: KJ-2026-0001">
-          </div>
-          <div>
-            <label>Nama Pasien</label>
-            <input id="phManualPasien" type="text" placeholder="Nama pasien">
-          </div>
-        </div>
-        <div class="grid-2">
-          <div>
-            <label>Dokter / Pemberi Resep</label>
-            <input id="phManualDokter" type="text" placeholder="Nama dokter">
-          </div>
-          <div>
-            <label>Catatan</label>
-            <input id="phManualCatatan" type="text" placeholder="Catatan resep">
-          </div>
-        </div>
-        <div class="ph-note">ℹ️ Modul ini sengaja tidak mengubah database agar struktur tabel <code>resep</code> yang sudah berjalan tetap aman.</div>
-      </div>
-
-      <div class="card ph-module-card">
-        <div class="ph-module-icon">🧪</div>
-        <h2>Skrining & Racikan Obat</h2>
-        <p>Area kerja petugas untuk memeriksa nama obat, dosis, aturan pakai, rute, dan komponen racikan sebelum dispensing.</p>
-        <div class="ph-checklist">
-          <label><input type="checkbox"> Identitas pasien sesuai</label>
-          <label><input type="checkbox"> Nama obat & dosis sesuai</label>
-          <label><input type="checkbox"> Aturan pakai diperiksa</label>
-          <label><input type="checkbox"> Rute pemberian diperiksa</label>
-          <label><input type="checkbox"> Komponen racikan diperiksa</label>
-          <label><input type="checkbox"> Potensi duplikasi / alergi diperiksa</label>
-        </div>
-        <button class="btn-primary" type="button" onclick="pharmacyToast('Checklist skrining tersimpan di layar kerja ini. Integrasi penyimpanan mengikuti struktur resep yang sudah ada.')">Selesaikan Skrining</button>
-      </div>
-    </div>
-
-    <div class="card ph-dispensing-card">
-      <div class="ph-section-title">
-        <div>
-          <h2>Dispensing & Etiket</h2>
-          <p>Gunakan antrean resep di atas untuk melakukan penyerahan obat. Template etiket dapat digunakan sebagai dasar pengembangan cetak.</p>
-        </div>
-        <button class="btn-outline" type="button" onclick="pharmacyToast('Fitur cetak etiket siap ditambahkan setelah format etiket Puskesmas ditetapkan.')">🖨️ Template Etiket</button>
-      </div>
-      <div class="ph-etiket-preview">
-        <div class="ph-etiket-head">UPTD PUSKESMAS BEKAWAN</div>
-        <div>Nama Pasien: <strong>—</strong></div>
-        <div>Obat: <strong>—</strong></div>
-        <div>Aturan Pakai: <strong>—</strong></div>
-        <div class="ph-etiket-rule">Gunakan sesuai aturan pakai.</div>
-      </div>
-    </div>
   </div>
   <!-- /panelPelayanan -->
 
@@ -582,81 +439,6 @@
   </div>
   <!-- /panelStok -->
 
-  <div id="panelPengadaan" style="display:none;">
-    <div class="ph-module-grid">
-      <div class="card ph-module-card">
-        <div class="ph-module-icon">📋</div>
-        <h2>LPLPO</h2>
-        <p>Laporan Pemakaian dan Lembar Permintaan Obat. Tampilan awal untuk menyiapkan periode laporan dan data yang akan direkap.</p>
-        <div class="grid-2">
-          <div>
-            <label>Periode</label>
-            <input type="month" id="phLplpoPeriode">
-          </div>
-          <div>
-            <label>Tujuan</label>
-            <input type="text" value="Dinas Kesehatan Kabupaten/Kota" readonly>
-          </div>
-        </div>
-        <button class="btn-primary" type="button" onclick="pharmacyToast('Rekap LPLPO belum ditulis ke database karena struktur tabel LPLPO belum tersedia di file ini.')">Siapkan LPLPO</button>
-      </div>
-
-      <div class="card ph-module-card">
-        <div class="ph-module-icon">📈</div>
-        <h2>RKO</h2>
-        <p>Rencana Kebutuhan Obat. Area perencanaan berbasis pemakaian dan stok yang tersedia.</p>
-        <div class="ph-kpi-row">
-          <div><strong id="phRkoItemCount">—</strong><span>Item obat</span></div>
-          <div><strong id="phRkoLowCount">—</strong><span>Stok minimum</span></div>
-          <div><strong id="phRkoExpCount">—</strong><span>Exp ≤ 90 hari</span></div>
-        </div>
-        <button class="btn-outline" type="button" onclick="pharmacyRefreshPlanning()">🔄 Hitung dari stok saat ini</button>
-      </div>
-    </div>
-
-    <div class="card ph-module-card">
-      <h2>Mutasi & Penerimaan Obat</h2>
-      <div class="ph-info-grid">
-        <div><strong>📥 Penerimaan</strong><span>Persiapan penerimaan dari Dinas Kesehatan / pengadaan.</span></div>
-        <div><strong>📤 Distribusi Internal</strong><span>Persiapan distribusi ke sub-unit seperti Pustu/Poskesdes.</span></div>
-        <div><strong>🔁 Mutasi</strong><span>Pergerakan stok antar unit/batch perlu dicatat pada kartu stok.</span></div>
-      </div>
-      <div class="ph-note">ℹ️ Fitur mutasi belum mengubah database pada versi ini karena struktur tabel mutasi/penerimaan belum terlihat pada <code>apotek.html</code>.</div>
-    </div>
-  </div>
-  <!-- /panelPengadaan -->
-
-  <div id="panelLaporan" style="display:none;">
-    <div class="ph-report-grid">
-      <div class="card ph-report-card">
-        <span class="ph-report-icon">🧾</span>
-        <h2>Laporan Pelayanan</h2>
-        <p>Rekap resep menunggu, sebagian diserahkan, dan diserahkan berdasarkan data resep yang sudah digunakan oleh modul ini.</p>
-        <button class="btn-primary" type="button" onclick="pharmacyLoadReport()">Tampilkan Ringkasan</button>
-      </div>
-      <div class="card ph-report-card">
-        <span class="ph-report-icon">💊</span>
-        <h2>Generik & Formularium</h2>
-        <p>Master obat sudah memiliki field <code>nama_generik</code>; persentase penggunaan dapat dikembangkan dari transaksi dispensing.</p>
-        <button class="btn-outline" type="button" onclick="pharmacyToast('Field obat generik sudah tersedia. Perhitungan kepatuhan formularium membutuhkan sumber data formularium.')">Lihat Status</button>
-      </div>
-      <div class="card ph-report-card">
-        <span class="ph-report-icon">🔐</span>
-        <h2>Narkotika & Psikotropika</h2>
-        <p>Kategori obat sudah tersedia pada master obat. Laporan khusus perlu disambungkan ke struktur transaksi yang berlaku.</p>
-        <button class="btn-outline" type="button" onclick="pharmacyToast('Kategori Narkotika dan Psikotropika sudah tersedia pada master obat.')">Lihat Kategori</button>
-      </div>
-    </div>
-
-    <div class="card ph-report-summary">
-      <h2>Ringkasan Farmasi</h2>
-      <div id="phReportResult" class="ph-report-result">
-        Klik <strong>Tampilkan Ringkasan</strong> untuk mengambil angka dari data yang sudah tersedia.
-      </div>
-    </div>
-  </div>
-  <!-- /panelLaporan -->
-
     </div>
 
   </div>
@@ -666,6 +448,7 @@
 <script src="js/supabaseClient.js"></script>
 <script>
 let profilSaya = null;
+let chartRingkasan = null, chartPemakaian = null, chartGenerik = null;
 
 (async () => {
   const session = await wajibLogin();
@@ -673,10 +456,11 @@ let profilSaya = null;
 
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "apotek.html");
-  sesuaikanTabNav(profilSaya);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+    document.getElementById("infoUser").textContent = `${profilSaya.nama}`;
   }
+  document.getElementById("infoTanggal").textContent = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
   await muatResepMenunggu();
   await muatDaftarObat();
@@ -685,66 +469,11 @@ let profilSaya = null;
 
 // ---------- Sub-tab Beranda / Pelayanan / Stok ----------
 function gantiSubtab(tab) {
-  const tabs = ["beranda", "pelayanan", "stok", "pengadaan", "laporan"];
-  tabs.forEach(t => {
-    const panel = document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1));
-    const button = document.getElementById("subtabBtn-" + t);
-    if (panel) panel.style.display = (t === tab) ? "block" : "none";
-    if (button) button.classList.toggle("active", t === tab);
+  ["beranda", "pelayanan", "stok"].forEach(t => {
+    document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? "block" : "none";
+    const nav = document.getElementById("nav" + t.charAt(0).toUpperCase() + t.slice(1));
+    if (nav) nav.classList.toggle("active", t === tab);
   });
-
-  if (tab === "pengadaan") pharmacyRefreshPlanning();
-}
-
-// ---------- Beranda: statistik resep hari ini + notifikasi stok ----------
-async function muatDashboardApotek() {
-  const awalHariIni = new Date(); awalHariIni.setHours(0, 0, 0, 0);
-
-  const [menunggu, sebagian, diserahkan] = await Promise.all([
-    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "menunggu"),
-    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "sebagian"),
-    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "diserahkan").gte("diserahkan_at", awalHariIni.toISOString())
-  ]);
-  document.getElementById("statResepMenunggu").textContent = menunggu.count ?? 0;
-  document.getElementById("statResepDisiapkan").textContent = sebagian.count ?? 0;
-  document.getElementById("statResepDiserahkan").textContent = diserahkan.count ?? 0;
-
-  const { data: semuaObat, error } = await supabaseClient.from("obat").select("*");
-  const alertBox = document.getElementById("alertStok");
-  const tbodyExp = document.getElementById("tabelExpSoon");
-
-  if (error || !semuaObat) {
-    alertBox.innerHTML = `<div class="alert-row">Gagal muat data stok.</div>`;
-    tbodyExp.innerHTML = `<tr><td colspan="5">Gagal muat data.</td></tr>`;
-    return;
-  }
-
-  const today = new Date().toISOString().split("T")[0];
-  const dalam90Hari = new Date(); dalam90Hari.setDate(dalam90Hari.getDate() + 90);
-  const dalam90HariStr = dalam90Hari.toISOString().split("T")[0];
-
-  const stokKosong = semuaObat.filter(o => o.stok === 0);
-  const stokMinimum = semuaObat.filter(o => o.stok > 0 && o.stok <= (o.stok_minimum ?? 10));
-  const akanExpired = semuaObat.filter(o => o.exp_date && o.exp_date >= today && o.exp_date <= dalam90HariStr);
-
-  const baris = [];
-  if (stokMinimum.length) baris.push(`<div class="alert-row"><span class="icon">⚠️</span><div><strong>${stokMinimum.length} item</strong>Stok minimum</div></div>`);
-  if (akanExpired.length) baris.push(`<div class="alert-row"><span class="icon">⚠️</span><div><strong>${akanExpired.length} item</strong>Akan expired ≤ 3 bulan</div></div>`);
-  if (stokKosong.length) baris.push(`<div class="alert-row"><span class="icon">🔴</span><div><strong>${stokKosong.length} item</strong>Stok kosong</div></div>`);
-  alertBox.innerHTML = baris.length ? baris.join("") : `<div class="alert-row">Tidak ada peringatan stok saat ini.</div>`;
-
-  const expSoonSorted = akanExpired.sort((a, b) => a.exp_date.localeCompare(b.exp_date)).slice(0, 10);
-  tbodyExp.innerHTML = expSoonSorted.length
-    ? expSoonSorted.map(o => `
-        <tr>
-          <td>${o.nama_obat} ${o.dosis || ""}</td>
-          <td>${o.no_lot || "-"}</td>
-          <td>${new Date(o.exp_date).toLocaleDateString("id-ID")}</td>
-          <td>${o.stok}</td>
-          <td>${o.satuan}</td>
-        </tr>
-      `).join("")
-    : `<tr><td colspan="5">Tidak ada obat yang mendekati expired dalam 90 hari.</td></tr>`;
 }
 
 const LABEL_KATEGORI = {
@@ -763,6 +492,197 @@ async function catatKartuStok(obatId, jenis, jumlah, saldoSetelah, referensi, ke
     referensi,
     keterangan,
     petugas_id: profilSaya.id
+  });
+}
+
+// ---------- Beranda: KPI, notifikasi stok, grafik, info sistem ----------
+async function muatDashboardApotek() {
+  const awalHariIni = new Date(); awalHariIni.setHours(0, 0, 0, 0);
+
+  const [masukHariIni, sebagian, diserahkanHariIni] = await Promise.all([
+    supabaseClient.from("resep").select("id", { count: "exact", head: true }).gte("created_at", awalHariIni.toISOString()),
+    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "sebagian"),
+    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "diserahkan").gte("diserahkan_at", awalHariIni.toISOString())
+  ]);
+  document.getElementById("statResepMenunggu").textContent = masukHariIni.count ?? 0;
+  document.getElementById("statResepDisiapkan").textContent = sebagian.count ?? 0;
+  document.getElementById("statResepDiserahkan").textContent = diserahkanHariIni.count ?? 0;
+  document.getElementById("phBellCount").textContent = (sebagian.count ?? 0);
+
+  const { data: semuaObat, error } = await supabaseClient.from("obat").select("*");
+  const alertBox = document.getElementById("alertStok");
+  const tbodyKritis = document.getElementById("tabelStokKritis");
+
+  if (error || !semuaObat) {
+    alertBox.innerHTML = `<div class="ph-notif-row">Gagal muat data stok.</div>`;
+    tbodyKritis.innerHTML = `<tr><td colspan="6">Gagal muat data.</td></tr>`;
+    return;
+  }
+
+  document.getElementById("infoTotalObat").textContent = semuaObat.length;
+
+  const today = new Date().toISOString().split("T")[0];
+  const dalam30Hari = new Date(); dalam30Hari.setDate(dalam30Hari.getDate() + 30);
+  const dalam30HariStr = dalam30Hari.toISOString().split("T")[0];
+
+  const stokMinimum = semuaObat.filter(o => o.stok <= (o.stok_minimum ?? 10));
+  const akanExpired = semuaObat.filter(o => o.exp_date && o.exp_date >= today && o.exp_date <= dalam30HariStr);
+
+  alertBox.innerHTML = `
+    <div class="ph-notif-row danger">
+      <span class="ico">⚠️</span>
+      <div><strong>${stokMinimum.length}</strong><div class="sub">Obat Stok Minimum</div></div>
+      <a onclick="document.getElementById('tabelStokKritis').scrollIntoView({behavior:'smooth'})">Lihat daftar →</a>
+    </div>
+    <div class="ph-notif-row warn">
+      <span class="ico">⚠️</span>
+      <div><strong>${akanExpired.length}</strong><div class="sub">Obat Mendekati Expired (30 hari)</div></div>
+      <a onclick="document.getElementById('tabelStokKritis').scrollIntoView({behavior:'smooth'})">Lihat daftar →</a>
+    </div>
+  `;
+
+  // Gabung stok minimum + mendekati expired jadi satu tabel ringkasan, expired duluan.
+  const gabungan = [...new Map([...akanExpired, ...stokMinimum].map(o => [o.id, o])).values()]
+    .sort((a, b) => (a.exp_date || "9999").localeCompare(b.exp_date || "9999"))
+    .slice(0, 10);
+
+  tbodyKritis.innerHTML = gabungan.length
+    ? gabungan.map((o, i) => {
+        const statusBadges = [];
+        if (o.stok <= (o.stok_minimum ?? 10)) statusBadges.push(`<span class="badge badge-batal">Stok Minimum</span>`);
+        if (o.exp_date && o.exp_date >= today && o.exp_date <= dalam30HariStr) statusBadges.push(`<span class="badge badge-menunggu">Mendekati Expired</span>`);
+        return `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${o.nama_obat} ${o.dosis || ""}</td>
+          <td>${o.stok}</td>
+          <td>${o.bentuk_sediaan || o.satuan || "-"}</td>
+          <td>${statusBadges.join(" ")}</td>
+          <td>${o.exp_date ? new Date(o.exp_date).toLocaleDateString("id-ID") : "-"}</td>
+        </tr>
+      `;
+      }).join("")
+    : `<tr><td colspan="6">Tidak ada stok kritis saat ini.</td></tr>`;
+
+  await muatRingkasanResep();
+  await muatGrafikPemakaian();
+  muatDonutGenerik(semuaObat);
+}
+
+// Line chart: jumlah resep diserahkan per hari, 7 hari terakhir + split BPJS/Non-BPJS.
+async function muatRingkasanResep() {
+  const tujuhHariLalu = new Date(); tujuhHariLalu.setDate(tujuhHariLalu.getDate() - 6); tujuhHariLalu.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabaseClient
+    .from("resep")
+    .select("diserahkan_at, kunjungan(pasien(status_bpjs))")
+    .eq("status", "diserahkan")
+    .gte("diserahkan_at", tujuhHariLalu.toISOString());
+
+  const labels = [];
+  const counts = {};
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(tujuhHariLalu); d.setDate(d.getDate() + i);
+    const key = d.toISOString().split("T")[0];
+    labels.push(d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit" }));
+    counts[key] = 0;
+  }
+
+  let totalBpjs = 0, totalNonBpjs = 0;
+  if (!error && data) {
+    data.forEach(r => {
+      const key = r.diserahkan_at.split("T")[0];
+      if (key in counts) counts[key]++;
+      if (r.kunjungan?.pasien?.status_bpjs === "aktif") totalBpjs++; else totalNonBpjs++;
+    });
+  }
+
+  document.getElementById("ringkasanTotal").textContent = (data?.length ?? 0);
+  document.getElementById("ringkasanBpjs").textContent = totalBpjs;
+  document.getElementById("ringkasanNonBpjs").textContent = totalNonBpjs;
+
+  const ctx = document.getElementById("chartRingkasan");
+  if (chartRingkasan) chartRingkasan.destroy();
+  chartRingkasan = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Resep Diserahkan",
+        data: Object.values(counts),
+        borderColor: "#0f7a5c",
+        backgroundColor: "rgba(15,122,92,0.1)",
+        tension: 0.35,
+        fill: true,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+}
+
+// Bar chart: top 5 obat paling banyak keluar (kartu_stok jenis=keluar), 30 hari terakhir.
+async function muatGrafikPemakaian() {
+  const tigapuluhHariLalu = new Date(); tigapuluhHariLalu.setDate(tigapuluhHariLalu.getDate() - 30);
+
+  const { data, error } = await supabaseClient
+    .from("kartu_stok")
+    .select("jumlah, obat(nama_obat)")
+    .eq("jenis", "keluar")
+    .gte("tanggal", tigapuluhHariLalu.toISOString());
+
+  const totals = {};
+  if (!error && data) {
+    data.forEach(row => {
+      const nama = row.obat?.nama_obat || "Lainnya";
+      totals[nama] = (totals[nama] || 0) + row.jumlah;
+    });
+  }
+
+  const top5 = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  const ctx = document.getElementById("chartPemakaian");
+  if (chartPemakaian) chartPemakaian.destroy();
+  chartPemakaian = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: top5.length ? top5.map(t => t[0]) : ["Belum ada data"],
+      datasets: [{
+        label: "Jumlah Keluar",
+        data: top5.length ? top5.map(t => t[1]) : [0],
+        backgroundColor: "#0f7a5c",
+        borderRadius: 6
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+}
+
+// Donut: persentase obat generik vs non-generik, dihitung dari jumlah item master data.
+function muatDonutGenerik(semuaObat) {
+  const generik = semuaObat.filter(o => o.nama_generik).length;
+  const nonGenerik = semuaObat.length - generik;
+  const totalItem = semuaObat.length || 1;
+  const pctGenerik = Math.round((generik / totalItem) * 100);
+
+  document.getElementById("legGenerik").textContent = `${pctGenerik}% (${generik})`;
+  document.getElementById("legNonGenerik").textContent = `${100 - pctGenerik}% (${nonGenerik})`;
+
+  const ctx = document.getElementById("chartGenerik");
+  if (chartGenerik) chartGenerik.destroy();
+  chartGenerik = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Generik", "Non Generik"],
+      datasets: [{ data: [generik, nonGenerik], backgroundColor: ["#0f7a5c", "#f5b93d"], borderWidth: 0 }]
+    },
+    options: { plugins: { legend: { display: false } }, cutout: "70%" }
   });
 }
 
@@ -953,7 +873,6 @@ async function simpanObat() {
   document.getElementById("oKeterangan").value = "";
   await muatDaftarObat();
 }
-
 async function muatResepMenunggu() {
   const tbody = document.getElementById("tabelResepMenunggu");
 
@@ -1102,52 +1021,6 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, checkboxEl) {
 
   await muatResepMenunggu();
   await muatDaftarObat();
-}
-
-function pharmacyToast(message) {
-  const box = document.getElementById("msgResep") || document.getElementById("msgObat");
-  if (box) {
-    box.innerHTML = `<div class="msg msg-success">${message}</div>`;
-    setTimeout(() => { box.innerHTML = ""; }, 5000);
-  } else {
-    alert(message);
-  }
-}
-
-async function pharmacyRefreshPlanning() {
-  const { data, error } = await supabaseClient.from("obat").select("stok, stok_minimum, exp_date");
-  if (error || !data) return;
-
-  const today = new Date();
-  const limit = new Date();
-  limit.setDate(limit.getDate() + 90);
-  const low = data.filter(o => Number(o.stok || 0) <= Number(o.stok_minimum ?? 10)).length;
-  const exp = data.filter(o => o.exp_date && new Date(o.exp_date) >= today && new Date(o.exp_date) <= limit).length;
-
-  const a = document.getElementById("phRkoItemCount");
-  const b = document.getElementById("phRkoLowCount");
-  const c = document.getElementById("phRkoExpCount");
-  if (a) a.textContent = data.length;
-  if (b) b.textContent = low;
-  if (c) c.textContent = exp;
-}
-
-async function pharmacyLoadReport() {
-  const result = document.getElementById("phReportResult");
-  if (!result) return;
-  result.innerHTML = "Memuat ringkasan...";
-
-  const [menunggu, sebagian, diserahkan] = await Promise.all([
-    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "menunggu"),
-    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "sebagian"),
-    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "diserahkan")
-  ]);
-
-  result.innerHTML = `
-    <div class="ph-report-number"><strong>${menunggu.count ?? 0}</strong><span>Menunggu</span></div>
-    <div class="ph-report-number"><strong>${sebagian.count ?? 0}</strong><span>Sebagian</span></div>
-    <div class="ph-report-number"><strong>${diserahkan.count ?? 0}</strong><span>Diserahkan</span></div>
-  `;
 }
 
 </script>
