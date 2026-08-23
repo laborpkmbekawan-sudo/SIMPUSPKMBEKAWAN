@@ -307,6 +307,54 @@ create policy "authenticated_read_hak_akses" on hak_akses for select to authenti
 -- gak bisa langsung ubah akses lewat REST API biasa.
 
 -- ============================================================
+-- 15. SINKRONISASI: kolom obat yang sudah dipakai di apotek.html
+--     tapi belum pernah tercatat di schema.sql ini (deployed duluan
+--     langsung lewat SQL Editor). Aman diulang.
+-- ============================================================
+alter table obat add column if not exists dosis text;
+alter table obat add column if not exists merk text;
+alter table obat add column if not exists no_lot text;
+alter table obat add column if not exists exp_date date;
+
+create index if not exists idx_obat_exp on obat(exp_date);
+
+-- ============================================================
+-- 16. MODUL APOTEK — FASE 1: kategori obat, stok minimum,
+--     Kartu Stok Digital (riwayat keluar-masuk per batch obat)
+-- ============================================================
+
+-- Kategori obat (buat laporan Narkotika/Psikotropika/SIPNAP nanti)
+-- dan ambang stok minimum buat notifikasi alert.
+alter table obat add column if not exists kategori text
+  default 'bebas' check (kategori in ('narkotika','psikotropika','keras','bebas_terbatas','bebas'));
+alter table obat add column if not exists bentuk_sediaan text;
+alter table obat add column if not exists harga numeric(12,2);
+alter table obat add column if not exists stok_minimum int not null default 10;
+alter table obat add column if not exists nama_generik boolean not null default true;
+
+-- Kartu Stok: setiap mutasi stok (masuk/keluar/opname/mutasi) tercatat
+-- di sini, gak cuma update angka stok di tabel obat. Ini dasar buat
+-- LPLPO, laporan, dan audit FEFO/FIFO nanti.
+create table if not exists kartu_stok (
+  id uuid primary key default gen_random_uuid(),
+  obat_id uuid not null references obat(id) on delete cascade,
+  tanggal date not null default current_date,
+  jenis text not null check (jenis in ('masuk','keluar','opname_tambah','opname_kurang','mutasi_keluar','mutasi_masuk')),
+  jumlah int not null,               -- selalu positif, arah ditentukan oleh "jenis"
+  saldo_setelah int not null,        -- sisa stok batch ini setelah mutasi
+  referensi text,                    -- no. resep / no. LPLPO / "Stok opname" / tujuan mutasi, dll
+  keterangan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kartu_stok_obat on kartu_stok(obat_id);
+create index if not exists idx_kartu_stok_tanggal on kartu_stok(tanggal);
+
+alter table kartu_stok enable row level security;
+create policy "authenticated_all_kartu_stok" on kartu_stok for all to authenticated using (true) with check (true);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
