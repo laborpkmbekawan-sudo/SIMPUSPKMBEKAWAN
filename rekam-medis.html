@@ -23,6 +23,7 @@
     <a href="index.html">Pendaftaran</a>
     <a href="rekam-medis.html" class="active">Rekam Medis</a>
     <a href="apotek.html">Apotek</a>
+    <a href="pengaturan.html">Pengaturan</a>
   </div>
 
   <div class="card">
@@ -347,14 +348,25 @@ async function muatAntrian() {
     .in("status", ["menunggu", "dipanggil", "diperiksa"])
     .order("no_antrian");
 
-  // Dokter/perawat/bidan cuma lihat antrian di klaster/poli tempat mereka ditugaskan.
+  // Dokter/perawat/bidan cuma lihat antrian di klaster/poli tempat mereka ditugaskan
+  // (klaster utama + klaster tambahan di pegawai_klaster).
+  // Kapus/KTU/Bendahara BOK dkk bisa dapat akses lintas klaster lewat hak_akses
+  // modul "rekam_medis" (klaster_id null di situ = semua klaster).
   // Admin lihat semua klaster.
   if (profilSaya.role !== "admin") {
-    if (!profilSaya.klaster_id) {
-      tbody.innerHTML = `<tr><td colspan="7">Akun kamu belum diatur klaster/poli-nya. Hubungi admin.</td></tr>`;
-      return;
+    const hakRM = (profilSaya.hakAksesPeta || {})["rekam_medis"] || [];
+    const semuaKlaster = hakRM.some(h => h.klaster_id === null);
+
+    if (!semuaKlaster) {
+      const klasterIds = new Set(profilSaya.klasterIds || []);
+      hakRM.forEach(h => { if (h.klaster_id) klasterIds.add(h.klaster_id); });
+
+      if (!klasterIds.size) {
+        tbody.innerHTML = `<tr><td colspan="7">Akun kamu belum diatur klaster/poli-nya. Hubungi admin.</td></tr>`;
+        return;
+      }
+      query = query.in("klaster_id", Array.from(klasterIds));
     }
-    query = query.eq("klaster_id", profilSaya.klaster_id);
   }
 
   const { data, error } = await query;
@@ -369,7 +381,13 @@ async function muatAntrian() {
     return;
   }
 
-  tbody.innerHTML = data.map(k => `
+  tbody.innerHTML = data.map(k => {
+    const bisa = bisaLayani(profilSaya, k.klaster_id);
+    const kJson = JSON.stringify(k).replace(/'/g, "&#39;");
+    const tombol = bisa
+      ? `<button class="btn-primary" onclick='bukaFormRM(${kJson}, true)'>Periksa</button>`
+      : `<button class="btn-secondary" onclick='bukaFormRM(${kJson}, false)'>Lihat</button>`;
+    return `
     <tr>
       <td>${k.no_antrian}</td>
       <td>${k.pasien?.nama || "-"}</td>
@@ -377,14 +395,32 @@ async function muatAntrian() {
       <td>${k.klaster?.kode || "-"}</td>
       <td>${k.keluhan_awal || "-"}</td>
       <td><span class="badge badge-${k.status}">${k.status}</span></td>
-      <td><button class="btn-primary" onclick='bukaFormRM(${JSON.stringify(k).replace(/'/g, "&#39;")})'>Periksa</button></td>
+      <td>${tombol}</td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
 }
 
-function bukaFormRM(kunjungan) {
+// Cek apakah profil ini bisa MENGISI rekam medis (bukan cuma lihat) di klaster
+// tempat pasien ini terdaftar. Dokter/perawat/bidan yang klaster-nya cocok:
+// otomatis bisa. Selain itu, cek hak_akses granular (level "layani"/"penuh").
+function bisaLayani(profil, klasterId) {
+  if (profil.role === "admin") return true;
+
+  if (["dokter", "perawat", "bidan"].includes(profil.role) &&
+      (profil.klasterIds || []).includes(klasterId)) {
+    return true;
+  }
+
+  const hakRM = (profil.hakAksesPeta || {})["rekam_medis"] || [];
+  const cocok = hakRM.find(h => h.klaster_id === null || h.klaster_id === klasterId);
+  return !!cocok && (cocok.level === "layani" || cocok.level === "penuh");
+}
+
+function bukaFormRM(kunjungan, bisaIsi = true) {
   kunjunganAktif = kunjungan;
-  document.getElementById("namaPasienAktif").textContent = `${kunjungan.pasien.nama} (No. Antrian ${kunjungan.no_antrian})`;
+  document.getElementById("namaPasienAktif").textContent = `${kunjungan.pasien.nama} (No. Antrian ${kunjungan.no_antrian})` +
+    (bisaIsi ? "" : " — mode lihat saja");
   document.getElementById("cardFormRM").style.display = "block";
   document.getElementById("msgBox").innerHTML = "";
   document.getElementById("formRM").reset();
@@ -393,6 +429,13 @@ function bukaFormRM(kunjungan) {
   daftarObatResep = [];
   renderTabelResep();
   document.getElementById("resepSection").style.display = "none";
+
+  // Mode lihat saja: matikan semua input, sembunyikan tombol simpan
+  const form = document.getElementById("formRM");
+  form.querySelectorAll("input, textarea, select, button").forEach(el => {
+    el.disabled = !bisaIsi;
+  });
+  document.querySelector("#formRM button[type=submit]").style.display = bisaIsi ? "inline-block" : "none";
 
   document.getElementById("vitalDisplay").innerHTML = `
     TD: <strong>${kunjungan.tekanan_darah || "-"}</strong> &nbsp;|&nbsp;
@@ -424,6 +467,11 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
 
   if (!kunjunganAktif || !profilSaya) {
     msgBox.innerHTML = `<div class="msg msg-error">Data kunjungan atau petugas tidak ditemukan.</div>`;
+    return;
+  }
+
+  if (!bisaLayani(profilSaya, kunjunganAktif.klaster_id)) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma punya akses lihat di klaster ini, gak bisa isi rekam medis.</div>`;
     return;
   }
 

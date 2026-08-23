@@ -43,6 +43,12 @@ body {
 
 .card h2 { font-size: 16px; margin-bottom: 16px; color: #0f766e; }
 
+.info-block { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 4px 16px; }
+.info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+.info-row:last-child { border-bottom: none; }
+.info-row label { margin: 0; color: #6b7280; font-weight: 600; }
+.info-row span { font-weight: 600; color: #1f2937; }
+
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 
@@ -136,3 +142,108 @@ th { background: #f9fafb; font-weight: 600; color: #374151; font-size: 13px; }
 
 .login-box h1 { text-align: center; color: #0f766e; margin-bottom: 4px; font-size: 20px; }
 .login-box p.subtitle { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 4px; }
+
+/* Kartu cetak: hanya tampil saat print */
+.kartu-cetak { display: none; }
+.kartu-cetak h2 { text-align: center; font-size: 18px; }
+.kartu-cetak p.sub { text-align: center; font-size: 13px; margin-bottom: 10px; }
+.kartu-cetak .garis { border-top: 1px dashed #999; margin: 10px 0; }
+.kartu-cetak .baris { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
+.kartu-cetak .baris span:first-child { color: #555; }
+.kartu-cetak .baris span:last-child { font-weight: 600; }
+.kartu-cetak .antrian-besar { text-align: center; margin: 18px 0; border: 2px solid #0f766e; border-radius: 8px; padding: 10px; }
+.kartu-cetak .antrian-besar .label { font-size: 12px; color: #555; letter-spacing: 1px; }
+.kartu-cetak .antrian-besar .nomor { font-size: 48px; font-weight: 700; color: #0f766e; }
+.kartu-cetak .catatan { font-size: 12px; color: #666; text-align: center; margin-top: 10px; }
+
+/* ============================================================
+   LAYOUT LOKET PENDAFTARAN (sidebar + dashboard) — dipakai index.html
+   ============================================================ */
+.app-shell { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px 18px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 12px;
+}
+.sidebar .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: #0f766e; flex-shrink: 0; }
+.sidebar .brand strong { font-size: 13px; color: #0f766e; line-height: 1.3; display: block; }
+
+.sidebar nav a {
+  display: block;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+}
+.sidebar nav a:hover { background: #f9fafb; color: #0f766e; }
+.sidebar nav a.active { background: #f0fdfa; color: #0f766e; border-left-color: #0f766e; }
+
+.main-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.dash-content { max-width: 1400px; width: 100%; margin: 0 auto; padding: 20px 24px 40px; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.stat-card {
+  background: white;
+  border-radius: 10px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.stat-card .label { font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 6px; }
+.stat-card .value { font-size: 24px; font-weight: 700; color: #1f2937; }
+.stat-card .value small { font-size: 13px; font-weight: 600; color: #6b7280; }
+
+.dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 1000px) { .dash-grid { grid-template-columns: 1fr; } }
+
+.queue-panel { background: white; border-radius: 10px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
+.queue-panel .queue-label { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #6b7280; margin-bottom: 8px; }
+.queue-panel .queue-number { font-size: 52px; font-weight: 800; color: #0f766e; margin-bottom: 4px; }
+.queue-panel .queue-sub { font-size: 13px; color: #6b7280; margin-bottom: 18px; }
+.queue-panel .queue-actions { display: flex; gap: 8px; justify-content: center; }
+.queue-panel button.btn-skip { background: #fee2e2; color: #991b1b; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.queue-panel button.btn-skip:hover { background: #fecaca; }
+
+.side-panel { background: white; border-radius: 10px; padding: 18px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.side-panel h3 { font-size: 14px; color: #0f766e; margin-bottom: 12px; }
+
+.mini-bar-row { margin-bottom: 10px; }
+.mini-bar-row .mini-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: #374151; margin-bottom: 4px; }
+.mini-bar-row .mini-bar-track { background: #f3f4f6; border-radius: 999px; height: 8px; overflow: hidden; }
+.mini-bar-row .mini-bar-fill { background: #0f766e; height: 100%; border-radius: 999px; }
+.mini-bar-row .mini-bar-fill.alt { background: #38bdf8; }
+
+.staff-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; font-size: 13px; border-bottom: 1px solid #f3f4f6; }
+.staff-item:last-child { border-bottom: none; }
+.staff-item .staff-dot { width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; flex-shrink: 0; }
+.staff-item .staff-dot.online { background: #22c55e; }
+.staff-item .staff-name { flex: 1; font-weight: 600; color: #1f2937; }
+.staff-item .staff-status { font-size: 11px; color: #9ca3af; }
+
+@media print {
+  body * { visibility: hidden; }
+  .kartu-cetak, .kartu-cetak * { visibility: visible; }
+  .kartu-cetak {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 320px;
+    padding: 16px;
+  }
+}

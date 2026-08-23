@@ -9,21 +9,65 @@
 </head>
 <body>
 
-<div class="topbar">
-  <h1>SIMPUS UPTD PUSKESMAS BEKAWAN — Pendaftaran</h1>
-  <div class="user-info">
-    <span id="namaUser">Memuat...</span>
-    <button onclick="logout()">Keluar</button>
-  </div>
-</div>
+<div class="app-shell">
 
-<div class="container">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+    </div>
+    <nav>
+      <a href="index.html" class="active">Pendaftaran</a>
+      <a href="rekam-medis.html">Rekam Medis</a>
+      <a href="apotek.html">Apotek</a>
+      <a href="pengaturan.html">Pengaturan</a>
+    </nav>
+  </aside>
 
-  <div class="tab-nav">
-    <a href="index.html" class="active">Pendaftaran</a>
-    <a href="rekam-medis.html">Rekam Medis</a>
-    <a href="apotek.html">Apotek</a>
-  </div>
+  <div class="main-wrap">
+
+    <div class="topbar">
+      <h1>Loket Pendaftaran</h1>
+      <div class="user-info">
+        <span id="namaUser">Memuat...</span>
+        <button onclick="logout()">Keluar</button>
+      </div>
+    </div>
+
+    <div class="dash-content">
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="label">Antrian Loket Saat Ini</div>
+          <div class="value" id="statAntrianSaatIni">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total Kunjungan Hari Ini</div>
+          <div class="value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Pasien Baru / Lama</div>
+          <div class="value"><span id="statBaru">0</span> <small>baru</small> / <span id="statLama">0</span> <small>lama</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="label">BPJS / Umum</div>
+          <div class="value"><span id="statBpjs">0</span> <small>bpjs</small> / <span id="statUmum">0</span> <small>umum</small></div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="col-left">
+
+          <div class="queue-panel">
+            <div class="queue-label">NOMOR ANTRIAN DIPANGGIL</div>
+            <div class="queue-number" id="queueNumber">—</div>
+            <div class="queue-sub" id="queueSub">Belum ada antrian dipanggil</div>
+            <div class="queue-actions">
+              <button class="btn-primary" onclick="panggilAntrean()">Panggil</button>
+              <button class="btn-secondary" onclick="panggilUlang()">Panggil Ulang</button>
+              <button class="btn-skip" onclick="lewatiAntrean()">Lewati</button>
+            </div>
+          </div>
 
   <div class="card">
     <h2>Daftarkan Pasien</h2>
@@ -31,8 +75,8 @@
 
     <div class="grid-2">
       <div>
-        <label>Cari Pasien (NIK / No. RM / No. BPJS)</label>
-        <input type="text" id="cariNik" placeholder="Ketik NIK, No. RM, atau No. BPJS">
+        <label>Cari Pasien (NIK / No. RM / No. BPJS / Nama)</label>
+        <input type="text" id="cariNik" placeholder="Ketik NIK, No. RM, No. BPJS, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasien();}">
       </div>
       <div style="display:flex; align-items:flex-end;">
         <button class="btn-primary" onclick="cariPasien()" style="margin-bottom:12px;">Cari Pasien</button>
@@ -40,6 +84,7 @@
     </div>
 
     <div id="hasilCari"></div>
+    <div id="daftarHasilCari"></div>
 
     <form id="formPasienBaru" style="display:none; margin-top:16px; border-top:1px solid #e5e7eb; padding-top:16px;">
       <h2>Data Pasien Baru</h2>
@@ -91,6 +136,8 @@
           <input type="text" id="pNoKk">
         </div>
       </div>
+      <label>Nama Kepala Keluarga</label>
+      <input type="text" id="pNamaKk" placeholder="Sesuai KK">
       <label>Alamat Lengkap</label>
       <input type="text" id="pAlamat" placeholder="Jalan / dusun">
       <div class="grid-3">
@@ -99,12 +146,31 @@
           <input type="text" id="pRtRw">
         </div>
         <div>
+          <label>Dusun</label>
+          <input type="text" id="pDusun">
+        </div>
+        <div>
           <label>Desa/Kelurahan</label>
           <input type="text" id="pDesa">
         </div>
+      </div>
+      <div class="grid-2">
         <div>
           <label>Kecamatan</label>
           <input type="text" id="pKecamatan">
+        </div>
+        <div>
+          <label>Pendidikan</label>
+          <select id="pPendidikan">
+            <option value="">-- Pilih --</option>
+            <option>Tidak Sekolah</option>
+            <option>SD</option>
+            <option>SMP</option>
+            <option>SMA</option>
+            <option>D3</option>
+            <option>S1</option>
+            <option>S2/S3</option>
+          </select>
         </div>
       </div>
       <div class="grid-2">
@@ -145,20 +211,63 @@
   </div>
 
   <div class="card" id="cardDaftarKunjungan" style="display:none;">
-    <h2>Buat Kunjungan Baru</h2>
-    <div class="grid-2">
+    <h2>Form Registrasi Pasien</h2>
+
+    <div class="info-block">
+      <div class="info-row"><label>Tanggal</label><span id="rTanggal"></span></div>
+      <div class="info-row"><label>Petugas Loket</label><span id="rPetugasLoket"></span></div>
+      <div class="info-row"><label>No Index/RM</label><span id="rNoRm"></span></div>
+      <div class="info-row"><label>NIK</label><span id="rNik"></span></div>
+      <div class="info-row"><label>Nama KK</label><span id="rNamaKk"></span></div>
+      <div class="info-row"><label>Nama Pasien</label><span id="rNamaPasien"></span></div>
+      <div class="info-row"><label>Tanggal Lahir</label><span id="rTglLahir"></span></div>
+      <div class="info-row"><label>Jenis Kunjungan</label><span id="rJenisKunjungan"></span></div>
+      <div class="info-row"><label>Jenis Kelamin</label><span id="rJenisKelamin"></span></div>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px;">
       <div>
-        <label>Klaster / Poli Tujuan *</label>
-        <select id="kKlaster" required></select>
-      </div>
-      <div>
-        <label>Jenis Pembayaran *</label>
-        <select id="kJenisBayar" required>
-          <option value="BPJS">BPJS</option>
-          <option value="Umum">Umum</option>
+        <label>Lokasi Pemeriksaan *</label>
+        <select id="kLokasi" required>
+          <option value="Puskesmas Induk">Puskesmas Induk</option>
+          <option value="Pustu Cahaya Baru">Pustu Cahaya Baru</option>
+          <option value="Pustu Belaras">Pustu Belaras</option>
+          <option value="Pustu Batang Sari">Pustu Batang Sari</option>
+          <option value="Pustu Bidari">Pustu Bidari</option>
         </select>
       </div>
+      <div>
+        <label>Unit Pelayanan / Klaster Tujuan *</label>
+        <select id="kKlaster" required></select>
+      </div>
     </div>
+    <div class="grid-3">
+      <div>
+        <label>Jenis Pasien *</label>
+        <select id="kJenisPasien" required onchange="sesuaikanJenisBayar()">
+          <option value="Umum">Umum</option>
+          <option value="JKN PBI">JKN PBI</option>
+          <option value="JKN Non PBI">JKN Non PBI</option>
+          <option value="PKMS Silver">PKMS Silver</option>
+          <option value="PKMS Gold">PKMS Gold</option>
+          <option value="Gratis">Gratis</option>
+          <option value="Lain-lain">Lain-lain</option>
+        </select>
+      </div>
+      <div>
+        <label>Pengirim</label>
+        <select id="kPengirim">
+          <option>Sendiri</option>
+          <option>Rujukan Internal</option>
+          <option>Rujukan Faskes Lain</option>
+        </select>
+      </div>
+      <div>
+        <label>Kode Administrasi Pasien</label>
+        <input type="text" id="kKodeAdmin" placeholder="Opsional">
+      </div>
+    </div>
+
     <label>Keluhan Awal</label>
     <textarea id="kKeluhan" placeholder="Keluhan singkat saat pendaftaran"></textarea>
 
@@ -195,37 +304,93 @@
     <button class="btn-primary" onclick="buatKunjungan()">Daftarkan Kunjungan</button>
   </div>
 
-  <div class="card">
-    <h2>Antrian Hari Ini</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>No. Antrian</th>
-          <th>No. Kunjungan</th>
-          <th>No. RM</th>
-          <th>Nama Pasien</th>
-          <th>Klaster</th>
-          <th>Bayar</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="tabelAntrian">
-        <tr><td colspan="7">Memuat...</td></tr>
-      </tbody>
-    </table>
-  </div>
+        </div>
 
+        <div class="col-right">
+
+          <div class="side-panel">
+            <h3>Dashboard Aktivitas</h3>
+            <div class="mini-bar-row">
+              <div class="mini-bar-label"><span>Pasien Baru</span><span id="mbBaruLabel">0</span></div>
+              <div class="mini-bar-track"><div class="mini-bar-fill" id="mbBaru" style="width:0%"></div></div>
+            </div>
+            <div class="mini-bar-row">
+              <div class="mini-bar-label"><span>Pasien Lama</span><span id="mbLamaLabel">0</span></div>
+              <div class="mini-bar-track"><div class="mini-bar-fill alt" id="mbLama" style="width:0%"></div></div>
+            </div>
+            <div class="mini-bar-row">
+              <div class="mini-bar-label"><span>BPJS</span><span id="mbBpjsLabel">0</span></div>
+              <div class="mini-bar-track"><div class="mini-bar-fill" id="mbBpjs" style="width:0%"></div></div>
+            </div>
+            <div class="mini-bar-row">
+              <div class="mini-bar-label"><span>Umum</span><span id="mbUmumLabel">0</span></div>
+              <div class="mini-bar-track"><div class="mini-bar-fill alt" id="mbUmum" style="width:0%"></div></div>
+            </div>
+          </div>
+
+          <div class="side-panel">
+            <h3>Staf Pendaftaran</h3>
+            <div id="daftarStaf"><div class="staff-item"><span class="staff-dot"></span><span class="staff-name">Memuat...</span></div></div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="card">
+        <h2>Daftar Pendaftaran Hari Ini</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>No. Antrian</th>
+              <th>No. Kunjungan</th>
+              <th>No. RM</th>
+              <th>Nama Pasien</th>
+              <th>Klaster</th>
+              <th>Bayar</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tabelAntrian">
+            <tr><td colspan="8">Memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="areaCetak" class="kartu-cetak">
+  <h2>UPTD PUSKESMAS BEKAWAN</h2>
+  <p class="sub">Kartu Berobat &amp; No. Antrian</p>
+  <div class="garis"></div>
+  <div class="baris"><span>Tanggal</span><span id="cetakTanggal"></span></div>
+  <div class="baris"><span>Nama Pasien</span><span id="cetakNama"></span></div>
+  <div class="baris"><span>No. RM</span><span id="cetakNoRm"></span></div>
+  <div class="baris"><span>NIK</span><span id="cetakNik"></span></div>
+  <div class="baris"><span>No. Kunjungan</span><span id="cetakNoKunjungan"></span></div>
+  <div class="baris"><span>Klaster / Poli</span><span id="cetakKlaster"></span></div>
+  <div class="baris"><span>Jenis Bayar</span><span id="cetakBayar"></span></div>
+  <div class="antrian-besar">
+    <p class="label">NO. ANTRIAN</p>
+    <p class="nomor" id="cetakNoAntrian"></p>
+  </div>
+  <p class="catatan">Simpan kartu ini &amp; tunggu nomor dipanggil di ruang klaster tujuan.</p>
 </div>
 
 <script src="js/supabaseClient.js"></script>
 <script>
 let pasienTerpilih = null;
+let profilSaya = null;
 
 (async () => {
   const session = await wajibLogin();
   if (!session) return;
 
   const profil = await getProfilSaya();
+  profilSaya = profil;
   cekAksesHalaman(profil, "index.html");
   sesuaikanTabNav(profil);
   if (profil) {
@@ -234,7 +399,82 @@ let pasienTerpilih = null;
 
   await muatKlaster();
   await muatAntrian();
+  await muatStaf();
 })();
+
+let antrianDipanggil = null; // kunjungan yang lagi aktif dipanggil
+let antrianDilewati = new Set(); // id kunjungan yang di-"Lewati" sesi ini (gak diulang otomatis)
+
+async function panggilAntrean() {
+  const antrian = window._antrianHariIni || [];
+  const berikutnya = antrian.find(k => k.status === "menunggu" && !antrianDilewati.has(k.id));
+
+  if (!berikutnya) {
+    document.getElementById("queueSub").textContent = "Tidak ada antrian menunggu.";
+    return;
+  }
+
+  const { error } = await supabaseClient.from("kunjungan").update({ status: "dipanggil" }).eq("id", berikutnya.id);
+  if (error) {
+    document.getElementById("queueSub").textContent = `Gagal panggil: ${error.message}`;
+    return;
+  }
+
+  antrianDipanggil = berikutnya;
+  tampilkanNomorDipanggil(berikutnya);
+  await muatAntrian();
+}
+
+function panggilUlang() {
+  if (!antrianDipanggil) return;
+  tampilkanNomorDipanggil(antrianDipanggil);
+}
+
+async function lewatiAntrean() {
+  if (!antrianDipanggil) return;
+  antrianDilewati.add(antrianDipanggil.id);
+
+  const { error } = await supabaseClient.from("kunjungan").update({ status: "menunggu" }).eq("id", antrianDipanggil.id);
+  if (error) {
+    document.getElementById("queueSub").textContent = `Gagal lewati: ${error.message}`;
+    return;
+  }
+
+  antrianDipanggil = null;
+  document.getElementById("queueSub").textContent = "Antrian dilewati. Klik Panggil buat lanjut.";
+  await muatAntrian();
+}
+
+function tampilkanNomorDipanggil(k) {
+  document.getElementById("queueNumber").textContent = k.no_antrian;
+  document.getElementById("queueSub").textContent = `${k.pasien?.nama || "-"} — ${k.klaster?.kode || "-"} ${k.klaster?.nama || ""}`;
+  document.getElementById("statAntrianSaatIni").textContent = k.no_antrian;
+}
+
+async function muatStaf() {
+  const el = document.getElementById("daftarStaf");
+  const { data, error } = await supabaseClient
+    .from("profil_pegawai")
+    .select("id, nama, role")
+    .in("role", ["petugas", "staff", "admin"])
+    .eq("aktif", true)
+    .order("nama");
+
+  if (error) {
+    el.innerHTML = `<div class="staff-item"><span class="staff-name">Gagal muat staf.</span></div>`;
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  el.innerHTML = data.map(p => `
+    <div class="staff-item">
+      <span class="staff-dot ${p.id === user.id ? "online" : ""}"></span>
+      <span class="staff-name">${p.nama}</span>
+      <span class="staff-status">${p.id === user.id ? "Online" : "-"}</span>
+    </div>
+  `).join("") || `<div class="staff-item"><span class="staff-name">Belum ada petugas terdaftar.</span></div>`;
+}
 
 async function muatKlaster() {
   const { data, error } = await supabaseClient.from("klaster").select("*").order("id");
@@ -260,45 +500,91 @@ function hitungUmur() {
   document.getElementById("pUmur").value = `${tahun} tahun ${bulan} bulan`;
 }
 
+let jenisKunjunganTerpilih = null;
+
 async function cariPasien() {
   const kunci = document.getElementById("cariNik").value.trim();
   const msgBox = document.getElementById("msgBox");
   const hasilDiv = document.getElementById("hasilCari");
+  const daftarDiv = document.getElementById("daftarHasilCari");
   msgBox.innerHTML = "";
   hasilDiv.innerHTML = "";
+  daftarDiv.innerHTML = "";
   document.getElementById("formPasienBaru").style.display = "none";
   document.getElementById("cardDaftarKunjungan").style.display = "none";
   pasienTerpilih = null;
+  jenisKunjunganTerpilih = null;
 
   if (!kunci) {
-    msgBox.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau No. BPJS dulu.</div>`;
+    msgBox.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, No. BPJS, atau nama dulu.</div>`;
     return;
   }
 
-  // Cari cocok di salah satu: NIK, No. RM, atau No. BPJS
+  // NIK/No.RM/No.BPJS dicari exact match, nama dicari ilike (mengandung kata kunci)
   const { data, error } = await supabaseClient
     .from("pasien")
     .select("*")
-    .or(`nik.eq.${kunci},no_rm.eq.${kunci},no_bpjs.eq.${kunci}`)
-    .maybeSingle();
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},no_bpjs.eq.${kunci},nama.ilike.%${kunci}%`)
+    .order("nama")
+    .limit(20);
 
   if (error) {
     msgBox.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`;
     return;
   }
 
-  if (data) {
-    pasienTerpilih = data;
-    hasilDiv.innerHTML = `<div class="msg msg-success">Pasien ditemukan: <strong>${data.nama}</strong> — No. RM ${data.no_rm || "-"} — NIK ${data.nik}</div>`;
-    document.getElementById("cardDaftarKunjungan").style.display = "block";
+  if (data.length === 1) {
+    pilihPasien(data[0]);
+  } else if (data.length > 1) {
+    daftarDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>NIK</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${p.nik}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasien = data;
   } else {
     hasilDiv.innerHTML = `<div class="msg msg-error">Pasien belum terdaftar. Isi form di bawah untuk mendaftarkan pasien baru (No. RM baru otomatis dibuat).</div>`;
     // Kalau yang dicari 16 digit angka, anggap NIK, prefill.
     if (/^\d{16}$/.test(kunci)) {
       document.getElementById("pNik").value = kunci;
+    } else {
+      document.getElementById("pNama").value = kunci;
     }
     document.getElementById("formPasienBaru").style.display = "block";
   }
+}
+
+function pilihPasienDariHasil(index) {
+  pilihPasien(window._hasilCariPasien[index]);
+}
+
+function pilihPasien(data) {
+  pasienTerpilih = data;
+  jenisKunjunganTerpilih = "lama";
+  document.getElementById("daftarHasilCari").innerHTML = "";
+  document.getElementById("hasilCari").innerHTML = `<div class="msg msg-success">Pasien dipilih: <strong>${data.nama}</strong> — No. RM ${data.no_rm || "-"} — NIK ${data.nik}</div>`;
+  isiInfoRegistrasi();
+  document.getElementById("cardDaftarKunjungan").style.display = "block";
+}
+
+function isiInfoRegistrasi() {
+  const umur = document.getElementById("pUmur");
+  document.getElementById("rTanggal").textContent = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  document.getElementById("rPetugasLoket").textContent = profilSaya ? profilSaya.nama : "-";
+  document.getElementById("rNoRm").textContent = pasienTerpilih.no_rm || "-";
+  document.getElementById("rNik").textContent = pasienTerpilih.nik;
+  document.getElementById("rNamaKk").textContent = pasienTerpilih.nama_kk || "-";
+  document.getElementById("rNamaPasien").textContent = pasienTerpilih.nama;
+  document.getElementById("rTglLahir").textContent = pasienTerpilih.tanggal_lahir
+    ? new Date(pasienTerpilih.tanggal_lahir).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+    : "-";
+  document.getElementById("rJenisKunjungan").textContent = jenisKunjunganTerpilih === "lama" ? "Lama" : "Baru";
+  document.getElementById("rJenisKelamin").textContent = pasienTerpilih.jenis_kelamin === "L" ? "Laki-laki" : "Perempuan";
 }
 
 document.getElementById("formPasienBaru").addEventListener("submit", async (e) => {
@@ -322,10 +608,13 @@ document.getElementById("formPasienBaru").addEventListener("submit", async (e) =
     tanggal_lahir: document.getElementById("pTglLahir").value,
     no_hp: document.getElementById("pHp").value.trim(),
     no_kk: document.getElementById("pNoKk").value.trim(),
+    nama_kk: document.getElementById("pNamaKk").value.trim(),
     alamat: document.getElementById("pAlamat").value.trim(),
     rt_rw: document.getElementById("pRtRw").value.trim(),
+    dusun: document.getElementById("pDusun").value.trim(),
     desa_kelurahan: document.getElementById("pDesa").value.trim(),
     kecamatan: document.getElementById("pKecamatan").value.trim(),
+    pendidikan: document.getElementById("pPendidikan").value,
     status_bpjs: document.getElementById("pStatusBpjs").value,
     no_bpjs: document.getElementById("pNoBpjs").value.trim(),
     pekerjaan: document.getElementById("pPekerjaan").value.trim(),
@@ -343,10 +632,20 @@ document.getElementById("formPasienBaru").addEventListener("submit", async (e) =
   }
 
   pasienTerpilih = data;
+  jenisKunjunganTerpilih = "baru";
   msgBox.innerHTML = `<div class="msg msg-success">Pasien baru berhasil disimpan: ${data.nama}</div>`;
   document.getElementById("formPasienBaru").style.display = "none";
+  isiInfoRegistrasi();
   document.getElementById("cardDaftarKunjungan").style.display = "block";
 });
+
+function sesuaikanJenisBayar() {
+  // no-op hook, kept for future validasi kalau perlu; jenis_bayar diturunkan otomatis di buatKunjungan()
+}
+
+function turunkanJenisBayar(jenisPasien) {
+  return jenisPasien.startsWith("JKN") ? "BPJS" : "Umum";
+}
 
 async function buatKunjungan() {
   const msgBox = document.getElementById("msgBox");
@@ -356,7 +655,11 @@ async function buatKunjungan() {
   }
 
   const klasterId = document.getElementById("kKlaster").value;
-  const jenisBayar = document.getElementById("kJenisBayar").value;
+  const lokasiPemeriksaan = document.getElementById("kLokasi").value;
+  const jenisPasien = document.getElementById("kJenisPasien").value;
+  const pengirim = document.getElementById("kPengirim").value;
+  const kodeAdmin = document.getElementById("kKodeAdmin").value.trim();
+  const jenisBayar = turunkanJenisBayar(jenisPasien);
   const keluhan = document.getElementById("kKeluhan").value.trim();
 
   if (!klasterId) {
@@ -380,6 +683,12 @@ async function buatKunjungan() {
     pasien_id: pasienTerpilih.id,
     klaster_id: parseInt(klasterId),
     jenis_bayar: jenisBayar,
+    jenis_kunjungan: jenisKunjunganTerpilih || "baru",
+    petugas_loket: profilSaya ? profilSaya.nama : null,
+    lokasi_pemeriksaan: lokasiPemeriksaan,
+    jenis_pasien: jenisPasien,
+    pengirim: pengirim,
+    kode_administrasi_pasien: kodeAdmin || null,
     no_antrian: noAntrianData,
     keluhan_awal: keluhan,
     tekanan_darah: document.getElementById("kTd").value.trim(),
@@ -399,13 +708,44 @@ async function buatKunjungan() {
     return;
   }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Kunjungan berhasil dibuat. No. antrian: ${noAntrianData}</div>`;
+  const klasterSelect = document.getElementById("kKlaster");
+  const klasterText = klasterSelect.options[klasterSelect.selectedIndex].text;
+
+  isiKartuCetak({
+    nama: pasienTerpilih.nama,
+    no_rm: pasienTerpilih.no_rm,
+    nik: pasienTerpilih.nik,
+    no_kunjungan: noKunjunganData,
+    no_antrian: noAntrianData,
+    klaster: klasterText,
+    jenis_bayar: `${jenisPasien} (${lokasiPemeriksaan})`,
+    tanggal: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+  });
+
+  msgBox.innerHTML = `<div class="msg msg-success">Kunjungan berhasil dibuat. No. antrian: ${noAntrianData}</div>
+    <button class="btn-secondary" onclick="cetakKartu()">Cetak Kartu / No. Antrian</button>`;
   document.getElementById("cardDaftarKunjungan").style.display = "none";
   document.getElementById("cariNik").value = "";
   document.getElementById("hasilCari").innerHTML = "";
   pasienTerpilih = null;
+  jenisKunjunganTerpilih = null;
 
   await muatAntrian();
+}
+
+function isiKartuCetak(k) {
+  document.getElementById("cetakNama").textContent = k.nama;
+  document.getElementById("cetakNoRm").textContent = k.no_rm || "-";
+  document.getElementById("cetakNik").textContent = k.nik;
+  document.getElementById("cetakNoKunjungan").textContent = k.no_kunjungan;
+  document.getElementById("cetakNoAntrian").textContent = k.no_antrian;
+  document.getElementById("cetakKlaster").textContent = k.klaster;
+  document.getElementById("cetakBayar").textContent = k.jenis_bayar;
+  document.getElementById("cetakTanggal").textContent = k.tanggal;
+}
+
+function cetakKartu() {
+  window.print();
 }
 
 async function muatAntrian() {
@@ -414,7 +754,7 @@ async function muatAntrian() {
 
   const { data, error } = await supabaseClient
     .from("kunjungan")
-    .select("*, pasien(nama, no_rm), klaster(nama, kode)")
+    .select("*, pasien(nama, no_rm, nik), klaster(nama, kode)")
     .eq("tanggal", today)
     .order("no_antrian");
 
@@ -423,12 +763,15 @@ async function muatAntrian() {
     return;
   }
 
+  window._antrianHariIni = data;
+  isiStatDashboard(data);
+
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="7">Belum ada kunjungan hari ini.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8">Belum ada kunjungan hari ini.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = data.map(k => `
+  tbody.innerHTML = data.map((k, i) => `
     <tr>
       <td>${k.no_antrian}</td>
       <td>${k.no_kunjungan}</td>
@@ -437,8 +780,48 @@ async function muatAntrian() {
       <td>${k.klaster?.kode || "-"} — ${k.klaster?.nama || "-"}</td>
       <td>${k.jenis_bayar}</td>
       <td><span class="badge badge-${k.status}">${k.status}</span></td>
+      <td><button class="btn-secondary" onclick="cetakUlang(${i})">Cetak</button></td>
     </tr>
   `).join("");
+}
+
+function isiStatDashboard(data) {
+  const total = data.length;
+  const baru = data.filter(k => k.jenis_kunjungan === "baru").length;
+  const lama = total - baru;
+  const bpjs = data.filter(k => k.jenis_bayar === "BPJS").length;
+  const umum = total - bpjs;
+  const persen = (n) => total ? Math.round((n / total) * 100) : 0;
+
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statBaru").textContent = baru;
+  document.getElementById("statLama").textContent = lama;
+  document.getElementById("statBpjs").textContent = bpjs;
+  document.getElementById("statUmum").textContent = umum;
+
+  document.getElementById("mbBaruLabel").textContent = baru;
+  document.getElementById("mbLamaLabel").textContent = lama;
+  document.getElementById("mbBpjsLabel").textContent = bpjs;
+  document.getElementById("mbUmumLabel").textContent = umum;
+  document.getElementById("mbBaru").style.width = persen(baru) + "%";
+  document.getElementById("mbLama").style.width = persen(lama) + "%";
+  document.getElementById("mbBpjs").style.width = persen(bpjs) + "%";
+  document.getElementById("mbUmum").style.width = persen(umum) + "%";
+}
+
+function cetakUlang(index) {
+  const k = window._antrianHariIni[index];
+  isiKartuCetak({
+    nama: k.pasien?.nama || "-",
+    no_rm: k.pasien?.no_rm,
+    nik: k.pasien?.nik || "-",
+    no_kunjungan: k.no_kunjungan,
+    no_antrian: k.no_antrian,
+    klaster: `${k.klaster?.kode || "-"} — ${k.klaster?.nama || "-"}`,
+    jenis_bayar: k.jenis_bayar,
+    tanggal: new Date(k.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+  });
+  window.print();
 }
 </script>
 

@@ -240,6 +240,73 @@ alter table obat enable row level security;
 create policy "authenticated_all_obat" on obat for all to authenticated using (true) with check (true);
 
 -- ============================================================
+-- 12. Jenis kunjungan (baru/lama), tercatat eksplisit per kunjungan
+-- ============================================================
+alter table kunjungan add column if not exists jenis_kunjungan text
+  check (jenis_kunjungan in ('baru','lama'));
+
+-- ============================================================
+-- 13. Kolom tambahan biar form Registrasi Pasien sesuai SOP:
+--     data pasien (Nama KK, Pendidikan, Dusun) + data kunjungan
+--     (Petugas Loket, Lokasi Pemeriksaan, Jenis Pasien, Pengirim,
+--     Kode Administrasi Pasien)
+-- ============================================================
+alter table pasien add column if not exists nama_kk text;
+alter table pasien add column if not exists pendidikan text;
+alter table pasien add column if not exists dusun text;
+
+alter table kunjungan add column if not exists petugas_loket text;
+alter table kunjungan add column if not exists lokasi_pemeriksaan text;
+alter table kunjungan add column if not exists jenis_pasien text;
+alter table kunjungan add column if not exists pengirim text default 'Sendiri';
+alter table kunjungan add column if not exists kode_administrasi_pasien text;
+
+-- ============================================================
+-- 14. TABEL AKSES LINTAS KLASTER (dipakai js/supabaseClient.js:
+--     getProfilSaya() join ke pegawai_klaster & hak_akses).
+--     Tabel ini belum pernah ada di schema — kalau belum dijalankan,
+--     SEMUA login gagal karena query profil error. Jalankan bagian
+--     ini sebelum lanjut apa pun. Aman diulang (if not exists).
+-- ============================================================
+
+-- Klaster tambahan yang bisa diakses satu pegawai, di luar klaster_id utamanya
+-- (misal: bidan yang juga bantu di Klaster Ibu&Anak dan Lansia).
+create table if not exists pegawai_klaster (
+  id uuid primary key default gen_random_uuid(),
+  pegawai_id uuid not null references profil_pegawai(id) on delete cascade,
+  klaster_id int not null references klaster(id),
+  keterangan text,
+  created_at timestamptz not null default now(),
+  unique (pegawai_id, klaster_id)
+);
+
+-- Hak akses granular per modul (index.html, rekam-medis.html, apotek.html,
+-- dst pakai kode modul sendiri, misal "rekam_medis"), opsional dibatasi per
+-- klaster (klaster_id null = berlaku semua klaster). level: lihat/layani/penuh.
+create table if not exists hak_akses (
+  id uuid primary key default gen_random_uuid(),
+  pegawai_id uuid not null references profil_pegawai(id) on delete cascade,
+  modul_kode text not null,
+  klaster_id int references klaster(id),
+  level text not null default 'lihat' check (level in ('lihat', 'layani', 'penuh')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pegawai_klaster_pegawai on pegawai_klaster(pegawai_id);
+create index if not exists idx_hak_akses_pegawai on hak_akses(pegawai_id);
+
+alter table pegawai_klaster enable row level security;
+alter table hak_akses enable row level security;
+
+create policy "authenticated_read_pegawai_klaster" on pegawai_klaster for select to authenticated using (true);
+create policy "authenticated_read_hak_akses" on hak_akses for select to authenticated using (true);
+
+-- Gak ada policy insert/update/delete buat role authenticated di dua tabel
+-- ini secara sengaja: tulis cuma boleh lewat Edge Function kelola-pegawai
+-- yang pakai service_role (bypass RLS). Jadi walau token admin bocor,
+-- gak bisa langsung ubah akses lewat REST API biasa.
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
