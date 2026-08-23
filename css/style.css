@@ -211,6 +211,7 @@ th { background: #f9fafb; font-weight: 600; color: #374151; font-size: 13px; }
 
 .dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
 @media (max-width: 1000px) { .dash-grid { grid-template-columns: 1fr; } }
+.dash-content-single { max-width: 900px; }
 
 .queue-panel { background: white; border-radius: 10px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
 .queue-panel .queue-label { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #6b7280; margin-bottom: 8px; }

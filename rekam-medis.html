@@ -26,6 +26,8 @@
     <a href="pengaturan.html">Pengaturan</a>
   </div>
 
+  <div id="modeKlinis" style="display:none;">
+
   <div class="card">
     <h2>Antrian Menunggu Pemeriksaan</h2>
     <table>
@@ -53,6 +55,11 @@
       <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:8px;">Data dari Pendaftaran (Triase Awal)</div>
       <div id="vitalDisplay" style="font-size:14px; color:#1f2937; line-height:1.8;"></div>
       <div id="riwayatDisplay" style="font-size:14px; color:#1f2937; margin-top:6px;"></div>
+    </div>
+
+    <div class="card" style="background:#f9fafb; box-shadow:none; padding:16px; margin-bottom:16px;">
+      <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:8px;">Riwayat Pemeriksaan Sebelumnya (buat pertimbangan terapi lanjutan)</div>
+      <div id="riwayatPemeriksaanKlinis" style="font-size:13px; color:#1f2937;">-</div>
     </div>
 
     <div id="msgBox"></div>
@@ -137,6 +144,113 @@
       <button type="button" class="btn-secondary" onclick="batalkanForm()">Batal</button>
     </form>
   </div>
+
+  </div>
+  <!-- /modeKlinis -->
+
+  <div id="modePendaftaran" style="display:none;">
+
+  <div class="card">
+    <h2>Cari Pasien</h2>
+    <div id="msgBoxRp"></div>
+    <div class="grid-2">
+      <div>
+        <label>Nama / NIK / No. RM / No. BPJS</label>
+        <input type="text" id="rpCari" placeholder="Ketik nama, NIK, No. RM, atau No. BPJS" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienRM();}">
+      </div>
+      <div style="display:flex; align-items:flex-end;">
+        <button class="btn-primary" onclick="cariPasienRM()" style="margin-bottom:12px;">Cari</button>
+      </div>
+    </div>
+    <div id="rpHasilList"></div>
+  </div>
+
+  <div class="card" id="cardPasienRM" style="display:none;">
+    <h2>Data Pasien — <span id="rpNamaAktif"></span></h2>
+    <div id="msgBoxEditPasien"></div>
+    <form id="formEditPasien">
+      <div class="grid-3">
+        <div><label>Nama Lengkap</label><input type="text" id="epNama" required></div>
+        <div><label>NIK</label><input type="text" id="epNik" readonly style="background:#f3f4f6;"></div>
+        <div><label>No. RM</label><input type="text" id="epNoRm" readonly style="background:#f3f4f6;"></div>
+      </div>
+      <div class="grid-3">
+        <div><label>Tempat Lahir</label><input type="text" id="epTempatLahir"></div>
+        <div><label>Tanggal Lahir</label><input type="date" id="epTglLahir"></div>
+        <div>
+          <label>Jenis Kelamin</label>
+          <select id="epJk"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div><label>No. HP</label><input type="text" id="epHp"></div>
+        <div><label>No. KK</label><input type="text" id="epNoKk"></div>
+      </div>
+      <label>Nama Kepala Keluarga</label>
+      <input type="text" id="epNamaKk">
+      <label>Alamat Lengkap</label>
+      <input type="text" id="epAlamat">
+      <div class="grid-3">
+        <div><label>RT/RW</label><input type="text" id="epRtRw"></div>
+        <div><label>Dusun</label><input type="text" id="epDusun"></div>
+        <div><label>Desa/Kelurahan</label><input type="text" id="epDesa"></div>
+      </div>
+      <div class="grid-2">
+        <div><label>Kecamatan</label><input type="text" id="epKecamatan"></div>
+        <div>
+          <label>Pendidikan</label>
+          <select id="epPendidikan">
+            <option value="">-- Pilih --</option>
+            <option>Tidak Sekolah</option><option>SD</option><option>SMP</option>
+            <option>SMA</option><option>D3</option><option>S1</option><option>S2/S3</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div>
+          <label>Status BPJS</label>
+          <select id="epStatusBpjs"><option value="tidak_aktif">Tidak Aktif</option><option value="aktif">Aktif</option></select>
+        </div>
+        <div><label>No. BPJS</label><input type="text" id="epNoBpjs"></div>
+        <div><label>Pekerjaan</label><input type="text" id="epPekerjaan"></div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label>Golongan Darah</label>
+          <select id="epGolDarah">
+            <option value="">-- Pilih --</option>
+            <option>A</option><option>B</option><option>AB</option><option>O</option>
+          </select>
+        </div>
+        <div><label>Alergi Obat</label><input type="text" id="epAlergi"></div>
+      </div>
+      <label>Riwayat Obat Rutin</label>
+      <textarea id="epRiwayatObat"></textarea>
+
+      <button type="submit" class="btn-primary">Simpan Perubahan Data Pasien</button>
+    </form>
+  </div>
+
+  <div class="card" id="cardRiwayatRM" style="display:none;">
+    <h2>Riwayat Pemeriksaan</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Klaster</th>
+          <th>Keluhan</th>
+          <th>Diagnosa (ICD-10)</th>
+          <th>Plan / Terapi</th>
+        </tr>
+      </thead>
+      <tbody id="tabelRiwayatRM">
+        <tr><td colspan="5">Belum ada pasien dipilih.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  </div>
+  <!-- /modePendaftaran -->
 
 </div>
 
@@ -231,9 +345,16 @@ function isiOtomatisIcd() {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
   }
 
-  muatDaftarDiagnosaBpjs();
-  await muatDaftarObat();
-  await muatAntrian();
+  const modeKlinisRole = ["dokter", "perawat", "bidan"].includes(profilSaya?.role);
+
+  if (modeKlinisRole) {
+    document.getElementById("modeKlinis").style.display = "block";
+    muatDaftarDiagnosaBpjs();
+    await muatDaftarObat();
+    await muatAntrian();
+  } else {
+    document.getElementById("modePendaftaran").style.display = "block";
+  }
 })();
 
 async function muatDaftarObat() {
@@ -453,7 +574,43 @@ function bukaFormRM(kunjungan, bisaIsi = true) {
     Alergi Obat: <strong>${alergi}</strong>
   `;
 
+  muatRiwayatPemeriksaanKlinis(kunjungan.pasien_id, kunjungan.id);
+
   window.scrollTo({ top: document.getElementById("cardFormRM").offsetTop - 20, behavior: "smooth" });
+}
+
+async function muatRiwayatPemeriksaanKlinis(pasienId, kunjunganIdSekarang) {
+  const el = document.getElementById("riwayatPemeriksaanKlinis");
+  el.textContent = "Memuat riwayat...";
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("id, tanggal, klaster(nama, kode), rekam_medis(assessment, kode_icd10, plan)")
+    .eq("pasien_id", pasienId)
+    .neq("id", kunjunganIdSekarang)
+    .order("tanggal", { ascending: false })
+    .limit(5);
+
+  if (error) {
+    el.textContent = "Gagal muat riwayat.";
+    return;
+  }
+
+  const punyaRm = data.filter(k => k.rekam_medis && k.rekam_medis.length);
+  if (!punyaRm.length) {
+    el.textContent = "Belum ada riwayat pemeriksaan sebelumnya.";
+    return;
+  }
+
+  el.innerHTML = punyaRm.map(k => {
+    const rm = k.rekam_medis[0];
+    const tgl = new Date(k.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    return `<div style="padding:6px 0; border-bottom:1px solid #e5e7eb;">
+      <strong>${tgl}</strong> — ${k.klaster?.kode || "-"}<br>
+      Diagnosa: ${rm.assessment || "-"} (${rm.kode_icd10 || "-"})<br>
+      Plan: ${rm.plan || "-"}
+    </div>`;
+  }).join("");
 }
 
 function batalkanForm() {
@@ -532,6 +689,171 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
   daftarObatResep = [];
   await muatAntrian();
 });
+
+// ============================================================
+// MODE PENDAFTARAN: cari pasien, riwayat pemeriksaan (baca saja),
+// edit data pasien. Dipakai akun petugas/staff/admin.
+// ============================================================
+let pasienRmAktif = null;
+
+async function cariPasienRM() {
+  const kunci = document.getElementById("rpCari").value.trim();
+  const msgBox = document.getElementById("msgBoxRp");
+  const hasilDiv = document.getElementById("rpHasilList");
+  msgBox.innerHTML = "";
+  hasilDiv.innerHTML = "";
+  document.getElementById("cardPasienRM").style.display = "none";
+  document.getElementById("cardRiwayatRM").style.display = "none";
+
+  if (!kunci) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi nama, NIK, No. RM, atau No. BPJS dulu.</div>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},no_bpjs.eq.${kunci},nama.ilike.%${kunci}%`)
+    .order("nama")
+    .limit(20);
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`;
+    return;
+  }
+
+  if (!data.length) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan.</div>`;
+    return;
+  }
+
+  if (data.length === 1) {
+    pilihPasienRM(data[0]);
+    return;
+  }
+
+  hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+    `<table><thead><tr><th>Nama</th><th>No. RM</th><th>NIK</th><th></th></tr></thead><tbody>` +
+    data.map((p, i) => `
+      <tr>
+        <td>${p.nama}</td>
+        <td>${p.no_rm || "-"}</td>
+        <td>${p.nik}</td>
+        <td><button class="btn-secondary" onclick="pilihPasienRMDariHasil(${i})">Pilih</button></td>
+      </tr>
+    `).join("") + `</tbody></table>`;
+  window._hasilCariPasienRM = data;
+}
+
+function pilihPasienRMDariHasil(index) {
+  pilihPasienRM(window._hasilCariPasienRM[index]);
+}
+
+function pilihPasienRM(p) {
+  pasienRmAktif = p;
+  document.getElementById("rpHasilList").innerHTML = "";
+  document.getElementById("rpNamaAktif").textContent = p.nama;
+
+  document.getElementById("epNama").value = p.nama || "";
+  document.getElementById("epNik").value = p.nik || "";
+  document.getElementById("epNoRm").value = p.no_rm || "";
+  document.getElementById("epTempatLahir").value = p.tempat_lahir || "";
+  document.getElementById("epTglLahir").value = p.tanggal_lahir || "";
+  document.getElementById("epJk").value = p.jenis_kelamin || "L";
+  document.getElementById("epHp").value = p.no_hp || "";
+  document.getElementById("epNoKk").value = p.no_kk || "";
+  document.getElementById("epNamaKk").value = p.nama_kk || "";
+  document.getElementById("epAlamat").value = p.alamat || "";
+  document.getElementById("epRtRw").value = p.rt_rw || "";
+  document.getElementById("epDusun").value = p.dusun || "";
+  document.getElementById("epDesa").value = p.desa_kelurahan || "";
+  document.getElementById("epKecamatan").value = p.kecamatan || "";
+  document.getElementById("epPendidikan").value = p.pendidikan || "";
+  document.getElementById("epStatusBpjs").value = p.status_bpjs || "tidak_aktif";
+  document.getElementById("epNoBpjs").value = p.no_bpjs || "";
+  document.getElementById("epPekerjaan").value = p.pekerjaan || "";
+  document.getElementById("epGolDarah").value = p.gol_darah || "";
+  document.getElementById("epAlergi").value = p.alergi_obat || "";
+  document.getElementById("epRiwayatObat").value = p.riwayat_obat || "";
+
+  document.getElementById("cardPasienRM").style.display = "block";
+  document.getElementById("cardRiwayatRM").style.display = "block";
+  muatRiwayatRM(p.id);
+}
+
+document.getElementById("formEditPasien").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msgBox = document.getElementById("msgBoxEditPasien");
+  if (!pasienRmAktif) return;
+
+  const payload = {
+    nama: document.getElementById("epNama").value.trim(),
+    tempat_lahir: document.getElementById("epTempatLahir").value.trim(),
+    tanggal_lahir: document.getElementById("epTglLahir").value || null,
+    jenis_kelamin: document.getElementById("epJk").value,
+    no_hp: document.getElementById("epHp").value.trim(),
+    no_kk: document.getElementById("epNoKk").value.trim(),
+    nama_kk: document.getElementById("epNamaKk").value.trim(),
+    alamat: document.getElementById("epAlamat").value.trim(),
+    rt_rw: document.getElementById("epRtRw").value.trim(),
+    dusun: document.getElementById("epDusun").value.trim(),
+    desa_kelurahan: document.getElementById("epDesa").value.trim(),
+    kecamatan: document.getElementById("epKecamatan").value.trim(),
+    pendidikan: document.getElementById("epPendidikan").value,
+    status_bpjs: document.getElementById("epStatusBpjs").value,
+    no_bpjs: document.getElementById("epNoBpjs").value.trim(),
+    pekerjaan: document.getElementById("epPekerjaan").value.trim(),
+    gol_darah: document.getElementById("epGolDarah").value,
+    alergi_obat: document.getElementById("epAlergi").value.trim(),
+    riwayat_obat: document.getElementById("epRiwayatObat").value.trim()
+  };
+
+  const { error } = await supabaseClient.from("pasien").update(payload).eq("id", pasienRmAktif.id);
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Data pasien berhasil disimpan.</div>`;
+  document.getElementById("rpNamaAktif").textContent = payload.nama;
+});
+
+async function muatRiwayatRM(pasienId) {
+  const tbody = document.getElementById("tabelRiwayatRM");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("tanggal, keluhan_awal, klaster(nama, kode), rekam_medis(assessment, kode_icd10, plan)")
+    .eq("pasien_id", pasienId)
+    .order("tanggal", { ascending: false })
+    .limit(30);
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="5">Gagal muat riwayat: ${error.message}</td></tr>`;
+    return;
+  }
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="5">Belum ada riwayat kunjungan.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(k => {
+    const rm = (k.rekam_medis && k.rekam_medis[0]) || null;
+    const tgl = new Date(k.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    return `
+    <tr>
+      <td>${tgl}</td>
+      <td>${k.klaster?.kode || "-"}</td>
+      <td>${k.keluhan_awal || "-"}</td>
+      <td>${rm ? `${rm.assessment || "-"} (${rm.kode_icd10 || "-"})` : "Belum diperiksa"}</td>
+      <td>${rm ? (rm.plan || "-") : "-"}</td>
+    </tr>
+  `;
+  }).join("");
+}
 </script>
 
 </body>

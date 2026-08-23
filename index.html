@@ -55,8 +55,7 @@
         </div>
       </div>
 
-      <div class="dash-grid">
-        <div class="col-left">
+      <div class="dash-content-single">
 
           <div class="queue-panel">
             <div class="queue-label">NOMOR ANTRIAN DIPANGGIL</div>
@@ -304,63 +303,33 @@
     <button class="btn-primary" onclick="buatKunjungan()">Daftarkan Kunjungan</button>
   </div>
 
-        </div>
-
-        <div class="col-right">
-
-          <div class="side-panel">
-            <h3>Dashboard Aktivitas</h3>
-            <div class="mini-bar-row">
-              <div class="mini-bar-label"><span>Pasien Baru</span><span id="mbBaruLabel">0</span></div>
-              <div class="mini-bar-track"><div class="mini-bar-fill" id="mbBaru" style="width:0%"></div></div>
-            </div>
-            <div class="mini-bar-row">
-              <div class="mini-bar-label"><span>Pasien Lama</span><span id="mbLamaLabel">0</span></div>
-              <div class="mini-bar-track"><div class="mini-bar-fill alt" id="mbLama" style="width:0%"></div></div>
-            </div>
-            <div class="mini-bar-row">
-              <div class="mini-bar-label"><span>BPJS</span><span id="mbBpjsLabel">0</span></div>
-              <div class="mini-bar-track"><div class="mini-bar-fill" id="mbBpjs" style="width:0%"></div></div>
-            </div>
-            <div class="mini-bar-row">
-              <div class="mini-bar-label"><span>Umum</span><span id="mbUmumLabel">0</span></div>
-              <div class="mini-bar-track"><div class="mini-bar-fill alt" id="mbUmum" style="width:0%"></div></div>
-            </div>
-          </div>
-
-          <div class="side-panel">
-            <h3>Staf Pendaftaran</h3>
-            <div id="daftarStaf"><div class="staff-item"><span class="staff-dot"></span><span class="staff-name">Memuat...</span></div></div>
-          </div>
+  <div class="card">
+    <h2>Daftar Pendaftaran Hari Ini</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>No. Antrian</th>
+          <th>No. Kunjungan</th>
+          <th>No. RM</th>
+          <th>Nama Pasien</th>
+          <th>Klaster</th>
+          <th>Bayar</th>
+          <th>Status</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tabelAntrian">
+        <tr><td colspan="8">Memuat...</td></tr>
+      </tbody>
+    </table>
+  </div>
 
         </div>
 
-      </div>
-
-      <div class="card">
-        <h2>Daftar Pendaftaran Hari Ini</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>No. Antrian</th>
-              <th>No. Kunjungan</th>
-              <th>No. RM</th>
-              <th>Nama Pasien</th>
-              <th>Klaster</th>
-              <th>Bayar</th>
-              <th>Status</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="tabelAntrian">
-            <tr><td colspan="8">Memuat...</td></tr>
-          </tbody>
-        </table>
       </div>
 
     </div>
   </div>
-</div>
 
 <div id="areaCetak" class="kartu-cetak">
   <h2>UPTD PUSKESMAS BEKAWAN</h2>
@@ -399,7 +368,6 @@ let profilSaya = null;
 
   await muatKlaster();
   await muatAntrian();
-  await muatStaf();
 })();
 
 let antrianDipanggil = null; // kunjungan yang lagi aktif dipanggil
@@ -449,31 +417,6 @@ function tampilkanNomorDipanggil(k) {
   document.getElementById("queueNumber").textContent = k.no_antrian;
   document.getElementById("queueSub").textContent = `${k.pasien?.nama || "-"} — ${k.klaster?.kode || "-"} ${k.klaster?.nama || ""}`;
   document.getElementById("statAntrianSaatIni").textContent = k.no_antrian;
-}
-
-async function muatStaf() {
-  const el = document.getElementById("daftarStaf");
-  const { data, error } = await supabaseClient
-    .from("profil_pegawai")
-    .select("id, nama, role")
-    .in("role", ["petugas", "staff", "admin"])
-    .eq("aktif", true)
-    .order("nama");
-
-  if (error) {
-    el.innerHTML = `<div class="staff-item"><span class="staff-name">Gagal muat staf.</span></div>`;
-    return;
-  }
-
-  const { data: { user } } = await supabaseClient.auth.getUser();
-
-  el.innerHTML = data.map(p => `
-    <div class="staff-item">
-      <span class="staff-dot ${p.id === user.id ? "online" : ""}"></span>
-      <span class="staff-name">${p.nama}</span>
-      <span class="staff-status">${p.id === user.id ? "Online" : "-"}</span>
-    </div>
-  `).join("") || `<div class="staff-item"><span class="staff-name">Belum ada petugas terdaftar.</span></div>`;
 }
 
 async function muatKlaster() {
@@ -798,15 +741,6 @@ function isiStatDashboard(data) {
   document.getElementById("statLama").textContent = lama;
   document.getElementById("statBpjs").textContent = bpjs;
   document.getElementById("statUmum").textContent = umum;
-
-  document.getElementById("mbBaruLabel").textContent = baru;
-  document.getElementById("mbLamaLabel").textContent = lama;
-  document.getElementById("mbBpjsLabel").textContent = bpjs;
-  document.getElementById("mbUmumLabel").textContent = umum;
-  document.getElementById("mbBaru").style.width = persen(baru) + "%";
-  document.getElementById("mbLama").style.width = persen(lama) + "%";
-  document.getElementById("mbBpjs").style.width = persen(bpjs) + "%";
-  document.getElementById("mbUmum").style.width = persen(umum) + "%";
 }
 
 function cetakUlang(index) {

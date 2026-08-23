@@ -124,8 +124,8 @@ async function panggilAdmin(action, payload) {
 // ============================================================
 const AKSES_HALAMAN = {
   admin: ["index.html", "rekam-medis.html", "apotek.html", "pengaturan.html"],
-  petugas: ["index.html", "pengaturan.html"],
-  staff: ["index.html", "pengaturan.html"],
+  petugas: ["index.html", "rekam-medis.html", "pengaturan.html"],
+  staff: ["index.html", "rekam-medis.html", "pengaturan.html"],
   dokter: ["rekam-medis.html", "pengaturan.html"],
   perawat: ["rekam-medis.html", "pengaturan.html"],
   bidan: ["rekam-medis.html", "pengaturan.html"],
