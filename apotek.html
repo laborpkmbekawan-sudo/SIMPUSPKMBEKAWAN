@@ -112,6 +112,7 @@
       <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
     </div>
 
+    <nav>
     <div class="ph-group-title">Petugas Farmasi</div>
     <a class="active" id="navBeranda" onclick="gantiSubtab('beranda')">Dashboard</a>
 
@@ -132,6 +133,7 @@
 
     <div class="ph-group-title">Modul Lain</div>
     <a href="pengaturan.html">Pengaturan</a>
+    </nav>
   </aside>
 
   <div class="main-wrap">
@@ -430,9 +432,9 @@ let resepTerpilihId = null;
   }
   document.getElementById("infoTanggal").textContent = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
-  await muatResepMenunggu();
-  await muatDaftarObat();
-  await muatDashboardApotek();
+  try { await muatResepMenunggu(); } catch (e) { console.error("muatResepMenunggu gagal:", e); }
+  try { await muatDaftarObat(); } catch (e) { console.error("muatDaftarObat gagal:", e); }
+  try { await muatDashboardApotek(); } catch (e) { console.error("muatDashboardApotek gagal:", e); }
 })();
 
 // ---------- Sub-tab Beranda / Pelayanan / Stok ----------
@@ -465,27 +467,29 @@ async function catatKartuStok(obatId, jenis, jumlah, saldoSetelah, referensi, ke
 
 // ---------- Beranda: KPI, notifikasi stok, grafik, info sistem ----------
 async function muatDashboardApotek() {
-  const awalHariIni = new Date(); awalHariIni.setHours(0, 0, 0, 0);
-
-  const [masukHariIni, sebagian, diserahkanHariIni] = await Promise.all([
-    supabaseClient.from("resep").select("id", { count: "exact", head: true }).gte("created_at", awalHariIni.toISOString()),
-    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "sebagian"),
-    supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "diserahkan").gte("diserahkan_at", awalHariIni.toISOString())
-  ]);
-  document.getElementById("statResepMenunggu").textContent = masukHariIni.count ?? 0;
-  document.getElementById("statResepDisiapkan").textContent = sebagian.count ?? 0;
-  document.getElementById("statResepDiserahkan").textContent = diserahkanHariIni.count ?? 0;
-  document.getElementById("phBellCount").textContent = (sebagian.count ?? 0);
-
-  const { data: semuaObat, error } = await supabaseClient.from("obat").select("*");
   const alertBox = document.getElementById("alertStok");
   const tbodyKritis = document.getElementById("tabelStokKritis");
 
-  if (error || !semuaObat) {
-    alertBox.innerHTML = `<div class="ph-notif-row">Gagal muat data stok.</div>`;
-    tbodyKritis.innerHTML = `<tr><td colspan="6">Gagal muat data.</td></tr>`;
-    return;
-  }
+  try {
+    const awalHariIni = new Date(); awalHariIni.setHours(0, 0, 0, 0);
+
+    const [masukHariIni, sebagian, diserahkanHariIni] = await Promise.all([
+      supabaseClient.from("resep").select("id", { count: "exact", head: true }).gte("created_at", awalHariIni.toISOString()),
+      supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "sebagian"),
+      supabaseClient.from("resep").select("id", { count: "exact", head: true }).eq("status", "diserahkan").gte("diserahkan_at", awalHariIni.toISOString())
+    ]);
+    document.getElementById("statResepMenunggu").textContent = masukHariIni.count ?? 0;
+    document.getElementById("statResepDisiapkan").textContent = sebagian.count ?? 0;
+    document.getElementById("statResepDiserahkan").textContent = diserahkanHariIni.count ?? 0;
+    document.getElementById("phBellCount").textContent = (sebagian.count ?? 0);
+
+    const { data: semuaObat, error } = await supabaseClient.from("obat").select("*");
+
+    if (error || !semuaObat) {
+      alertBox.innerHTML = `<div class="ph-notif-row">Gagal muat data stok${error ? ": " + error.message : ""}.</div>`;
+      tbodyKritis.innerHTML = `<tr><td colspan="6">Gagal muat data.</td></tr>`;
+      return;
+    }
 
   document.getElementById("infoTotalObat").textContent = semuaObat.length;
 
@@ -532,9 +536,14 @@ async function muatDashboardApotek() {
       }).join("")
     : `<tr><td colspan="6">Tidak ada stok kritis saat ini.</td></tr>`;
 
-  await muatRingkasanResep();
-  await muatGrafikPemakaian();
-  muatDonutGenerik(semuaObat);
+    await muatRingkasanResep();
+    await muatGrafikPemakaian();
+    muatDonutGenerik(semuaObat);
+  } catch (err) {
+    console.error("muatDashboardApotek gagal:", err);
+    alertBox.innerHTML = `<div class="ph-notif-row">Dashboard gagal dimuat: ${err.message || err}. Coba refresh halaman.</div>`;
+    tbodyKritis.innerHTML = `<tr><td colspan="6">Gagal memuat data.</td></tr>`;
+  }
 }
 
 // Line chart: jumlah resep diserahkan per hari, 7 hari terakhir + split BPJS/Non-BPJS.
@@ -570,6 +579,7 @@ async function muatRingkasanResep() {
   document.getElementById("ringkasanNonBpjs").textContent = totalNonBpjs;
 
   const ctx = document.getElementById("chartRingkasan");
+  if (typeof Chart === "undefined") { ctx.insertAdjacentHTML("afterend", "<p style='font-size:12px;color:var(--muted)'>Grafik gagal dimuat (koneksi ke Chart.js diblokir).</p>"); return; }
   if (chartRingkasan) chartRingkasan.destroy();
   chartRingkasan = new Chart(ctx, {
     type: "line",
@@ -600,7 +610,7 @@ async function muatGrafikPemakaian() {
     .from("kartu_stok")
     .select("jumlah, obat(nama_obat)")
     .eq("jenis", "keluar")
-    .gte("tanggal", tigapuluhHariLalu.toISOString());
+    .gte("tanggal", tigapuluhHariLalu.toISOString().split("T")[0]);
 
   const totals = {};
   if (!error && data) {
@@ -613,6 +623,7 @@ async function muatGrafikPemakaian() {
   const top5 = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
   const ctx = document.getElementById("chartPemakaian");
+  if (typeof Chart === "undefined") { ctx.insertAdjacentHTML("afterend", "<p style='font-size:12px;color:var(--muted)'>Grafik gagal dimuat (koneksi ke Chart.js diblokir).</p>"); return; }
   if (chartPemakaian) chartPemakaian.destroy();
   chartPemakaian = new Chart(ctx, {
     type: "bar",
@@ -643,6 +654,7 @@ function muatDonutGenerik(semuaObat) {
   document.getElementById("legNonGenerik").textContent = `${100 - pctGenerik}% (${nonGenerik})`;
 
   const ctx = document.getElementById("chartGenerik");
+  if (typeof Chart === "undefined") { ctx.insertAdjacentHTML("afterend", "<p style='font-size:12px;color:var(--muted)'>Grafik gagal dimuat (koneksi ke Chart.js diblokir).</p>"); return; }
   if (chartGenerik) chartGenerik.destroy();
   chartGenerik = new Chart(ctx, {
     type: "doughnut",
