@@ -159,10 +159,11 @@
     <a id="navPelayanan" onclick="gantiSubtab('pelayanan')">Verifikasi & Penyerahan Resep</a>
     <a onclick="gantiSubtab('pelayanan'); setTimeout(()=>document.getElementById('entriKunjunganSelect').scrollIntoView({behavior:'smooth'}),50)">Entri Resep Manual</a>
     <a id="navRacikan" onclick="gantiSubtab('racikan')">Racikan Obat</a>
+    <a id="navRiwayatobat" onclick="gantiSubtab('riwayatobat')">Riwayat Obat Pasien</a>
 
     <div class="ph-group-title">Pengelolaan Stok</div>
     <a id="navStok" onclick="gantiSubtab('stok')">Master Data Obat</a>
-    <a onclick="gantiSubtab('stok'); setTimeout(()=>document.getElementById('ksObatSelect').focus(),50)">Kartu Stok Digital</a>
+    <a id="navKartustok" onclick="gantiSubtab('kartustok')">Kartu Stok Digital</a>
     <a class="disabled">Stok Opname <span class="ph-badge-soon">Segera</span></a>
     <a class="disabled">Mutasi & Penerimaan <span class="ph-badge-soon">Segera</span></a>
 
@@ -218,7 +219,7 @@
       <div class="ph-quick-grid">
         <div class="ph-quick-tile" onclick="gantiSubtab('pelayanan')">Verifikasi Resep</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('stok')">Master Data Obat</div>
-        <div class="ph-quick-tile" onclick="gantiSubtab('stok'); setTimeout(()=>document.getElementById('ksObatSelect').focus(),50)">Kartu Stok</div>
+        <div class="ph-quick-tile" onclick="gantiSubtab('kartustok')">Kartu Stok</div>
         <div class="ph-quick-tile disabled">LPLPO</div>
         <div class="ph-quick-tile disabled">Stok Opname</div>
         <div class="ph-quick-tile disabled">Penerimaan Obat</div>
@@ -434,8 +435,13 @@
     </table>
   </div>
 
+  </div>
+  <!-- /panelStok -->
+
+  <div id="panelKartustok" style="display:none;">
+
   <div class="card" style="--accent:#1c7d7f">
-    <h2><span class="card-num">3</span>Kartu Stok</h2>
+    <h2><span class="card-num">1</span>Kartu Stok Digital</h2>
     <p style="font-size:13px; color:#6b7280; margin-bottom:10px;">Riwayat keluar-masuk stok per obat, dasar buat LPLPO & laporan.</p>
     <div class="grid-2" style="margin-bottom:14px;">
       <div>
@@ -463,7 +469,7 @@
   </div>
 
   </div>
-  <!-- /panelStok -->
+  <!-- /panelKartustok -->
 
   <div id="panelRacikan" style="display:none;">
 
@@ -509,6 +515,47 @@
   </div>
   <!-- /panelRacikan -->
 
+  <div id="panelRiwayatobat" style="display:none;">
+
+  <div class="card" style="--accent:#26a3a0">
+    <h2><span class="card-num">1</span>Riwayat Obat Diserahkan</h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Catatan obat yang sudah diserahkan ke pasien, bisa difilter per tanggal & nama pasien.</p>
+    <div id="msgRiwayatObat"></div>
+    <div class="grid-3" style="margin-bottom:14px;">
+      <div>
+        <label>Dari Tanggal</label>
+        <input type="date" id="robDari">
+      </div>
+      <div>
+        <label>Sampai Tanggal</label>
+        <input type="date" id="robSampai">
+      </div>
+      <div>
+        <label>Cari Nama Pasien</label>
+        <input type="text" id="robCariPasien" placeholder="Ketik nama pasien (opsional)">
+      </div>
+    </div>
+    <button type="button" class="btn-primary" onclick="muatRiwayatObatApotek()">Tampilkan</button>
+    <table style="margin-top:14px;">
+      <thead>
+        <tr>
+          <th>Tanggal Diserahkan</th>
+          <th>Nama Pasien</th>
+          <th>NIK</th>
+          <th>No. Kunjungan</th>
+          <th>Obat Diserahkan</th>
+          <th>PIO</th>
+        </tr>
+      </thead>
+      <tbody id="tabelRiwayatObatApotek">
+        <tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  </div>
+  <!-- /panelRiwayatobat -->
+
     </div>
 
   </div>
@@ -536,6 +583,10 @@ let riwayatRangeAktif = "harian"; // filter riwayat pasien: harian/mingguan/bula
   }
   document.getElementById("infoTanggal").textContent = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
+  const hariIni = new Date().toISOString().split("T")[0];
+  document.getElementById("robDari").value = hariIni;
+  document.getElementById("robSampai").value = hariIni;
+
   try { await muatResepMenunggu(); } catch (e) { console.error("muatResepMenunggu gagal:", e); }
   try { await muatDaftarObat(); } catch (e) { console.error("muatDaftarObat gagal:", e); }
   try { await muatDashboardApotek(); } catch (e) { console.error("muatDashboardApotek gagal:", e); }
@@ -543,9 +594,74 @@ let riwayatRangeAktif = "harian"; // filter riwayat pasien: harian/mingguan/bula
   try { await siapkanRacikan(); } catch (e) { console.error("siapkanRacikan gagal:", e); }
 })();
 
+// ---------- Riwayat Obat Diserahkan (filter tanggal & nama pasien) ----------
+async function muatRiwayatObatApotek() {
+  const tbody = document.getElementById("tabelRiwayatObatApotek");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("robDari").value;
+  const sampaiInput = document.getElementById("robSampai").value;
+  const cariNama = document.getElementById("robCariPasien").value.trim();
+
+  let query = supabaseClient
+    .from("resep")
+    .select("id, diserahkan_at, daftar_obat, kunjungan!inner(no_kunjungan, pasien(nama, nik))")
+    .eq("status", "diserahkan")
+    .order("diserahkan_at", { ascending: false })
+    .limit(200);
+
+  if (dariInput) {
+    const dari = new Date(dariInput);
+    dari.setHours(0, 0, 0, 0);
+    query = query.gte("diserahkan_at", dari.toISOString());
+  }
+  if (sampaiInput) {
+    const sampai = new Date(sampaiInput);
+    sampai.setHours(23, 59, 59, 999);
+    query = query.lte("diserahkan_at", sampai.toISOString());
+  }
+  if (cariNama) {
+    query = query.ilike("kunjungan.pasien.nama", `%${cariNama}%`);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="6">Gagal muat riwayat: ${error.message}</td></tr>`;
+    return;
+  }
+
+  const hasil = (data || []).filter(r => r.kunjungan?.pasien);
+
+  if (!hasil.length) {
+    tbody.innerHTML = `<tr><td colspan="6">Tidak ada obat diserahkan di rentang ini.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = hasil.map(r => {
+    const tgl = new Date(r.diserahkan_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const obatTxt = (r.daftar_obat || []).map(o => {
+      const nama = o.racikan ? o.nama_racikan : `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`;
+      const jumlah = o.racikan ? `${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul` : `${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}`;
+      return `${nama} (${jumlah})`;
+    }).join(", ");
+    const semuaPio = (r.daftar_obat || []).length > 0 && (r.daftar_obat || []).every(o => o.pio_diberikan);
+    return `
+      <tr>
+        <td>${tgl}</td>
+        <td>${r.kunjungan.pasien.nama}</td>
+        <td>${r.kunjungan.pasien.nik || "-"}</td>
+        <td>${r.kunjungan.no_kunjungan || "-"}</td>
+        <td>${obatTxt || "-"}</td>
+        <td>${semuaPio ? "✓" : "-"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
 // ---------- Sub-tab Beranda / Pelayanan / Stok ----------
 function gantiSubtab(tab) {
-  ["beranda", "pelayanan", "stok", "racikan"].forEach(t => {
+  ["beranda", "pelayanan", "stok", "kartustok", "racikan", "riwayatobat"].forEach(t => {
     document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? "block" : "none";
     const nav = document.getElementById("nav" + t.charAt(0).toUpperCase() + t.slice(1));
     if (nav) nav.classList.toggle("active", t === tab);
@@ -1343,6 +1459,8 @@ function cetakEtiket(namaPasien, item) {
       ${item.anjuran_makan ? `<div class="baris">${LABEL_ANJURAN_MAKAN_MAP[item.anjuran_makan] || item.anjuran_makan}</div>` : ""}
       ${waktuTxt ? `<div class="baris waktu">Diminum: ${waktuTxt}</div>` : ""}
       <div class="garis"></div>
+      <div class="baris" style="font-size:10px;">Edukasi/PIO: ${item.pio_diberikan ? "sudah diberikan" : "belum tercatat"}</div>
+      <div class="garis"></div>
       <div class="center">Semoga lekas sembuh</div>
     </body></html>
   `;
@@ -1374,6 +1492,7 @@ function renderDetailResep(resep) {
           ${o.diserahkan ? `
             <div class="racikan-komponen-mini" style="width:100%;">Diserahkan: ${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul — Komponen dipotong: ${(o.komponen || []).map(k => `${k.nama_obat} (${k.jumlah_dipakai_aktual ?? k.jumlah_dipakai}${k.satuan ? " " + k.satuan : ""})`).join(", ")}</div>
             <span class="badge badge-selesai">Diserahkan</span>
+            ${o.pio_diberikan ? `<span class="badge" style="background:#e0f2f1; color:#1c7d7f;">PIO ✓</span>` : `<span class="badge" style="background:#fef3c7; color:#92400e;">PIO belum tercatat</span>`}
             <button type="button" onclick='cetakEtiket(${JSON.stringify(resep.kunjungan?.pasien?.nama || "-")}, ${JSON.stringify(o)})'>Cetak Etiket</button>
           ` : `
             <div class="racikan-serah-block" style="width:100%;">
@@ -1388,6 +1507,10 @@ function renderDetailResep(resep) {
                   </div>
                 `).join("")}
               </div>
+              <label style="display:block; margin-top:8px; font-size:12px;">
+                <input type="checkbox" id="pioCheck_${resep.id}_${i}" style="width:auto; display:inline-block;">
+                Sudah diberi PIO (info cara pakai/edukasi obat) ke pasien
+              </label>
               <button type="button" onclick="konfirmasiObatDiserahkan('${resep.id}', ${i}, this)" style="margin-top:8px;">Serahkan Racikan</button>
             </div>
           `}
@@ -1400,12 +1523,17 @@ function renderDetailResep(resep) {
               ${o.nama_obat}${o.dosis ? " — " + o.dosis : ""} (diresepkan ${o.jumlah}${o.satuan ? " " + o.satuan : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""}${labelAnjuranMakan(o.anjuran_makan)}) ${labelWaktu(o.waktu)}
             </label>
             <span class="badge badge-selesai">Diserahkan ${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}</span>
+            ${o.pio_diberikan ? `<span class="badge" style="background:#e0f2f1; color:#1c7d7f;">PIO ✓</span>` : `<span class="badge" style="background:#fef3c7; color:#92400e;">PIO belum tercatat</span>`}
             <button type="button" onclick='cetakEtiket(${JSON.stringify(resep.kunjungan?.pasien?.nama || "-")}, ${JSON.stringify(o)})'>Cetak Etiket</button>
           ` : `
             <label style="flex:1;">
               ${o.nama_obat}${o.dosis ? " — " + o.dosis : ""} (diresepkan ${o.jumlah}${o.satuan ? " " + o.satuan : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""}${labelAnjuranMakan(o.anjuran_makan)}) ${labelWaktu(o.waktu)}
             </label>
             <input type="number" class="serah-input" id="jumlahSerah_${resep.id}_${i}" value="${o.jumlah}" min="1">
+            <label style="display:block; width:100%; margin-top:6px; font-size:12px;">
+              <input type="checkbox" id="pioCheck_${resep.id}_${i}" style="width:auto; display:inline-block;">
+              Sudah diberi PIO (info cara pakai/edukasi obat) ke pasien
+            </label>
             <button type="button" onclick="konfirmasiObatDiserahkan('${resep.id}', ${i}, this)">Serahkan</button>
           `}
         </li>
@@ -1533,6 +1661,11 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, tombolEl) {
   }
 
   const labelKonfirmasi = isRacikan ? `racikan "${item.nama_racikan}" (${jumlahDiserahkan} bungkus/kapsul, stok dipotong sesuai jumlah obat dasar yang diisi)` : "obat ini";
+  const pioCheckbox = document.getElementById(`pioCheck_${resepId}_${itemIndex}`);
+  const pioDiberikan = !!pioCheckbox?.checked;
+  if (!pioDiberikan && !confirm(`Kotak "Sudah diberi PIO/edukasi" belum dicentang. Tetap lanjut serahkan ${labelKonfirmasi} tanpa catatan PIO?`)) {
+    return;
+  }
   if (!confirm(`Konfirmasi ${labelKonfirmasi} sudah diserahkan ke pasien?`)) {
     return;
   }
@@ -1605,7 +1738,8 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, tombolEl) {
         jumlah_diserahkan: jumlahDiserahkan,
         ...(isRacikan ? { komponen: komponenAktual } : {}),
         diserahkan_at: new Date().toISOString(),
-        diserahkan_oleh: profilSaya.id
+        diserahkan_oleh: profilSaya.id,
+        pio_diberikan: pioDiberikan
       }
     : o);
   const semuaSelesai = daftarObatBaru.every(o => o.diserahkan);

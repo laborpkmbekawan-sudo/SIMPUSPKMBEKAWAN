@@ -278,10 +278,11 @@
           <th>NIK</th>
           <th>No. Kunjungan</th>
           <th>Obat Diserahkan</th>
+          <th>PIO</th>
         </tr>
       </thead>
       <tbody id="tabelRiwayatObat">
-        <tr><td colspan="5">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
+        <tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
       </tbody>
     </table>
   </div>
@@ -296,7 +297,7 @@ let daftarObatResep = [];
 
 async function muatRiwayatObat() {
   const tbody = document.getElementById("tabelRiwayatObat");
-  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
 
   const dariInput = document.getElementById("robDari").value;
   const sampaiInput = document.getElementById("robSampai").value;
@@ -326,14 +327,14 @@ async function muatRiwayatObat() {
   const { data, error } = await query;
 
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="5">Gagal muat riwayat: ${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6">Gagal muat riwayat: ${error.message}</td></tr>`;
     return;
   }
 
   const hasil = (data || []).filter(r => r.kunjungan?.pasien);
 
   if (!hasil.length) {
-    tbody.innerHTML = `<tr><td colspan="5">Tidak ada obat diserahkan di rentang ini.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6">Tidak ada obat diserahkan di rentang ini.</td></tr>`;
     return;
   }
 
@@ -344,6 +345,7 @@ async function muatRiwayatObat() {
       const jumlah = o.racikan ? `${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul` : `${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}`;
       return `${nama} (${jumlah})`;
     }).join(", ");
+    const semuaPio = (r.daftar_obat || []).length > 0 && (r.daftar_obat || []).every(o => o.pio_diberikan);
     return `
       <tr>
         <td>${tgl}</td>
@@ -351,6 +353,7 @@ async function muatRiwayatObat() {
         <td>${r.kunjungan.pasien.nik || "-"}</td>
         <td>${r.kunjungan.no_kunjungan || "-"}</td>
         <td>${obatTxt || "-"}</td>
+        <td>${semuaPio ? "✓" : "-"}</td>
       </tr>
     `;
   }).join("");
