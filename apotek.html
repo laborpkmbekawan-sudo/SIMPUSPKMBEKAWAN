@@ -640,12 +640,20 @@ async function muatRiwayatObatApotek() {
 
   tbody.innerHTML = hasil.map(r => {
     const tgl = new Date(r.diserahkan_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-    const obatTxt = (r.daftar_obat || []).map(o => {
+    const daftarObat = r.daftar_obat || [];
+    const obatBaris = daftarObat.map(o => {
       const nama = o.racikan ? o.nama_racikan : `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`;
       const jumlah = o.racikan ? `${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul` : `${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}`;
       return `${nama} (${jumlah})`;
-    }).join(", ");
-    const semuaPio = (r.daftar_obat || []).length > 0 && (r.daftar_obat || []).every(o => o.pio_diberikan);
+    });
+    let obatTxt = "-";
+    if (obatBaris.length === 1) {
+      obatTxt = obatBaris[0];
+    } else if (obatBaris.length > 1) {
+      const listHtml = obatBaris.map(t => `<li>${t}</li>`).join("");
+      obatTxt = `<details><summary style="cursor:pointer; color:var(--primary,#0d6b5e); font-weight:500;">${obatBaris.length} jenis obat</summary><ul style="margin:6px 0 0 18px; padding:0;">${listHtml}</ul></details>`;
+    }
+    const semuaPio = daftarObat.length > 0 && daftarObat.every(o => o.pio_diberikan);
     return `
       <tr>
         <td>${tgl}</td>
