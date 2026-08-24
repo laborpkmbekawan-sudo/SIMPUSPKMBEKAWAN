@@ -252,6 +252,40 @@
   </div>
   <!-- /modePendaftaran -->
 
+  <div class="card">
+    <h2>Riwayat Obat Diserahkan</h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Catatan obat yang sudah diserahkan Farmasi ke pasien, bisa difilter per tanggal.</p>
+    <div class="grid-3" style="margin-bottom:14px;">
+      <div>
+        <label>Dari Tanggal</label>
+        <input type="date" id="robDari">
+      </div>
+      <div>
+        <label>Sampai Tanggal</label>
+        <input type="date" id="robSampai">
+      </div>
+      <div>
+        <label>Cari Nama Pasien</label>
+        <input type="text" id="robCariPasien" placeholder="Ketik nama pasien (opsional)">
+      </div>
+    </div>
+    <button type="button" class="btn-primary" onclick="muatRiwayatObat()">Tampilkan</button>
+    <table style="margin-top:14px;">
+      <thead>
+        <tr>
+          <th>Tanggal Diserahkan</th>
+          <th>Nama Pasien</th>
+          <th>NIK</th>
+          <th>No. Kunjungan</th>
+          <th>Obat Diserahkan</th>
+        </tr>
+      </thead>
+      <tbody id="tabelRiwayatObat">
+        <tr><td colspan="5">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
 </div>
 
 <script src="js/supabaseClient.js"></script>
@@ -259,6 +293,79 @@
 let kunjunganAktif = null;
 let profilSaya = null;
 let daftarObatResep = [];
+
+async function muatRiwayatObat() {
+  const tbody = document.getElementById("tabelRiwayatObat");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("robDari").value;
+  const sampaiInput = document.getElementById("robSampai").value;
+  const cariNama = document.getElementById("robCariPasien").value.trim();
+
+  let query = supabaseClient
+    .from("resep")
+    .select("id, diserahkan_at, daftar_obat, kunjungan!inner(no_kunjungan, pasien(nama, nik))")
+    .eq("status", "diserahkan")
+    .order("diserahkan_at", { ascending: false })
+    .limit(200);
+
+  if (dariInput) {
+    const dari = new Date(dariInput);
+    dari.setHours(0, 0, 0, 0);
+    query = query.gte("diserahkan_at", dari.toISOString());
+  }
+  if (sampaiInput) {
+    const sampai = new Date(sampaiInput);
+    sampai.setHours(23, 59, 59, 999);
+    query = query.lte("diserahkan_at", sampai.toISOString());
+  }
+  if (cariNama) {
+    query = query.ilike("kunjungan.pasien.nama", `%${cariNama}%`);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="5">Gagal muat riwayat: ${error.message}</td></tr>`;
+    return;
+  }
+
+  const hasil = (data || []).filter(r => r.kunjungan?.pasien);
+
+  if (!hasil.length) {
+    tbody.innerHTML = `<tr><td colspan="5">Tidak ada obat diserahkan di rentang ini.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = hasil.map(r => {
+    const tgl = new Date(r.diserahkan_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const obatTxt = (r.daftar_obat || []).map(o => {
+      const nama = o.racikan ? o.nama_racikan : `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`;
+      const jumlah = o.racikan ? `${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul` : `${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}`;
+      return `${nama} (${jumlah})`;
+    }).join(", ");
+    return `
+      <tr>
+        <td>${tgl}</td>
+        <td>${r.kunjungan.pasien.nama}</td>
+        <td>${r.kunjungan.pasien.nik || "-"}</td>
+        <td>${r.kunjungan.no_kunjungan || "-"}</td>
+        <td>${obatTxt || "-"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// Default: filter tanggal hari ini pas halaman pertama dibuka.
+(function setDefaultTanggalRiwayatObat() {
+  const hariIni = new Date().toISOString().split("T")[0];
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("robDari").value = hariIni;
+    document.getElementById("robSampai").value = hariIni;
+  });
+})();
+</script>
+<script>
 
 // Daftar diagnosa Kompetensi 4A (wajib tuntas FKTP, sesuai Panduan Kapitasi BPJS).
 // Bukan daftar lengkap resmi — tambah/sesuaikan sendiri lewat SK Kepala Puskesmas / Permenkes terbaru kalau ada penambahan.
