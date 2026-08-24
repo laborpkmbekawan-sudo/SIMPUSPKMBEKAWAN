@@ -368,6 +368,34 @@ alter table resep add constraint resep_status_check
   check (status in ('menunggu', 'disiapkan', 'sebagian', 'diserahkan'));
 
 -- ============================================================
+-- 18. RACIKAN OBAT + JENIS OBAT + WAKTU MINUM (dokumentasi saja,
+--     TIDAK PERLU DIJALANKAN — daftar_obat tetap jsonb, jadi field baru
+--     otomatis diterima tanpa migrasi kolom).
+--
+--     Item obat biasa di daftar_obat sekarang bisa punya field tambahan:
+--       jenis_obat: 'tablet_kapsul' | 'sirup' | 'salep' | 'tetes' | 'lainnya'
+--       waktu: array teks, misal ['pagi','siang','sore']
+--
+--     Item racikan (dari menu Racikan Obat) berbentuk beda, ditandai
+--     racikan: true, contoh:
+--       {
+--         "racikan": true,
+--         "nama_racikan": "Puyer Batuk Anak",
+--         "jumlah_bungkus": 10,
+--         "satuan": "bungkus",
+--         "aturan_pakai": "3x1 bungkus sehabis makan",
+--         "waktu": ["pagi","siang","sore"],
+--         "komponen": [
+--           {"nama_obat": "Paracetamol", "dosis": "500mg", "jumlah_dipakai": 5, "satuan": "tablet"},
+--           {"nama_obat": "CTM", "dosis": "4mg", "jumlah_dipakai": 5, "satuan": "tablet"}
+--         ],
+--         "diserahkan": true, "jumlah_diserahkan": 10, "diserahkan_at": "...", "diserahkan_oleh": "..."
+--       }
+--     Pas racikan diserahkan, stok tiap obat di "komponen" dipotong sesuai
+--     jumlah_dipakai masing-masing (FEFO), bukan cuma 1 nama obat kayak resep biasa.
+-- ============================================================
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
