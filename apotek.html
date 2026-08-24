@@ -8,95 +8,62 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
-/* ================= REDESAIN DASHBOARD APOTEK ================= */
-/* CSS khusus halaman ini saja — gak nyentuh style.css / halaman lain. */
+/* ================= REDESAIN DASHBOARD APOTEK (skema Navy/Orange) ================= */
+/* Page-scoped — cuma nimpa tampilan Apotek, gak nyentuh css/style.css / halaman lain. */
+.dash-content, .topbar { --navy:#0f2942; --navy-2:#173b5e; --teal-a:#1c7d7f; --teal-2:#26a3a0; --orange:#e0793c; --plum:#6a4c93; }
 
-.ph-shell .sidebar {
-  background: linear-gradient(180deg, #0f4c3a 0%, #0a3a2c 100%);
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 16px;
-  overflow-y: auto;
+.sidebar {
+  background: linear-gradient(180deg, #0f2942 0%, #173b5e 100%) !important;
 }
-.ph-shell .sidebar .brand { border-bottom: 1px solid rgba(255,255,255,.12); }
+.sidebar nav a.active { border-left: 3px solid #e0793c !important; background: rgba(255,255,255,.09) !important; }
+.sidebar nav a:hover { background: rgba(255,255,255,.06) !important; }
+
+.topbar h1 { color: var(--navy); }
+
 .ph-group-title {
   font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.45);
-  text-transform: uppercase; padding: 16px 20px 6px;
+  text-transform: uppercase; padding: 14px 18px 4px;
 }
-.ph-nav-link {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 20px; color: rgba(255,255,255,.85); font-size: 14px;
-  text-decoration: none; cursor: pointer; border-left: 3px solid transparent;
-}
-.ph-nav-link:hover { background: rgba(255,255,255,.06); }
-.ph-nav-link.active { background: rgba(255,255,255,.12); border-left-color: #34d399; color: #fff; font-weight: 600; }
-.ph-nav-link.disabled { opacity: .4; cursor: default; }
-.ph-nav-link.disabled:hover { background: none; }
-.ph-nav-link .ico { width: 18px; text-align: center; }
+.sidebar nav a.disabled { opacity: .45; cursor: default; }
+.sidebar nav a.disabled:hover { background: none; }
 .ph-badge-soon {
-  margin-left: auto; font-size: 10px; background: rgba(255,255,255,.12); color: rgba(255,255,255,.7);
-  padding: 2px 6px; border-radius: 999px;
+  float: right; font-size: 10px; font-weight: 500; background: rgba(255,255,255,.14); color: rgba(255,255,255,.75);
+  padding: 2px 7px; border-radius: 999px;
 }
-.ph-nav-link.crossapp { color: rgba(255,255,255,.6); font-size: 13px; }
 
-.ph-topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 28px; background: #fff; border-bottom: 1px solid #eef0ee;
+/* Kartu dashboard bergaris aksen warna + badge angka, gaya mockup navy/orange */
+.dash-content .card { border-left: 4px solid var(--accent, var(--teal-2)); position: relative; }
+.dash-content .card h2 { display: flex; align-items: center; gap: 8px; }
+.card-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 5px; background: var(--accent, var(--teal-2));
+  color: #fff; font-size: 10.5px; font-weight: 700; flex-shrink: 0;
 }
-.ph-topbar h1 { font-size: 20px; margin: 0; }
-.ph-topbar p { margin: 2px 0 0; color: #6b7280; font-size: 13px; }
-.ph-topbar-right { display: flex; align-items: center; gap: 18px; }
-.ph-bell { position: relative; font-size: 18px; }
-.ph-bell .dot-count {
-  position: absolute; top: -6px; right: -8px; background: #dc2626; color: #fff;
-  font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 999px;
-}
-.ph-user { text-align: right; font-size: 13px; line-height: 1.3; }
-.ph-user strong { display: block; font-size: 13px; }
-.ph-user span { color: #6b7280; font-size: 12px; }
+.stat-card { border-left: 4px solid var(--teal-2); }
 
-.ph-kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
-.ph-kpi-card {
-  background: #fff; border: 1px solid #eef0ee; border-radius: 12px; padding: 18px;
-  display: flex; align-items: center; gap: 14px;
-}
-.ph-kpi-icon {
-  width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center;
-  justify-content: center; font-size: 20px; flex-shrink: 0;
-}
-.ph-kpi-icon.blue { background: #e8f1ff; }
-.ph-kpi-icon.amber { background: #fff4d6; }
-.ph-kpi-icon.green { background: #e5f7ef; }
-.ph-kpi-value { font-size: 26px; font-weight: 700; line-height: 1.1; }
-.ph-kpi-label { font-size: 12px; color: #6b7280; margin-top: 2px; }
-.ph-kpi-link { font-size: 12px; color: #0f7a5c; text-decoration: none; cursor: pointer; }
-
-.ph-grid-3 { display: grid; grid-template-columns: 1.1fr 1fr 1.3fr; gap: 16px; margin-bottom: 16px; align-items: stretch; }
-.ph-card { background: #fff; border: 1px solid #eef0ee; border-radius: 12px; padding: 18px; }
-.ph-card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: #374151; margin: 0 0 14px; }
+.ph-grid-3 { display: grid; grid-template-columns: 1.1fr 1fr 1.3fr; gap: 16px; margin-bottom: 20px; align-items: stretch; }
 
 .ph-notif-row {
-  display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: 10px; margin-bottom: 8px;
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px;
 }
-.ph-notif-row.danger { background: #fde7e9; }
+.ph-notif-row.danger { background: var(--red-light, #fde7e9); }
 .ph-notif-row.warn { background: #fff4d6; }
-.ph-notif-row .ico { font-size: 16px; }
-.ph-notif-row strong { display: block; font-size: 15px; }
-.ph-notif-row .sub { font-size: 12px; color: #6b7280; }
-.ph-notif-row a { font-size: 12px; color: #0f7a5c; text-decoration: none; margin-left: auto; white-space: nowrap; }
+.ph-notif-row strong { display: block; font-size: 16px; }
+.ph-notif-row .sub { font-size: 12px; color: var(--muted); }
+.ph-notif-row a { font-size: 12px; color: var(--primary); text-decoration: none; margin-left: auto; white-space: nowrap; font-weight: 600; }
 
 .ph-quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .ph-quick-tile {
-  border: 1px solid #eef0ee; border-radius: 10px; padding: 12px 8px; text-align: center;
-  cursor: pointer; background: #fafbfa; font-size: 12px; color: #374151;
+  border: 1px solid var(--border); border-radius: 8px; padding: 12px 8px; text-align: center;
+  cursor: pointer; background: #fafbfa; font-size: 12px; color: #374151; font-weight: 500;
 }
-.ph-quick-tile:hover { background: #f0f4f2; }
+.ph-quick-tile:hover { background: var(--primary-light); border-color: var(--primary); }
 .ph-quick-tile.disabled { opacity: .4; cursor: default; }
-.ph-quick-tile .ico { font-size: 20px; display: block; margin-bottom: 6px; }
+.ph-quick-tile.disabled:hover { background: #fafbfa; border-color: var(--border); }
 
 .ph-info-grid { display: flex; flex-direction: column; gap: 12px; }
 .ph-info-row { display: flex; justify-content: space-between; font-size: 13px; }
-.ph-info-row span:first-child { color: #6b7280; }
+.ph-info-row span:first-child { color: var(--muted); }
 .ph-info-row span:last-child { font-weight: 600; text-align: right; }
 
 .ph-chart-card canvas { max-height: 220px; }
@@ -106,15 +73,38 @@
 .ph-donut-legend .row { display: flex; align-items: center; gap: 8px; }
 .ph-donut-legend .sw { width: 10px; height: 10px; border-radius: 3px; }
 
+/* ---- Antrian resep: daftar pasien + panel detail ---- */
+.queue-layout { display: flex; gap: 18px; align-items: flex-start; }
+.queue-list { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; max-height: 640px; overflow-y: auto; }
+.queue-item {
+  border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px; cursor: pointer; background: #fff;
+}
+.queue-item:hover { border-color: var(--primary); }
+.queue-item.active { border-color: var(--primary); background: var(--primary-light); }
+.queue-item .nama { font-weight: 600; font-size: 14px; color: #111827; }
+.queue-item .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.queue-detail { flex: 1; min-width: 0; }
+.queue-empty { color: var(--muted); font-size: 14px; padding: 30px 0; text-align: center; }
+.queue-detail-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.queue-detail-head h3 { font-size: 16px; margin: 0 0 4px; }
+.queue-detail-head .meta { font-size: 13px; color: var(--muted); }
+.riwayat-block { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border); }
+.riwayat-block h4 { font-size: 13px; text-transform: uppercase; letter-spacing: .03em; color: #374151; margin: 0 0 10px; }
+.riwayat-item { padding: 9px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
+.riwayat-item:last-child { border-bottom: none; }
+.riwayat-item .tgl { color: var(--muted); font-size: 12px; margin-bottom: 3px; }
+
 @media (max-width: 1100px) {
-  .ph-kpi-row, .ph-grid-3 { grid-template-columns: 1fr; }
+  .ph-grid-3 { grid-template-columns: 1fr; }
   .ph-quick-grid { grid-template-columns: repeat(2, 1fr); }
+  .queue-layout { flex-direction: column; }
+  .queue-list { width: 100%; max-height: 280px; }
 }
 </style>
 </head>
 <body>
 
-<div class="app-shell ph-shell">
+<div class="app-shell">
 
   <aside class="sidebar">
     <div class="brand">
@@ -123,41 +113,33 @@
     </div>
 
     <div class="ph-group-title">Petugas Farmasi</div>
-    <a class="ph-nav-link active" id="navBeranda" onclick="gantiSubtab('beranda')"><span class="ico">🏠</span> Dashboard</a>
+    <a class="active" id="navBeranda" onclick="gantiSubtab('beranda')">Dashboard</a>
 
     <div class="ph-group-title">Pelayanan Obat & Resep</div>
-    <a class="ph-nav-link" id="navPelayanan" onclick="gantiSubtab('pelayanan')"><span class="ico">📋</span> Verifikasi & Penyerahan Resep</a>
-    <a class="ph-nav-link disabled"><span class="ico">📝</span> Entri Resep Manual <span class="ph-badge-soon">Segera</span></a>
-    <a class="ph-nav-link disabled"><span class="ico">🧪</span> Racikan Obat <span class="ph-badge-soon">Segera</span></a>
+    <a id="navPelayanan" onclick="gantiSubtab('pelayanan')">Verifikasi & Penyerahan Resep</a>
+    <a class="disabled">Entri Resep Manual <span class="ph-badge-soon">Segera</span></a>
+    <a class="disabled">Racikan Obat <span class="ph-badge-soon">Segera</span></a>
 
     <div class="ph-group-title">Pengelolaan Stok</div>
-    <a class="ph-nav-link" id="navStok" onclick="gantiSubtab('stok')"><span class="ico">💊</span> Master Data Obat</a>
-    <a class="ph-nav-link" onclick="gantiSubtab('stok'); setTimeout(()=>document.getElementById('ksObatSelect').focus(),50)"><span class="ico">📊</span> Kartu Stok Digital</a>
-    <a class="ph-nav-link disabled"><span class="ico">📦</span> Stok Opname <span class="ph-badge-soon">Segera</span></a>
-    <a class="ph-nav-link disabled"><span class="ico">🚚</span> Mutasi & Penerimaan <span class="ph-badge-soon">Segera</span></a>
+    <a id="navStok" onclick="gantiSubtab('stok')">Master Data Obat</a>
+    <a onclick="gantiSubtab('stok'); setTimeout(()=>document.getElementById('ksObatSelect').focus(),50)">Kartu Stok Digital</a>
+    <a class="disabled">Stok Opname <span class="ph-badge-soon">Segera</span></a>
+    <a class="disabled">Mutasi & Penerimaan <span class="ph-badge-soon">Segera</span></a>
 
     <div class="ph-group-title">Pengadaan & Laporan</div>
-    <a class="ph-nav-link disabled"><span class="ico">📑</span> LPLPO <span class="ph-badge-soon">Segera</span></a>
-    <a class="ph-nav-link disabled"><span class="ico">📈</span> Laporan <span class="ph-badge-soon">Segera</span></a>
+    <a class="disabled">LPLPO <span class="ph-badge-soon">Segera</span></a>
+    <a class="disabled">Laporan <span class="ph-badge-soon">Segera</span></a>
 
     <div class="ph-group-title">Modul Lain</div>
-    <a class="ph-nav-link crossapp" href="index.html"><span class="ico">🧾</span> Pendaftaran</a>
-    <a class="ph-nav-link crossapp" href="rekam-medis.html"><span class="ico">🩺</span> Rekam Medis</a>
-    <a class="ph-nav-link crossapp" href="pengaturan.html"><span class="ico">⚙️</span> Pengaturan</a>
+    <a href="pengaturan.html">Pengaturan</a>
   </aside>
 
   <div class="main-wrap">
 
-    <div class="ph-topbar">
-      <div>
-        <h1>Dashboard Petugas Farmasi</h1>
-        <p>Ringkasan pelayanan dan informasi penting hari ini.</p>
-      </div>
-      <div class="ph-topbar-right">
-        <div class="ph-bell">🔔<span class="dot-count" id="phBellCount">0</span></div>
-        <div class="ph-user">
-          <strong id="namaUser">Memuat...</strong>
-        </div>
+    <div class="topbar">
+      <h1>Dashboard Petugas Farmasi</h1>
+      <div class="user-info">
+        <span id="namaUser">Memuat...</span>
         <button onclick="logout()">Keluar</button>
       </div>
     </div>
@@ -166,53 +148,44 @@
 
   <div id="panelBeranda">
 
-  <div class="ph-kpi-row">
-    <div class="ph-kpi-card">
-      <div class="ph-kpi-icon blue">📄</div>
-      <div>
-        <div class="ph-kpi-value" id="statResepMenunggu">-</div>
-        <div class="ph-kpi-label">Resep Masuk Hari Ini</div>
-      </div>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="label">Resep Masuk Hari Ini</div>
+      <div class="value" id="statResepMenunggu">-</div>
     </div>
-    <div class="ph-kpi-card">
-      <div class="ph-kpi-icon amber">⏳</div>
-      <div>
-        <div class="ph-kpi-value" id="statResepDisiapkan">-</div>
-        <div class="ph-kpi-label">Sedang Diproses (Sebagian)</div>
-      </div>
+    <div class="stat-card">
+      <div class="label">Sedang Diproses (Sebagian)</div>
+      <div class="value" id="statResepDisiapkan">-</div>
     </div>
-    <div class="ph-kpi-card">
-      <div class="ph-kpi-icon green">✅</div>
-      <div>
-        <div class="ph-kpi-value" id="statResepDiserahkan">-</div>
-        <div class="ph-kpi-label">Selesai Diserahkan Hari Ini</div>
-      </div>
+    <div class="stat-card">
+      <div class="label">Selesai Diserahkan Hari Ini</div>
+      <div class="value" id="statResepDiserahkan">-</div>
     </div>
   </div>
 
   <div class="ph-grid-3">
 
-    <div class="ph-card">
-      <h2>Notifikasi Stok Alert</h2>
+    <div class="card" style="--accent:#e0793c">
+      <h2><span class="card-num">1</span>Notifikasi Stok Alert</h2>
       <div id="alertStok"><div class="ph-notif-row">Memuat...</div></div>
     </div>
 
-    <div class="ph-card">
-      <h2>Menu Cepat</h2>
+    <div class="card" style="--accent:#26a3a0">
+      <h2><span class="card-num">2</span>Menu Cepat</h2>
       <div class="ph-quick-grid">
-        <div class="ph-quick-tile" onclick="gantiSubtab('pelayanan')"><span class="ico">📋</span>Verifikasi Resep</div>
-        <div class="ph-quick-tile" onclick="gantiSubtab('stok')"><span class="ico">💊</span>Master Data Obat</div>
-        <div class="ph-quick-tile" onclick="gantiSubtab('stok'); setTimeout(()=>document.getElementById('ksObatSelect').focus(),50)"><span class="ico">📊</span>Kartu Stok</div>
-        <div class="ph-quick-tile disabled"><span class="ico">🧾</span>LPLPO</div>
-        <div class="ph-quick-tile disabled"><span class="ico">📦</span>Stok Opname</div>
-        <div class="ph-quick-tile disabled"><span class="ico">🚚</span>Penerimaan Obat</div>
-        <div class="ph-quick-tile disabled"><span class="ico">🧪</span>Racikan Obat</div>
-        <div class="ph-quick-tile disabled"><span class="ico">📈</span>Laporan</div>
+        <div class="ph-quick-tile" onclick="gantiSubtab('pelayanan')">Verifikasi Resep</div>
+        <div class="ph-quick-tile" onclick="gantiSubtab('stok')">Master Data Obat</div>
+        <div class="ph-quick-tile" onclick="gantiSubtab('stok'); setTimeout(()=>document.getElementById('ksObatSelect').focus(),50)">Kartu Stok</div>
+        <div class="ph-quick-tile disabled">LPLPO</div>
+        <div class="ph-quick-tile disabled">Stok Opname</div>
+        <div class="ph-quick-tile disabled">Penerimaan Obat</div>
+        <div class="ph-quick-tile disabled">Racikan Obat</div>
+        <div class="ph-quick-tile disabled">Laporan</div>
       </div>
     </div>
 
-    <div class="ph-card ph-chart-card">
-      <h2>Ringkasan Resep Diserahkan (7 Hari Terakhir)</h2>
+    <div class="card ph-chart-card" style="--accent:#173b5e">
+      <h2><span class="card-num">3</span>Ringkasan Resep Diserahkan (7 Hari Terakhir)</h2>
       <canvas id="chartRingkasan"></canvas>
       <div class="ph-info-grid" style="margin-top:12px;">
         <div class="ph-info-row"><span>Total resep diserahkan</span><span id="ringkasanTotal">-</span></div>
@@ -223,8 +196,8 @@
 
   </div>
 
-  <div class="ph-card" style="margin-bottom:16px;">
-    <h2>Ringkasan Stok Kritis</h2>
+  <div class="card" style="margin-bottom:20px; --accent:#6a4c93">
+    <h2><span class="card-num">4</span>Ringkasan Stok Kritis</h2>
     <table>
       <thead>
         <tr>
@@ -244,25 +217,25 @@
 
   <div class="ph-grid-3" style="grid-template-columns: 1.3fr 1fr 1fr;">
 
-    <div class="ph-card ph-chart-card">
-      <h2>Grafik Pemakaian Obat — Top 5 (30 Hari Terakhir)</h2>
+    <div class="card ph-chart-card" style="--accent:#1c7d7f">
+      <h2><span class="card-num">5</span>Grafik Pemakaian Obat — Top 5 (30 Hari Terakhir)</h2>
       <canvas id="chartPemakaian"></canvas>
     </div>
 
-    <div class="ph-card">
-      <h2>Persentase Obat Generik</h2>
+    <div class="card" style="--accent:#26a3a0">
+      <h2><span class="card-num">6</span>Persentase Obat Generik</h2>
       <div class="ph-donut-wrap">
         <canvas id="chartGenerik"></canvas>
         <div class="ph-donut-legend">
-          <div class="row"><span class="sw" style="background:#0f7a5c"></span> Generik <strong id="legGenerik">-</strong></div>
-          <div class="row"><span class="sw" style="background:#f5b93d"></span> Non Generik <strong id="legNonGenerik">-</strong></div>
+          <div class="row"><span class="sw" style="background:#26a3a0"></span> Generik <strong id="legGenerik">-</strong></div>
+          <div class="row"><span class="sw" style="background:#e0793c"></span> Non Generik <strong id="legNonGenerik">-</strong></div>
         </div>
       </div>
       <p style="font-size:11px; color:#9ca3af; margin-top:10px;">Dihitung dari jumlah item obat di master data, bukan volume transaksi.</p>
     </div>
 
-    <div class="ph-card">
-      <h2>Informasi Sistem</h2>
+    <div class="card" style="--accent:#173b5e">
+      <h2><span class="card-num">7</span>Informasi Sistem</h2>
       <div class="ph-info-grid">
         <div class="ph-info-row"><span>Metode Stok</span><span>FEFO</span></div>
         <div class="ph-info-row"><span>Tanggal Sistem</span><span id="infoTanggal">-</span></div>
@@ -278,23 +251,16 @@
 
   <div id="panelPelayanan" style="display:none;">
 
-  <div class="card">
-    <h2>Resep Menunggu Disiapkan</h2>
+  <div class="card" style="--accent:#e0793c">
+    <h2><span class="card-num">1</span>Antrian Resep Pasien</h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Klik nama pasien buat lihat resepnya, baru centang tiap obat saat diserahkan.</p>
     <div id="msgResep"></div>
-    <table>
-      <thead>
-        <tr>
-          <th>No. Kunjungan</th>
-          <th>Nama Pasien</th>
-          <th>Klaster</th>
-          <th>Daftar Obat (centang tiap obat saat diserahkan)</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="tabelResepMenunggu">
-        <tr><td colspan="5">Memuat...</td></tr>
-      </tbody>
-    </table>
+    <div class="queue-layout">
+      <div class="queue-list" id="daftarPasienResep">Memuat...</div>
+      <div class="queue-detail" id="detailResepPasien">
+        <div class="queue-empty">Pilih pasien di daftar sebelah kiri buat lihat & konfirmasi resepnya.</div>
+      </div>
+    </div>
   </div>
 
   </div>
@@ -302,8 +268,8 @@
 
   <div id="panelStok" style="display:none;">
 
-  <div class="card">
-    <h2>Tambah / Update Stok Obat</h2>
+  <div class="card" style="--accent:#173b5e">
+    <h2><span class="card-num">1</span>Tambah / Update Stok Obat</h2>
     <div id="msgObat"></div>
     <div class="grid-3">
       <div>
@@ -386,8 +352,8 @@
     <p style="font-size:12px; color:#6b7280; margin-top:8px;">Kode obat dibuat otomatis (OB-0001, dst). Kalau Nama+Dosis+Merk+No.Lot+Exp sama persis dengan yang sudah ada, stok akan ditambahkan ke batch itu (bukan bikin baris baru).</p>
   </div>
 
-  <div class="card">
-    <h2>Daftar Obat & Stok</h2>
+  <div class="card" style="--accent:#6a4c93">
+    <h2><span class="card-num">2</span>Daftar Obat & Stok</h2>
     <table>
       <thead>
         <tr>
@@ -408,8 +374,8 @@
     </table>
   </div>
 
-  <div class="card">
-    <h2>Kartu Stok</h2>
+  <div class="card" style="--accent:#1c7d7f">
+    <h2><span class="card-num">3</span>Kartu Stok</h2>
     <p style="font-size:13px; color:#6b7280; margin-bottom:10px;">Riwayat keluar-masuk stok per obat, dasar buat LPLPO & laporan.</p>
     <div class="grid-2" style="margin-bottom:14px;">
       <div>
@@ -449,6 +415,8 @@
 <script>
 let profilSaya = null;
 let chartRingkasan = null, chartPemakaian = null, chartGenerik = null;
+let resepList = [];       // cache daftar resep menunggu/sebagian, buat lookup pas pilih pasien
+let resepTerpilihId = null;
 
 (async () => {
   const session = await wajibLogin();
@@ -575,7 +543,7 @@ async function muatRingkasanResep() {
 
   const { data, error } = await supabaseClient
     .from("resep")
-    .select("diserahkan_at, kunjungan(pasien(status_bpjs))")
+    .select("diserahkan_at, kunjungan(jenis_bayar)")
     .eq("status", "diserahkan")
     .gte("diserahkan_at", tujuhHariLalu.toISOString());
 
@@ -593,7 +561,7 @@ async function muatRingkasanResep() {
     data.forEach(r => {
       const key = r.diserahkan_at.split("T")[0];
       if (key in counts) counts[key]++;
-      if (r.kunjungan?.pasien?.status_bpjs === "aktif") totalBpjs++; else totalNonBpjs++;
+      if (r.kunjungan?.jenis_bayar === "BPJS") totalBpjs++; else totalNonBpjs++;
     });
   }
 
@@ -610,8 +578,8 @@ async function muatRingkasanResep() {
       datasets: [{
         label: "Resep Diserahkan",
         data: Object.values(counts),
-        borderColor: "#0f7a5c",
-        backgroundColor: "rgba(15,122,92,0.1)",
+        borderColor: "#173b5e",
+        backgroundColor: "rgba(23,59,94,0.1)",
         tension: 0.35,
         fill: true,
         pointRadius: 3
@@ -653,7 +621,7 @@ async function muatGrafikPemakaian() {
       datasets: [{
         label: "Jumlah Keluar",
         data: top5.length ? top5.map(t => t[1]) : [0],
-        backgroundColor: "#0f7a5c",
+        backgroundColor: "#1c7d7f",
         borderRadius: 6
       }]
     },
@@ -680,7 +648,7 @@ function muatDonutGenerik(semuaObat) {
     type: "doughnut",
     data: {
       labels: ["Generik", "Non Generik"],
-      datasets: [{ data: [generik, nonGenerik], backgroundColor: ["#0f7a5c", "#f5b93d"], borderWidth: 0 }]
+      datasets: [{ data: [generik, nonGenerik], backgroundColor: ["#26a3a0", "#e0793c"], borderWidth: 0 }]
     },
     options: { plugins: { legend: { display: false } }, cutout: "70%" }
   });
@@ -873,51 +841,133 @@ async function simpanObat() {
   document.getElementById("oKeterangan").value = "";
   await muatDaftarObat();
 }
+// Muat daftar pasien yang punya resep menunggu/sebagian, tampil sebagai
+// antrian di kiri. Klik salah satu baru buka detail resep + checklist obat.
 async function muatResepMenunggu() {
-  const tbody = document.getElementById("tabelResepMenunggu");
+  const listBox = document.getElementById("daftarPasienResep");
 
   const { data, error } = await supabaseClient
     .from("resep")
-    .select("*, kunjungan(no_kunjungan, pasien(nama), klaster(nama, kode))")
+    .select("*, kunjungan(no_kunjungan, jenis_bayar, pasien(id, nama), klaster(nama, kode))")
     .in("status", ["menunggu", "disiapkan", "sebagian"])
     .order("created_at");
 
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="5">Gagal muat data: ${error.message}</td></tr>`;
+    listBox.innerHTML = `<div class="queue-empty">Gagal muat data: ${error.message}</div>`;
     return;
   }
 
-  if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="5">Tidak ada resep menunggu.</td></tr>`;
+  resepList = data || [];
+
+  if (!resepList.length) {
+    listBox.innerHTML = `<div class="queue-empty">Tidak ada resep menunggu.</div>`;
+    document.getElementById("detailResepPasien").innerHTML = `<div class="queue-empty">Pilih pasien di daftar sebelah kiri buat lihat & konfirmasi resepnya.</div>`;
+    resepTerpilihId = null;
     return;
   }
 
-  tbody.innerHTML = data.map(r => {
+  listBox.innerHTML = resepList.map(r => {
     const items = r.daftar_obat || [];
     const semuaSelesai = items.length > 0 && items.every(o => o.diserahkan);
     return `
-    <tr>
-      <td>${r.kunjungan?.no_kunjungan || "-"}</td>
-      <td>${r.kunjungan?.pasien?.nama || "-"}</td>
-      <td>${r.kunjungan?.klaster?.kode || "-"}</td>
-      <td>
-        <ul class="checklist-obat">
-          ${items.map((o, i) => `
-            <li>
-              <label>
-                <input type="checkbox" ${o.diserahkan ? "checked disabled" : ""}
-                  onchange="konfirmasiObatDiserahkan('${r.id}', ${i}, this)">
-                ${o.nama_obat} (${o.jumlah}${o.dosis ? " — " + o.dosis : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""})
-              </label>
-              <span class="badge ${o.diserahkan ? "badge-selesai" : "badge-menunggu"}">${o.diserahkan ? "Diserahkan" : "Menunggu"}</span>
-            </li>
-          `).join("")}
-        </ul>
-      </td>
-      <td>${semuaSelesai ? `<span class="badge badge-selesai">Lengkap</span>` : `<span class="badge badge-menunggu">Sebagian</span>`}</td>
-    </tr>
-  `;
+      <div class="queue-item ${r.id === resepTerpilihId ? "active" : ""}" onclick="pilihResepPasien('${r.id}')">
+        <div class="nama">${r.kunjungan?.pasien?.nama || "-"}</div>
+        <div class="meta">${r.kunjungan?.no_kunjungan || "-"} · ${r.kunjungan?.klaster?.kode || "-"}</div>
+        <span class="badge ${semuaSelesai ? "badge-selesai" : "badge-menunggu"}" style="margin-top:6px; display:inline-block;">${semuaSelesai ? "Lengkap" : "Menunggu"}</span>
+      </div>
+    `;
   }).join("");
+
+  // Kalau pasien yang lagi dipilih masih ada di daftar (misal abis konfirmasi 1 obat
+  // tapi resepnya belum lengkap semua), refresh detailnya. Kalau udah selesai/gak ada
+  // lagi di daftar menunggu, kosongin panel detail.
+  if (resepTerpilihId) {
+    const masihAda = resepList.find(r => r.id === resepTerpilihId);
+    if (masihAda) {
+      renderDetailResep(masihAda);
+      muatRiwayatObatPasien(masihAda.kunjungan?.pasien?.id, masihAda.id);
+    } else {
+      resepTerpilihId = null;
+      document.getElementById("detailResepPasien").innerHTML = `<div class="queue-empty">Resep sudah lengkap diserahkan. Pilih pasien lain di daftar.</div>`;
+    }
+  }
+}
+
+function pilihResepPasien(resepId) {
+  resepTerpilihId = resepId;
+  document.querySelectorAll("#daftarPasienResep .queue-item").forEach(el => el.classList.remove("active"));
+  const resep = resepList.find(r => r.id === resepId);
+  if (!resep) return;
+
+  // highlight ulang (index-based karena urutan render sama dengan resepList)
+  const idx = resepList.indexOf(resep);
+  const nodes = document.querySelectorAll("#daftarPasienResep .queue-item");
+  if (nodes[idx]) nodes[idx].classList.add("active");
+
+  renderDetailResep(resep);
+  muatRiwayatObatPasien(resep.kunjungan?.pasien?.id, resepId);
+}
+
+function renderDetailResep(resep) {
+  const items = resep.daftar_obat || [];
+  const semuaSelesai = items.length > 0 && items.every(o => o.diserahkan);
+
+  document.getElementById("detailResepPasien").innerHTML = `
+    <div class="queue-detail-head">
+      <div>
+        <h3>${resep.kunjungan?.pasien?.nama || "-"}</h3>
+        <div class="meta">${resep.kunjungan?.no_kunjungan || "-"} · ${resep.kunjungan?.klaster?.kode || "-"} · ${resep.kunjungan?.jenis_bayar || "-"}</div>
+      </div>
+      <span class="badge ${semuaSelesai ? "badge-selesai" : "badge-menunggu"}">${semuaSelesai ? "Lengkap" : "Sebagian"}</span>
+    </div>
+    <ul class="checklist-obat">
+      ${items.map((o, i) => `
+        <li>
+          <label>
+            <input type="checkbox" ${o.diserahkan ? "checked disabled" : ""}
+              onchange="konfirmasiObatDiserahkan('${resep.id}', ${i}, this)">
+            ${o.nama_obat} (${o.jumlah}${o.dosis ? " — " + o.dosis : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""})
+          </label>
+          <span class="badge ${o.diserahkan ? "badge-selesai" : "badge-menunggu"}">${o.diserahkan ? "Diserahkan" : "Menunggu"}</span>
+        </li>
+      `).join("")}
+    </ul>
+    <div class="riwayat-block">
+      <h4>Riwayat Pemberian Obat Pasien Ini</h4>
+      <div id="riwayatObatPasien">Memuat...</div>
+    </div>
+  `;
+}
+
+// Riwayat resep yang SUDAH lengkap diserahkan buat pasien ini (di luar resep yang lagi dibuka).
+async function muatRiwayatObatPasien(pasienId, resepIniId) {
+  const box = document.getElementById("riwayatObatPasien");
+  if (!box) return;
+  if (!pasienId) { box.innerHTML = `<div class="queue-empty" style="padding:10px 0;">Data pasien gak ditemukan.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("resep")
+    .select("id, diserahkan_at, daftar_obat, kunjungan!inner(no_kunjungan, pasien_id)")
+    .eq("kunjungan.pasien_id", pasienId)
+    .eq("status", "diserahkan")
+    .order("diserahkan_at", { ascending: false })
+    .limit(5);
+
+  if (error) {
+    box.innerHTML = `<div class="queue-empty" style="padding:10px 0;">Gagal muat riwayat: ${error.message}</div>`;
+    return;
+  }
+
+  const riwayat = (data || []).filter(r => r.id !== resepIniId);
+
+  box.innerHTML = riwayat.length
+    ? riwayat.map(r => `
+        <div class="riwayat-item">
+          <div class="tgl">${new Date(r.diserahkan_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })} · ${r.kunjungan?.no_kunjungan || "-"}</div>
+          <div>${(r.daftar_obat || []).map(o => `${o.nama_obat}${o.dosis ? " " + o.dosis : ""} (${o.jumlah})`).join(", ")}</div>
+        </div>
+      `).join("")
+    : `<div class="queue-empty" style="padding:10px 0;">Belum ada riwayat resep sebelumnya.</div>`;
 }
 
 // Konfirmasi penyerahan 1 obat di dalam 1 resep. Tiap obat dipotong stoknya
