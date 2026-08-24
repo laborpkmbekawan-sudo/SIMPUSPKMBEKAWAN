@@ -593,7 +593,6 @@ async function muatDashboardApotek() {
     document.getElementById("statResepMenunggu").textContent = masukHariIni.count ?? 0;
     document.getElementById("statResepDisiapkan").textContent = sebagian.count ?? 0;
     document.getElementById("statResepDiserahkan").textContent = diserahkanHariIni.count ?? 0;
-    document.getElementById("phBellCount").textContent = (sebagian.count ?? 0);
 
     const { data: semuaObat, error } = await supabaseClient.from("obat").select("*");
 
