@@ -88,6 +88,67 @@
 .queue-detail-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
 .queue-detail-head h3 { font-size: 16px; margin: 0 0 4px; }
 .queue-detail-head .meta { font-size: 13px; color: var(--muted); }
+
+/* ---- Tab pemisah Obat / BMHP (Master Data, Kartu Stok, Stok Opname) ---- */
+.jenis-tab-row { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.jenis-tab {
+  border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 20px; cursor: pointer;
+  font-size: 13.5px; font-weight: 600; color: #374151; background: #fff;
+}
+.jenis-tab:hover { border-color: var(--primary); }
+.jenis-tab.active { background: var(--navy-2, #173b5e); border-color: var(--navy-2, #173b5e); color: #fff; }
+.jenis-tab-note { font-size: 11.5px; color: var(--muted); margin-left: 4px; }
+.so-link-note {
+  font-size: 12px; color: #6b7280; background: #f4f6f8; border: 1px dashed var(--border); border-radius: 6px;
+  padding: 7px 11px; margin-bottom: 14px;
+}
+
+/* ---- Pil status pasien (Antrian & Penyerahan Hari Ini) ---- */
+.pasien-pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.pasien-pill {
+  border: 1.5px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer;
+  font-size: 13px; font-weight: 600; background: #fff; color: #374151; white-space: nowrap;
+}
+.pasien-pill .sub { font-weight: 500; opacity: .8; }
+.pasien-pill:hover { border-color: var(--primary); }
+.pasien-pill.active { box-shadow: 0 0 0 2px rgba(0,0,0,.04) inset; }
+.pasien-pill.st-selesai { border-color: #16865c; color: #16865c; background: #f0faf5; }
+.pasien-pill.st-diracik { border-color: #e0793c; color: #b25b20; background: #fff6ee; }
+.pasien-pill.st-menunggu { border-color: var(--border); color: #6b7280; background: #fff; }
+.pasien-pill.active.st-selesai { background: #16865c; color: #fff; }
+.pasien-pill.active.st-diracik { background: #e0793c; color: #fff; }
+.pasien-pill.active.st-menunggu { background: #4b5563; color: #fff; border-color: #4b5563; }
+
+/* ---- Kartu ringkasan resep selesai/diserahkan (gaya banner + timeline) ---- */
+.resep-selesai-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.resep-selesai-banner {
+  background: linear-gradient(135deg, #1c7d7f, #26a3a0); color: #fff; padding: 16px 20px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+}
+.resep-selesai-banner h3 { margin: 0 0 4px; font-size: 17px; }
+.resep-selesai-banner .meta { font-size: 12.5px; opacity: .9; }
+.resep-selesai-banner .badge-ok { background: rgba(255,255,255,.2); color: #fff; border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 600; }
+.resep-selesai-body { padding: 18px 20px; }
+.resep-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.resep-info-grid .lbl { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+.resep-info-grid .val { font-size: 13.5px; font-weight: 600; color: #111827; }
+.resep-selesai-body table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+.resep-selesai-body th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.resep-selesai-body td { padding: 8px; border-bottom: 1px solid #f1f3f4; font-size: 13.5px; }
+.resep-timeline { display: flex; align-items: center; gap: 4px; margin-bottom: 18px; }
+.resep-timeline .tl-step { flex: 1; text-align: center; }
+.resep-timeline .tl-dot {
+  width: 26px; height: 26px; border-radius: 50%; background: #16865c; color: #fff;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; font-size: 13px; font-weight: 700;
+}
+.resep-timeline .tl-label { font-size: 11.5px; color: #16865c; font-weight: 600; }
+.resep-timeline .tl-line { flex: 1; height: 2px; background: #16865c; margin-bottom: 20px; }
+.resep-note-ok {
+  background: #f0faf5; border: 1px solid #c9ecda; border-radius: 8px; padding: 12px 14px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+}
+.resep-note-ok strong { color: #16865c; }
+.resep-note-ok p { margin: 3px 0 0; font-size: 12.5px; color: #374151; }
 .riwayat-block { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border); }
 .riwayat-block h4 { font-size: 13px; text-transform: uppercase; letter-spacing: .03em; color: #374151; margin: 0 0 10px; }
 .riwayat-item { padding: 9px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
@@ -157,7 +218,7 @@
 
     <div class="ph-group-title">Pelayanan Obat & Resep</div>
     <a id="navPelayanan" onclick="gantiSubtab('pelayanan')">Verifikasi & Penyerahan Resep</a>
-    <a onclick="gantiSubtab('pelayanan'); setTimeout(()=>document.getElementById('entriKunjunganSelect').scrollIntoView({behavior:'smooth'}),50)">Entri Resep Manual</a>
+    <a id="navEntrimanual" onclick="gantiSubtab('entrimanual')">Entri Resep Manual</a>
     <a id="navRacikan" onclick="gantiSubtab('racikan')">Racikan Obat</a>
     <a id="navRiwayatobat" onclick="gantiSubtab('riwayatobat')">Riwayat Obat Pasien</a>
 
@@ -295,27 +356,24 @@
 
   <div id="panelPelayanan" style="display:none;">
 
-  <div class="card" style="--accent:#26a3a0">
-    <h2><span class="card-num">✓</span>Pasien Sudah Dilayani Hari Ini</h2>
-    <p style="font-size:13px; color:var(--muted); margin-bottom:10px;">Cek dulu sebelum nyerahin obat, biar gak dobel kasih ke pasien yang sama.</p>
-    <div id="pasienHariIni">Memuat...</div>
-  </div>
-
   <div class="card" style="--accent:#e0793c">
-    <h2><span class="card-num">1</span>Antrian Resep Pasien</h2>
-    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Klik nama pasien buat lihat resepnya, isi jumlah yang diberikan, baru konfirmasi tiap obat.</p>
+    <h2><span class="card-num">1</span>Antrian & Penyerahan Resep Hari Ini</h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Klik nama pasien buat lihat resep & statusnya. Pasien yang obatnya sudah diserahkan hari ini juga muncul di sini (status "selesai"), biar gampang dicek ulang / cetak etiket lagi tanpa perlu kasih dobel.</p>
     <div id="msgResep"></div>
-    <div class="queue-layout">
-      <div class="queue-list" id="daftarPasienResep">Memuat...</div>
-      <div class="queue-detail" id="detailResepPasien">
-        <div class="queue-empty">Pilih pasien di daftar sebelah kiri buat lihat & konfirmasi resepnya.</div>
-      </div>
+    <div id="pasienPillRow" class="pasien-pill-row">Memuat...</div>
+    <div class="queue-detail" id="detailResepPasien">
+      <div class="queue-empty">Pilih pasien di atas buat lihat & konfirmasi resepnya.</div>
     </div>
   </div>
 
+  </div>
+  <!-- /panelPelayanan -->
+
+  <div id="panelEntrimanual" style="display:none;">
+
   <div class="card" style="--accent:#173b5e">
-    <h2><span class="card-num">2</span>Entri Resep Manual</h2>
-    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Buat resep langsung dari Farmasi buat pasien yang lagi berkunjung hari ini (di luar alur rekam medis).</p>
+    <h2><span class="card-num">1</span>Entri Resep Manual</h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Buat resep langsung dari Farmasi buat pasien yang lagi berkunjung hari ini (di luar alur rekam medis). Ini terpisah dari Antrian Resep Pasien — resep yang disimpan di sini baru muncul di antrian setelah disimpan.</p>
     <div id="msgEntriResep"></div>
     <div class="grid-2" style="margin-bottom:10px;">
       <div>
@@ -331,15 +389,21 @@
   </div>
 
   </div>
-  <!-- /panelPelayanan -->
+  <!-- /panelEntrimanual -->
 
   <div id="panelStok" style="display:none;">
 
+  <div class="jenis-tab-row">
+    <div class="jenis-tab active" id="stokTabObat" onclick="gantiTabJenisStok('obat')">💊 Data Obat</div>
+    <div class="jenis-tab" id="stokTabBmhp" onclick="gantiTabJenisStok('bmhp')">🧰 Data BMHP</div>
+    <span class="jenis-tab-note">Tampilan dipisah, tapi tetap 1 tabel data — otomatis kepakai bareng di laporan Stok Opname & LPLPO.</span>
+  </div>
+
   <div class="card" style="--accent:#173b5e">
-    <h2><span class="card-num">1</span><span id="judulFormObat">Tambah / Update Stok Obat &amp; BMHP</span></h2>
+    <h2><span class="card-num">1</span><span id="judulFormObat">Tambah / Update Stok Obat</span></h2>
     <div id="msgObat"></div>
     <div class="grid-3">
-      <div>
+      <div id="wrapJenisItem" style="display:none;">
         <label>Jenis Item *</label>
         <select id="oJenisItem" onchange="toggleFormJenisItem()">
           <option value="obat">Obat</option>
@@ -433,11 +497,10 @@
   </div>
 
   <div class="card" style="--accent:#6a4c93">
-    <h2><span class="card-num">2</span>Daftar Obat &amp; BMHP</h2>
+    <h2><span class="card-num">2</span><span id="judulDaftarObat">Daftar Obat</span></h2>
     <table>
       <thead>
         <tr>
-          <th>Jenis</th>
           <th>Nama</th>
           <th>Dosis</th>
           <th>Kategori</th>
@@ -451,7 +514,7 @@
         </tr>
       </thead>
       <tbody id="tabelObat">
-        <tr><td colspan="11">Memuat...</td></tr>
+        <tr><td colspan="10">Memuat...</td></tr>
       </tbody>
     </table>
   </div>
@@ -461,12 +524,17 @@
 
   <div id="panelKartustok" style="display:none;">
 
+  <div class="jenis-tab-row">
+    <div class="jenis-tab active" id="ksTabObat" onclick="gantiTabKartustok('obat')">💊 Kartu Stok Obat</div>
+    <div class="jenis-tab" id="ksTabBmhp" onclick="gantiTabKartustok('bmhp')">🧰 Kartu Stok BMHP</div>
+  </div>
+
   <div class="card" style="--accent:#1c7d7f">
-    <h2><span class="card-num">1</span>Kartu Stok Digital</h2>
-    <p style="font-size:13px; color:#6b7280; margin-bottom:10px;">Riwayat keluar-masuk stok per obat, dasar buat LPLPO & laporan.</p>
+    <h2><span class="card-num">1</span><span id="judulKartustok">Kartu Stok Obat</span></h2>
+    <p style="font-size:13px; color:#6b7280; margin-bottom:10px;">Riwayat keluar-masuk stok per item, dasar buat LPLPO & laporan (Obat & BMHP tetap terhubung ke laporan yang sama).</p>
     <div class="grid-2" style="margin-bottom:14px;">
       <div>
-        <label>Pilih Obat (batch)</label>
+        <label id="labelKsObatSelect">Pilih Obat (batch)</label>
         <select id="ksObatSelect" onchange="muatKartuStok()">
           <option value="">-- pilih obat --</option>
         </select>
@@ -495,13 +563,18 @@
 
   <div id="panelStokopname" style="display:none;">
 
+  <div class="jenis-tab-row">
+    <div class="jenis-tab active" id="opTabObat" onclick="gantiTabOpname('obat')">💊 Opname Obat</div>
+    <div class="jenis-tab" id="opTabBmhp" onclick="gantiTabOpname('bmhp')">🧰 Opname BMHP</div>
+  </div>
+
   <div class="card" style="--accent:#e0793c">
-    <h2><span class="card-num">1</span>Stok Opname</h2>
-    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Cocokkan stok sistem dengan stok fisik di rak/gudang. Selisih otomatis dihitung dan tercatat ke Kartu Stok begitu disesuaikan — jadi datanya konsisten buat laporan LPLPO.</p>
+    <h2><span class="card-num">1</span><span id="judulOpname">Stok Opname — Obat</span></h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Cocokkan stok sistem dengan stok fisik di rak/gudang. Selisih otomatis dihitung dan tercatat ke Kartu Stok begitu disesuaikan. Opname Obat & BMHP dipisah di sini, tapi tetap dirangkum jadi 1 laporan SO dan LPLPO.</p>
     <div id="msgOpname"></div>
     <div class="grid-3" style="margin-bottom:10px;">
       <div>
-        <label>Cari Nama Obat/BMHP</label>
+        <label id="labelOpCari">Cari Nama Obat</label>
         <input type="text" id="opCari" placeholder="Ketik buat filter tabel..." oninput="filterOpname()">
       </div>
     </div>
@@ -623,6 +696,7 @@
 let profilSaya = null;
 let chartRingkasan = null, chartPemakaian = null, chartGenerik = null;
 let resepList = [];       // cache daftar resep menunggu/sebagian, buat lookup pas pilih pasien
+let resepSelesaiCache = []; // cache resep status "diserahkan" hari ini, buat lookup pil "selesai"
 let resepTerpilihId = null;
 let obatMasterCache = []; // cache master obat (distinct nama+dosis) buat dropdown entri resep manual
 let riwayatRangeAktif = "harian"; // filter riwayat pasien: harian/mingguan/bulanan
@@ -643,47 +717,12 @@ let riwayatRangeAktif = "harian"; // filter riwayat pasien: harian/mingguan/bula
   document.getElementById("robDari").value = hariIni;
   document.getElementById("robSampai").value = hariIni;
 
-  try { await muatResepMenunggu(); } catch (e) { console.error("muatResepMenunggu gagal:", e); }
-  try { await muatPasienHariIni(); } catch (e) { console.error("muatPasienHariIni gagal:", e); }
+  try { await muatAntrianResep(); } catch (e) { console.error("muatAntrianResep gagal:", e); }
   try { await muatDaftarObat(); } catch (e) { console.error("muatDaftarObat gagal:", e); }
   try { await muatDashboardApotek(); } catch (e) { console.error("muatDashboardApotek gagal:", e); }
   try { await siapkanEntriResepManual(); } catch (e) { console.error("siapkanEntriResepManual gagal:", e); }
   try { await siapkanRacikan(); } catch (e) { console.error("siapkanRacikan gagal:", e); }
 })();
-
-// ---------- Pasien Sudah Dilayani Hari Ini (di tab Pelayanan, cegah dobel kasih obat) ----------
-async function muatPasienHariIni() {
-  const box = document.getElementById("pasienHariIni");
-  if (!box) return;
-  const awalHari = new Date(); awalHari.setHours(0, 0, 0, 0);
-  const akhirHari = new Date(); akhirHari.setHours(23, 59, 59, 999);
-
-  const { data, error } = await supabaseClient
-    .from("resep")
-    .select("id, status, diserahkan_at, daftar_obat, kunjungan!inner(no_kunjungan, pasien(nama))")
-    .in("status", ["diserahkan", "sebagian"])
-    .gte("diserahkan_at", awalHari.toISOString())
-    .lte("diserahkan_at", akhirHari.toISOString())
-    .order("diserahkan_at", { ascending: false });
-
-  if (error) {
-    box.innerHTML = `<div class="msg msg-error">Gagal muat: ${error.message}</div>`;
-    return;
-  }
-  const hasil = (data || []).filter(r => r.kunjungan?.pasien);
-  if (!hasil.length) {
-    box.innerHTML = `<div style="font-size:13px; color:var(--muted);">Belum ada pasien yang dilayani hari ini.</div>`;
-    return;
-  }
-  box.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:8px;">` + hasil.map(r => {
-    const jam = new Date(r.diserahkan_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-    const jmlObat = (r.daftar_obat || []).length;
-    const statusTxt = r.status === "sebagian" ? "sebagian" : "lengkap";
-    const warna = r.status === "sebagian" ? "#fef3c7" : "#e0f2f1";
-    const warnaTeks = r.status === "sebagian" ? "#92400e" : "#1c7d7f";
-    return `<span class="badge" style="background:${warna}; color:${warnaTeks};" title="${r.kunjungan.no_kunjungan || ""}">${r.kunjungan.pasien.nama} · ${jam} · ${jmlObat} obat (${statusTxt})</span>`;
-  }).join("") + `</div>`;
-}
 
 // ---------- Riwayat Obat Diserahkan (filter tanggal & nama pasien) ----------
 async function muatRiwayatObatApotek() {
@@ -763,7 +802,7 @@ async function muatRiwayatObatApotek() {
 
 // ---------- Sub-tab Beranda / Pelayanan / Stok ----------
 function gantiSubtab(tab) {
-  ["beranda", "pelayanan", "stok", "kartustok", "stokopname", "racikan", "riwayatobat"].forEach(t => {
+  ["beranda", "pelayanan", "entrimanual", "stok", "kartustok", "stokopname", "racikan", "riwayatobat"].forEach(t => {
     document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? "block" : "none";
     const nav = document.getElementById("nav" + t.charAt(0).toUpperCase() + t.slice(1));
     if (nav) nav.classList.toggle("active", t === tab);
@@ -772,17 +811,29 @@ function gantiSubtab(tab) {
 }
 
 // ---------- Stok Opname (cocokkan stok sistem vs fisik, per baris/batch) ----------
+let opnameTabAktif = "obat";
 async function muatStokOpname() {
   const tbody = document.getElementById("tabelOpname");
   tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
   if (!daftarObatCache.length) await muatDaftarObat();
-  renderTabelOpname(daftarObatCache);
+  filterOpname();
+}
+
+function gantiTabOpname(jenis) {
+  opnameTabAktif = jenis;
+  document.getElementById("opTabObat").classList.toggle("active", jenis === "obat");
+  document.getElementById("opTabBmhp").classList.toggle("active", jenis === "bmhp");
+  document.getElementById("judulOpname").textContent = jenis === "bmhp" ? "Stok Opname — BMHP" : "Stok Opname — Obat";
+  document.getElementById("labelOpCari").textContent = jenis === "bmhp" ? "Cari Nama BMHP" : "Cari Nama Obat";
+  document.getElementById("opCari").value = "";
+  filterOpname();
 }
 
 function filterOpname() {
   const kata = document.getElementById("opCari").value.trim().toLowerCase();
   const data = daftarObatCache.filter(o =>
-    !kata || o.nama_obat.toLowerCase().includes(kata) || (o.dosis || "").toLowerCase().includes(kata)
+    (o.jenis_item || "obat") === opnameTabAktif &&
+    (!kata || o.nama_obat.toLowerCase().includes(kata) || (o.dosis || "").toLowerCase().includes(kata))
   );
   renderTabelOpname(data);
 }
@@ -790,7 +841,7 @@ function filterOpname() {
 function renderTabelOpname(data) {
   const tbody = document.getElementById("tabelOpname");
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="8">Tidak ada data.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8">Tidak ada data ${opnameTabAktif === "bmhp" ? "BMHP" : "obat"}.</td></tr>`;
     return;
   }
   tbody.innerHTML = data.map(o => `
@@ -1083,6 +1134,8 @@ let obatEditId = null;   // kalau ada isi, form Tambah/Update Stok lagi mode EDI
 let daftarObatCache = []; // cache tabel obat terakhir dimuat, buat isi ulang form pas Edit
 let kartuStokCache = []; // cache riwayat kartu stok obat terpilih, buat edit/hapus entri "Masuk" terakhir
 
+let stokTabAktif = "obat"; // tab aktif di Master Data Obat (panelStok)
+
 function toggleFormJenisItem() {
   const jenis = document.getElementById("oJenisItem").value;
   const isBmhp = jenis === "bmhp";
@@ -1091,18 +1144,41 @@ function toggleFormJenisItem() {
   document.getElementById("oDosis").placeholder = isBmhp ? "Contoh: Ukuran M / 10x10cm (opsional)" : "Contoh: 500mg";
 }
 
+// Ganti tab Obat/BMHP di Master Data Obat. Data tetap 1 tabel ("obat"), cuma
+// tampilan form + daftar yang dipisah per jenis biar gak ketuker pas entri.
+function gantiTabJenisStok(jenis) {
+  stokTabAktif = jenis;
+  document.getElementById("stokTabObat").classList.toggle("active", jenis === "obat");
+  document.getElementById("stokTabBmhp").classList.toggle("active", jenis === "bmhp");
+  document.getElementById("oJenisItem").value = jenis;
+  toggleFormJenisItem();
+  document.getElementById("judulDaftarObat").textContent = jenis === "bmhp" ? "Daftar BMHP" : "Daftar Obat";
+  if (!obatEditId) {
+    document.getElementById("judulFormObat").textContent = jenis === "bmhp" ? "Tambah / Update Stok BMHP" : "Tambah / Update Stok Obat";
+  }
+  renderTabelObatFiltered();
+}
+
 async function muatDaftarObat() {
   const tbody = document.getElementById("tabelObat");
   const { data, error } = await supabaseClient.from("obat").select("*").order("nama_obat").order("exp_date");
 
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="11">Gagal muat data: ${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10">Gagal muat data: ${error.message}</td></tr>`;
     return;
   }
   daftarObatCache = data || [];
+  renderTabelObatFiltered();
+  renderKsObatSelect();
+}
+
+// Tabel "Daftar Obat/BMHP" difilter sesuai tab aktif (stokTabAktif).
+function renderTabelObatFiltered() {
+  const tbody = document.getElementById("tabelObat");
+  const data = daftarObatCache.filter(o => (o.jenis_item || "obat") === stokTabAktif);
 
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="11">Belum ada obat/BMHP terdaftar.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10">Belum ada ${stokTabAktif === "bmhp" ? "BMHP" : "obat"} terdaftar.</td></tr>`;
     return;
   }
 
@@ -1111,10 +1187,8 @@ async function muatDaftarObat() {
     const expSoon = o.exp_date && o.exp_date < today;
     const stokRendah = o.stok <= (o.stok_minimum ?? 10);
     const kategoriKelas = o.kategori && o.kategori !== "bebas" ? `badge-${o.kategori.replace("_terbatas","")}` : null;
-    const isBmhp = o.jenis_item === "bmhp";
     return `
     <tr>
-      <td>${isBmhp ? '<span class="badge" style="background:#e5e7eb; color:#374151;">BMHP</span>' : '<span class="badge" style="background:#e0f2f1; color:#1c7d7f;">Obat</span>'}</td>
       <td>${o.nama_obat}</td>
       <td>${o.dosis || "-"}</td>
       <td>${kategoriKelas ? `<span class="badge ${kategoriKelas}">${LABEL_KATEGORI[o.kategori]}</span>` : (LABEL_KATEGORI[o.kategori] || "Bebas")}</td>
@@ -1131,13 +1205,6 @@ async function muatDaftarObat() {
     </tr>
   `;
   }).join("");
-
-  const select = document.getElementById("ksObatSelect");
-  const dipilihSebelumnya = select.value;
-  select.innerHTML = '<option value="">-- pilih obat --</option>' + data.map(o =>
-    `<option value="${o.id}">${o.nama_obat} ${o.dosis || ""} ${o.no_lot ? "— Lot " + o.no_lot : ""} (${o.kode_obat || "-"})</option>`
-  ).join("");
-  if (dipilihSebelumnya) select.value = dipilihSebelumnya;
 }
 
 // Isi form Tambah/Update Stok dengan data baris terpilih, biar bisa diedit langsung
@@ -1148,6 +1215,13 @@ function editObat(id) {
   obatEditId = id;
   document.getElementById("oJenisItem").value = o.jenis_item || "obat";
   toggleFormJenisItem();
+
+  // Sinkronkan tab aktif dengan jenis item yang diedit, biar formnya konsisten sama tab yang kebuka.
+  stokTabAktif = o.jenis_item || "obat";
+  document.getElementById("stokTabObat").classList.toggle("active", stokTabAktif === "obat");
+  document.getElementById("stokTabBmhp").classList.toggle("active", stokTabAktif === "bmhp");
+  document.getElementById("judulDaftarObat").textContent = stokTabAktif === "bmhp" ? "Daftar BMHP" : "Daftar Obat";
+
   document.getElementById("oNama").value = o.nama_obat || "";
   document.getElementById("oDosis").value = o.dosis || "";
   document.getElementById("oSatuan").value = o.satuan || "tablet";
@@ -1168,19 +1242,21 @@ function editObat(id) {
   document.getElementById("hintFormObat").textContent = "Mode edit: field Stok di atas jadi nilai stok akhir (bukan ditambahkan), dan perubahan stok tetap tercatat di Kartu Stok.";
   document.getElementById("msgObat").innerHTML = "";
   document.querySelector('#panelStok .card').scrollIntoView({ behavior: "smooth" });
+
+  renderTabelObatFiltered();
 }
 
 function batalEditObat() {
   obatEditId = null;
   ["oNama","oDosis","oMerk","oNoLot","oExp","oBentuk","oHarga","oKeterangan"].forEach(id => document.getElementById(id).value = "");
-  document.getElementById("oJenisItem").value = "obat";
+  document.getElementById("oJenisItem").value = stokTabAktif;
   toggleFormJenisItem();
   document.getElementById("oSatuan").value = "tablet";
   document.getElementById("oKategori").value = "bebas";
   document.getElementById("oStok").value = "";
   document.getElementById("oStokMin").value = "";
   document.getElementById("oGenerik").value = "true";
-  document.getElementById("judulFormObat").textContent = "Tambah / Update Stok Obat & BMHP";
+  document.getElementById("judulFormObat").textContent = stokTabAktif === "bmhp" ? "Tambah / Update Stok BMHP" : "Tambah / Update Stok Obat";
   document.getElementById("btnSimpanObat").textContent = "Simpan Obat";
   document.getElementById("btnBatalEditObat").style.display = "none";
   document.getElementById("hintFormObat").textContent = "Kode obat dibuat otomatis (OB-0001, dst). Kalau Nama+Dosis+Merk+No.Lot+Exp sama persis dengan yang sudah ada, stok akan ditambahkan ke batch itu (bukan bikin baris baru).";
@@ -1204,6 +1280,30 @@ async function hapusObat(id) {
   msgBox.innerHTML = `<div class="msg msg-success">Berhasil dihapus.</div>`;
   if (obatEditId === id) batalEditObat();
   await muatDaftarObat();
+}
+
+// ---------- Kartu Stok Digital: dropdown "Pilih Obat" difilter per tab (Obat/BMHP) ----------
+let kartustokTabAktif = "obat";
+
+function gantiTabKartustok(jenis) {
+  kartustokTabAktif = jenis;
+  document.getElementById("ksTabObat").classList.toggle("active", jenis === "obat");
+  document.getElementById("ksTabBmhp").classList.toggle("active", jenis === "bmhp");
+  document.getElementById("judulKartustok").textContent = jenis === "bmhp" ? "Kartu Stok BMHP" : "Kartu Stok Obat";
+  document.getElementById("labelKsObatSelect").textContent = jenis === "bmhp" ? "Pilih BMHP (batch)" : "Pilih Obat (batch)";
+  renderKsObatSelect();
+  document.getElementById("tabelKartuStok").innerHTML = `<tr><td colspan="7">Pilih ${jenis === "bmhp" ? "BMHP" : "obat"} dulu.</td></tr>`;
+}
+
+function renderKsObatSelect() {
+  const select = document.getElementById("ksObatSelect");
+  if (!select) return;
+  const dipilihSebelumnya = select.value;
+  const data = daftarObatCache.filter(o => (o.jenis_item || "obat") === kartustokTabAktif);
+  select.innerHTML = `<option value="">-- pilih ${kartustokTabAktif === "bmhp" ? "BMHP" : "obat"} --</option>` + data.map(o =>
+    `<option value="${o.id}">${o.nama_obat} ${o.dosis || ""} ${o.no_lot ? "— Lot " + o.no_lot : ""} (${o.kode_obat || "-"})</option>`
+  ).join("");
+  if (dipilihSebelumnya && data.some(o => o.id === dipilihSebelumnya)) select.value = dipilihSebelumnya;
 }
 
 async function muatKartuStok() {
@@ -1604,7 +1704,7 @@ async function simpanResepManual() {
   document.getElementById("entriKunjunganSelect").value = "";
   document.getElementById("entriObatRows").innerHTML = "";
   tambahBarisObatEntri();
-  await muatResepMenunggu();
+  await muatAntrianResep();
   await muatDashboardApotek();
 }
 
@@ -1731,75 +1831,100 @@ async function simpanResepRacikan() {
   document.getElementById("racikanKomponenRows").innerHTML = "";
   tambahBarisKomponenRacikan();
   tambahBarisKomponenRacikan();
-  await muatResepMenunggu();
+  await muatAntrianResep();
   await muatDashboardApotek();
 }
 
-// Muat daftar pasien yang punya resep menunggu/sebagian, tampil sebagai
-// antrian di kiri. Klik salah satu baru buka detail resep + checklist obat.
-async function muatResepMenunggu() {
-  const listBox = document.getElementById("daftarPasienResep");
+// Antrian & Penyerahan Resep Hari Ini: gabung resep yang masih menunggu/diracik
+// (belum diserahkan) DAN resep yang sudah lengkap diserahkan hari ini, tampil
+// sebagai pil status di atas. Klik pil pasien "selesai" buka ringkasan penyerahan
+// (kayak struk konfirmasi), klik pil "menunggu"/"diracik" buka checklist konfirmasi.
+function statusAntrian(r) {
+  if (r.status === "diserahkan") return "selesai";
+  if (r.status === "sebagian" || r.status === "disiapkan") return "diracik";
+  return "menunggu";
+}
 
-  const { data, error } = await supabaseClient
-    .from("resep")
-    .select("*, kunjungan(no_kunjungan, jenis_bayar, pasien(id, nama), klaster(nama, kode))")
-    .in("status", ["menunggu", "disiapkan", "sebagian"])
-    .order("created_at");
+async function muatAntrianResep() {
+  const pillBox = document.getElementById("pasienPillRow");
+  const awalHari = new Date(); awalHari.setHours(0, 0, 0, 0);
+  const akhirHari = new Date(); akhirHari.setHours(23, 59, 59, 999);
 
-  if (error) {
-    listBox.innerHTML = `<div class="queue-empty">Gagal muat data: ${error.message}</div>`;
+  const [pendingRes, selesaiRes] = await Promise.all([
+    supabaseClient
+      .from("resep")
+      .select("*, kunjungan(no_kunjungan, jenis_bayar, pasien(id, nama), klaster(nama, kode))")
+      .in("status", ["menunggu", "disiapkan", "sebagian"])
+      .order("created_at"),
+    supabaseClient
+      .from("resep")
+      .select("*, kunjungan(no_kunjungan, jenis_bayar, pasien(id, nama), klaster(nama, kode)), profil_pegawai!diserahkan_oleh(nama)")
+      .eq("status", "diserahkan")
+      .gte("diserahkan_at", awalHari.toISOString())
+      .lte("diserahkan_at", akhirHari.toISOString())
+      .order("diserahkan_at", { ascending: false })
+  ]);
+
+  if (pendingRes.error) {
+    pillBox.innerHTML = `<div class="queue-empty">Gagal muat data: ${pendingRes.error.message}</div>`;
     return;
   }
 
-  resepList = data || [];
+  resepList = pendingRes.data || [];
+  resepSelesaiCache = (selesaiRes.data || []).filter(r => r.kunjungan?.pasien);
 
-  if (!resepList.length) {
-    listBox.innerHTML = `<div class="queue-empty">Tidak ada resep menunggu.</div>`;
-    document.getElementById("detailResepPasien").innerHTML = `<div class="queue-empty">Pilih pasien di daftar sebelah kiri buat lihat & konfirmasi resepnya.</div>`;
+  const gabungan = [
+    ...resepList.map(r => ({ resep: r, status: statusAntrian(r) })),
+    ...resepSelesaiCache.map(r => ({ resep: r, status: "selesai" }))
+  ];
+
+  if (!gabungan.length) {
+    pillBox.innerHTML = `<div class="queue-empty">Belum ada resep hari ini.</div>`;
+    document.getElementById("detailResepPasien").innerHTML = `<div class="queue-empty">Pilih pasien di atas buat lihat & konfirmasi resepnya.</div>`;
     resepTerpilihId = null;
     return;
   }
 
-  listBox.innerHTML = resepList.map(r => {
-    const items = r.daftar_obat || [];
-    const semuaSelesai = items.length > 0 && items.every(o => o.diserahkan);
-    return `
-      <div class="queue-item ${r.id === resepTerpilihId ? "active" : ""}" onclick="pilihResepPasien('${r.id}')">
-        <div class="nama">${r.kunjungan?.pasien?.nama || "-"}</div>
-        <div class="meta">${r.kunjungan?.no_kunjungan || "-"} · ${r.kunjungan?.klaster?.kode || "-"}</div>
-        <span class="badge ${semuaSelesai ? "badge-selesai" : "badge-menunggu"}" style="margin-top:6px; display:inline-block;">${semuaSelesai ? "Lengkap" : "Menunggu"}</span>
-      </div>
-    `;
+  const LABEL_STATUS_PILL = { selesai: "selesai", diracik: "diracik", menunggu: "menunggu" };
+  pillBox.innerHTML = gabungan.map(g => {
+    const r = g.resep;
+    return `<div class="pasien-pill st-${g.status} ${r.id === resepTerpilihId ? "active" : ""}" onclick="pilihPasienAntrian('${r.id}', '${g.status}', this)">
+      ${r.kunjungan?.pasien?.nama || "-"} <span class="sub">— ${LABEL_STATUS_PILL[g.status]}</span>
+    </div>`;
   }).join("");
 
-  // Kalau pasien yang lagi dipilih masih ada di daftar (misal abis konfirmasi 1 obat
-  // tapi resepnya belum lengkap semua), refresh detailnya. Kalau udah selesai/gak ada
-  // lagi di daftar menunggu, kosongin panel detail.
+  // Kalau pasien yang lagi dipilih masih ada, refresh detailnya (mis. abis konfirmasi
+  // 1 obat resep belum lengkap, atau baru aja jadi lengkap/selesai).
   if (resepTerpilihId) {
-    const masihAda = resepList.find(r => r.id === resepTerpilihId);
+    const masihAda = gabungan.find(g => g.resep.id === resepTerpilihId);
     if (masihAda) {
-      renderDetailResep(masihAda);
-      muatRiwayatObatPasien(masihAda.kunjungan?.pasien?.id, masihAda.id);
+      tampilkanDetailAntrian(masihAda.resep, masihAda.status);
     } else {
       resepTerpilihId = null;
-      document.getElementById("detailResepPasien").innerHTML = `<div class="queue-empty">Resep sudah lengkap diserahkan. Pilih pasien lain di daftar.</div>`;
+      document.getElementById("detailResepPasien").innerHTML = `<div class="queue-empty">Pilih pasien di atas buat lihat & konfirmasi resepnya.</div>`;
     }
   }
 }
 
-function pilihResepPasien(resepId) {
+function pilihPasienAntrian(resepId, status, el) {
   resepTerpilihId = resepId;
-  document.querySelectorAll("#daftarPasienResep .queue-item").forEach(el => el.classList.remove("active"));
-  const resep = resepList.find(r => r.id === resepId);
+  document.querySelectorAll("#pasienPillRow .pasien-pill").forEach(x => x.classList.remove("active"));
+  if (el) el.classList.add("active");
+
+  const resep = status === "selesai"
+    ? resepSelesaiCache.find(r => r.id === resepId)
+    : resepList.find(r => r.id === resepId);
   if (!resep) return;
+  tampilkanDetailAntrian(resep, status);
+}
 
-  // highlight ulang (index-based karena urutan render sama dengan resepList)
-  const idx = resepList.indexOf(resep);
-  const nodes = document.querySelectorAll("#daftarPasienResep .queue-item");
-  if (nodes[idx]) nodes[idx].classList.add("active");
-
-  renderDetailResep(resep);
-  muatRiwayatObatPasien(resep.kunjungan?.pasien?.id, resepId);
+function tampilkanDetailAntrian(resep, status) {
+  if (status === "selesai") {
+    renderDetailResepSelesai(resep);
+  } else {
+    renderDetailResep(resep);
+    muatRiwayatObatPasien(resep.kunjungan?.pasien?.id, resep.id);
+  }
 }
 
 const LABEL_WAKTU_MAP = { pagi: "Pagi", siang: "Siang", sore: "Sore" };
@@ -1953,6 +2078,75 @@ function renderDetailResep(resep) {
   `;
 }
 
+// Ringkasan resep yang sudah LENGKAP diserahkan (dipilih dari pil status "selesai").
+// Bukan buat konfirmasi lagi — cuma buat lihat ulang detail & cetak etiket kalau perlu.
+function renderDetailResepSelesai(resep) {
+  const items = resep.daftar_obat || [];
+  const tglLayanan = resep.diserahkan_at
+    ? new Date(resep.diserahkan_at).toLocaleString("id-ID", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    : "-";
+
+  document.getElementById("detailResepPasien").innerHTML = `
+    <div class="resep-selesai-card">
+      <div class="resep-selesai-banner">
+        <div>
+          <h3>${resep.kunjungan?.pasien?.nama || "-"}</h3>
+          <div class="meta">${resep.kunjungan?.no_kunjungan || "-"} · ${resep.kunjungan?.klaster?.nama || resep.kunjungan?.klaster?.kode || "-"} · ${resep.kunjungan?.jenis_bayar || "-"}</div>
+        </div>
+        <span class="badge-ok">✓ Sudah Diserahkan</span>
+      </div>
+      <div class="resep-selesai-body">
+        <div class="resep-info-grid">
+          <div><div class="lbl">Tanggal Layanan</div><div class="val">${tglLayanan}</div></div>
+          <div><div class="lbl">Diserahkan Oleh</div><div class="val">${resep.profil_pegawai?.nama || "Petugas Farmasi"}</div></div>
+          <div><div class="lbl">No. Kunjungan</div><div class="val">${resep.kunjungan?.no_kunjungan || "-"}</div></div>
+        </div>
+        <table>
+          <thead><tr><th>Item</th><th>Jenis</th><th>Dosis / Aturan Pakai</th><th>Jumlah</th></tr></thead>
+          <tbody>
+            ${items.map(o => {
+              const isRacikan = !!o.racikan;
+              const nama = isRacikan
+                ? o.nama_racikan
+                : (o.diganti ? `${o.nama_obat_diberikan}${o.dosis_diberikan ? " " + o.dosis_diberikan : ""}` : `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`);
+              const jenis = isRacikan ? "Racikan" : "Obat";
+              const aturan = isRacikan ? (o.aturan_pakai || "-") : `${o.aturan_pakai || "-"}${labelAnjuranMakan(o.anjuran_makan)}`;
+              const jumlah = isRacikan
+                ? `${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul`
+                : `${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}`;
+              return `<tr><td>${nama}</td><td><span class="badge" style="background:#e0f2f1; color:#1c7d7f;">${jenis}</span></td><td>${aturan}</td><td>${jumlah}</td></tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+        <div class="resep-timeline">
+          <div class="tl-step"><div class="tl-dot">✓</div><div class="tl-label">Resep Diterima</div></div>
+          <div class="tl-line"></div>
+          <div class="tl-step"><div class="tl-dot">✓</div><div class="tl-label">Diverifikasi</div></div>
+          <div class="tl-line"></div>
+          <div class="tl-step"><div class="tl-dot">✓</div><div class="tl-label">Diracik/Disiapkan</div></div>
+          <div class="tl-line"></div>
+          <div class="tl-step"><div class="tl-dot">✓</div><div class="tl-label">Diserahkan</div></div>
+        </div>
+        <div class="resep-note-ok">
+          <div>
+            <strong>Obat telah diserahkan ke pasien.</strong>
+            <p>Konseling singkat diberikan: cara minum obat & efek samping ringan yang mungkin muncul.</p>
+          </div>
+          <button type="button" class="btn-primary" onclick="cetakSemuaEtiket('${resep.id}')">Cetak Etiket</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Cetak etiket semua item di resep yang udah lengkap diserahkan (buat cetak ulang).
+function cetakSemuaEtiket(resepId) {
+  const resep = resepSelesaiCache.find(r => r.id === resepId);
+  if (!resep) return;
+  const namaPasien = resep.kunjungan?.pasien?.nama || "-";
+  (resep.daftar_obat || []).forEach(item => cetakEtiket(namaPasien, item));
+}
+
 function gantiRiwayatRange(evt, range, pasienId, resepIniId) {
   riwayatRangeAktif = range;
   muatRiwayatObatPasien(pasienId, resepIniId);
@@ -2027,7 +2221,7 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, tombolEl) {
   const item = items[itemIndex];
 
   if (!item || item.diserahkan) {
-    await muatResepMenunggu();
+    await muatAntrianResep();
     return;
   }
 
@@ -2183,9 +2377,8 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, tombolEl) {
     ? `<div class="msg msg-error">Diserahkan, tapi ada catatan: ${peringatanList.join("; ")}</div>`
     : `<div class="msg msg-success">${isRacikan ? item.nama_racikan : item.nama_obat} berhasil diserahkan, stok terpotong.</div>`;
 
-  await muatResepMenunggu();
+  await muatAntrianResep();
   await muatDaftarObat();
-  await muatPasienHariIni();
 }
 
 </script>
