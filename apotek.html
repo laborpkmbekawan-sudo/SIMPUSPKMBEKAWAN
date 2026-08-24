@@ -558,7 +558,7 @@ const LABEL_KATEGORI = {
 // Catat satu baris mutasi ke Kartu Stok. Dipanggil tiap kali stok
 // sebuah batch berubah (input manual maupun dispensing resep).
 async function catatKartuStok(obatId, jenis, jumlah, saldoSetelah, referensi, keterangan) {
-  await supabaseClient.from("kartu_stok").insert({
+  const { error } = await supabaseClient.from("kartu_stok").insert({
     obat_id: obatId,
     jenis,
     jumlah,
@@ -567,6 +567,12 @@ async function catatKartuStok(obatId, jenis, jumlah, saldoSetelah, referensi, ke
     keterangan,
     petugas_id: profilSaya.id
   });
+  if (error) {
+    // Jangan gagalkan proses utama (potong stok tetap jalan), tapi
+    // errornya harus keliatan di console — bukan ditelen diam-diam,
+    // karena ini sumber data buat Kartu Stok Digital & LPLPO.
+    console.error("Gagal catat kartu stok:", error.message, { obatId, jenis, jumlah });
+  }
 }
 
 // ---------- Beranda: KPI, notifikasi stok, grafik, info sistem ----------
@@ -1519,7 +1525,8 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, tombolEl) {
   tombolEl.textContent = "Memproses...";
 
   const referensiResep = `Resep ${resep.kunjungan?.no_kunjungan || resep.id} — ${resep.kunjungan?.pasien?.nama || "-"}`;
-  const peringatanList = [];
+  const peringatanList = [];   // stok kurang (sebagian terpotong) — tetap boleh lanjut, cuma diwarn
+  const gagalTotalList = [];   // obat sama sekali gak ketemu / stok 0 — WAJIB berhenti, jangan tandai diserahkan
 
   // Potong stok satu obat (FEFO), dipakai baik buat obat biasa maupun tiap komponen racikan.
   async function potongStok(namaObat, dosis, jumlahButuh, catatan) {
@@ -1533,7 +1540,7 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, tombolEl) {
     const { data: batches } = await query;
 
     if (!batches || !batches.length) {
-      peringatanList.push(`${namaObat}${dosis ? " " + dosis : ""}: tidak ditemukan di data stok`);
+      gagalTotalList.push(`${namaObat}${dosis ? " " + dosis : ""}: gak ketemu di Master Data Obat atau stoknya 0`);
       return;
     }
     let sisaButuh = jumlahButuh;
@@ -1549,7 +1556,7 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, tombolEl) {
       sisaButuh -= potong;
     }
     if (sisaButuh > 0) {
-      peringatanList.push(`${namaObat}${dosis ? " " + dosis : ""}: stok kurang ${sisaButuh}`);
+      peringatanList.push(`${namaObat}${dosis ? " " + dosis : ""}: stok kurang, cuma ${jumlahButuh - sisaButuh} yang kepotong`);
     }
   }
 
@@ -1563,6 +1570,15 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, tombolEl) {
     }
   } else {
     await potongStok(item.nama_obat, item.dosis, jumlahDiserahkan, item.aturan_pakai || null);
+  }
+
+  // Kalau ada obat yang SAMA SEKALI gak ketemu/stok 0, batalkan — jangan tandai
+  // resep diserahkan, biar data stok & LPLPO gak bohong (obat keluar tapi gak tercatat).
+  if (gagalTotalList.length) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal diserahkan: ${gagalTotalList.join("; ")}. Cek nama & dosis obat ini di Master Data Obat, samain persis, dan pastikan stoknya lebih dari 0, baru coba lagi.</div>`;
+    tombolEl.disabled = false;
+    tombolEl.textContent = isRacikan ? "Serahkan Racikan" : "Serahkan";
+    return;
   }
 
   // Tandai obat/racikan ini diserahkan, lalu cek apakah semua item di resep sudah selesai.
