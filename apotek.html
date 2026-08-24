@@ -94,6 +94,16 @@
 .riwayat-item:last-child { border-bottom: none; }
 .riwayat-item .tgl { color: var(--muted); font-size: 12px; margin-bottom: 3px; }
 
+.entri-obat-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+.entri-obat-row select, .entri-obat-row input { width: 100%; }
+.riwayat-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.riwayat-tabs button {
+  font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border);
+  background: #fff; cursor: pointer; color: #374151;
+}
+.riwayat-tabs button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.serah-input { width: 70px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+
 @media (max-width: 1100px) {
   .ph-grid-3 { grid-template-columns: 1fr; }
   .ph-quick-grid { grid-template-columns: repeat(2, 1fr); }
@@ -118,7 +128,7 @@
 
     <div class="ph-group-title">Pelayanan Obat & Resep</div>
     <a id="navPelayanan" onclick="gantiSubtab('pelayanan')">Verifikasi & Penyerahan Resep</a>
-    <a class="disabled">Entri Resep Manual <span class="ph-badge-soon">Segera</span></a>
+    <a onclick="gantiSubtab('pelayanan'); setTimeout(()=>document.getElementById('entriKunjunganSelect').scrollIntoView({behavior:'smooth'}),50)">Entri Resep Manual</a>
     <a class="disabled">Racikan Obat <span class="ph-badge-soon">Segera</span></a>
 
     <div class="ph-group-title">Pengelolaan Stok</div>
@@ -255,13 +265,30 @@
 
   <div class="card" style="--accent:#e0793c">
     <h2><span class="card-num">1</span>Antrian Resep Pasien</h2>
-    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Klik nama pasien buat lihat resepnya, baru centang tiap obat saat diserahkan.</p>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Klik nama pasien buat lihat resepnya, isi jumlah yang diberikan, baru konfirmasi tiap obat.</p>
     <div id="msgResep"></div>
     <div class="queue-layout">
       <div class="queue-list" id="daftarPasienResep">Memuat...</div>
       <div class="queue-detail" id="detailResepPasien">
         <div class="queue-empty">Pilih pasien di daftar sebelah kiri buat lihat & konfirmasi resepnya.</div>
       </div>
+    </div>
+  </div>
+
+  <div class="card" style="--accent:#173b5e">
+    <h2><span class="card-num">2</span>Entri Resep Manual</h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Buat resep langsung dari Farmasi buat pasien yang lagi berkunjung hari ini (di luar alur rekam medis).</p>
+    <div id="msgEntriResep"></div>
+    <div class="grid-2" style="margin-bottom:10px;">
+      <div>
+        <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:4px;">Pilih Kunjungan Pasien Hari Ini</label>
+        <select id="entriKunjunganSelect" style="width:100%;"><option value="">Memuat kunjungan...</option></select>
+      </div>
+    </div>
+    <div id="entriObatRows"></div>
+    <button type="button" onclick="tambahBarisObatEntri()" style="margin:8px 0;">+ Tambah Obat</button>
+    <div>
+      <button type="button" class="btn-primary" onclick="simpanResepManual()">Simpan Resep</button>
     </div>
   </div>
 
@@ -419,6 +446,8 @@ let profilSaya = null;
 let chartRingkasan = null, chartPemakaian = null, chartGenerik = null;
 let resepList = [];       // cache daftar resep menunggu/sebagian, buat lookup pas pilih pasien
 let resepTerpilihId = null;
+let obatMasterCache = []; // cache master obat (distinct nama+dosis) buat dropdown entri resep manual
+let riwayatRangeAktif = "harian"; // filter riwayat pasien: harian/mingguan/bulanan
 
 (async () => {
   const session = await wajibLogin();
@@ -435,6 +464,7 @@ let resepTerpilihId = null;
   try { await muatResepMenunggu(); } catch (e) { console.error("muatResepMenunggu gagal:", e); }
   try { await muatDaftarObat(); } catch (e) { console.error("muatDaftarObat gagal:", e); }
   try { await muatDashboardApotek(); } catch (e) { console.error("muatDashboardApotek gagal:", e); }
+  try { await siapkanEntriResepManual(); } catch (e) { console.error("siapkanEntriResepManual gagal:", e); }
 })();
 
 // ---------- Sub-tab Beranda / Pelayanan / Stok ----------
@@ -855,6 +885,121 @@ async function simpanObat() {
 }
 // Muat daftar pasien yang punya resep menunggu/sebagian, tampil sebagai
 // antrian di kiri. Klik salah satu baru buka detail resep + checklist obat.
+// ---------- Entri Resep Manual (dibuat langsung dari Farmasi) ----------
+async function siapkanEntriResepManual() {
+  const selKunjungan = document.getElementById("entriKunjunganSelect");
+  const today = new Date().toISOString().split("T")[0];
+
+  const [{ data: kunjunganList, error: errK }, { data: obatData, error: errO }] = await Promise.all([
+    supabaseClient
+      .from("kunjungan")
+      .select("id, no_kunjungan, no_antrian, pasien(nama), klaster(kode)")
+      .eq("tanggal", today)
+      .neq("status", "batal")
+      .order("no_antrian"),
+    supabaseClient.from("obat").select("nama_obat, dosis").order("nama_obat")
+  ]);
+
+  if (errK) {
+    selKunjungan.innerHTML = `<option value="">Gagal muat kunjungan</option>`;
+  } else if (!kunjunganList || !kunjunganList.length) {
+    selKunjungan.innerHTML = `<option value="">Tidak ada kunjungan hari ini</option>`;
+  } else {
+    selKunjungan.innerHTML = `<option value="">-- Pilih pasien --</option>` + kunjunganList.map(k =>
+      `<option value="${k.id}">${k.no_antrian}. ${k.pasien?.nama || "-"} (${k.no_kunjungan} — ${k.klaster?.kode || "-"})</option>`
+    ).join("");
+  }
+
+  if (!errO && obatData) {
+    // Unik-kan nama+dosis buat opsi dropdown (banyak batch obat sama nama/dosis).
+    const seen = new Set();
+    obatMasterCache = obatData.filter(o => {
+      const key = `${o.nama_obat}|${o.dosis || ""}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  document.getElementById("entriObatRows").innerHTML = "";
+  tambahBarisObatEntri();
+}
+
+function tambahBarisObatEntri() {
+  const wrap = document.getElementById("entriObatRows");
+  const rowId = "row_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+  const opsiObat = obatMasterCache.map(o =>
+    `<option value="${o.nama_obat}|||${o.dosis || ""}">${o.nama_obat}${o.dosis ? " — " + o.dosis : ""}</option>`
+  ).join("");
+
+  const row = document.createElement("div");
+  row.className = "entri-obat-row";
+  row.id = rowId;
+  row.innerHTML = `
+    <select class="entri-nama-obat">
+      <option value="">-- Pilih obat --</option>
+      ${opsiObat}
+    </select>
+    <input type="number" class="entri-jumlah" placeholder="Jumlah" min="1" value="1">
+    <input type="text" class="entri-satuan" placeholder="Satuan (tablet/kapsul)">
+    <input type="text" class="entri-aturan" placeholder="Aturan pakai (3x1 sehabis makan)">
+    <button type="button" onclick="document.getElementById('${rowId}').remove()">Hapus</button>
+  `;
+  wrap.appendChild(row);
+}
+
+async function simpanResepManual() {
+  const msgBox = document.getElementById("msgEntriResep");
+  msgBox.innerHTML = "";
+
+  const kunjunganId = document.getElementById("entriKunjunganSelect").value;
+  if (!kunjunganId) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien/kunjungan dulu.</div>`;
+    return;
+  }
+
+  const rows = document.querySelectorAll("#entriObatRows .entri-obat-row");
+  const daftarObat = [];
+  for (const row of rows) {
+    const namaDosis = row.querySelector(".entri-nama-obat").value;
+    const jumlah = parseInt(row.querySelector(".entri-jumlah").value, 10);
+    const satuan = row.querySelector(".entri-satuan").value.trim();
+    const aturan = row.querySelector(".entri-aturan").value.trim();
+    if (!namaDosis || !jumlah || jumlah <= 0) continue;
+    const [nama_obat, dosis] = namaDosis.split("|||");
+    daftarObat.push({ nama_obat, dosis: dosis || null, jumlah, satuan: satuan || null, aturan_pakai: aturan || null });
+  }
+
+  if (!daftarObat.length) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi minimal 1 obat dengan nama & jumlah yang valid.</div>`;
+    return;
+  }
+
+  // Kolom dokter_id di tabel resep NOT NULL (didesain awal buat resep dari dokter).
+  // Buat resep manual dari Farmasi, isi dokter_id dengan id petugas farmasi yang bikin —
+  // fungsinya di sini jadi "penanggung jawab resep", bukan berarti resep dari dokter.
+  const { error } = await supabaseClient.from("resep").insert({
+    kunjungan_id: kunjunganId,
+    dokter_id: profilSaya.id,
+    daftar_obat: daftarObat,
+    status: "menunggu"
+  });
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan resep: ${error.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Resep manual berhasil dibuat, muncul di Antrian Resep Pasien.</div>`;
+  document.getElementById("entriKunjunganSelect").value = "";
+  document.getElementById("entriObatRows").innerHTML = "";
+  tambahBarisObatEntri();
+  await muatResepMenunggu();
+  await muatDashboardApotek();
+}
+
+// Muat daftar pasien yang punya resep menunggu/sebagian, tampil sebagai
+// antrian di kiri. Klik salah satu baru buka detail resep + checklist obat.
 async function muatResepMenunggu() {
   const listBox = document.getElementById("daftarPasienResep");
 
@@ -935,35 +1080,67 @@ function renderDetailResep(resep) {
     <ul class="checklist-obat">
       ${items.map((o, i) => `
         <li>
-          <label>
-            <input type="checkbox" ${o.diserahkan ? "checked disabled" : ""}
-              onchange="konfirmasiObatDiserahkan('${resep.id}', ${i}, this)">
-            ${o.nama_obat} (${o.jumlah}${o.dosis ? " — " + o.dosis : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""})
-          </label>
-          <span class="badge ${o.diserahkan ? "badge-selesai" : "badge-menunggu"}">${o.diserahkan ? "Diserahkan" : "Menunggu"}</span>
+          ${o.diserahkan ? `
+            <label>
+              <input type="checkbox" checked disabled>
+              ${o.nama_obat}${o.dosis ? " — " + o.dosis : ""} (diresepkan ${o.jumlah}${o.satuan ? " " + o.satuan : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""})
+            </label>
+            <span class="badge badge-selesai">Diserahkan ${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}</span>
+          ` : `
+            <label style="flex:1;">
+              ${o.nama_obat}${o.dosis ? " — " + o.dosis : ""} (diresepkan ${o.jumlah}${o.satuan ? " " + o.satuan : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""})
+            </label>
+            <input type="number" class="serah-input" id="jumlahSerah_${resep.id}_${i}" value="${o.jumlah}" min="1">
+            <button type="button" onclick="konfirmasiObatDiserahkan('${resep.id}', ${i}, this)">Serahkan</button>
+          `}
         </li>
       `).join("")}
     </ul>
     <div class="riwayat-block">
       <h4>Riwayat Pemberian Obat Pasien Ini</h4>
+      <div class="riwayat-tabs">
+        <button type="button" class="${riwayatRangeAktif === "harian" ? "active" : ""}" onclick="gantiRiwayatRange(event, 'harian', '${resep.kunjungan?.pasien?.id}', '${resep.id}')">Hari Ini</button>
+        <button type="button" class="${riwayatRangeAktif === "mingguan" ? "active" : ""}" onclick="gantiRiwayatRange(event, 'mingguan', '${resep.kunjungan?.pasien?.id}', '${resep.id}')">Minggu Ini</button>
+        <button type="button" class="${riwayatRangeAktif === "bulanan" ? "active" : ""}" onclick="gantiRiwayatRange(event, 'bulanan', '${resep.kunjungan?.pasien?.id}', '${resep.id}')">Bulan Ini</button>
+      </div>
       <div id="riwayatObatPasien">Memuat...</div>
     </div>
   `;
 }
 
-// Riwayat resep yang SUDAH lengkap diserahkan buat pasien ini (di luar resep yang lagi dibuka).
+function gantiRiwayatRange(evt, range, pasienId, resepIniId) {
+  riwayatRangeAktif = range;
+  muatRiwayatObatPasien(pasienId, resepIniId);
+  document.querySelectorAll(".riwayat-tabs button").forEach(b => b.classList.remove("active"));
+  evt.target.classList.add("active");
+}
+
+// Riwayat resep yang SUDAH lengkap diserahkan buat pasien ini, difilter per hari/minggu/bulan.
 async function muatRiwayatObatPasien(pasienId, resepIniId) {
   const box = document.getElementById("riwayatObatPasien");
   if (!box) return;
   if (!pasienId) { box.innerHTML = `<div class="queue-empty" style="padding:10px 0;">Data pasien gak ditemukan.</div>`; return; }
+
+  const batas = new Date();
+  if (riwayatRangeAktif === "harian") {
+    batas.setHours(0, 0, 0, 0);
+  } else if (riwayatRangeAktif === "mingguan") {
+    const hari = batas.getDay() === 0 ? 7 : batas.getDay(); // Senin = awal minggu
+    batas.setDate(batas.getDate() - (hari - 1));
+    batas.setHours(0, 0, 0, 0);
+  } else {
+    batas.setDate(1);
+    batas.setHours(0, 0, 0, 0);
+  }
 
   const { data, error } = await supabaseClient
     .from("resep")
     .select("id, diserahkan_at, daftar_obat, kunjungan!inner(no_kunjungan, pasien_id)")
     .eq("kunjungan.pasien_id", pasienId)
     .eq("status", "diserahkan")
+    .gte("diserahkan_at", batas.toISOString())
     .order("diserahkan_at", { ascending: false })
-    .limit(5);
+    .limit(20);
 
   if (error) {
     box.innerHTML = `<div class="queue-empty" style="padding:10px 0;">Gagal muat riwayat: ${error.message}</div>`;
@@ -976,24 +1153,33 @@ async function muatRiwayatObatPasien(pasienId, resepIniId) {
     ? riwayat.map(r => `
         <div class="riwayat-item">
           <div class="tgl">${new Date(r.diserahkan_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })} · ${r.kunjungan?.no_kunjungan || "-"}</div>
-          <div>${(r.daftar_obat || []).map(o => `${o.nama_obat}${o.dosis ? " " + o.dosis : ""} (${o.jumlah})`).join(", ")}</div>
+          <div>${(r.daftar_obat || []).map(o => `${o.nama_obat}${o.dosis ? " " + o.dosis : ""} (${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""})`).join(", ")}</div>
         </div>
       `).join("")
-    : `<div class="queue-empty" style="padding:10px 0;">Belum ada riwayat resep sebelumnya.</div>`;
+    : `<div class="queue-empty" style="padding:10px 0;">Belum ada riwayat di periode ini.</div>`;
 }
 
-// Konfirmasi penyerahan 1 obat di dalam 1 resep. Tiap obat dipotong stoknya
-// (FEFO) sendiri-sendiri, tepat saat dicentang — bukan borongan sekali klik.
-async function konfirmasiObatDiserahkan(resepId, itemIndex, checkboxEl) {
+// Konfirmasi penyerahan 1 obat di dalam 1 resep — petugas isi jumlah aktual yang
+// diserahkan (bisa beda dari jumlah resep kalau stok terbatas), lalu stok dipotong
+// (FEFO) sesuai jumlah itu, bukan borongan sekali klik buat semua obat.
+async function konfirmasiObatDiserahkan(resepId, itemIndex, tombolEl) {
   const msgBox = document.getElementById("msgResep");
   msgBox.innerHTML = "";
 
-  if (!confirm("Konfirmasi obat ini sudah diserahkan ke pasien?")) {
-    checkboxEl.checked = false;
+  const inputJumlah = document.getElementById(`jumlahSerah_${resepId}_${itemIndex}`);
+  const jumlahDiserahkan = parseInt(inputJumlah?.value, 10);
+
+  if (!jumlahDiserahkan || jumlahDiserahkan <= 0) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi jumlah yang diserahkan dulu (harus lebih dari 0).</div>`;
     return;
   }
 
-  checkboxEl.disabled = true;
+  if (!confirm(`Konfirmasi ${jumlahDiserahkan} obat ini sudah diserahkan ke pasien?`)) {
+    return;
+  }
+
+  tombolEl.disabled = true;
+  tombolEl.textContent = "Memproses...";
 
   // Ambil ulang data resep terbaru (hindari race condition kalau ada 2 petugas buka bareng).
   const { data: resep, error: errAmbil } = await supabaseClient
@@ -1004,8 +1190,8 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, checkboxEl) {
 
   if (errAmbil || !resep) {
     msgBox.innerHTML = `<div class="msg msg-error">Gagal ambil data resep: ${errAmbil?.message || "tidak ditemukan"}</div>`;
-    checkboxEl.checked = false;
-    checkboxEl.disabled = false;
+    tombolEl.disabled = false;
+    tombolEl.textContent = "Serahkan";
     return;
   }
 
@@ -1017,7 +1203,8 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, checkboxEl) {
     return;
   }
 
-  // Potong stok obat ini saja, dari batch paling dekat expired dulu (FEFO).
+  // Potong stok obat ini saja sebanyak JUMLAH YANG DIISI PETUGAS (bukan jumlah resep),
+  // dari batch paling dekat expired dulu (FEFO).
   const referensiResep = `Resep ${resep.kunjungan?.no_kunjungan || resep.id} — ${resep.kunjungan?.pasien?.nama || "-"}`;
   let query = supabaseClient
     .from("obat")
@@ -1033,7 +1220,7 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, checkboxEl) {
   if (!batches || !batches.length) {
     peringatan = `${item.nama_obat}${item.dosis ? " " + item.dosis : ""}: tidak ditemukan di data stok`;
   } else {
-    let sisaButuh = item.jumlah;
+    let sisaButuh = jumlahDiserahkan;
     for (const batch of batches) {
       if (sisaButuh <= 0) break;
       const potong = Math.min(batch.stok, sisaButuh);
@@ -1046,13 +1233,14 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, checkboxEl) {
       sisaButuh -= potong;
     }
     if (sisaButuh > 0) {
-      peringatan = `${item.nama_obat}${item.dosis ? " " + item.dosis : ""}: stok kurang ${sisaButuh}`;
+      peringatan = `${item.nama_obat}${item.dosis ? " " + item.dosis : ""}: stok kurang ${sisaButuh}, cuma ${jumlahDiserahkan - sisaButuh} yang terpotong`;
     }
   }
 
-  // Tandai obat ini diserahkan di dalam daftar_obat, lalu cek apakah semua obat di resep sudah selesai.
+  // Tandai obat ini diserahkan + simpan jumlah aktual yang diserahkan, lalu cek
+  // apakah semua obat di resep sudah selesai.
   const daftarObatBaru = items.map((o, i) => i === itemIndex
-    ? { ...o, diserahkan: true, diserahkan_at: new Date().toISOString(), diserahkan_oleh: profilSaya.id }
+    ? { ...o, diserahkan: true, jumlah_diserahkan: jumlahDiserahkan, diserahkan_at: new Date().toISOString(), diserahkan_oleh: profilSaya.id }
     : o);
   const semuaSelesai = daftarObatBaru.every(o => o.diserahkan);
 
@@ -1072,14 +1260,14 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, checkboxEl) {
 
   if (errUpdate) {
     msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan konfirmasi: ${errUpdate.message}</div>`;
-    checkboxEl.checked = false;
-    checkboxEl.disabled = false;
+    tombolEl.disabled = false;
+    tombolEl.textContent = "Serahkan";
     return;
   }
 
   msgBox.innerHTML = peringatan
     ? `<div class="msg msg-error">Obat diserahkan, tapi ada catatan: ${peringatan}</div>`
-    : `<div class="msg msg-success">${item.nama_obat} berhasil diserahkan, stok terpotong.</div>`;
+    : `<div class="msg msg-success">${item.nama_obat}: ${jumlahDiserahkan}${item.satuan ? " " + item.satuan : ""} berhasil diserahkan, stok terpotong.</div>`;
 
   await muatResepMenunggu();
   await muatDaftarObat();
