@@ -171,6 +171,8 @@
     <a class="disabled">Laporan <span class="ph-badge-soon">Segera</span></a>
 
     <div class="ph-group-title">Modul Lain</div>
+    <a href="index.html">Pendaftaran</a>
+    <a href="rekam-medis.html">Rekam Medis</a>
     <a href="pengaturan.html">Pengaturan</a>
     </nav>
   </aside>
@@ -1033,7 +1035,16 @@ function tambahBarisObatEntri() {
       <button type="button" onclick="document.getElementById('${rowId}').remove()">Hapus</button>
     </div>
     <div class="entri-obat-row-line">
-      <input type="text" class="entri-aturan" placeholder="Aturan pakai (3x1 sehabis makan)" style="flex:1;">
+      <input type="text" class="entri-aturan" placeholder="Aturan pakai (misal: 3x1 sehari)">
+      <select class="entri-anjuran-makan">
+        <option value="">-- Anjuran makan --</option>
+        <option value="sebelum_makan">Sebelum makan</option>
+        <option value="sesudah_makan">Sesudah makan</option>
+        <option value="saat_makan">Saat/bersama makan</option>
+        <option value="tidak_terkait">Tidak terkait waktu makan</option>
+      </select>
+    </div>
+    <div class="entri-obat-row-line">
       <span class="entri-waktu-label">Waktu minum:</span>
       <label class="entri-waktu-chk"><input type="checkbox" class="entri-waktu" value="pagi"> Pagi</label>
       <label class="entri-waktu-chk"><input type="checkbox" class="entri-waktu" value="siang"> Siang</label>
@@ -1061,10 +1072,11 @@ async function simpanResepManual() {
     const jumlah = parseInt(row.querySelector(".entri-jumlah").value, 10);
     const satuan = row.querySelector(".entri-satuan").value.trim();
     const aturan = row.querySelector(".entri-aturan").value.trim();
+    const anjuranMakan = row.querySelector(".entri-anjuran-makan").value;
     const waktu = Array.from(row.querySelectorAll(".entri-waktu:checked")).map(c => c.value);
     if (!namaDosis || !jumlah || jumlah <= 0) continue;
     const [nama_obat, dosis] = namaDosis.split("|||");
-    daftarObat.push({ nama_obat, dosis: dosis || null, jenis_obat: jenisObat, jumlah, satuan: satuan || null, aturan_pakai: aturan || null, waktu });
+    daftarObat.push({ nama_obat, dosis: dosis || null, jenis_obat: jenisObat, jumlah, satuan: satuan || null, aturan_pakai: aturan || null, anjuran_makan: anjuranMakan || null, waktu });
   }
 
   if (!daftarObat.length) {
@@ -1290,6 +1302,10 @@ function pilihResepPasien(resepId) {
 }
 
 const LABEL_WAKTU_MAP = { pagi: "Pagi", siang: "Siang", sore: "Sore" };
+const LABEL_ANJURAN_MAKAN_MAP = { sebelum_makan: "Sebelum makan", sesudah_makan: "Sesudah makan", saat_makan: "Saat/bersama makan", tidak_terkait: "Tidak terkait waktu makan" };
+function labelAnjuranMakan(kode) {
+  return kode && LABEL_ANJURAN_MAKAN_MAP[kode] ? `, ${LABEL_ANJURAN_MAKAN_MAP[kode]}` : "";
+}
 function labelWaktu(waktu) {
   if (!waktu || !waktu.length) return "";
   return `<span class="waktu-badges">${waktu.map(w => `<span class="badge-waktu">${LABEL_WAKTU_MAP[w] || w}</span>`).join("")}</span>`;
@@ -1325,6 +1341,7 @@ function cetakEtiket(namaPasien, item) {
       ${jenisLabel ? `<div class="baris">Jenis: ${jenisLabel}</div>` : ""}
       <div class="baris">Jumlah: ${jumlah}</div>
       ${item.aturan_pakai ? `<div class="baris">Aturan pakai: ${item.aturan_pakai}</div>` : ""}
+      ${item.anjuran_makan ? `<div class="baris">${LABEL_ANJURAN_MAKAN_MAP[item.anjuran_makan] || item.anjuran_makan}</div>` : ""}
       ${waktuTxt ? `<div class="baris waktu">Diminum: ${waktuTxt}</div>` : ""}
       <div class="garis"></div>
       <div class="center">Semoga lekas sembuh</div>
@@ -1381,13 +1398,13 @@ function renderDetailResep(resep) {
           ${o.diserahkan ? `
             <label>
               <input type="checkbox" checked disabled>
-              ${o.nama_obat}${o.dosis ? " — " + o.dosis : ""} (diresepkan ${o.jumlah}${o.satuan ? " " + o.satuan : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""}) ${labelWaktu(o.waktu)}
+              ${o.nama_obat}${o.dosis ? " — " + o.dosis : ""} (diresepkan ${o.jumlah}${o.satuan ? " " + o.satuan : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""}${labelAnjuranMakan(o.anjuran_makan)}) ${labelWaktu(o.waktu)}
             </label>
             <span class="badge badge-selesai">Diserahkan ${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}</span>
             <button type="button" onclick='cetakEtiket(${JSON.stringify(resep.kunjungan?.pasien?.nama || "-")}, ${JSON.stringify(o)})'>Cetak Etiket</button>
           ` : `
             <label style="flex:1;">
-              ${o.nama_obat}${o.dosis ? " — " + o.dosis : ""} (diresepkan ${o.jumlah}${o.satuan ? " " + o.satuan : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""}) ${labelWaktu(o.waktu)}
+              ${o.nama_obat}${o.dosis ? " — " + o.dosis : ""} (diresepkan ${o.jumlah}${o.satuan ? " " + o.satuan : ""}${o.aturan_pakai ? ", " + o.aturan_pakai : ""}${labelAnjuranMakan(o.anjuran_makan)}) ${labelWaktu(o.waktu)}
             </label>
             <input type="number" class="serah-input" id="jumlahSerah_${resep.id}_${i}" value="${o.jumlah}" min="1">
             <button type="button" onclick="konfirmasiObatDiserahkan('${resep.id}', ${i}, this)">Serahkan</button>

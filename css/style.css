@@ -307,6 +307,56 @@ tr:hover td { background: #fafcfc; }
 .staff-item .staff-name { flex: 1; font-weight: 600; color: #1f2937; }
 .staff-item .staff-status { font-size: 11px; color: #9ca3af; }
 
+/* ---- Baris obat Entri Resep Manual (rapi, ada kotak & garis pemisah) ---- */
+.entri-obat-row {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: #f8fafc;
+}
+.entri-obat-row-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.entri-obat-row-line + .entri-obat-row-line {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #dbe2ea;
+}
+.entri-obat-row select, .entri-obat-row input { margin-bottom: 0; width: auto; }
+.entri-nama-obat { flex: 2 1 220px; }
+.entri-jenis-obat { flex: 1 1 140px; }
+.entri-jumlah { flex: 0 1 90px; }
+.entri-satuan { flex: 1 1 150px; }
+.entri-obat-row-line > button {
+  flex: 0 0 auto;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.entri-obat-row-line > button:hover { background: #fee2e2; }
+.entri-aturan { flex: 2 1 220px; }
+.entri-anjuran-makan { flex: 1 1 160px; }
+.entri-waktu-label { font-size: 12px; color: var(--muted); font-weight: 600; margin-left: 4px; }
+.entri-waktu-chk {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0;
+  cursor: pointer;
+}
+.entri-waktu-chk input[type="checkbox"] { width: 15px; height: 15px; accent-color: #16865c; cursor: pointer; margin: 0; }
+
 @media print {
   body * { visibility: hidden; }
   .kartu-cetak, .kartu-cetak * { visibility: visible; }
