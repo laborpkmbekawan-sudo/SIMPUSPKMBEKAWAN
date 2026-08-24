@@ -164,7 +164,7 @@
     <div class="ph-group-title">Pengelolaan Stok</div>
     <a id="navStok" onclick="gantiSubtab('stok')">Master Data Obat</a>
     <a id="navKartustok" onclick="gantiSubtab('kartustok')">Kartu Stok Digital</a>
-    <a class="disabled">Stok Opname <span class="ph-badge-soon">Segera</span></a>
+    <a id="navStokopname" onclick="gantiSubtab('stokopname')">Stok Opname</a>
     <a class="disabled">Mutasi & Penerimaan <span class="ph-badge-soon">Segera</span></a>
 
     <div class="ph-group-title">Pengadaan & Laporan</div>
@@ -221,7 +221,7 @@
         <div class="ph-quick-tile" onclick="gantiSubtab('stok')">Master Data Obat</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('kartustok')">Kartu Stok</div>
         <div class="ph-quick-tile disabled">LPLPO</div>
-        <div class="ph-quick-tile disabled">Stok Opname</div>
+        <div class="ph-quick-tile" onclick="gantiSubtab('stokopname')">Stok Opname</div>
         <div class="ph-quick-tile disabled">Penerimaan Obat</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('racikan')">Racikan Obat</div>
         <div class="ph-quick-tile disabled">Laporan</div>
@@ -336,17 +336,26 @@
   <div id="panelStok" style="display:none;">
 
   <div class="card" style="--accent:#173b5e">
-    <h2><span class="card-num">1</span>Tambah / Update Stok Obat</h2>
+    <h2><span class="card-num">1</span><span id="judulFormObat">Tambah / Update Stok Obat &amp; BMHP</span></h2>
     <div id="msgObat"></div>
     <div class="grid-3">
       <div>
-        <label>Nama Obat *</label>
-        <input type="text" id="oNama" placeholder="Contoh: Paracetamol">
+        <label>Jenis Item *</label>
+        <select id="oJenisItem" onchange="toggleFormJenisItem()">
+          <option value="obat">Obat</option>
+          <option value="bmhp">BMHP (Bahan Medis Habis Pakai)</option>
+        </select>
       </div>
       <div>
-        <label>Dosis *</label>
+        <label id="labelNamaItem">Nama Obat *</label>
+        <input type="text" id="oNama" placeholder="Contoh: Paracetamol">
+      </div>
+      <div id="wrapDosis">
+        <label id="labelDosis">Dosis *</label>
         <input type="text" id="oDosis" placeholder="Contoh: 500mg">
       </div>
+    </div>
+    <div class="grid-3">
       <div>
         <label>Satuan</label>
         <select id="oSatuan">
@@ -357,6 +366,9 @@
           <option value="strip">Strip</option>
           <option value="sachet">Sachet</option>
           <option value="ampul">Ampul</option>
+          <option value="pcs">Pcs / Buah</option>
+          <option value="box">Box</option>
+          <option value="pasang">Pasang</option>
         </select>
       </div>
     </div>
@@ -415,16 +427,18 @@
       <label>Keterangan</label>
       <input type="text" id="oKeterangan" placeholder="Opsional">
     </div>
-    <button class="btn-primary" onclick="simpanObat()">Simpan Obat</button>
-    <p style="font-size:12px; color:#6b7280; margin-top:8px;">Kode obat dibuat otomatis (OB-0001, dst). Kalau Nama+Dosis+Merk+No.Lot+Exp sama persis dengan yang sudah ada, stok akan ditambahkan ke batch itu (bukan bikin baris baru).</p>
+    <button class="btn-primary" id="btnSimpanObat" onclick="simpanObat()">Simpan Obat</button>
+    <button type="button" id="btnBatalEditObat" onclick="batalEditObat()" style="display:none;">Batal Edit</button>
+    <p style="font-size:12px; color:#6b7280; margin-top:8px;" id="hintFormObat">Kode obat dibuat otomatis (OB-0001, dst). Kalau Nama+Dosis+Merk+No.Lot+Exp sama persis dengan yang sudah ada, stok akan ditambahkan ke batch itu (bukan bikin baris baru).</p>
   </div>
 
   <div class="card" style="--accent:#6a4c93">
-    <h2><span class="card-num">2</span>Daftar Obat & Stok</h2>
+    <h2><span class="card-num">2</span>Daftar Obat &amp; BMHP</h2>
     <table>
       <thead>
         <tr>
-          <th>Nama Obat</th>
+          <th>Jenis</th>
+          <th>Nama</th>
           <th>Dosis</th>
           <th>Kategori</th>
           <th>Satuan</th>
@@ -433,10 +447,11 @@
           <th>Exp</th>
           <th>Stok</th>
           <th>Kode</th>
+          <th>Aksi</th>
         </tr>
       </thead>
       <tbody id="tabelObat">
-        <tr><td colspan="9">Memuat...</td></tr>
+        <tr><td colspan="11">Memuat...</td></tr>
       </tbody>
     </table>
   </div>
@@ -466,16 +481,51 @@
           <th>Saldo Setelah</th>
           <th>Referensi</th>
           <th>Petugas</th>
+          <th>Aksi</th>
         </tr>
       </thead>
       <tbody id="tabelKartuStok">
-        <tr><td colspan="6">Pilih obat dulu.</td></tr>
+        <tr><td colspan="7">Pilih obat dulu.</td></tr>
       </tbody>
     </table>
   </div>
 
   </div>
   <!-- /panelKartustok -->
+
+  <div id="panelStokopname" style="display:none;">
+
+  <div class="card" style="--accent:#e0793c">
+    <h2><span class="card-num">1</span>Stok Opname</h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Cocokkan stok sistem dengan stok fisik di rak/gudang. Selisih otomatis dihitung dan tercatat ke Kartu Stok begitu disesuaikan — jadi datanya konsisten buat laporan LPLPO.</p>
+    <div id="msgOpname"></div>
+    <div class="grid-3" style="margin-bottom:10px;">
+      <div>
+        <label>Cari Nama Obat/BMHP</label>
+        <input type="text" id="opCari" placeholder="Ketik buat filter tabel..." oninput="filterOpname()">
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>Dosis/Varian</th>
+          <th>Satuan</th>
+          <th>Stok Sistem</th>
+          <th>Stok Fisik</th>
+          <th>Selisih</th>
+          <th>Keterangan</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tabelOpname">
+        <tr><td colspan="8">Memuat...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  </div>
+  <!-- /panelStokopname -->
 
   <div id="panelRacikan" style="display:none;">
 
@@ -713,11 +763,95 @@ async function muatRiwayatObatApotek() {
 
 // ---------- Sub-tab Beranda / Pelayanan / Stok ----------
 function gantiSubtab(tab) {
-  ["beranda", "pelayanan", "stok", "kartustok", "racikan", "riwayatobat"].forEach(t => {
+  ["beranda", "pelayanan", "stok", "kartustok", "stokopname", "racikan", "riwayatobat"].forEach(t => {
     document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? "block" : "none";
     const nav = document.getElementById("nav" + t.charAt(0).toUpperCase() + t.slice(1));
     if (nav) nav.classList.toggle("active", t === tab);
   });
+  if (tab === "stokopname") muatStokOpname();
+}
+
+// ---------- Stok Opname (cocokkan stok sistem vs fisik, per baris/batch) ----------
+async function muatStokOpname() {
+  const tbody = document.getElementById("tabelOpname");
+  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
+  if (!daftarObatCache.length) await muatDaftarObat();
+  renderTabelOpname(daftarObatCache);
+}
+
+function filterOpname() {
+  const kata = document.getElementById("opCari").value.trim().toLowerCase();
+  const data = daftarObatCache.filter(o =>
+    !kata || o.nama_obat.toLowerCase().includes(kata) || (o.dosis || "").toLowerCase().includes(kata)
+  );
+  renderTabelOpname(data);
+}
+
+function renderTabelOpname(data) {
+  const tbody = document.getElementById("tabelOpname");
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="8">Tidak ada data.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(o => `
+    <tr id="opRow_${o.id}">
+      <td>${o.nama_obat}</td>
+      <td>${o.dosis || "-"}</td>
+      <td>${o.satuan}</td>
+      <td>${o.stok}</td>
+      <td><input type="number" class="serah-input" id="opFisik_${o.id}" value="${o.stok}" min="0" oninput="hitungSelisihOpname('${o.id}', ${o.stok})" style="width:90px;"></td>
+      <td id="opSelisih_${o.id}" style="font-weight:600;">0</td>
+      <td><input type="text" id="opKet_${o.id}" placeholder="Opsional" style="width:140px;"></td>
+      <td><button type="button" style="font-size:11px; padding:3px 8px;" onclick="sesuaikanOpname('${o.id}', ${o.stok})">Sesuaikan</button></td>
+    </tr>
+  `).join("");
+}
+
+function hitungSelisihOpname(id, stokSistem) {
+  const fisik = parseInt(document.getElementById(`opFisik_${id}`).value, 10);
+  const el = document.getElementById(`opSelisih_${id}`);
+  if (isNaN(fisik)) { el.textContent = "-"; el.style.color = ""; return; }
+  const selisih = fisik - stokSistem;
+  el.textContent = selisih > 0 ? `+${selisih}` : `${selisih}`;
+  el.style.color = selisih < 0 ? "#dc2626" : (selisih > 0 ? "#059669" : "");
+}
+
+// Simpan hasil opname 1 baris: update stok obat ke nilai fisik, catat selisih ke Kartu Stok.
+async function sesuaikanOpname(id, stokSistem) {
+  const inputFisik = document.getElementById(`opFisik_${id}`);
+  const fisik = parseInt(inputFisik.value, 10);
+  const msgBox = document.getElementById("msgOpname");
+  msgBox.innerHTML = "";
+
+  if (isNaN(fisik) || fisik < 0) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi stok fisik dulu (angka, gak boleh minus).</div>`;
+    return;
+  }
+  const selisih = fisik - stokSistem;
+  if (selisih === 0) {
+    msgBox.innerHTML = `<div class="msg msg-success">Stok fisik sama dengan sistem, gak ada yang perlu disesuaikan.</div>`;
+    return;
+  }
+  const keterangan = document.getElementById(`opKet_${id}`).value.trim() || null;
+  if (!confirm(`Sesuaikan stok jadi ${fisik} (selisih ${selisih > 0 ? "+" : ""}${selisih})? Ini bakal tercatat permanen di Kartu Stok.`)) {
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("obat")
+    .update({ stok: fisik, updated_by: profilSaya.id, updated_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`;
+    return;
+  }
+
+  await catatKartuStok(id, selisih > 0 ? "opname_tambah" : "opname_kurang", Math.abs(selisih), fisik, "Stok Opname", keterangan);
+
+  msgBox.innerHTML = `<div class="msg msg-success">Berhasil disesuaikan (selisih ${selisih > 0 ? "+" : ""}${selisih}).</div>`;
+  await muatDaftarObat();
+  renderTabelOpname(daftarObatCache);
 }
 
 const LABEL_KATEGORI = {
@@ -945,17 +1079,30 @@ function muatDonutGenerik(semuaObat) {
   });
 }
 
+let obatEditId = null;   // kalau ada isi, form Tambah/Update Stok lagi mode EDIT (update langsung), bukan tambah stok baru
+let daftarObatCache = []; // cache tabel obat terakhir dimuat, buat isi ulang form pas Edit
+let kartuStokCache = []; // cache riwayat kartu stok obat terpilih, buat edit/hapus entri "Masuk" terakhir
+
+function toggleFormJenisItem() {
+  const jenis = document.getElementById("oJenisItem").value;
+  const isBmhp = jenis === "bmhp";
+  document.getElementById("labelNamaItem").textContent = isBmhp ? "Nama BMHP *" : "Nama Obat *";
+  document.getElementById("labelDosis").textContent = isBmhp ? "Varian/Ukuran (opsional)" : "Dosis *";
+  document.getElementById("oDosis").placeholder = isBmhp ? "Contoh: Ukuran M / 10x10cm (opsional)" : "Contoh: 500mg";
+}
+
 async function muatDaftarObat() {
   const tbody = document.getElementById("tabelObat");
   const { data, error } = await supabaseClient.from("obat").select("*").order("nama_obat").order("exp_date");
 
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="9">Gagal muat data: ${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11">Gagal muat data: ${error.message}</td></tr>`;
     return;
   }
+  daftarObatCache = data || [];
 
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="9">Belum ada obat terdaftar.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11">Belum ada obat/BMHP terdaftar.</td></tr>`;
     return;
   }
 
@@ -964,8 +1111,10 @@ async function muatDaftarObat() {
     const expSoon = o.exp_date && o.exp_date < today;
     const stokRendah = o.stok <= (o.stok_minimum ?? 10);
     const kategoriKelas = o.kategori && o.kategori !== "bebas" ? `badge-${o.kategori.replace("_terbatas","")}` : null;
+    const isBmhp = o.jenis_item === "bmhp";
     return `
     <tr>
+      <td>${isBmhp ? '<span class="badge" style="background:#e5e7eb; color:#374151;">BMHP</span>' : '<span class="badge" style="background:#e0f2f1; color:#1c7d7f;">Obat</span>'}</td>
       <td>${o.nama_obat}</td>
       <td>${o.dosis || "-"}</td>
       <td>${kategoriKelas ? `<span class="badge ${kategoriKelas}">${LABEL_KATEGORI[o.kategori]}</span>` : (LABEL_KATEGORI[o.kategori] || "Bebas")}</td>
@@ -975,6 +1124,10 @@ async function muatDaftarObat() {
       <td>${o.exp_date ? new Date(o.exp_date).toLocaleDateString("id-ID") : "-"}${expSoon ? ' <span class="badge badge-batal">Expired</span>' : ""}</td>
       <td>${o.stok}${stokRendah ? ' <span class="badge badge-stok-rendah">Stok Rendah</span>' : ""}</td>
       <td>${o.kode_obat || "-"}</td>
+      <td style="white-space:nowrap;">
+        <button type="button" style="font-size:11px; padding:3px 8px;" onclick="editObat('${o.id}')">Edit</button>
+        <button type="button" style="font-size:11px; padding:3px 8px; background:#fee2e2; color:#991b1b; border-color:#fecaca;" onclick="hapusObat('${o.id}')">Hapus</button>
+      </td>
     </tr>
   `;
   }).join("");
@@ -987,15 +1140,81 @@ async function muatDaftarObat() {
   if (dipilihSebelumnya) select.value = dipilihSebelumnya;
 }
 
+// Isi form Tambah/Update Stok dengan data baris terpilih, biar bisa diedit langsung
+// (bukan nambah stok baru — field lain kayak nama/dosis/kategori/harga juga ikut kekoreksi).
+function editObat(id) {
+  const o = daftarObatCache.find(x => x.id === id);
+  if (!o) return;
+  obatEditId = id;
+  document.getElementById("oJenisItem").value = o.jenis_item || "obat";
+  toggleFormJenisItem();
+  document.getElementById("oNama").value = o.nama_obat || "";
+  document.getElementById("oDosis").value = o.dosis || "";
+  document.getElementById("oSatuan").value = o.satuan || "tablet";
+  document.getElementById("oMerk").value = o.merk || "";
+  document.getElementById("oNoLot").value = o.no_lot || "";
+  document.getElementById("oExp").value = o.exp_date || "";
+  document.getElementById("oKategori").value = o.kategori || "bebas";
+  document.getElementById("oBentuk").value = o.bentuk_sediaan || "";
+  document.getElementById("oHarga").value = o.harga ?? "";
+  document.getElementById("oStok").value = o.stok ?? 0;
+  document.getElementById("oStokMin").value = o.stok_minimum ?? 10;
+  document.getElementById("oGenerik").value = o.nama_generik ? "true" : "false";
+  document.getElementById("oKeterangan").value = o.keterangan || "";
+
+  document.getElementById("judulFormObat").textContent = `Edit: ${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`;
+  document.getElementById("btnSimpanObat").textContent = "Update Data Ini";
+  document.getElementById("btnBatalEditObat").style.display = "inline-block";
+  document.getElementById("hintFormObat").textContent = "Mode edit: field Stok di atas jadi nilai stok akhir (bukan ditambahkan), dan perubahan stok tetap tercatat di Kartu Stok.";
+  document.getElementById("msgObat").innerHTML = "";
+  document.querySelector('#panelStok .card').scrollIntoView({ behavior: "smooth" });
+}
+
+function batalEditObat() {
+  obatEditId = null;
+  ["oNama","oDosis","oMerk","oNoLot","oExp","oBentuk","oHarga","oKeterangan"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("oJenisItem").value = "obat";
+  toggleFormJenisItem();
+  document.getElementById("oSatuan").value = "tablet";
+  document.getElementById("oKategori").value = "bebas";
+  document.getElementById("oStok").value = "";
+  document.getElementById("oStokMin").value = "";
+  document.getElementById("oGenerik").value = "true";
+  document.getElementById("judulFormObat").textContent = "Tambah / Update Stok Obat & BMHP";
+  document.getElementById("btnSimpanObat").textContent = "Simpan Obat";
+  document.getElementById("btnBatalEditObat").style.display = "none";
+  document.getElementById("hintFormObat").textContent = "Kode obat dibuat otomatis (OB-0001, dst). Kalau Nama+Dosis+Merk+No.Lot+Exp sama persis dengan yang sudah ada, stok akan ditambahkan ke batch itu (bukan bikin baris baru).";
+  document.getElementById("msgObat").innerHTML = "";
+}
+
+// Hapus baris obat/BMHP. Ini permanen dan ikut menghapus riwayat Kartu Stok
+// batch ini (FK cascade) — jadi cuma buat baris salah input, bukan buat obat habis.
+async function hapusObat(id) {
+  const o = daftarObatCache.find(x => x.id === id);
+  if (!o) return;
+  if (!confirm(`Hapus "${o.nama_obat}${o.dosis ? " " + o.dosis : ""}"${o.no_lot ? " (Lot " + o.no_lot + ")" : ""} secara permanen?\n\nRiwayat Kartu Stok buat batch ini ikut terhapus. Cuma buat baris yang salah input — kalau cuma stoknya habis, biarin aja stok 0.`)) {
+    return;
+  }
+  const { error } = await supabaseClient.from("obat").delete().eq("id", id);
+  const msgBox = document.getElementById("msgObat");
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal hapus: ${error.message}</div>`;
+    return;
+  }
+  msgBox.innerHTML = `<div class="msg msg-success">Berhasil dihapus.</div>`;
+  if (obatEditId === id) batalEditObat();
+  await muatDaftarObat();
+}
+
 async function muatKartuStok() {
   const obatId = document.getElementById("ksObatSelect").value;
   const tbody = document.getElementById("tabelKartuStok");
   if (!obatId) {
-    tbody.innerHTML = `<tr><td colspan="6">Pilih obat dulu.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7">Pilih obat dulu.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
   const { data, error } = await supabaseClient
     .from("kartu_stok")
     .select("*, profil_pegawai(nama)")
@@ -1004,11 +1223,11 @@ async function muatKartuStok() {
     .limit(50);
 
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`;
     return;
   }
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="6">Belum ada riwayat mutasi buat obat ini.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7">Belum ada riwayat mutasi buat obat ini.</td></tr>`;
     return;
   }
 
@@ -1021,22 +1240,90 @@ async function muatKartuStok() {
     mutasi_keluar: '<span class="badge badge-menunggu">Mutasi Keluar</span>'
   };
 
-  tbody.innerHTML = data.map(k => `
-    <tr>
+  kartuStokCache = data;
+  tbody.innerHTML = data.map((k, idx) => {
+    const bisaDiedit = idx === 0 && k.jenis === "masuk"; // cuma entri "Masuk" paling baru, biar saldo berjalan gak berantakan
+    const aksi = bisaDiedit
+      ? `<button type="button" style="font-size:11px; padding:3px 8px;" onclick="editKartuStokMasuk('${k.id}')">Edit</button>
+         <button type="button" style="font-size:11px; padding:3px 8px; background:#fee2e2; color:#991b1b; border-color:#fecaca;" onclick="hapusKartuStokMasuk('${k.id}')">Hapus</button>`
+      : `<span style="font-size:11px; color:var(--muted);" title="Cuma entri 'Masuk' paling baru yang bisa diedit/dihapus, biar riwayat saldo gak berantakan">-</span>`;
+    return `
+    <tr id="ksRow_${k.id}">
       <td>${new Date(k.tanggal).toLocaleDateString("id-ID")}</td>
       <td>${LABEL_JENIS[k.jenis] || k.jenis}</td>
-      <td>${k.jumlah}</td>
+      <td id="ksJumlah_${k.id}">${k.jumlah}</td>
       <td>${k.saldo_setelah}</td>
       <td>${k.referensi || "-"}</td>
       <td>${k.profil_pegawai?.nama || "-"}</td>
+      <td style="white-space:nowrap;">${aksi}</td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
+}
+
+// Ganti sel jumlah jadi input, buat edit cepat entri "Masuk" paling baru.
+function editKartuStokMasuk(id) {
+  const k = (kartuStokCache || []).find(x => x.id === id);
+  if (!k) return;
+  const sel = document.getElementById(`ksJumlah_${id}`);
+  sel.innerHTML = `<input type="number" id="ksJumlahInput_${id}" value="${k.jumlah}" min="1" style="width:80px;">`;
+  const row = document.getElementById(`ksRow_${id}`);
+  row.lastElementChild.innerHTML = `
+    <button type="button" style="font-size:11px; padding:3px 8px;" onclick="simpanEditKartuStokMasuk('${id}')">Simpan</button>
+    <button type="button" style="font-size:11px; padding:3px 8px;" onclick="muatKartuStok()">Batal</button>
+  `;
+}
+
+// Simpan koreksi jumlah entri "Masuk" paling baru — stok obat & saldo_setelah ikut disesuaikan.
+async function simpanEditKartuStokMasuk(id) {
+  const k = (kartuStokCache || []).find(x => x.id === id);
+  if (!k) return;
+  const input = document.getElementById(`ksJumlahInput_${id}`);
+  const jumlahBaru = parseInt(input?.value, 10);
+  if (!jumlahBaru || jumlahBaru <= 0) {
+    alert("Jumlah harus lebih dari 0.");
+    return;
+  }
+  const obatId = document.getElementById("ksObatSelect").value;
+  const { data: obatSekarang, error: errAmbil } = await supabaseClient.from("obat").select("stok").eq("id", obatId).single();
+  if (errAmbil || !obatSekarang) {
+    alert("Gagal ambil data stok terbaru: " + (errAmbil?.message || "tidak ditemukan"));
+    return;
+  }
+  const stokBaru = obatSekarang.stok - k.jumlah + jumlahBaru;
+  const { error: errObat } = await supabaseClient.from("obat").update({ stok: stokBaru, updated_by: profilSaya.id, updated_at: new Date().toISOString() }).eq("id", obatId);
+  if (errObat) { alert("Gagal update stok: " + errObat.message); return; }
+  const { error: errKs } = await supabaseClient.from("kartu_stok").update({ jumlah: jumlahBaru, saldo_setelah: stokBaru }).eq("id", id);
+  if (errKs) { alert("Gagal update kartu stok: " + errKs.message); return; }
+  await muatDaftarObat();
+  await muatKartuStok();
+}
+
+// Hapus entri "Masuk" paling baru — jumlahnya dikurangi balik dari stok obat.
+async function hapusKartuStokMasuk(id) {
+  const k = (kartuStokCache || []).find(x => x.id === id);
+  if (!k) return;
+  if (!confirm(`Hapus entri "Masuk" sejumlah ${k.jumlah} ini? Stok obat akan dikurangi balik ${k.jumlah}.`)) return;
+  const obatId = document.getElementById("ksObatSelect").value;
+  const { data: obatSekarang, error: errAmbil } = await supabaseClient.from("obat").select("stok").eq("id", obatId).single();
+  if (errAmbil || !obatSekarang) {
+    alert("Gagal ambil data stok terbaru: " + (errAmbil?.message || "tidak ditemukan"));
+    return;
+  }
+  const stokBaru = obatSekarang.stok - k.jumlah;
+  const { error: errObat } = await supabaseClient.from("obat").update({ stok: stokBaru, updated_by: profilSaya.id, updated_at: new Date().toISOString() }).eq("id", obatId);
+  if (errObat) { alert("Gagal update stok: " + errObat.message); return; }
+  const { error: errKs } = await supabaseClient.from("kartu_stok").delete().eq("id", id);
+  if (errKs) { alert("Gagal hapus kartu stok: " + errKs.message); return; }
+  await muatDaftarObat();
+  await muatKartuStok();
 }
 
 async function simpanObat() {
   const msgBox = document.getElementById("msgObat");
   msgBox.innerHTML = "";
 
+  const jenisItem = document.getElementById("oJenisItem").value;
   const nama = document.getElementById("oNama").value.trim();
   const dosis = document.getElementById("oDosis").value.trim();
   const satuan = document.getElementById("oSatuan").value;
@@ -1052,20 +1339,53 @@ async function simpanObat() {
   const stokMinimum = parseInt(document.getElementById("oStokMin").value) || 10;
   const namaGenerik = document.getElementById("oGenerik").value === "true";
 
-  if (!nama || !dosis) {
-    msgBox.innerHTML = `<div class="msg msg-error">Isi nama obat dan dosis dulu.</div>`;
+  if (!nama || (jenisItem === "obat" && !dosis)) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi nama${jenisItem === "obat" ? " dan dosis" : ""} dulu.</div>`;
     return;
   }
 
-  // Batch dianggap sama kalau nama+dosis+merk+no_lot+exp identik -> stok ditambahkan.
-  // Beda salah satu (misal exp beda) -> dianggap batch baru.
+  // ---------- MODE EDIT: update langsung baris terpilih, stok jadi nilai akhir (bukan ditambah) ----------
+  if (obatEditId) {
+    const existing = daftarObatCache.find(x => x.id === obatEditId);
+    const saldoLama = existing ? existing.stok : 0;
+    const selisih = stokInput - saldoLama;
+
+    const { error } = await supabaseClient.from("obat").update({
+      jenis_item: jenisItem,
+      nama_obat: nama,
+      dosis: dosis || null,
+      satuan, merk, no_lot: noLot, exp_date: exp,
+      stok: stokInput,
+      kategori, bentuk_sediaan: bentukSediaan, harga,
+      stok_minimum: stokMinimum, nama_generik: namaGenerik,
+      keterangan,
+      updated_by: profilSaya.id,
+      updated_at: new Date().toISOString()
+    }).eq("id", obatEditId);
+
+    if (error) {
+      msgBox.innerHTML = `<div class="msg msg-error">Gagal update: ${error.message}</div>`;
+      return;
+    }
+    if (selisih !== 0) {
+      await catatKartuStok(obatEditId, selisih > 0 ? "opname_tambah" : "opname_kurang", Math.abs(selisih), stokInput, "Edit Master Data", keterangan || "Penyesuaian dari form edit");
+    }
+    msgBox.innerHTML = `<div class="msg msg-success">"${nama}${dosis ? " " + dosis : ""}" berhasil diupdate.</div>`;
+    batalEditObat();
+    await muatDaftarObat();
+    return;
+  }
+
+  // ---------- MODE TAMBAH: batch dianggap sama kalau nama+dosis+merk+no_lot+exp+jenis identik -> stok ditambahkan.
+  // Beda salah satu (misal exp beda) -> dianggap batch baru. ----------
   let query = supabaseClient
     .from("obat")
     .select("*")
     .eq("nama_obat", nama)
-    .eq("dosis", dosis)
+    .eq("dosis", dosis || "")
     .eq("merk", merk || "")
-    .eq("no_lot", noLot || "");
+    .eq("no_lot", noLot || "")
+    .eq("jenis_item", jenisItem);
   query = exp ? query.eq("exp_date", exp) : query.is("exp_date", null);
   const { data: existing } = await query.maybeSingle();
 
@@ -1091,8 +1411,9 @@ async function simpanObat() {
   } else {
     saldoSetelah = stokInput;
     const { data: inserted, error: errInsert } = await supabaseClient.from("obat").insert({
+      jenis_item: jenisItem,
       nama_obat: nama,
-      dosis,
+      dosis: dosis || null,
       satuan,
       merk,
       no_lot: noLot,
@@ -1119,7 +1440,7 @@ async function simpanObat() {
     await catatKartuStok(obatId, "masuk", stokInput, saldoSetelah, "Input manual", keterangan || null);
   }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Obat "${nama} ${dosis}" tersimpan.</div>`;
+  msgBox.innerHTML = `<div class="msg msg-success">"${nama}${dosis ? " " + dosis : ""}" tersimpan.</div>`;
   document.getElementById("oNama").value = "";
   document.getElementById("oDosis").value = "";
   document.getElementById("oMerk").value = "";
