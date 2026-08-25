@@ -209,6 +209,22 @@
 .badge-status-diverifikasi { background: #fff6ee; color: #b25b20; border: 1px solid #f4d5b8; border-radius: 999px; padding: 2px 9px; font-size: 11.5px; font-weight: 600; }
 .badge-status-selesai { background: #f0faf5; color: #16865c; border: 1px solid #c9ecda; border-radius: 999px; padding: 2px 9px; font-size: 11.5px; font-weight: 600; }
 
+/* ---- Combobox cari item (Obat/BMHP), dipakai di Mutasi Keluar/Internal/Retur ---- */
+.mi-combo-wrap { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+.mi-jenis-filter { width: 100px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+.mi-combo { position: relative; flex: 1; min-width: 200px; }
+.mi-combo-input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; box-sizing: border-box; }
+.mi-combo-list {
+  display: none; position: absolute; z-index: 20; top: calc(100% + 2px); left: 0; right: 0;
+  max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.1);
+}
+.mi-combo-opt { padding: 8px 10px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f1f3f4; }
+.mi-combo-opt:last-child { border-bottom: none; }
+.mi-combo-opt:hover { background: var(--primary-light, #f0faf5); }
+.mi-combo-sub { color: var(--muted); font-size: 11.5px; }
+.mi-combo-empty { padding: 10px; font-size: 12.5px; color: var(--muted); }
+
 @media (max-width: 1100px) {
   .ph-grid-3 { grid-template-columns: 1fr; }
   .ph-quick-grid { grid-template-columns: repeat(2, 1fr); }
@@ -847,7 +863,18 @@
       <div class="grid-3" style="margin-bottom:10px;">
         <div>
           <label>Item (Obat/BMHP) *</label>
-          <select id="miObat"><option value="">Memuat...</option></select>
+          <div class="mi-combo-wrap">
+            <select id="miJenisFilter" class="mi-jenis-filter" onchange="filterComboObat('mi')">
+              <option value="">Semua</option><option value="obat">Obat</option><option value="bmhp">BMHP</option>
+            </select>
+            <div class="mi-combo">
+              <input type="text" id="miObatCari" class="mi-combo-input" placeholder="Ketik nama item..." autocomplete="off"
+                oninput="filterComboObat('mi')" onfocus="filterComboObat('mi')"
+                onblur="setTimeout(()=>{document.getElementById('miComboList').style.display='none';}, 150)">
+              <input type="hidden" id="miObat">
+              <div class="mi-combo-list" id="miComboList"></div>
+            </div>
+          </div>
         </div>
         <div>
           <label>Jumlah *</label>
@@ -913,7 +940,18 @@
       <div class="grid-3" style="margin-bottom:14px;">
         <div>
           <label>Item (Obat/BMHP) *</label>
-          <select id="rtObat"><option value="">Memuat...</option></select>
+          <div class="mi-combo-wrap">
+            <select id="rtJenisFilter" class="mi-jenis-filter" onchange="filterComboObat('rt')">
+              <option value="">Semua</option><option value="obat">Obat</option><option value="bmhp">BMHP</option>
+            </select>
+            <div class="mi-combo">
+              <input type="text" id="rtObatCari" class="mi-combo-input" placeholder="Ketik nama item..." autocomplete="off"
+                oninput="filterComboObat('rt')" onfocus="filterComboObat('rt')"
+                onblur="setTimeout(()=>{document.getElementById('rtComboList').style.display='none';}, 150)">
+              <input type="hidden" id="rtObat">
+              <div class="mi-combo-list" id="rtComboList"></div>
+            </div>
+          </div>
         </div>
         <div>
           <label>Jumlah *</label>
@@ -2696,8 +2734,6 @@ async function siapkanMutasi() {
   });
 
   if (!daftarObatCache.length) await muatDaftarObat();
-  isiSelectObatMutasi("miObat");
-  isiSelectObatMutasi("rtObat");
 
   if (!mutasiInit) {
     mutasiInit = true;
@@ -2722,13 +2758,76 @@ function gantiTabMutasi(tab) {
 }
 
 function isiSelectObatMutasi(selectId) {
-  const sel = document.getElementById(selectId);
-  if (!sel) return;
-  const nilaiLama = sel.value;
-  sel.innerHTML = `<option value="">-- Pilih item --</option>` + daftarObatCache.map(o =>
-    `<option value="${o.id}" data-satuan="${o.satuan}" data-jenis="${o.jenis_item || "obat"}" data-stok="${o.stok}">${o.nama_obat}${o.dosis ? " " + o.dosis : ""} (${o.jenis_item === "bmhp" ? "BMHP" : "Obat"} — stok ${o.stok} ${o.satuan})</option>`
-  ).join("");
-  if (nilaiLama) sel.value = nilaiLama;
+  // Deprecated: field jadi combobox cari (lihat comboObatOptions/filterComboObat*).
+  // Dibiarkan sebagai no-op biar pemanggil lama gak error kalau ada sisa referensi.
+}
+
+// ---------- Combobox cari item (Obat/BMHP), dipakai Mutasi Keluar/Internal/Retur ----------
+function comboObatOptions(jenisFilter, kata) {
+  const k = (kata || "").trim().toLowerCase();
+  return daftarObatCache.filter(o =>
+    (!jenisFilter || (o.jenis_item || "obat") === jenisFilter) &&
+    (!k || o.nama_obat.toLowerCase().includes(k) || (o.dosis || "").toLowerCase().includes(k))
+  ).slice(0, 30);
+}
+
+function renderComboList(listEl, items, onPick) {
+  if (!items.length) {
+    listEl.innerHTML = `<div class="mi-combo-empty">Tidak ada item cocok.</div>`;
+    listEl.style.display = "block";
+    return;
+  }
+  listEl.innerHTML = items.map(o => `
+    <div class="mi-combo-opt" data-id="${o.id}">
+      ${o.nama_obat}${o.dosis ? " " + o.dosis : ""}
+      <span class="mi-combo-sub">(${o.jenis_item === "bmhp" ? "BMHP" : "Obat"} · stok ${o.stok} ${o.satuan})</span>
+    </div>
+  `).join("");
+  listEl.style.display = "block";
+  listEl.querySelectorAll(".mi-combo-opt").forEach(el => {
+    el.onmousedown = () => onPick(el.dataset.id); // mousedown biar keduluan sebelum onblur input
+  });
+}
+
+// Combobox tunggal (Mutasi Internal / Retur): prefix "mi" atau "rt"
+function filterComboObat(prefix) {
+  const jenis = document.getElementById(prefix + "JenisFilter").value;
+  const kata = document.getElementById(prefix + "ObatCari").value;
+  const listEl = document.getElementById(prefix + "ComboList");
+  renderComboList(listEl, comboObatOptions(jenis, kata), (id) => pilihComboObat(prefix, id));
+}
+
+function pilihComboObat(prefix, id) {
+  const o = daftarObatCache.find(x => x.id === id);
+  if (!o) return;
+  document.getElementById(prefix + "Obat").value = id;
+  document.getElementById(prefix + "ObatCari").value = `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`;
+  document.getElementById(prefix + "ComboList").style.display = "none";
+}
+
+function resetComboObat(prefix) {
+  document.getElementById(prefix + "Obat").value = "";
+  document.getElementById(prefix + "ObatCari").value = "";
+  document.getElementById(prefix + "JenisFilter").value = "";
+}
+
+// Combobox per-baris (Mutasi Keluar, banyak baris sekaligus)
+function filterComboObatRow(rowId) {
+  const row = document.getElementById(rowId);
+  const jenis = row.querySelector(".mi-jenis-filter").value;
+  const kata = row.querySelector(".mi-combo-input").value;
+  const listEl = row.querySelector(".mi-combo-list");
+  renderComboList(listEl, comboObatOptions(jenis, kata), (id) => pilihComboObatRow(rowId, id));
+}
+
+function pilihComboObatRow(rowId, id) {
+  const row = document.getElementById(rowId);
+  const o = daftarObatCache.find(x => x.id === id);
+  if (!o) return;
+  row.querySelector(".mi-obat-id").value = id;
+  row.querySelector(".mi-combo-input").value = `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`;
+  row.querySelector(".mi-satuan").textContent = o.satuan;
+  row.querySelector(".mi-combo-list").style.display = "none";
 }
 
 async function muatKlasterListMut() {
@@ -2922,16 +3021,20 @@ async function selesaikanSbbk(id) {
 function tambahBarisMutKeluar() {
   const wrap = document.getElementById("mkItemRows");
   const rowId = "mkRow_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-  const opsi = daftarObatCache.map(o =>
-    `<option value="${o.id}" data-satuan="${o.satuan}" data-jenis="${o.jenis_item || "obat"}" data-stok="${o.stok}">${o.nama_obat}${o.dosis ? " " + o.dosis : ""} (stok ${o.stok} ${o.satuan})</option>`
-  ).join("");
   const row = document.createElement("div");
   row.className = "mut-item-row";
   row.id = rowId;
   row.innerHTML = `
-    <select class="mi-nama" onchange="this.nextElementSibling.nextElementSibling.textContent = this.selectedOptions[0]?.dataset.satuan || '-'">
-      <option value="">-- Pilih item --</option>${opsi}
+    <select class="mi-jenis-filter" onchange="filterComboObatRow('${rowId}')">
+      <option value="">Semua</option><option value="obat">Obat</option><option value="bmhp">BMHP</option>
     </select>
+    <div class="mi-combo">
+      <input type="text" class="mi-combo-input" placeholder="Ketik nama item..." autocomplete="off"
+        oninput="filterComboObatRow('${rowId}')" onfocus="filterComboObatRow('${rowId}')"
+        onblur="setTimeout(()=>{ const l=document.getElementById('${rowId}')?.querySelector('.mi-combo-list'); if(l) l.style.display='none'; }, 150)">
+      <input type="hidden" class="mi-obat-id">
+      <div class="mi-combo-list"></div>
+    </div>
     <input type="number" class="mi-jumlah" placeholder="Jumlah" min="1">
     <span class="mi-satuan">-</span>
     <button type="button" onclick="document.getElementById('${rowId}').remove()">Hapus</button>
@@ -2957,7 +3060,7 @@ async function simpanMutasiKeluar() {
   const rows = document.querySelectorAll("#mkItemRows .mut-item-row");
   const items = [];
   for (const row of rows) {
-    const obatId = row.querySelector(".mi-nama").value;
+    const obatId = row.querySelector(".mi-obat-id").value;
     const jumlah = parseInt(row.querySelector(".mi-jumlah").value, 10);
     if (!obatId || !jumlah) continue;
     const obat = daftarObatCache.find(o => o.id === obatId);
@@ -2995,8 +3098,6 @@ async function simpanMutasiKeluar() {
   document.getElementById("mkItemRows").innerHTML = "";
   tambahBarisMutKeluar();
   await muatDaftarObat();
-  isiSelectObatMutasi("miObat");
-  isiSelectObatMutasi("rtObat");
   await muatMutasiKeluarList();
 }
 
@@ -3050,6 +3151,7 @@ async function simpanMutasiInternal() {
   document.getElementById("miDari").value = "";
   document.getElementById("miKe").value = "";
   document.getElementById("miCatatan").value = "";
+  resetComboObat("mi");
   await muatMutasiInternalList();
 }
 
@@ -3109,9 +3211,8 @@ async function simpanRetur() {
   document.getElementById("rtAsalTujuan").value = "";
   document.getElementById("rtJumlah").value = "";
   document.getElementById("rtAlasan").value = "";
+  resetComboObat("rt");
   await muatDaftarObat();
-  isiSelectObatMutasi("miObat");
-  isiSelectObatMutasi("rtObat");
   await muatReturList();
 }
 
