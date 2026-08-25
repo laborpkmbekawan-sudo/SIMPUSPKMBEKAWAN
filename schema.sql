@@ -748,6 +748,33 @@ insert into fornas_referensi (kelas_terapi, nama_obat, bentuk_sediaan, kekuatan,
 on conflict do nothing;
 
 -- ============================================================
+-- 23. MODUL APOTEK — LAPORAN: High Alert & LASA, Vaksin Cold Chain
+--     High Alert/LASA cukup flag boolean di master obat (+ nama
+--     pasangan LASA buat catatan). Cold chain butuh tabel baru
+--     buat log suhu kulkas vaksin harian (pagi/sore).
+-- ============================================================
+alter table obat add column if not exists is_high_alert boolean not null default false;
+alter table obat add column if not exists is_lasa boolean not null default false;
+alter table obat add column if not exists lasa_pasangan text;
+alter table obat add column if not exists perlu_cold_chain boolean not null default false;
+
+create table if not exists vaksin_suhu_log (
+  id uuid primary key default gen_random_uuid(),
+  tanggal date not null,
+  waktu text not null check (waktu in ('pagi','sore')),
+  suhu_celsius numeric(4,1) not null,
+  kondisi text not null default 'normal' check (kondisi in ('normal','diluar_range')),
+  keterangan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  unique (tanggal, waktu)
+);
+
+create index if not exists idx_vaksin_suhu_log_tanggal on vaksin_suhu_log(tanggal);
+alter table vaksin_suhu_log enable row level security;
+create policy "authenticated_all_vaksin_suhu_log" on vaksin_suhu_log for all to authenticated using (true) with check (true);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

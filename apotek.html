@@ -597,6 +597,33 @@
         <div id="oFornasStatus" style="font-size:11px; margin-top:4px; color:var(--muted);">Belum dicocokkan.</div>
       </div>
     </div>
+    <div class="grid-3">
+      <div>
+        <label>⚠️ High Alert?</label>
+        <select id="oHighAlert">
+          <option value="false">Bukan</option>
+          <option value="true">Ya, High Alert</option>
+        </select>
+      </div>
+      <div>
+        <label>LASA (mirip obat lain)?</label>
+        <select id="oLasa" onchange="toggleLasaPasangan()">
+          <option value="false">Bukan</option>
+          <option value="true">Ya, LASA</option>
+        </select>
+      </div>
+      <div id="wrapLasaPasangan" style="display:none;">
+        <label>Mirip dengan obat apa?</label>
+        <input type="text" id="oLasaPasangan" placeholder="Contoh: Amlodipin 5mg vs 10mg">
+      </div>
+      <div id="wrapColdChain">
+        <label>❄️ Perlu Cold Chain (Vaksin)?</label>
+        <select id="oColdChain">
+          <option value="false">Tidak</option>
+          <option value="true">Ya, simpan 2-8°C</option>
+        </select>
+      </div>
+    </div>
     <div>
       <label>Keterangan</label>
       <input type="text" id="oKeterangan" placeholder="Opsional">
@@ -1507,12 +1534,84 @@
     </div>
 
     <div class="card" style="--accent:#6a4c93">
-      <h2><span class="card-num">2</span>High Alert & LASA, Vaksin Cold Chain</h2>
-      <div class="lap-segera" style="padding:24px 20px;">
-        <div class="ic">💉</div>
-        <div class="t">Segera dibangun</div>
-        Butuh tambahan penanda "High Alert"/"LASA" di Master Data Obat dan log suhu harian buat vaksin — nyusul giliran berikutnya.
+      <h2><span class="card-num">2</span>Daftar Obat High Alert &amp; LASA</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Rekap obat/BMHP yang ditandai High Alert atau LASA (Look Alike Sound Alike) di Master Data Obat — dasar penempatan/label khusus di rak farmasi.</p>
+
+      <div class="grid-3" style="margin-bottom:10px;">
+        <div>
+          <label>Filter Tampilkan</label>
+          <select id="halFilter" onchange="renderTabelHighAlertLasa()">
+            <option value="semua">Semua (High Alert + LASA)</option>
+            <option value="high_alert">High Alert saja</option>
+            <option value="lasa">LASA saja</option>
+          </select>
+        </div>
       </div>
+
+      <div class="lap-summary-strip">
+        <div class="lap-sum-card warn"><div class="label">Item High Alert</div><div class="value" id="halSumHighAlert">0</div></div>
+        <div class="lap-sum-card"><div class="label">Item LASA</div><div class="value" id="halSumLasa">0</div></div>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <button type="button" onclick="exportHighAlertLasaCsv()">⬇️ Export CSV</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Nama Item</th><th>Dosis</th><th>Kategori</th><th>Penanda</th><th>Keterangan LASA</th><th>Stok</th></tr>
+        </thead>
+        <tbody id="halTabel"><tr><td colspan="6">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card" style="--accent:#1e6091">
+      <h2><span class="card-num">3</span>Vaksin Cold Chain — Log Suhu Harian</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Pencatatan suhu lemari es vaksin 2x sehari (pagi/sore). Rentang aman 2°C–8°C — di luar itu otomatis ditandai "Di Luar Range" sebagai bukti kepatuhan cold chain akreditasi.</p>
+
+      <div id="msgSuhuVaksin"></div>
+      <div class="grid-3">
+        <div>
+          <label>Tanggal *</label>
+          <input type="date" id="vsTanggal">
+        </div>
+        <div>
+          <label>Waktu *</label>
+          <select id="vsWaktu">
+            <option value="pagi">Pagi</option>
+            <option value="sore">Sore</option>
+          </select>
+        </div>
+        <div>
+          <label>Suhu (°C) *</label>
+          <input type="number" step="0.1" id="vsSuhu" placeholder="Contoh: 5.5">
+        </div>
+      </div>
+      <div>
+        <label>Keterangan</label>
+        <input type="text" id="vsKeterangan" placeholder="Opsional, misal: listrik padam, kulkas dicek teknisi">
+      </div>
+      <button type="button" class="btn-primary" onclick="simpanSuhuVaksin()">Catat Suhu</button>
+
+      <h3 style="margin-top:22px; font-size:15px;">Riwayat Suhu</h3>
+      <div class="grid-3" style="margin-bottom:10px;">
+        <div>
+          <label>Dari Tanggal</label>
+          <input type="date" id="vsDari">
+        </div>
+        <div>
+          <label>Sampai Tanggal</label>
+          <input type="date" id="vsSampai">
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button type="button" onclick="muatRiwayatSuhuVaksin()">Tampilkan</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Waktu</th><th>Suhu</th><th>Kondisi</th><th>Keterangan</th><th></th></tr></thead>
+        <tbody id="vsTabel"><tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+      </table>
     </div>
 
   </div>
@@ -2086,7 +2185,7 @@ function renderTabelObatFiltered() {
     const kategoriKelas = o.kategori && o.kategori !== "bebas" ? `badge-${o.kategori.replace("_terbatas","")}` : null;
     return `
     <tr>
-      <td>${o.nama_obat}${o.is_antibiotik ? ' <span class="badge" style="background:#fee2e2; color:#991b1b;">AB</span>' : ""}${o.fornas_ref_id ? ' <span class="badge" style="background:#e0f2f1; color:#1c7d7f;">Fornas</span>' : ""}</td>
+      <td>${o.nama_obat}${o.is_antibiotik ? ' <span class="badge" style="background:#fee2e2; color:#991b1b;">AB</span>' : ""}${o.fornas_ref_id ? ' <span class="badge" style="background:#e0f2f1; color:#1c7d7f;">Fornas</span>' : ""}${o.is_high_alert ? ' <span class="badge" style="background:#fef08a; color:#854d0e;" title="High Alert">⚠️ HA</span>' : ""}${o.is_lasa ? ` <span class="badge" style="background:#ede9fe; color:#5b21b6;" title="${o.lasa_pasangan ? 'Mirip: ' + o.lasa_pasangan : 'LASA'}">LASA</span>` : ""}${o.perlu_cold_chain ? ' <span class="badge" style="background:#dbeafe; color:#1e40af;" title="Cold Chain 2-8°C">❄️ CC</span>' : ""}</td>
       <td>${o.dosis || "-"}</td>
       <td>${kategoriKelas ? `<span class="badge ${kategoriKelas}">${LABEL_KATEGORI[o.kategori]}</span>` : (LABEL_KATEGORI[o.kategori] || "Bebas")}</td>
       <td>${o.satuan}</td>
@@ -2106,6 +2205,12 @@ function renderTabelObatFiltered() {
 
 // Isi form Tambah/Update Stok dengan data baris terpilih, biar bisa diedit langsung
 // (bukan nambah stok baru — field lain kayak nama/dosis/kategori/harga juga ikut kekoreksi).
+function toggleLasaPasangan() {
+  const isLasa = document.getElementById("oLasa").value === "true";
+  document.getElementById("wrapLasaPasangan").style.display = isLasa ? "" : "none";
+  if (!isLasa) document.getElementById("oLasaPasangan").value = "";
+}
+
 function editObat(id) {
   const o = daftarObatCache.find(x => x.id === id);
   if (!o) return;
@@ -2132,6 +2237,11 @@ function editObat(id) {
   document.getElementById("oStokMin").value = o.stok_minimum ?? 10;
   document.getElementById("oGenerik").value = o.nama_generik ? "true" : "false";
   document.getElementById("oAntibiotik").value = o.is_antibiotik ? "true" : "false";
+  document.getElementById("oHighAlert").value = o.is_high_alert ? "true" : "false";
+  document.getElementById("oLasa").value = o.is_lasa ? "true" : "false";
+  document.getElementById("oLasaPasangan").value = o.lasa_pasangan || "";
+  toggleLasaPasangan();
+  document.getElementById("oColdChain").value = o.perlu_cold_chain ? "true" : "false";
   setFornasFieldDariObat(o);
   document.getElementById("oKeterangan").value = o.keterangan || "";
 
@@ -2156,6 +2266,11 @@ function batalEditObat() {
   document.getElementById("oStokMin").value = "";
   document.getElementById("oGenerik").value = "true";
   document.getElementById("oAntibiotik").value = "false";
+  document.getElementById("oHighAlert").value = "false";
+  document.getElementById("oLasa").value = "false";
+  document.getElementById("oLasaPasangan").value = "";
+  document.getElementById("wrapLasaPasangan").style.display = "none";
+  document.getElementById("oColdChain").value = "false";
   document.getElementById("oFornasCari").value = "";
   document.getElementById("oFornasRefId").value = "";
   document.getElementById("oFornasStatus").textContent = "Belum dicocokkan.";
@@ -2342,6 +2457,10 @@ async function simpanObat() {
   const stokMinimum = parseInt(document.getElementById("oStokMin").value) || 10;
   const namaGenerik = document.getElementById("oGenerik").value === "true";
   const isAntibiotik = document.getElementById("oAntibiotik").value === "true";
+  const isHighAlert = document.getElementById("oHighAlert").value === "true";
+  const isLasa = document.getElementById("oLasa").value === "true";
+  const lasaPasangan = isLasa ? (document.getElementById("oLasaPasangan").value.trim() || null) : null;
+  const perluColdChain = document.getElementById("oColdChain").value === "true";
   const fornasRefId = document.getElementById("oFornasRefId").value || null;
 
   if (!nama || (jenisItem === "obat" && !dosis)) {
@@ -2363,6 +2482,7 @@ async function simpanObat() {
       stok: stokInput,
       kategori, bentuk_sediaan: bentukSediaan, harga,
       stok_minimum: stokMinimum, nama_generik: namaGenerik, is_antibiotik: isAntibiotik, fornas_ref_id: fornasRefId,
+      is_high_alert: isHighAlert, is_lasa: isLasa, lasa_pasangan: lasaPasangan, perlu_cold_chain: perluColdChain,
       keterangan,
       updated_by: profilSaya.id,
       updated_at: new Date().toISOString()
@@ -2410,6 +2530,10 @@ async function simpanObat() {
         nama_generik: namaGenerik,
         is_antibiotik: isAntibiotik,
         fornas_ref_id: fornasRefId,
+        is_high_alert: isHighAlert,
+        is_lasa: isLasa,
+        lasa_pasangan: lasaPasangan,
+        perlu_cold_chain: perluColdChain,
         keterangan: keterangan || existing.keterangan,
         updated_by: profilSaya.id,
         updated_at: new Date().toISOString()
@@ -2433,6 +2557,10 @@ async function simpanObat() {
       nama_generik: namaGenerik,
       is_antibiotik: isAntibiotik,
       fornas_ref_id: fornasRefId,
+      is_high_alert: isHighAlert,
+      is_lasa: isLasa,
+      lasa_pasangan: lasaPasangan,
+      perlu_cold_chain: perluColdChain,
       keterangan,
       updated_by: profilSaya.id
     }).select().single();
@@ -2459,6 +2587,11 @@ async function simpanObat() {
   document.getElementById("oStokMin").value = "";
   document.getElementById("oBentuk").value = "";
   document.getElementById("oHarga").value = "";
+  document.getElementById("oHighAlert").value = "false";
+  document.getElementById("oLasa").value = "false";
+  document.getElementById("oLasaPasangan").value = "";
+  document.getElementById("wrapLasaPasangan").style.display = "none";
+  document.getElementById("oColdChain").value = "false";
   document.getElementById("oKeterangan").value = "";
   await muatDaftarObat();
 }
@@ -4398,7 +4531,7 @@ function gantiTabLaporan(tab) {
   if (tab === "stok") muatLaporanStok();
   if (tab === "lplpoRing") muatLaporanLplpoRing();
   if (tab === "fornas") siapkanFornasReport();
-  if (tab === "khusus") siapkanSipnap();
+  if (tab === "khusus") { siapkanSipnap(); siapkanHighAlertLasa(); siapkanSuhuVaksin(); }
   if (tab === "evaluasi") siapkanTopObat();
 }
 
@@ -4658,6 +4791,147 @@ function exportSipnapCsv() {
   a.download = `SIPNAP_${BULAN_LABEL_LPLPO[bulan]}_${tahun}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ---------- 2. High Alert & LASA ----------
+let halCache = [];
+
+async function siapkanHighAlertLasa() {
+  if (!daftarObatCache.length) await muatDaftarObat();
+  renderTabelHighAlertLasa();
+}
+
+function renderTabelHighAlertLasa() {
+  const tbody = document.getElementById("halTabel");
+  const filter = document.getElementById("halFilter").value;
+
+  halCache = daftarObatCache.filter(o => o.is_high_alert || o.is_lasa);
+  document.getElementById("halSumHighAlert").textContent = daftarObatCache.filter(o => o.is_high_alert).length;
+  document.getElementById("halSumLasa").textContent = daftarObatCache.filter(o => o.is_lasa).length;
+
+  let data = halCache;
+  if (filter === "high_alert") data = data.filter(o => o.is_high_alert);
+  if (filter === "lasa") data = data.filter(o => o.is_lasa);
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="6">Belum ada obat/BMHP yang ditandai High Alert atau LASA. Tandai lewat Master Data Obat.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(o => {
+    const penanda = [
+      o.is_high_alert ? '<span class="badge" style="background:#fef08a; color:#854d0e;">⚠️ High Alert</span>' : "",
+      o.is_lasa ? '<span class="badge" style="background:#ede9fe; color:#5b21b6;">LASA</span>' : ""
+    ].filter(Boolean).join(" ");
+    return `
+    <tr>
+      <td>${o.nama_obat}</td>
+      <td>${o.dosis || "-"}</td>
+      <td>${LABEL_KATEGORI[o.kategori] || "Bebas"}</td>
+      <td>${penanda}</td>
+      <td>${o.is_lasa ? (o.lasa_pasangan || "-") : "-"}</td>
+      <td>${o.stok} ${o.satuan}</td>
+    </tr>`;
+  }).join("");
+}
+
+function exportHighAlertLasaCsv() {
+  if (!halCache.length) { alert("Belum ada data buat diexport."); return; }
+  const header = ["Nama Item", "Dosis", "Kategori", "High Alert", "LASA", "Keterangan LASA", "Stok", "Satuan"];
+  const rows = halCache.map(o => [o.nama_obat, o.dosis || "-", LABEL_KATEGORI[o.kategori] || "Bebas", o.is_high_alert ? "Ya" : "Tidak", o.is_lasa ? "Ya" : "Tidak", o.lasa_pasangan || "-", o.stok, o.satuan]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `High_Alert_LASA_${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ---------- 3. Vaksin Cold Chain — Log Suhu ----------
+let suhuVaksinInit = false;
+
+function siapkanSuhuVaksin() {
+  if (!suhuVaksinInit) {
+    suhuVaksinInit = true;
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("vsTanggal").value = today;
+    const dari = new Date(); dari.setDate(dari.getDate() - 6);
+    document.getElementById("vsDari").value = dari.toISOString().split("T")[0];
+    document.getElementById("vsSampai").value = today;
+  }
+  muatRiwayatSuhuVaksin();
+}
+
+async function simpanSuhuVaksin() {
+  const msgBox = document.getElementById("msgSuhuVaksin");
+  msgBox.innerHTML = "";
+
+  const tanggal = document.getElementById("vsTanggal").value;
+  const waktu = document.getElementById("vsWaktu").value;
+  const suhuInput = document.getElementById("vsSuhu").value;
+  const keterangan = document.getElementById("vsKeterangan").value.trim();
+
+  if (!tanggal || !suhuInput) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dan suhu dulu.</div>`;
+    return;
+  }
+  const suhu = parseFloat(suhuInput);
+  const kondisi = (suhu >= 2 && suhu <= 8) ? "normal" : "diluar_range";
+
+  const { error } = await supabaseClient.from("vaksin_suhu_log").upsert({
+    tanggal, waktu, suhu_celsius: suhu, kondisi, keterangan: keterangan || null,
+    petugas_id: profilSaya.id
+  }, { onConflict: "tanggal,waktu" });
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = kondisi === "diluar_range"
+    ? `<div class="msg msg-error">⚠️ Suhu ${suhu}°C DI LUAR RANGE aman (2-8°C)! Tercatat, segera cek kulkas vaksin.</div>`
+    : `<div class="msg msg-success">Suhu ${suhu}°C (${waktu}) tercatat, dalam range aman.</div>`;
+  document.getElementById("vsSuhu").value = "";
+  document.getElementById("vsKeterangan").value = "";
+  await muatRiwayatSuhuVaksin();
+}
+
+async function muatRiwayatSuhuVaksin() {
+  const tbody = document.getElementById("vsTabel");
+  const dari = document.getElementById("vsDari").value;
+  const sampai = document.getElementById("vsSampai").value;
+  if (!dari || !sampai) { tbody.innerHTML = `<tr><td colspan="6">Pilih rentang tanggal dulu.</td></tr>`; return; }
+
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+  const { data, error } = await supabaseClient
+    .from("vaksin_suhu_log")
+    .select("*")
+    .gte("tanggal", dari)
+    .lte("tanggal", sampai)
+    .order("tanggal", { ascending: false })
+    .order("waktu", { ascending: true });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data || !data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada log suhu di rentang ini.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.waktu === "pagi" ? "Pagi" : "Sore"}</td>
+      <td>${r.suhu_celsius}°C</td>
+      <td>${r.kondisi === "diluar_range" ? '<span class="badge badge-batal">Di Luar Range</span>' : '<span class="badge" style="background:#d1fae5; color:#065f46;">Normal</span>'}</td>
+      <td>${r.keterangan || "-"}</td>
+      <td><button type="button" style="font-size:11px; padding:3px 8px; background:#fee2e2; color:#991b1b; border-color:#fecaca;" onclick="hapusSuhuVaksin('${r.id}')">Hapus</button></td>
+    </tr>`).join("");
+}
+
+async function hapusSuhuVaksin(id) {
+  if (!confirm("Hapus log suhu ini?")) return;
+  const { error } = await supabaseClient.from("vaksin_suhu_log").delete().eq("id", id);
+  if (error) { alert("Gagal hapus: " + error.message); return; }
+  await muatRiwayatSuhuVaksin();
 }
 
 // ---------- 4a. 10 Obat/BMHP Terbanyak Digunakan ----------
