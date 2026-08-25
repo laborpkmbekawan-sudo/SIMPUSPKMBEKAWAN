@@ -1269,7 +1269,44 @@
     <div class="card"><div class="lap-segera"><div class="ic">📚</div><div class="t">Formularium (FORNAS)</div>Kepatuhan ketersediaan & peresepan terhadap Formularium Nasional — segera dibangun, giliran berikutnya.</div></div>
   </div>
   <div id="lapPanelEvaluasi" style="display:none;">
-    <div class="card"><div class="lap-segera"><div class="ic">📊</div><div class="t">Evaluasi & Analisis Mutu</div>Indikator mutu farmasi, fast/slow moving, stockout rate — segera dibangun.</div></div>
+
+    <div class="card" style="--accent:#26a3a0">
+      <h2><span class="card-num">1</span>10 Obat/BMHP Terbanyak Digunakan</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Rekap pemakaian (keluar ke pasien + mutasi ke klaster/Pustu) per periode — buat dasar perencanaan & lampiran LPLPO.</p>
+
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div>
+          <label>Periode</label>
+          <select id="topPeriodeSelect" onchange="gantiPeriodeTop()"></select>
+        </div>
+        <div>
+          <label>Jenis</label>
+          <select id="topJenisSelect" onchange="muatTopObat()">
+            <option value="all">Semua</option>
+            <option value="obat">Obat</option>
+            <option value="bmhp">BMHP</option>
+          </select>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <div><button type="button" onclick="gantiSubtab('lplpo')">Buka LPLPO buat lampirkan</button></div>
+        </div>
+      </div>
+
+      <table>
+        <thead><tr><th>#</th><th>Nama Item</th><th>Jenis</th><th>Total Terpakai</th><th>Satuan</th><th style="width:200px;">Proporsi</th></tr></thead>
+        <tbody id="topTabel"><tr><td colspan="6">Pilih periode dulu.</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="lap-segera" style="padding:24px 20px;">
+        <div class="ic">📊</div>
+        <div class="t">Segera dibangun</div>
+        Indikator Peresepan (POR), Waktu Tunggu Pelayanan Resep, dan Rekap PIO — nyusul giliran berikutnya.
+      </div>
+    </div>
+
   </div>
   <div id="lapPanelKhusus" style="display:none;">
 
@@ -4141,6 +4178,7 @@ function gantiTabLaporan(tab) {
   if (tab === "stok") muatLaporanStok();
   if (tab === "lplpoRing") muatLaporanLplpoRing();
   if (tab === "khusus") siapkanSipnap();
+  if (tab === "evaluasi") siapkanTopObat();
 }
 
 // ---------- 1. Data Stok & Ketersediaan Obat ----------
@@ -4399,6 +4437,83 @@ function exportSipnapCsv() {
   a.download = `SIPNAP_${BULAN_LABEL_LPLPO[bulan]}_${tahun}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ---------- 4a. 10 Obat/BMHP Terbanyak Digunakan ----------
+let topInit = false;
+let topPeriodeAktif = null;
+
+function siapkanTopObat() {
+  if (!topInit) {
+    topInit = true;
+    const sel = document.getElementById("topPeriodeSelect");
+    const now = new Date();
+    let opsi = "";
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      opsi += `<option value="${d.getFullYear()}-${d.getMonth() + 1}">${BULAN_LABEL_LPLPO[d.getMonth() + 1]} ${d.getFullYear()}</option>`;
+    }
+    sel.innerHTML = opsi;
+    sel.value = `${now.getFullYear()}-${now.getMonth() + 1}`;
+    gantiPeriodeTop();
+  } else {
+    muatTopObat();
+  }
+}
+
+function gantiPeriodeTop() {
+  const [tahun, bulan] = document.getElementById("topPeriodeSelect").value.split("-").map(Number);
+  topPeriodeAktif = { tahun, bulan };
+  muatTopObat();
+}
+
+async function muatTopObat() {
+  const { tahun, bulan } = topPeriodeAktif;
+  const tbody = document.getElementById("topTabel");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  if (!daftarObatCache.length) await muatDaftarObat();
+
+  const awalBulan = `${tahun}-${String(bulan).padStart(2, "0")}-01`;
+  const akhirTgl = new Date(tahun, bulan, 0).getDate();
+  const akhirBulan = `${tahun}-${String(bulan).padStart(2, "0")}-${String(akhirTgl).padStart(2, "0")}`;
+
+  const { data: ks, error } = await supabaseClient.from("kartu_stok")
+    .select("obat_id, jumlah")
+    .in("jenis", ["keluar", "mutasi_keluar"])
+    .gte("tanggal", awalBulan).lte("tanggal", akhirBulan);
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  const pakaiMap = {};
+  (ks || []).forEach(r => { pakaiMap[r.obat_id] = (pakaiMap[r.obat_id] || 0) + r.jumlah; });
+
+  const jenisFilter = document.getElementById("topJenisSelect").value;
+  let ranking = daftarObatCache
+    .filter(o => pakaiMap[o.id] && (jenisFilter === "all" || (o.jenis_item || "obat") === jenisFilter))
+    .map(o => ({ nama: `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`, jenis: o.jenis_item || "obat", satuan: o.satuan, total: pakaiMap[o.id] }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 10);
+
+  if (!ranking.length) {
+    tbody.innerHTML = `<tr><td colspan="6">Belum ada pemakaian tercatat di periode ini.</td></tr>`;
+    return;
+  }
+
+  const maxTotal = ranking[0].total;
+  tbody.innerHTML = ranking.map((r, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td style="text-align:left; font-weight:600;">${r.nama}</td>
+      <td><span class="lplpo-tag ${r.jenis}">${r.jenis === "bmhp" ? "BMHP" : "Obat"}</span></td>
+      <td>${r.total}</td>
+      <td>${r.satuan}</td>
+      <td>
+        <div style="background:#eef2f2; border-radius:4px; overflow:hidden; height:14px;">
+          <div style="background:${r.jenis === "bmhp" ? "#6a4c93" : "#1c7d7f"}; height:100%; width:${Math.round((r.total / maxTotal) * 100)}%;"></div>
+        </div>
+      </td>
+    </tr>
+  `).join("");
 }
 </script>
 
