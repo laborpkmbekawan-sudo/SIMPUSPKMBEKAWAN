@@ -277,6 +277,23 @@
   .queue-layout { flex-direction: column; }
   .queue-list { width: 100%; max-height: 280px; }
 }
+/* ---- Laporan Akreditasi & Dinkes ---- */
+.lap-summary-strip { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+.lap-sum-card { flex: 1; min-width: 170px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 13px 16px; }
+.lap-sum-card .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+.lap-sum-card .value { font-size: 17px; font-weight: 700; color: var(--navy-2, #173b5e); margin-top: 4px; }
+.lap-sum-card.warn .value { color: #e0793c; }
+.lap-sum-card.danger .value { color: #c0503f; }
+.lap-sum-card.ok .value { color: #2f9e5c; }
+.lap-status-pill { font-size: 9.5px; padding: 3px 10px; border-radius: 12px; font-weight: 700; display: inline-block; }
+.lap-status-pill.lengkap { background: #eafaee; color: #2f9e5c; }
+.lap-status-pill.proses { background: #fdf1e8; color: #e0793c; }
+.lap-status-pill.kosong { background: #fbe9e6; color: #c0503f; }
+.lap-link-btn { font-size: 11px; color: #1c7d7f; cursor: pointer; font-weight: 600; }
+.lap-segera { text-align: center; padding: 50px 20px; color: var(--muted); }
+.lap-segera .ic { font-size: 32px; margin-bottom: 10px; }
+.lap-segera .t { font-size: 14px; font-weight: 700; color: var(--navy-2, #173b5e); margin-bottom: 6px; }
+
 </style>
 </head>
 <body>
@@ -307,7 +324,7 @@
 
     <div class="ph-group-title">Pengadaan & Laporan</div>
     <a id="navLplpo" onclick="gantiSubtab('lplpo')">LPLPO</a>
-    <a class="disabled">Laporan <span class="ph-badge-soon">Segera</span></a>
+    <a id="navLaporan" onclick="gantiSubtab('laporan')">Laporan</a>
 
     <div class="ph-group-title">Modul Lain</div>
     <a href="index.html">Pendaftaran</a>
@@ -362,7 +379,7 @@
         <div class="ph-quick-tile" onclick="gantiSubtab('stokopname')">Stok Opname</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('mutasi')">Penerimaan Obat</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('racikan')">Racikan Obat</div>
-        <div class="ph-quick-tile disabled">Laporan</div>
+        <div class="ph-quick-tile" onclick="gantiSubtab('laporan')">Laporan</div>
       </div>
     </div>
 
@@ -1175,6 +1192,95 @@
   </div>
   <!-- /panelLplpo -->
 
+  <div id="panelLaporan" style="display:none;">
+
+  <div class="jenis-tab-row">
+    <div class="jenis-tab active" id="lapTabStok" onclick="gantiTabLaporan('stok')">1. Data Stok</div>
+    <div class="jenis-tab" id="lapTabLplpoRing" onclick="gantiTabLaporan('lplpoRing')">2. LPLPO</div>
+    <div class="jenis-tab" id="lapTabFornas" onclick="gantiTabLaporan('fornas')">3. Formularium</div>
+    <div class="jenis-tab" id="lapTabEvaluasi" onclick="gantiTabLaporan('evaluasi')">4. Evaluasi Mutu</div>
+    <div class="jenis-tab" id="lapTabKhusus" onclick="gantiTabLaporan('khusus')">5. Obat Khusus</div>
+    <div class="jenis-tab" id="lapTabKeselamatan" onclick="gantiTabLaporan('keselamatan')">6. Keselamatan Pasien</div>
+    <span class="jenis-tab-note">Kumpulan laporan buat akreditasi & Dinkes. Dibangun bertahap, satu per satu.</span>
+  </div>
+
+  <!-- ===== 1. Data Stok & Ketersediaan Obat ===== -->
+  <div id="lapPanelStok">
+
+    <div class="card" style="--accent:#173b5e">
+      <h2><span class="card-num">1</span>Data Stok & Ketersediaan Obat</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Kartu stok, stok opname, register mutasi, dan pengelolaan obat expired/rusak — narik langsung dari data yang sudah tercatat.</p>
+
+      <div class="ph-info-grid" style="max-width:700px; margin-bottom:14px;">
+        <div class="ph-info-row"><span>Puskesmas</span><span>UPTD Puskesmas Bekawan</span></div>
+        <div class="ph-info-row"><span>Tanggal Cetak</span><span id="lapTglCetak">-</span></div>
+        <div class="ph-info-row"><span>Petugas Penyusun</span><span id="lapPetugas">-</span></div>
+      </div>
+
+      <div class="lap-summary-strip">
+        <div class="lap-sum-card"><div class="label">Total Item Terdaftar</div><div class="value" id="lapSumTotal">0</div></div>
+        <div class="lap-sum-card warn"><div class="label">Item Stok Kritis</div><div class="value" id="lapSumKritis">0</div></div>
+        <div class="lap-sum-card danger"><div class="label">Item Mendekati/Lewat Exp (≤90 hari)</div><div class="value" id="lapSumExp">0</div></div>
+        <div class="lap-sum-card ok"><div class="label">Nilai Stok Total</div><div class="value" id="lapSumNilai">Rp 0</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#1c7d7f">
+      <h2><span class="card-num">2</span>Dokumen & Register Wajib</h2>
+      <table>
+        <thead><tr><th>Dokumen / Laporan</th><th>Frekuensi</th><th>Update Terakhir</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="lapTabelRegister"><tr><td colspan="5">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card" style="--accent:#e0793c">
+      <h2><span class="card-num">3</span>Item Mendekati / Sudah Kadaluarsa</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Item dengan exp_date ≤ 90 hari dari sekarang, atau sudah lewat. Buat proses retur ke Dinas/pemusnahan, catat lewat Mutasi & Penerimaan → Retur.</p>
+      <table>
+        <thead><tr><th>Jenis</th><th>Nama Item</th><th>No. Batch</th><th>Tgl Exp</th><th>Sisa Stok</th><th>Status</th></tr></thead>
+        <tbody id="lapTabelExp"><tr><td colspan="6">Memuat...</td></tr></tbody>
+      </table>
+      <div style="margin-top:12px;">
+        <button type="button" onclick="gantiSubtab('mutasi'); setTimeout(()=>gantiTabMutasi('retur'), 50)">↩️ Buka Retur (buat proses pemusnahan)</button>
+      </div>
+    </div>
+
+  </div>
+  <!-- /lapPanelStok -->
+
+  <!-- ===== 2. LPLPO (ringkasan, modul penuh di menu LPLPO) ===== -->
+  <div id="lapPanelLplpoRing" style="display:none;">
+    <div class="card" style="--accent:#6a4c93">
+      <h2><span class="card-num">1</span>LPLPO — Ringkasan Periode Terbaru</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Modul lengkap terpisah, terhubung ke Kartu Stok, Mutasi, SBBK & Stok Opname.</p>
+      <div class="lap-summary-strip">
+        <div class="lap-sum-card"><div class="label">Item Obat</div><div class="value" id="lapLpObat">-</div></div>
+        <div class="lap-sum-card"><div class="label">Item BMHP</div><div class="value" id="lapLpBmhp">-</div></div>
+        <div class="lap-sum-card"><div class="label">Total Nilai Stok Akhir</div><div class="value" id="lapLpNilai">-</div></div>
+        <div class="lap-sum-card warn"><div class="label">Status Periode Terbaru</div><div class="value" id="lapLpStatus">-</div></div>
+      </div>
+      <button type="button" class="btn-primary" onclick="gantiSubtab('lplpo')">📄 Buka Modul LPLPO Lengkap</button>
+    </div>
+  </div>
+  <!-- /lapPanelLplpoRing -->
+
+  <!-- ===== 3–6. Segera dibangun ===== -->
+  <div id="lapPanelFornas" style="display:none;">
+    <div class="card"><div class="lap-segera"><div class="ic">📚</div><div class="t">Formularium (FORNAS)</div>Kepatuhan ketersediaan & peresepan terhadap Formularium Nasional — segera dibangun, giliran berikutnya.</div></div>
+  </div>
+  <div id="lapPanelEvaluasi" style="display:none;">
+    <div class="card"><div class="lap-segera"><div class="ic">📊</div><div class="t">Evaluasi & Analisis Mutu</div>Indikator mutu farmasi, fast/slow moving, stockout rate — segera dibangun.</div></div>
+  </div>
+  <div id="lapPanelKhusus" style="display:none;">
+    <div class="card"><div class="lap-segera"><div class="ic">💊</div><div class="t">Obat Khusus</div>SIPNAP narkotika-psikotropika, High Alert & LASA, vaksin cold chain — segera dibangun.</div></div>
+  </div>
+  <div id="lapPanelKeselamatan" style="display:none;">
+    <div class="card"><div class="lap-segera"><div class="ic">🛡️</div><div class="t">Keselamatan Pasien</div>Medication error, FMEA kefarmasian, efek samping obat/KTD — segera dibangun.</div></div>
+  </div>
+
+  </div>
+  <!-- /panelLaporan -->
+
     </div>
 
   </div>
@@ -1292,7 +1398,7 @@ async function muatRiwayatObatApotek() {
 
 // ---------- Sub-tab Beranda / Pelayanan / Stok ----------
 function gantiSubtab(tab) {
-  ["beranda", "pelayanan", "entrimanual", "stok", "kartustok", "stokopname", "racikan", "riwayatobat", "mutasi", "lplpo"].forEach(t => {
+  ["beranda", "pelayanan", "entrimanual", "stok", "kartustok", "stokopname", "racikan", "riwayatobat", "mutasi", "lplpo", "laporan"].forEach(t => {
     document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? "block" : "none";
     const nav = document.getElementById("nav" + t.charAt(0).toUpperCase() + t.slice(1));
     if (nav) nav.classList.toggle("active", t === tab);
@@ -1300,6 +1406,7 @@ function gantiSubtab(tab) {
   if (tab === "stokopname") muatStokOpname();
   if (tab === "mutasi") siapkanMutasi();
   if (tab === "lplpo") siapkanLplpo();
+  if (tab === "laporan") siapkanLaporan();
 }
 
 // ---------- Stok Opname (cocokkan stok sistem vs fisik, per baris/batch) ----------
@@ -3952,6 +4059,134 @@ function bukaPeriodeDariRiwayatLplpo(bulan, tahun) {
   isiPeriodeSelectLplpo();
   gantiTabLplpo("laporan");
   muatPeriodeLplpo(bulan, tahun);
+}
+</script>
+
+<script>
+// ============================================================
+// LAPORAN AKREDITASI & DINKES
+// ============================================================
+let laporanInit = false;
+
+function siapkanLaporan() {
+  if (profilSaya) document.getElementById("lapPetugas").textContent = `${profilSaya.nama} (otomatis)`;
+  document.getElementById("lapTglCetak").textContent = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+
+  if (!laporanInit) {
+    laporanInit = true;
+    gantiTabLaporan("stok");
+  }
+}
+
+function gantiTabLaporan(tab) {
+  ["stok", "lplpoRing", "fornas", "evaluasi", "khusus", "keselamatan"].forEach(t => {
+    const panel = document.getElementById("lapPanel" + t.charAt(0).toUpperCase() + t.slice(1));
+    if (panel) panel.style.display = (t === tab) ? "block" : "none";
+    const navTab = document.getElementById("lapTab" + t.charAt(0).toUpperCase() + t.slice(1));
+    if (navTab) navTab.classList.toggle("active", t === tab);
+  });
+  if (tab === "stok") muatLaporanStok();
+  if (tab === "lplpoRing") muatLaporanLplpoRing();
+}
+
+// ---------- 1. Data Stok & Ketersediaan Obat ----------
+async function muatLaporanStok() {
+  if (!daftarObatCache.length) await muatDaftarObat();
+
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  const batasExp = new Date(today); batasExp.setDate(batasExp.getDate() + 90);
+  const batasExpStr = batasExp.toISOString().split("T")[0];
+
+  let totalItem = 0, kritis = 0, expCount = 0, nilaiTotal = 0;
+  const itemExp = [];
+  daftarObatCache.forEach(o => {
+    totalItem++;
+    nilaiTotal += (o.stok || 0) * (o.harga || 0);
+    if (o.stok <= (o.stok_minimum ?? 10)) kritis++;
+    if (o.exp_date && o.exp_date <= batasExpStr) {
+      expCount++;
+      itemExp.push(o);
+    }
+  });
+
+  document.getElementById("lapSumTotal").textContent = totalItem;
+  document.getElementById("lapSumKritis").textContent = kritis;
+  document.getElementById("lapSumExp").textContent = expCount;
+  document.getElementById("lapSumNilai").textContent = formatRupiah(nilaiTotal);
+
+  // Tabel item mendekati/lewat exp, urut yang paling mepet duluan
+  const tbodyExp = document.getElementById("lapTabelExp");
+  if (!itemExp.length) {
+    tbodyExp.innerHTML = `<tr><td colspan="6">Tidak ada item mendekati atau lewat exp dalam 90 hari ke depan.</td></tr>`;
+  } else {
+    itemExp.sort((a, b) => a.exp_date.localeCompare(b.exp_date));
+    tbodyExp.innerHTML = itemExp.map(o => {
+      const lewat = o.exp_date < todayStr;
+      return `
+      <tr>
+        <td><span class="lplpo-tag ${o.jenis_item || "obat"}">${(o.jenis_item || "obat") === "bmhp" ? "BMHP" : "Obat"}</span></td>
+        <td style="text-align:left;">${o.nama_obat}${o.dosis ? " " + o.dosis : ""}</td>
+        <td>${o.no_lot || "-"}</td>
+        <td>${new Date(o.exp_date).toLocaleDateString("id-ID")}</td>
+        <td>${o.stok} ${o.satuan}</td>
+        <td>${lewat ? '<span class="lap-status-pill kosong">Sudah Kadaluarsa</span>' : '<span class="lap-status-pill proses">Mendekati Exp</span>'}</td>
+      </tr>`;
+    }).join("");
+  }
+
+  // Tabel dokumen & register wajib, "Update Terakhir" narik dari data asli
+  const [ksTerbaru, soTerbaru, returTerbaru] = await Promise.all([
+    supabaseClient.from("kartu_stok").select("tanggal").order("tanggal", { ascending: false }).limit(1).maybeSingle(),
+    supabaseClient.from("kartu_stok").select("tanggal").in("jenis", ["opname_tambah", "opname_kurang"]).order("tanggal", { ascending: false }).limit(1).maybeSingle(),
+    supabaseClient.from("retur").select("tanggal").eq("arah", "ke_dinas").order("tanggal", { ascending: false }).limit(1).maybeSingle()
+  ]);
+
+  const fmtTgl = (d) => d ? new Date(d).toLocaleDateString("id-ID") : "-";
+  const pill = (ada) => ada ? '<span class="lap-status-pill lengkap">Lengkap</span>' : '<span class="lap-status-pill proses">Belum Ada Data</span>';
+
+  const baris = [
+    { nama: "Kartu Stok Digital per Item", frek: "Real-time", tgl: ksTerbaru.data?.tanggal, aksi: "gantiSubtab('kartustok')" },
+    { nama: "Stok Opname Bulanan", frek: "Bulanan", tgl: soTerbaru.data?.tanggal, aksi: "gantiSubtab('stokopname')" },
+    { nama: "Register Obat Masuk-Keluar", frek: "Harian", tgl: ksTerbaru.data?.tanggal, aksi: "gantiSubtab('kartustok')" },
+    { nama: "Daftar Obat Expired/Rusak & Berita Acara Pemusnahan", frek: "Sesuai kejadian", tgl: returTerbaru.data?.tanggal, aksi: "gantiSubtab('mutasi'); setTimeout(()=>gantiTabMutasi('retur'), 50)" }
+  ];
+
+  document.getElementById("lapTabelRegister").innerHTML = baris.map(b => `
+    <tr>
+      <td style="text-align:left; font-weight:600;">${b.nama}</td>
+      <td>${b.frek}</td>
+      <td>${fmtTgl(b.tgl)}</td>
+      <td>${pill(!!b.tgl)}</td>
+      <td><span class="lap-link-btn" onclick="${b.aksi}">Lihat</span></td>
+    </tr>
+  `).join("");
+}
+
+// ---------- 2. LPLPO (ringkasan periode terbaru) ----------
+async function muatLaporanLplpoRing() {
+  const { data: header } = await supabaseClient.from("lplpo").select("*")
+    .order("periode_tahun", { ascending: false }).order("periode_bulan", { ascending: false }).limit(1).maybeSingle();
+
+  if (!header) {
+    document.getElementById("lapLpObat").textContent = "-";
+    document.getElementById("lapLpBmhp").textContent = "-";
+    document.getElementById("lapLpNilai").textContent = "-";
+    document.getElementById("lapLpStatus").textContent = "Belum ada data";
+    return;
+  }
+
+  const { data: items } = await supabaseClient.from("lplpo_item").select("jenis_item, sisa_stok_fisik, harga_satuan").eq("lplpo_id", header.id);
+  let itemObat = 0, itemBmhp = 0, nilai = 0;
+  (items || []).forEach(it => {
+    if (it.jenis_item === "bmhp") itemBmhp++; else itemObat++;
+    nilai += (it.sisa_stok_fisik || 0) * (it.harga_satuan || 0);
+  });
+
+  document.getElementById("lapLpObat").textContent = itemObat;
+  document.getElementById("lapLpBmhp").textContent = itemBmhp;
+  document.getElementById("lapLpNilai").textContent = formatRupiah(nilai);
+  document.getElementById("lapLpStatus").textContent = `${LABEL_STATUS_LPLPO[header.status]} (${BULAN_LABEL_LPLPO[header.periode_bulan]} ${header.periode_tahun})`;
 }
 </script>
 
