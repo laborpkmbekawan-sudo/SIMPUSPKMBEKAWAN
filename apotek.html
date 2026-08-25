@@ -581,6 +581,15 @@
         </select>
       </div>
     </div>
+    <div class="grid-3">
+      <div>
+        <label>Golongan Antibiotik?</label>
+        <select id="oAntibiotik">
+          <option value="false">Bukan</option>
+          <option value="true">Ya, Antibiotik</option>
+        </select>
+      </div>
+    </div>
     <div>
       <label>Keterangan</label>
       <input type="text" id="oKeterangan" placeholder="Opsional">
@@ -1324,12 +1333,44 @@
       </table>
     </div>
 
-    <div class="card">
-      <div class="lap-segera" style="padding:24px 20px;">
-        <div class="ic">📊</div>
-        <div class="t">Segera dibangun</div>
-        Indikator Peresepan (POR) dan Rekap PIO — nyusul giliran berikutnya.
+    <div class="card" style="--accent:#173b5e">
+      <h2><span class="card-num">3</span>Indikator Peresepan Obat Rasional (POR)</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Standar Kepmenkes 128/MENKES/2004 & indikator inti WHO/INRUD — dihitung dari resep yang sudah diserahkan pada periode terpilih.</p>
+
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div>
+          <label>Periode</label>
+          <select id="porPeriodeSelect" onchange="gantiPeriodePor()"></select>
+        </div>
       </div>
+
+      <div class="lap-summary-strip">
+        <div class="lap-sum-card"><div class="label">Total Lembar Resep</div><div class="value" id="porTotalResep">-</div></div>
+        <div class="lap-sum-card"><div class="label">Rata² Item Obat/Resep</div><div class="value" id="porRataItem">-</div></div>
+        <div class="lap-sum-card"><div class="label">% Resep dengan Antibiotik</div><div class="value" id="porPersenAb">-</div></div>
+        <div class="lap-sum-card"><div class="label">% Item Obat Generik</div><div class="value" id="porPersenGenerik">-</div></div>
+      </div>
+      <p style="font-size:10.5px; color:var(--muted); margin-top:2px;">
+        Indikator % resep dengan injeksi belum bisa dihitung — modul resep belum membedakan bentuk sediaan injeksi secara terpisah.
+      </p>
+    </div>
+
+    <div class="card" style="--accent:#26a3a0">
+      <h2><span class="card-num">4</span>Rekap PIO (Pelayanan Informasi Obat)</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Persentase obat yang sudah diberi edukasi/informasi cara pakai ke pasien saat diserahkan, per periode.</p>
+
+      <div class="lap-summary-strip">
+        <div class="lap-sum-card"><div class="label">Total Item Diserahkan</div><div class="value" id="porPioTotal">-</div></div>
+        <div class="lap-sum-card ok"><div class="label">Sudah Diberi PIO</div><div class="value" id="porPioSudah">-</div></div>
+        <div class="lap-sum-card warn"><div class="label">Belum Tercatat PIO</div><div class="value" id="porPioBelum">-</div></div>
+        <div class="lap-sum-card"><div class="label">% Cakupan PIO</div><div class="value" id="porPioPersen">-</div></div>
+      </div>
+
+      <div class="section-title" style="font-size:13px; font-weight:700; margin:8px 0;">Resep dengan Item Belum Tercatat PIO</div>
+      <table>
+        <thead><tr><th>No. Kunjungan</th><th>Nama Obat</th><th>Diserahkan Oleh</th><th>Tanggal</th></tr></thead>
+        <tbody id="porPioTabel"><tr><td colspan="4">Pilih periode dulu.</td></tr></tbody>
+      </table>
     </div>
 
   </div>
@@ -1903,7 +1944,7 @@ function renderTabelObatFiltered() {
     const kategoriKelas = o.kategori && o.kategori !== "bebas" ? `badge-${o.kategori.replace("_terbatas","")}` : null;
     return `
     <tr>
-      <td>${o.nama_obat}</td>
+      <td>${o.nama_obat}${o.is_antibiotik ? ' <span class="badge" style="background:#fee2e2; color:#991b1b;">AB</span>' : ""}</td>
       <td>${o.dosis || "-"}</td>
       <td>${kategoriKelas ? `<span class="badge ${kategoriKelas}">${LABEL_KATEGORI[o.kategori]}</span>` : (LABEL_KATEGORI[o.kategori] || "Bebas")}</td>
       <td>${o.satuan}</td>
@@ -1948,6 +1989,7 @@ function editObat(id) {
   document.getElementById("oStok").value = o.stok ?? 0;
   document.getElementById("oStokMin").value = o.stok_minimum ?? 10;
   document.getElementById("oGenerik").value = o.nama_generik ? "true" : "false";
+  document.getElementById("oAntibiotik").value = o.is_antibiotik ? "true" : "false";
   document.getElementById("oKeterangan").value = o.keterangan || "";
 
   document.getElementById("judulFormObat").textContent = `Edit: ${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`;
@@ -1970,6 +2012,7 @@ function batalEditObat() {
   document.getElementById("oStok").value = "";
   document.getElementById("oStokMin").value = "";
   document.getElementById("oGenerik").value = "true";
+  document.getElementById("oAntibiotik").value = "false";
   document.getElementById("judulFormObat").textContent = stokTabAktif === "bmhp" ? "Tambah / Update Stok BMHP" : "Tambah / Update Stok Obat";
   document.getElementById("btnSimpanObat").textContent = "Simpan Obat";
   document.getElementById("btnBatalEditObat").style.display = "none";
@@ -2152,6 +2195,7 @@ async function simpanObat() {
   const harga = hargaInput ? parseFloat(hargaInput) : null;
   const stokMinimum = parseInt(document.getElementById("oStokMin").value) || 10;
   const namaGenerik = document.getElementById("oGenerik").value === "true";
+  const isAntibiotik = document.getElementById("oAntibiotik").value === "true";
 
   if (!nama || (jenisItem === "obat" && !dosis)) {
     msgBox.innerHTML = `<div class="msg msg-error">Isi nama${jenisItem === "obat" ? " dan dosis" : ""} dulu.</div>`;
@@ -2171,7 +2215,7 @@ async function simpanObat() {
       satuan, merk, no_lot: noLot, exp_date: exp,
       stok: stokInput,
       kategori, bentuk_sediaan: bentukSediaan, harga,
-      stok_minimum: stokMinimum, nama_generik: namaGenerik,
+      stok_minimum: stokMinimum, nama_generik: namaGenerik, is_antibiotik: isAntibiotik,
       keterangan,
       updated_by: profilSaya.id,
       updated_at: new Date().toISOString()
@@ -2217,6 +2261,7 @@ async function simpanObat() {
         harga: harga ?? existing.harga,
         stok_minimum: stokMinimum,
         nama_generik: namaGenerik,
+        is_antibiotik: isAntibiotik,
         keterangan: keterangan || existing.keterangan,
         updated_by: profilSaya.id,
         updated_at: new Date().toISOString()
@@ -2238,6 +2283,7 @@ async function simpanObat() {
       harga,
       stok_minimum: stokMinimum,
       nama_generik: namaGenerik,
+      is_antibiotik: isAntibiotik,
       keterangan,
       updated_by: profilSaya.id
     }).select().single();
@@ -4562,6 +4608,7 @@ function siapkanWaktuTunggu() {
   } else {
     muatWaktuTunggu();
   }
+  siapkanPor();
 }
 
 function gantiPeriodeWaktuTunggu() {
@@ -4631,6 +4678,149 @@ async function muatWaktuTunggu() {
       <td>${tercapai ? '<span class="lap-status-pill lengkap">Tercapai</span>' : '<span class="lap-status-pill kosong">Melebihi Standar</span>'}</td>
     </tr>`;
   }).join("");
+}
+
+// ---------- 4c. Indikator Peresepan (POR) & Rekap PIO ----------
+let porInit = false;
+let porPeriodeAktif = null;
+let petaPegawaiPorCache = null;
+
+function siapkanPor() {
+  if (!porInit) {
+    porInit = true;
+    const sel = document.getElementById("porPeriodeSelect");
+    const now = new Date();
+    let opsi = "";
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      opsi += `<option value="${d.getFullYear()}-${d.getMonth() + 1}">${BULAN_LABEL_LPLPO[d.getMonth() + 1]} ${d.getFullYear()}</option>`;
+    }
+    sel.innerHTML = opsi;
+    sel.value = `${now.getFullYear()}-${now.getMonth() + 1}`;
+    gantiPeriodePor();
+  } else {
+    muatPor();
+  }
+}
+
+function gantiPeriodePor() {
+  const [tahun, bulan] = document.getElementById("porPeriodeSelect").value.split("-").map(Number);
+  porPeriodeAktif = { tahun, bulan };
+  muatPor();
+}
+
+async function muatPor() {
+  const { tahun, bulan } = porPeriodeAktif;
+  document.getElementById("porPioTabel").innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  if (!daftarObatCache.length) await muatDaftarObat();
+  if (!petaPegawaiPorCache) {
+    const { data: pgw } = await supabaseClient.from("profil_pegawai").select("id, nama");
+    petaPegawaiPorCache = {};
+    (pgw || []).forEach(p => petaPegawaiPorCache[p.id] = p.nama);
+  }
+
+  // Peta klasifikasi per nama obat (lowercase) dari master data, dipakai buat
+  // cocokkan item resep (resep simpan nama_obat teks bebas, bukan obat_id).
+  const petaKlasifikasi = {};
+  daftarObatCache.forEach(o => {
+    const key = (o.nama_obat || "").trim().toLowerCase();
+    if (!petaKlasifikasi[key]) petaKlasifikasi[key] = { antibiotik: false, generik: false };
+    if (o.is_antibiotik) petaKlasifikasi[key].antibiotik = true;
+    if (o.nama_generik) petaKlasifikasi[key].generik = true;
+  });
+
+  const awalBulan = `${tahun}-${String(bulan).padStart(2, "0")}-01T00:00:00`;
+  const akhirTgl = new Date(tahun, bulan, 0).getDate();
+  const akhirBulan = `${tahun}-${String(bulan).padStart(2, "0")}-${String(akhirTgl).padStart(2, "0")}T23:59:59`;
+
+  const { data, error } = await supabaseClient.from("resep")
+    .select("id, created_at, daftar_obat, kunjungan:kunjungan_id(no_kunjungan)")
+    .gte("created_at", awalBulan).lte("created_at", akhirBulan);
+  if (error) {
+    document.getElementById("porPioTabel").innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`;
+    return;
+  }
+
+  const resepList = data || [];
+  document.getElementById("porTotalResep").textContent = resepList.length;
+
+  const idKosong = ["porRataItem", "porPersenAb", "porPersenGenerik", "porPioTotal", "porPioSudah", "porPioBelum", "porPioPersen"];
+  if (!resepList.length) {
+    idKosong.forEach(id => document.getElementById(id).textContent = "-");
+    document.getElementById("porPioTabel").innerHTML = `<tr><td colspan="4">Belum ada resep di periode ini.</td></tr>`;
+    return;
+  }
+
+  let totalItemLine = 0;
+  let resepDenganAb = 0;
+  let itemDinilai = 0, itemGenerik = 0;
+  let totalDiserahkan = 0, totalPio = 0;
+  const belumPio = [];
+
+  resepList.forEach(r => {
+    const items = r.daftar_obat || [];
+    totalItemLine += items.length;
+    let adaAb = false;
+
+    items.forEach(it => {
+      if (it.racikan) {
+        (it.komponen || []).forEach(k => {
+          const kls = petaKlasifikasi[(k.nama_obat || "").trim().toLowerCase()];
+          if (kls?.antibiotik) adaAb = true;
+          itemDinilai++;
+          if (kls?.generik) itemGenerik++;
+        });
+      } else {
+        const namaCek = (it.diganti ? it.nama_obat_diberikan : it.nama_obat) || "";
+        const kls = petaKlasifikasi[namaCek.trim().toLowerCase()];
+        if (kls?.antibiotik) adaAb = true;
+        itemDinilai++;
+        if (kls?.generik) itemGenerik++;
+      }
+
+      if (it.diserahkan) {
+        totalDiserahkan++;
+        if (it.pio_diberikan) {
+          totalPio++;
+        } else {
+          belumPio.push({
+            noKunjungan: r.kunjungan?.no_kunjungan || "-",
+            nama: it.racikan ? it.nama_racikan : (it.nama_obat_diberikan || it.nama_obat),
+            oleh: petaPegawaiPorCache[it.diserahkan_oleh] || "-",
+            tanggal: it.diserahkan_at
+          });
+        }
+      }
+    });
+
+    if (adaAb) resepDenganAb++;
+  });
+
+  document.getElementById("porRataItem").textContent = (totalItemLine / resepList.length).toFixed(1);
+  document.getElementById("porPersenAb").textContent = `${Math.round((resepDenganAb / resepList.length) * 100)}%`;
+  document.getElementById("porPersenGenerik").textContent = itemDinilai ? `${Math.round((itemGenerik / itemDinilai) * 100)}%` : "-";
+
+  document.getElementById("porPioTotal").textContent = totalDiserahkan;
+  document.getElementById("porPioSudah").textContent = totalPio;
+  document.getElementById("porPioBelum").textContent = totalDiserahkan - totalPio;
+  document.getElementById("porPioPersen").textContent = totalDiserahkan ? `${Math.round((totalPio / totalDiserahkan) * 100)}%` : "-";
+
+  const tbodyPio = document.getElementById("porPioTabel");
+  if (!belumPio.length) {
+    tbodyPio.innerHTML = `<tr><td colspan="4">Semua item yang diserahkan di periode ini sudah tercatat PIO.</td></tr>`;
+  } else {
+    tbodyPio.innerHTML = belumPio.slice(0, 50).map(b => `
+      <tr>
+        <td>${b.noKunjungan}</td>
+        <td>${b.nama || "-"}</td>
+        <td>${b.oleh}</td>
+        <td>${b.tanggal ? new Date(b.tanggal).toLocaleDateString("id-ID") : "-"}</td>
+      </tr>`).join("");
+    if (belumPio.length > 50) {
+      tbodyPio.innerHTML += `<tr><td colspan="4" style="color:var(--muted);">...dan ${belumPio.length - 50} item lain. Persempit periode buat lihat semua.</td></tr>`;
+    }
+  }
 }
 </script>
 
