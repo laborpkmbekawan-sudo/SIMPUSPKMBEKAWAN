@@ -194,6 +194,21 @@
 .racikan-komponen-serah-row span { flex: 1; }
 .racikan-komponen-serah-row .serah-input { width: 80px; }
 
+/* ---- Mutasi & Penerimaan: baris item dinamis (SBBK, Mutasi Keluar) ---- */
+.mut-item-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; background: #fafafa; }
+.mut-item-row select, .mut-item-row input[type="text"], .mut-item-row input[type="number"], .mut-item-row input[type="date"] { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+.mut-item-row .mi-jenis { width: 100px; }
+.mut-item-row .mi-nama { flex: 1; min-width: 140px; }
+.mut-item-row .mi-batch { width: 100px; }
+.mut-item-row .mi-exp { width: 140px; }
+.mut-item-row .mi-jumlah { width: 80px; }
+.mut-item-row .mi-satuan { width: 100px; }
+.mut-item-row .mi-harga { width: 110px; }
+.mut-item-row .mi-subtotal { width: 110px; font-weight: 600; color: #111827; }
+.badge-status-draft { background: #f4f6f8; color: #6b7280; border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; font-size: 11.5px; font-weight: 600; }
+.badge-status-diverifikasi { background: #fff6ee; color: #b25b20; border: 1px solid #f4d5b8; border-radius: 999px; padding: 2px 9px; font-size: 11.5px; font-weight: 600; }
+.badge-status-selesai { background: #f0faf5; color: #16865c; border: 1px solid #c9ecda; border-radius: 999px; padding: 2px 9px; font-size: 11.5px; font-weight: 600; }
+
 @media (max-width: 1100px) {
   .ph-grid-3 { grid-template-columns: 1fr; }
   .ph-quick-grid { grid-template-columns: repeat(2, 1fr); }
@@ -226,7 +241,7 @@
     <a id="navStok" onclick="gantiSubtab('stok')">Master Data Obat</a>
     <a id="navKartustok" onclick="gantiSubtab('kartustok')">Kartu Stok Digital</a>
     <a id="navStokopname" onclick="gantiSubtab('stokopname')">Stok Opname</a>
-    <a class="disabled">Mutasi & Penerimaan <span class="ph-badge-soon">Segera</span></a>
+    <a id="navMutasi" onclick="gantiSubtab('mutasi')">Mutasi & Penerimaan</a>
 
     <div class="ph-group-title">Pengadaan & Laporan</div>
     <a class="disabled">LPLPO <span class="ph-badge-soon">Segera</span></a>
@@ -283,7 +298,7 @@
         <div class="ph-quick-tile" onclick="gantiSubtab('kartustok')">Kartu Stok</div>
         <div class="ph-quick-tile disabled">LPLPO</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('stokopname')">Stok Opname</div>
-        <div class="ph-quick-tile disabled">Penerimaan Obat</div>
+        <div class="ph-quick-tile" onclick="gantiSubtab('mutasi')">Penerimaan Obat</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('racikan')">Racikan Obat</div>
         <div class="ph-quick-tile disabled">Laporan</div>
       </div>
@@ -685,6 +700,281 @@
   </div>
   <!-- /panelRiwayatobat -->
 
+  <div id="panelMutasi" style="display:none;">
+
+  <div class="jenis-tab-row">
+    <div class="jenis-tab active" id="mutTabSbbk" onclick="gantiTabMutasi('sbbk')">📥 Penerimaan SBBK</div>
+    <div class="jenis-tab" id="mutTabKeluar" onclick="gantiTabMutasi('keluar')">📤 Mutasi Keluar</div>
+    <div class="jenis-tab" id="mutTabInternal" onclick="gantiTabMutasi('internal')">🔁 Mutasi Internal</div>
+    <div class="jenis-tab" id="mutTabRetur" onclick="gantiTabMutasi('retur')">↩️ Retur</div>
+    <div class="jenis-tab" id="mutTabRiwayat" onclick="gantiTabMutasi('riwayat')">📜 Riwayat</div>
+    <span class="jenis-tab-note">Semua transaksi di sini otomatis update Kartu Stok Obat/BMHP & jadi dasar Stok Opname + LPLPO.</span>
+  </div>
+
+  <!-- ===== Sub-tab: Penerimaan dari Dinas Kesehatan (SBBK) ===== -->
+  <div id="mutPanelSbbk">
+
+    <div class="card" style="--accent:#173b5e">
+      <h2><span class="card-num">1</span>Buat Penerimaan SBBK Baru</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Stok baru bertambah setelah status disetel "Selesai" — sebelum itu data masih Draft/Diverifikasi, belum masuk stok resmi.</p>
+      <div id="msgSbbk"></div>
+      <div class="grid-3" style="margin-bottom:10px;">
+        <div>
+          <label>No. SBBK *</label>
+          <input type="text" id="sbNoSbbk" placeholder="Nomor surat dari Dinas">
+        </div>
+        <div>
+          <label>Tanggal Terima *</label>
+          <input type="date" id="sbTanggal">
+        </div>
+        <div>
+          <label>Sumber *</label>
+          <select id="sbSumber">
+            <option value="dinas_kesehatan_kab">Dinas Kesehatan Kab</option>
+            <option value="gudang_farmasi_kab">Gudang Farmasi Kab</option>
+            <option value="droping_program">Droping Program</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:14px;">
+        <div>
+          <label>Lampiran SBBK (opsional — link/nama file scan)</label>
+          <input type="text" id="sbFileUrl" placeholder="Tempel link scan/foto SBBK bila ada">
+        </div>
+        <div>
+          <label>Catatan</label>
+          <input type="text" id="sbCatatan" placeholder="Opsional">
+        </div>
+      </div>
+
+      <h3 style="font-size:14px; margin:12px 0 8px;">Detail Item Diterima</h3>
+      <div id="sbItemRows"></div>
+      <button type="button" onclick="tambahBarisSbbk()" style="margin:8px 0;">+ Tambah Item</button>
+
+      <div class="ph-info-grid" style="max-width:340px; margin:14px 0;">
+        <div class="ph-info-row"><span>Total item diterima</span><span id="sbTotalItem">0</span></div>
+        <div class="ph-info-row"><span>Total nilai SBBK</span><span id="sbTotalNilai">Rp 0</span></div>
+      </div>
+
+      <button type="button" class="btn-primary" onclick="simpanSbbk('draft')">Simpan sebagai Draft</button>
+      <button type="button" onclick="simpanSbbk('diverifikasi')" style="margin-left:6px;">Simpan & Tandai Diverifikasi</button>
+    </div>
+
+    <div class="card" style="--accent:#e0793c">
+      <h2><span class="card-num">2</span>Daftar Penerimaan SBBK</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>No. SBBK</th><th>Tanggal</th><th>Sumber</th><th>Total Item</th><th>Total Nilai</th><th>Status</th><th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabelSbbk"><tr><td colspan="7">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+  <!-- /mutPanelSbbk -->
+
+  <!-- ===== Sub-tab: Mutasi Keluar (Klaster / Pustu) ===== -->
+  <div id="mutPanelKeluar" style="display:none;">
+
+    <div class="card" style="--accent:#6a4c93">
+      <h2><span class="card-num">1</span>Mutasi Keluar Baru</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Pustu/Poskesdes dicatat terpisah dari Klaster internal karena barangnya "keluar wilayah" gedung induk — biar bisa dipantau stok di tiap Pustu.</p>
+      <div id="msgMutKeluar"></div>
+      <div class="grid-3" style="margin-bottom:10px;">
+        <div>
+          <label>Tujuan *</label>
+          <select id="mkTujuanTipe" onchange="toggleTujuanMutasi()">
+            <option value="klaster">Klaster Internal</option>
+            <option value="pustu">Pustu / Poskesdes / Polindes</option>
+          </select>
+        </div>
+        <div id="mkWrapKlaster">
+          <label>Pilih Klaster *</label>
+          <select id="mkKlaster"><option value="">Memuat...</option></select>
+        </div>
+        <div id="mkWrapPustu" style="display:none;">
+          <label>Pilih Pustu *</label>
+          <select id="mkPustu"><option value="">Memuat...</option></select>
+        </div>
+        <div>
+          <label>Tanggal Mutasi *</label>
+          <input type="date" id="mkTanggal">
+        </div>
+      </div>
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div>
+          <label>Petugas Penerima di Tujuan</label>
+          <input type="text" id="mkPenerimaNama" placeholder="Nama">
+        </div>
+        <div>
+          <label>Jabatan</label>
+          <input type="text" id="mkPenerimaJabatan" placeholder="Jabatan">
+        </div>
+        <div>
+          <label>Catatan</label>
+          <input type="text" id="mkCatatan" placeholder="Opsional, misal: stok darurat Pustu X">
+        </div>
+      </div>
+
+      <h3 style="font-size:14px; margin:12px 0 8px;">Item Keluar</h3>
+      <div id="mkItemRows"></div>
+      <button type="button" onclick="tambahBarisMutKeluar()" style="margin:8px 0;">+ Tambah Item</button>
+      <div>
+        <button type="button" class="btn-primary" onclick="simpanMutasiKeluar()">Simpan Mutasi Keluar</button>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#1c7d7f">
+      <h2><span class="card-num">2</span>Riwayat Mutasi Keluar</h2>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Tujuan</th><th>Item</th><th>Penerima</th><th>Catatan</th></tr></thead>
+        <tbody id="tabelMutKeluar"><tr><td colspan="5">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+  <!-- /mutPanelKeluar -->
+
+  <!-- ===== Sub-tab: Mutasi Internal Antar Lokasi Simpan ===== -->
+  <div id="mutPanelInternal" style="display:none;">
+
+    <div class="card" style="--accent:#26a3a0">
+      <h2><span class="card-num">1</span>Mutasi Internal Antar Lokasi Simpan</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Cuma pindah tempat simpan (misal gudang farmasi ⇄ ruang racik) — total stok Puskesmas tidak berubah, jadi tidak masuk Kartu Stok.</p>
+      <div id="msgMutInternal"></div>
+      <div class="grid-3" style="margin-bottom:10px;">
+        <div>
+          <label>Item (Obat/BMHP) *</label>
+          <select id="miObat"><option value="">Memuat...</option></select>
+        </div>
+        <div>
+          <label>Jumlah *</label>
+          <input type="number" id="miJumlah" min="1" placeholder="0">
+        </div>
+        <div>
+          <label>Tanggal *</label>
+          <input type="date" id="miTanggal">
+        </div>
+      </div>
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div>
+          <label>Dari Lokasi *</label>
+          <input type="text" id="miDari" placeholder="misal: Gudang Farmasi">
+        </div>
+        <div>
+          <label>Ke Lokasi *</label>
+          <input type="text" id="miKe" placeholder="misal: Ruang Racik">
+        </div>
+        <div>
+          <label>Catatan</label>
+          <input type="text" id="miCatatan" placeholder="Opsional">
+        </div>
+      </div>
+      <button type="button" class="btn-primary" onclick="simpanMutasiInternal()">Simpan Mutasi Internal</button>
+    </div>
+
+    <div class="card" style="--accent:#173b5e">
+      <h2><span class="card-num">2</span>Riwayat Mutasi Internal</h2>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Item</th><th>Jumlah</th><th>Dari</th><th>Ke</th><th>Catatan</th></tr></thead>
+        <tbody id="tabelMutInternal"><tr><td colspan="6">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+  <!-- /mutPanelInternal -->
+
+  <!-- ===== Sub-tab: Retur ===== -->
+  <div id="mutPanelRetur" style="display:none;">
+
+    <div class="card" style="--accent:#e0793c">
+      <h2><span class="card-num">1</span>Retur / Pengembalian</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Retur masuk (dari klaster/Pustu ke Farmasi) menambah stok. Retur ke Dinas (obat exp/rusak, buat proses pemusnahan resmi) mengurangi stok.</p>
+      <div id="msgRetur"></div>
+      <div class="grid-3" style="margin-bottom:10px;">
+        <div>
+          <label>Arah Retur *</label>
+          <select id="rtArah" onchange="toggleArahRetur()">
+            <option value="masuk">Masuk (Klaster/Pustu → Farmasi)</option>
+            <option value="ke_dinas">Ke Dinas (Farmasi → Dinas)</option>
+          </select>
+        </div>
+        <div>
+          <label id="rtLabelAsal">Asal (Klaster/Pustu)</label>
+          <input type="text" id="rtAsalTujuan" placeholder="Nama klaster/Pustu asal">
+        </div>
+        <div>
+          <label>Tanggal *</label>
+          <input type="date" id="rtTanggal">
+        </div>
+      </div>
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div>
+          <label>Item (Obat/BMHP) *</label>
+          <select id="rtObat"><option value="">Memuat...</option></select>
+        </div>
+        <div>
+          <label>Jumlah *</label>
+          <input type="number" id="rtJumlah" min="1" placeholder="0">
+        </div>
+        <div>
+          <label>Alasan *</label>
+          <input type="text" id="rtAlasan" placeholder="misal: rusak, exp, sisa tak terpakai">
+        </div>
+      </div>
+      <button type="button" class="btn-primary" onclick="simpanRetur()">Simpan Retur</button>
+    </div>
+
+    <div class="card" style="--accent:#6a4c93">
+      <h2><span class="card-num">2</span>Riwayat Retur</h2>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Arah</th><th>Item</th><th>Jumlah</th><th>Asal/Tujuan</th><th>Alasan</th></tr></thead>
+        <tbody id="tabelRetur"><tr><td colspan="6">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+  <!-- /mutPanelRetur -->
+
+  <!-- ===== Sub-tab: Riwayat Gabungan ===== -->
+  <div id="mutPanelRiwayat" style="display:none;">
+
+    <div class="card" style="--accent:#1c7d7f">
+      <h2><span class="card-num">1</span>Riwayat Mutasi & Penerimaan (Gabungan)</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Log semua transaksi: penerimaan SBBK, mutasi keluar (klaster/Pustu), mutasi internal, dan retur.</p>
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div>
+          <label>Jenis Transaksi</label>
+          <select id="rwJenis" onchange="muatRiwayatMutasi()">
+            <option value="">Semua</option>
+            <option value="sbbk">Penerimaan SBBK</option>
+            <option value="keluar">Mutasi Keluar</option>
+            <option value="internal">Mutasi Internal</option>
+            <option value="retur">Retur</option>
+          </select>
+        </div>
+        <div>
+          <label>Cari (No. SBBK / Nama Item)</label>
+          <input type="text" id="rwCari" placeholder="Ketik lalu Enter..." onkeydown="if(event.key==='Enter') muatRiwayatMutasi()">
+        </div>
+        <div>
+          <button type="button" class="btn-primary" style="margin-top:22px;" onclick="muatRiwayatMutasi()">Tampilkan</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Item</th><th>Jumlah</th></tr></thead>
+        <tbody id="tabelRiwayatMutasi"><tr><td colspan="5">Pilih filter lalu klik Tampilkan.</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+  <!-- /mutPanelRiwayat -->
+
+  </div>
+  <!-- /panelMutasi -->
+
     </div>
 
   </div>
@@ -802,12 +1092,13 @@ async function muatRiwayatObatApotek() {
 
 // ---------- Sub-tab Beranda / Pelayanan / Stok ----------
 function gantiSubtab(tab) {
-  ["beranda", "pelayanan", "entrimanual", "stok", "kartustok", "stokopname", "racikan", "riwayatobat"].forEach(t => {
+  ["beranda", "pelayanan", "entrimanual", "stok", "kartustok", "stokopname", "racikan", "riwayatobat", "mutasi"].forEach(t => {
     document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? "block" : "none";
     const nav = document.getElementById("nav" + t.charAt(0).toUpperCase() + t.slice(1));
     if (nav) nav.classList.toggle("active", t === tab);
   });
   if (tab === "stokopname") muatStokOpname();
+  if (tab === "mutasi") siapkanMutasi();
 }
 
 // ---------- Stok Opname (cocokkan stok sistem vs fisik, per baris/batch) ----------
@@ -2381,6 +2672,545 @@ async function konfirmasiObatDiserahkan(resepId, itemIndex, tombolEl) {
   await muatDaftarObat();
 }
 
+</script>
+
+<script>
+// ============================================================
+// MUTASI & PENERIMAAN
+// ============================================================
+let mutasiInit = false;
+let pustuListCache = [];
+let klasterListMutCache = [];
+const LABEL_SUMBER = { dinas_kesehatan_kab: "Dinas Kesehatan Kab", gudang_farmasi_kab: "Gudang Farmasi Kab", droping_program: "Droping Program" };
+const LABEL_STATUS_SBBK = { draft: "Draft", diverifikasi: "Diverifikasi", selesai: "Selesai" };
+
+function formatRupiah(n) {
+  return "Rp " + Math.round(n || 0).toLocaleString("id-ID");
+}
+
+async function siapkanMutasi() {
+  const hariIni = new Date().toISOString().split("T")[0];
+  ["sbTanggal", "mkTanggal", "miTanggal", "rtTanggal"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.value) el.value = hariIni;
+  });
+
+  if (!daftarObatCache.length) await muatDaftarObat();
+  isiSelectObatMutasi("miObat");
+  isiSelectObatMutasi("rtObat");
+
+  if (!mutasiInit) {
+    mutasiInit = true;
+    await muatKlasterListMut();
+    await muatPustuListMut();
+    if (!document.getElementById("sbItemRows").children.length) tambahBarisSbbk();
+    if (!document.getElementById("mkItemRows").children.length) tambahBarisMutKeluar();
+  }
+
+  await muatDaftarSbbk();
+  await muatMutasiKeluarList();
+  await muatMutasiInternalList();
+  await muatReturList();
+}
+
+function gantiTabMutasi(tab) {
+  ["sbbk", "keluar", "internal", "retur", "riwayat"].forEach(t => {
+    document.getElementById("mutPanel" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? "block" : "none";
+    document.getElementById("mutTab" + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle("active", t === tab);
+  });
+  if (tab === "riwayat") muatRiwayatMutasi();
+}
+
+function isiSelectObatMutasi(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const nilaiLama = sel.value;
+  sel.innerHTML = `<option value="">-- Pilih item --</option>` + daftarObatCache.map(o =>
+    `<option value="${o.id}" data-satuan="${o.satuan}" data-jenis="${o.jenis_item || "obat"}" data-stok="${o.stok}">${o.nama_obat}${o.dosis ? " " + o.dosis : ""} (${o.jenis_item === "bmhp" ? "BMHP" : "Obat"} — stok ${o.stok} ${o.satuan})</option>`
+  ).join("");
+  if (nilaiLama) sel.value = nilaiLama;
+}
+
+async function muatKlasterListMut() {
+  const { data, error } = await supabaseClient.from("klaster").select("id, nama, kode").order("id");
+  if (error) { console.error("Gagal muat klaster:", error.message); return; }
+  klasterListMutCache = data || [];
+  document.getElementById("mkKlaster").innerHTML = klasterListMutCache.map(k => `<option value="${k.id}">${k.nama} (${k.kode})</option>`).join("");
+}
+
+async function muatPustuListMut() {
+  const { data, error } = await supabaseClient.from("pustu").select("id, nama, tipe").eq("aktif", true).order("nama");
+  if (error) { console.error("Gagal muat pustu:", error.message); return; }
+  pustuListCache = data || [];
+  document.getElementById("mkPustu").innerHTML = pustuListCache.map(p => `<option value="${p.id}">${p.nama} (${p.tipe})</option>`).join("");
+}
+
+function toggleTujuanMutasi() {
+  const tipe = document.getElementById("mkTujuanTipe").value;
+  document.getElementById("mkWrapKlaster").style.display = tipe === "klaster" ? "block" : "none";
+  document.getElementById("mkWrapPustu").style.display = tipe === "pustu" ? "block" : "none";
+}
+
+// ---------- SBBK: baris item dinamis ----------
+function tambahBarisSbbk() {
+  const wrap = document.getElementById("sbItemRows");
+  const rowId = "sbRow_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+  const row = document.createElement("div");
+  row.className = "mut-item-row";
+  row.id = rowId;
+  row.innerHTML = `
+    <select class="mi-jenis"><option value="obat">Obat</option><option value="bmhp">BMHP</option></select>
+    <input type="text" class="mi-nama" placeholder="Nama item">
+    <input type="text" class="mi-batch" placeholder="No. batch/lot">
+    <input type="date" class="mi-exp" title="Tgl exp">
+    <input type="number" class="mi-jumlah" placeholder="Jumlah" min="1" oninput="hitungTotalSbbk()">
+    <input type="text" class="mi-satuan" placeholder="Satuan">
+    <input type="number" class="mi-harga" placeholder="Harga satuan" min="0" oninput="hitungTotalSbbk()">
+    <span class="mi-subtotal">Rp 0</span>
+    <button type="button" onclick="document.getElementById('${rowId}').remove(); hitungTotalSbbk();">Hapus</button>
+  `;
+  wrap.appendChild(row);
+  hitungTotalSbbk();
+}
+
+function hitungTotalSbbk() {
+  const rows = document.querySelectorAll("#sbItemRows .mut-item-row");
+  let totalNilai = 0;
+  rows.forEach(row => {
+    const jumlah = parseFloat(row.querySelector(".mi-jumlah").value) || 0;
+    const harga = parseFloat(row.querySelector(".mi-harga").value) || 0;
+    const subtotal = jumlah * harga;
+    row.querySelector(".mi-subtotal").textContent = formatRupiah(subtotal);
+    totalNilai += subtotal;
+  });
+  document.getElementById("sbTotalItem").textContent = rows.length;
+  document.getElementById("sbTotalNilai").textContent = formatRupiah(totalNilai);
+}
+
+function ambilItemSbbkDariForm() {
+  const rows = document.querySelectorAll("#sbItemRows .mut-item-row");
+  const hasil = [];
+  rows.forEach(row => {
+    const nama = row.querySelector(".mi-nama").value.trim();
+    const jumlah = parseInt(row.querySelector(".mi-jumlah").value, 10);
+    const satuan = row.querySelector(".mi-satuan").value.trim();
+    if (!nama || !jumlah || !satuan) return; // baris kosong dilewati
+    const harga = parseFloat(row.querySelector(".mi-harga").value) || 0;
+    hasil.push({
+      jenis_item: row.querySelector(".mi-jenis").value,
+      nama_item: nama,
+      no_batch: row.querySelector(".mi-batch").value.trim() || null,
+      exp_date: row.querySelector(".mi-exp").value || null,
+      jumlah, satuan,
+      harga_satuan: harga,
+      subtotal: jumlah * harga
+    });
+  });
+  return hasil;
+}
+
+async function simpanSbbk(statusTarget) {
+  const msgBox = document.getElementById("msgSbbk");
+  msgBox.innerHTML = "";
+  const noSbbk = document.getElementById("sbNoSbbk").value.trim();
+  const tanggal = document.getElementById("sbTanggal").value;
+  const sumber = document.getElementById("sbSumber").value;
+  const fileUrl = document.getElementById("sbFileUrl").value.trim() || null;
+  const catatan = document.getElementById("sbCatatan").value.trim() || null;
+
+  if (!noSbbk || !tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi No. SBBK dan tanggal terima dulu.</div>`; return; }
+  const items = ambilItemSbbkDariForm();
+  if (!items.length) { msgBox.innerHTML = `<div class="msg msg-error">Isi minimal 1 item (nama, jumlah, satuan).</div>`; return; }
+
+  const totalItem = items.length;
+  const totalNilai = items.reduce((s, it) => s + it.subtotal, 0);
+
+  const { data: header, error: errHeader } = await supabaseClient.from("sbbk_penerimaan").insert({
+    no_sbbk: noSbbk, tanggal_terima: tanggal, sumber, petugas_id: profilSaya.id,
+    file_url: fileUrl, status: statusTarget, total_item: totalItem, total_nilai: totalNilai, catatan
+  }).select().single();
+
+  if (errHeader) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan SBBK: ${errHeader.message}</div>`; return; }
+
+  const { error: errItem } = await supabaseClient.from("sbbk_penerimaan_item").insert(
+    items.map(it => ({ ...it, sbbk_id: header.id }))
+  );
+  if (errItem) { msgBox.innerHTML = `<div class="msg msg-error">SBBK tersimpan tapi item gagal: ${errItem.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">SBBK "${noSbbk}" tersimpan (${LABEL_STATUS_SBBK[statusTarget]}). Buka tabel di bawah lalu klik "Selesaikan" biar stok bertambah.</div>`;
+  document.getElementById("sbNoSbbk").value = "";
+  document.getElementById("sbFileUrl").value = "";
+  document.getElementById("sbCatatan").value = "";
+  document.getElementById("sbItemRows").innerHTML = "";
+  tambahBarisSbbk();
+  await muatDaftarSbbk();
+}
+
+async function muatDaftarSbbk() {
+  const tbody = document.getElementById("tabelSbbk");
+  const { data, error } = await supabaseClient.from("sbbk_penerimaan").select("*").order("tanggal_terima", { ascending: false }).limit(50);
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada penerimaan SBBK.</td></tr>`; return; }
+  tbody.innerHTML = data.map(s => `
+    <tr>
+      <td>${s.no_sbbk}</td>
+      <td>${new Date(s.tanggal_terima).toLocaleDateString("id-ID")}</td>
+      <td>${LABEL_SUMBER[s.sumber] || s.sumber}</td>
+      <td>${s.total_item}</td>
+      <td>${formatRupiah(s.total_nilai)}</td>
+      <td><span class="badge-status-${s.status}">${LABEL_STATUS_SBBK[s.status]}</span></td>
+      <td style="white-space:nowrap;">
+        ${s.status === "draft" ? `<button type="button" style="font-size:11px; padding:3px 8px;" onclick="verifikasiSbbk('${s.id}')">Verifikasi</button>` : ""}
+        ${s.status !== "selesai" ? `<button type="button" class="btn-primary" style="font-size:11px; padding:3px 8px;" onclick="selesaikanSbbk('${s.id}')">Selesaikan</button>` : "<span style=\"color:#16865c; font-size:11.5px;\">Stok sudah masuk</span>"}
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function verifikasiSbbk(id) {
+  const { error } = await supabaseClient.from("sbbk_penerimaan").update({ status: "diverifikasi", updated_at: new Date().toISOString() }).eq("id", id);
+  if (error) { alert("Gagal verifikasi: " + error.message); return; }
+  await muatDaftarSbbk();
+}
+
+// Tandai SBBK "Selesai": stok baru bertambah di sini (bukan pas simpan draft).
+async function selesaikanSbbk(id) {
+  if (!confirm("Selesaikan SBBK ini? Stok Obat/BMHP akan bertambah sesuai item di dalamnya. Aksi ini gak bisa dibatalkan.")) return;
+
+  const { data: items, error: errItems } = await supabaseClient.from("sbbk_penerimaan_item").select("*").eq("sbbk_id", id);
+  if (errItems) { alert("Gagal ambil item SBBK: " + errItems.message); return; }
+
+  const { data: header } = await supabaseClient.from("sbbk_penerimaan").select("no_sbbk").eq("id", id).single();
+
+  for (const it of items) {
+    // Batch dianggap sama kalau nama+no_batch+exp+jenis identik -> stok ditambahkan. Beda -> batch baru.
+    let query = supabaseClient.from("obat").select("*").eq("nama_obat", it.nama_item).eq("jenis_item", it.jenis_item).eq("no_lot", it.no_batch || "");
+    query = it.exp_date ? query.eq("exp_date", it.exp_date) : query.is("exp_date", null);
+    const { data: existing } = await query.maybeSingle();
+
+    let obatId, saldoSetelah;
+    if (existing) {
+      saldoSetelah = existing.stok + it.jumlah;
+      obatId = existing.id;
+      await supabaseClient.from("obat").update({
+        stok: saldoSetelah, satuan: it.satuan, harga: it.harga_satuan || existing.harga,
+        updated_by: profilSaya.id, updated_at: new Date().toISOString()
+      }).eq("id", existing.id);
+    } else {
+      saldoSetelah = it.jumlah;
+      const { data: inserted, error: errInsert } = await supabaseClient.from("obat").insert({
+        jenis_item: it.jenis_item, nama_obat: it.nama_item, satuan: it.satuan,
+        no_lot: it.no_batch, exp_date: it.exp_date, stok: it.jumlah, harga: it.harga_satuan,
+        updated_by: profilSaya.id
+      }).select().single();
+      if (errInsert) { console.error("Gagal buat item baru dari SBBK:", errInsert.message); continue; }
+      obatId = inserted.id;
+    }
+
+    await supabaseClient.from("sbbk_penerimaan_item").update({ obat_id: obatId }).eq("id", it.id);
+    await catatKartuStok(obatId, "penerimaan_sbbk", it.jumlah, saldoSetelah, header?.no_sbbk || "SBBK", "Penerimaan dari Dinas Kesehatan");
+  }
+
+  const { error: errStatus } = await supabaseClient.from("sbbk_penerimaan").update({ status: "selesai", updated_at: new Date().toISOString() }).eq("id", id);
+  if (errStatus) { alert("Item sudah masuk stok, tapi gagal update status: " + errStatus.message); }
+
+  await muatDaftarObat();
+  await muatDaftarSbbk();
+}
+
+// ---------- Mutasi Keluar (Klaster / Pustu) ----------
+function tambahBarisMutKeluar() {
+  const wrap = document.getElementById("mkItemRows");
+  const rowId = "mkRow_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+  const opsi = daftarObatCache.map(o =>
+    `<option value="${o.id}" data-satuan="${o.satuan}" data-jenis="${o.jenis_item || "obat"}" data-stok="${o.stok}">${o.nama_obat}${o.dosis ? " " + o.dosis : ""} (stok ${o.stok} ${o.satuan})</option>`
+  ).join("");
+  const row = document.createElement("div");
+  row.className = "mut-item-row";
+  row.id = rowId;
+  row.innerHTML = `
+    <select class="mi-nama" onchange="this.nextElementSibling.nextElementSibling.textContent = this.selectedOptions[0]?.dataset.satuan || '-'">
+      <option value="">-- Pilih item --</option>${opsi}
+    </select>
+    <input type="number" class="mi-jumlah" placeholder="Jumlah" min="1">
+    <span class="mi-satuan">-</span>
+    <button type="button" onclick="document.getElementById('${rowId}').remove()">Hapus</button>
+  `;
+  wrap.appendChild(row);
+}
+
+async function simpanMutasiKeluar() {
+  const msgBox = document.getElementById("msgMutKeluar");
+  msgBox.innerHTML = "";
+  const tujuanTipe = document.getElementById("mkTujuanTipe").value;
+  const tujuanKlaster = document.getElementById("mkKlaster").value || null;
+  const tujuanPustu = document.getElementById("mkPustu").value || null;
+  const tanggal = document.getElementById("mkTanggal").value;
+  const penerimaNama = document.getElementById("mkPenerimaNama").value.trim() || null;
+  const penerimaJabatan = document.getElementById("mkPenerimaJabatan").value.trim() || null;
+  const catatan = document.getElementById("mkCatatan").value.trim() || null;
+
+  if (!tanggal || (tujuanTipe === "klaster" && !tujuanKlaster) || (tujuanTipe === "pustu" && !tujuanPustu)) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih tujuan mutasi dan tanggal dulu.</div>`; return;
+  }
+
+  const rows = document.querySelectorAll("#mkItemRows .mut-item-row");
+  const items = [];
+  for (const row of rows) {
+    const obatId = row.querySelector(".mi-nama").value;
+    const jumlah = parseInt(row.querySelector(".mi-jumlah").value, 10);
+    if (!obatId || !jumlah) continue;
+    const obat = daftarObatCache.find(o => o.id === obatId);
+    if (!obat) continue;
+    if (jumlah > obat.stok) { msgBox.innerHTML = `<div class="msg msg-error">Stok "${obat.nama_obat}" cuma ${obat.stok}, gak cukup buat keluar ${jumlah}.</div>`; return; }
+    items.push({ obat_id: obatId, jenis_item: obat.jenis_item || "obat", jumlah, satuan: obat.satuan });
+  }
+  if (!items.length) { msgBox.innerHTML = `<div class="msg msg-error">Isi minimal 1 item dengan jumlah valid.</div>`; return; }
+
+  const { data: header, error: errHeader } = await supabaseClient.from("mutasi_keluar").insert({
+    tanggal, tujuan_tipe: tujuanTipe, tujuan_klaster_id: tujuanTipe === "klaster" ? tujuanKlaster : null,
+    tujuan_pustu_id: tujuanTipe === "pustu" ? tujuanPustu : null,
+    penerima_nama: penerimaNama, penerima_jabatan: penerimaJabatan, catatan, petugas_id: profilSaya.id
+  }).select().single();
+  if (errHeader) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan mutasi: ${errHeader.message}</div>`; return; }
+
+  const { error: errItem } = await supabaseClient.from("mutasi_keluar_item").insert(items.map(it => ({ ...it, mutasi_id: header.id })));
+  if (errItem) { msgBox.innerHTML = `<div class="msg msg-error">Header tersimpan tapi item gagal: ${errItem.message}</div>`; return; }
+
+  const tujuanNama = tujuanTipe === "klaster"
+    ? (klasterListMutCache.find(k => String(k.id) === String(tujuanKlaster))?.nama || "Klaster")
+    : (pustuListCache.find(p => String(p.id) === String(tujuanPustu))?.nama || "Pustu");
+
+  for (const it of items) {
+    const obat = daftarObatCache.find(o => o.id === it.obat_id);
+    const saldoSetelah = obat.stok - it.jumlah;
+    await supabaseClient.from("obat").update({ stok: saldoSetelah, updated_by: profilSaya.id, updated_at: new Date().toISOString() }).eq("id", it.obat_id);
+    await catatKartuStok(it.obat_id, "mutasi_keluar", it.jumlah, saldoSetelah, tujuanNama, catatan);
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Mutasi keluar ke "${tujuanNama}" tersimpan, stok terpotong.</div>`;
+  document.getElementById("mkPenerimaNama").value = "";
+  document.getElementById("mkPenerimaJabatan").value = "";
+  document.getElementById("mkCatatan").value = "";
+  document.getElementById("mkItemRows").innerHTML = "";
+  tambahBarisMutKeluar();
+  await muatDaftarObat();
+  isiSelectObatMutasi("miObat");
+  isiSelectObatMutasi("rtObat");
+  await muatMutasiKeluarList();
+}
+
+async function muatMutasiKeluarList() {
+  const tbody = document.getElementById("tabelMutKeluar");
+  const { data, error } = await supabaseClient.from("mutasi_keluar")
+    .select("id, tanggal, tujuan_tipe, penerima_nama, catatan, klaster:tujuan_klaster_id(nama), pustu:tujuan_pustu_id(nama), mutasi_keluar_item(jumlah, satuan, obat(nama_obat, dosis))")
+    .order("tanggal", { ascending: false }).limit(50);
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada mutasi keluar.</td></tr>`; return; }
+  tbody.innerHTML = data.map(m => {
+    const tujuan = m.tujuan_tipe === "klaster" ? (m.klaster?.nama || "-") : (m.pustu?.nama || "-");
+    const itemTxt = (m.mutasi_keluar_item || []).map(i => `${i.obat?.nama_obat || "-"}${i.obat?.dosis ? " " + i.obat.dosis : ""} (${i.jumlah} ${i.satuan})`).join(", ") || "-";
+    return `<tr>
+      <td>${new Date(m.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${m.tujuan_tipe === "klaster" ? "Klaster: " : "Pustu: "}${tujuan}</td>
+      <td>${itemTxt}</td>
+      <td>${m.penerima_nama || "-"}</td>
+      <td>${m.catatan || "-"}</td>
+    </tr>`;
+  }).join("");
+}
+
+// ---------- Mutasi Internal (antar lokasi simpan) ----------
+async function simpanMutasiInternal() {
+  const msgBox = document.getElementById("msgMutInternal");
+  msgBox.innerHTML = "";
+  const sel = document.getElementById("miObat");
+  const obatId = sel.value;
+  const jumlah = parseInt(document.getElementById("miJumlah").value, 10);
+  const tanggal = document.getElementById("miTanggal").value;
+  const dari = document.getElementById("miDari").value.trim();
+  const ke = document.getElementById("miKe").value.trim();
+  const catatan = document.getElementById("miCatatan").value.trim() || null;
+
+  if (!obatId || !jumlah || jumlah < 1 || !tanggal || !dari || !ke) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi item, jumlah, tanggal, dari & ke lokasi dulu.</div>`; return;
+  }
+  const obat = daftarObatCache.find(o => o.id === obatId);
+  if (obat && jumlah > obat.stok) {
+    msgBox.innerHTML = `<div class="msg msg-error">Stok "${obat.nama_obat}" cuma ${obat.stok}, gak cukup dipindah ${jumlah}.</div>`; return;
+  }
+
+  const { error } = await supabaseClient.from("mutasi_internal").insert({
+    tanggal, obat_id: obatId, jenis_item: obat?.jenis_item || "obat", jumlah, dari_lokasi: dari, ke_lokasi: ke, catatan, petugas_id: profilSaya.id
+  });
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Mutasi internal tersimpan. Total stok Puskesmas tidak berubah.</div>`;
+  document.getElementById("miJumlah").value = "";
+  document.getElementById("miDari").value = "";
+  document.getElementById("miKe").value = "";
+  document.getElementById("miCatatan").value = "";
+  await muatMutasiInternalList();
+}
+
+async function muatMutasiInternalList() {
+  const tbody = document.getElementById("tabelMutInternal");
+  const { data, error } = await supabaseClient.from("mutasi_internal").select("*, obat(nama_obat, dosis)").order("tanggal", { ascending: false }).limit(50);
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada mutasi internal.</td></tr>`; return; }
+  tbody.innerHTML = data.map(m => `
+    <tr>
+      <td>${new Date(m.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${m.obat?.nama_obat || "-"}${m.obat?.dosis ? " " + m.obat.dosis : ""}</td>
+      <td>${m.jumlah}</td>
+      <td>${m.dari_lokasi}</td>
+      <td>${m.ke_lokasi}</td>
+      <td>${m.catatan || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+// ---------- Retur ----------
+function toggleArahRetur() {
+  const arah = document.getElementById("rtArah").value;
+  document.getElementById("rtLabelAsal").textContent = arah === "masuk" ? "Asal (Klaster/Pustu)" : "Tujuan (catatan ke Dinas)";
+}
+
+async function simpanRetur() {
+  const msgBox = document.getElementById("msgRetur");
+  msgBox.innerHTML = "";
+  const arah = document.getElementById("rtArah").value;
+  const asalTujuan = document.getElementById("rtAsalTujuan").value.trim() || null;
+  const tanggal = document.getElementById("rtTanggal").value;
+  const obatId = document.getElementById("rtObat").value;
+  const jumlah = parseInt(document.getElementById("rtJumlah").value, 10);
+  const alasan = document.getElementById("rtAlasan").value.trim();
+
+  if (!tanggal || !obatId || !jumlah || jumlah < 1 || !alasan) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi item, jumlah, tanggal, dan alasan dulu.</div>`; return;
+  }
+  const obat = daftarObatCache.find(o => o.id === obatId);
+  if (!obat) { msgBox.innerHTML = `<div class="msg msg-error">Item tidak ditemukan, coba muat ulang.</div>`; return; }
+  if (arah === "ke_dinas" && jumlah > obat.stok) {
+    msgBox.innerHTML = `<div class="msg msg-error">Stok "${obat.nama_obat}" cuma ${obat.stok}, gak cukup diretur ${jumlah}.</div>`; return;
+  }
+
+  const { error: errRetur } = await supabaseClient.from("retur").insert({
+    tanggal, arah, asal_tujuan: asalTujuan, obat_id: obatId, jenis_item: obat.jenis_item || "obat",
+    jumlah, satuan: obat.satuan, alasan, petugas_id: profilSaya.id
+  });
+  if (errRetur) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan retur: ${errRetur.message}</div>`; return; }
+
+  const saldoSetelah = arah === "masuk" ? obat.stok + jumlah : obat.stok - jumlah;
+  await supabaseClient.from("obat").update({ stok: saldoSetelah, updated_by: profilSaya.id, updated_at: new Date().toISOString() }).eq("id", obatId);
+  await catatKartuStok(obatId, arah === "masuk" ? "retur_masuk" : "retur_keluar", jumlah, saldoSetelah, asalTujuan || (arah === "masuk" ? "Retur masuk" : "Retur ke Dinas"), alasan);
+
+  msgBox.innerHTML = `<div class="msg msg-success">Retur tersimpan, stok ${arah === "masuk" ? "bertambah" : "berkurang"} sesuai arah.</div>`;
+  document.getElementById("rtAsalTujuan").value = "";
+  document.getElementById("rtJumlah").value = "";
+  document.getElementById("rtAlasan").value = "";
+  await muatDaftarObat();
+  isiSelectObatMutasi("miObat");
+  isiSelectObatMutasi("rtObat");
+  await muatReturList();
+}
+
+async function muatReturList() {
+  const tbody = document.getElementById("tabelRetur");
+  const { data, error } = await supabaseClient.from("retur").select("*, obat(nama_obat, dosis)").order("tanggal", { ascending: false }).limit(50);
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada retur.</td></tr>`; return; }
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.arah === "masuk" ? "Masuk (ke Farmasi)" : "Ke Dinas"}</td>
+      <td>${r.obat?.nama_obat || "-"}${r.obat?.dosis ? " " + r.obat.dosis : ""}</td>
+      <td>${r.jumlah} ${r.satuan}</td>
+      <td>${r.asal_tujuan || "-"}</td>
+      <td>${r.alasan || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+// ---------- Riwayat Gabungan ----------
+async function muatRiwayatMutasi() {
+  const tbody = document.getElementById("tabelRiwayatMutasi");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  const jenisFilter = document.getElementById("rwJenis").value;
+  const cari = document.getElementById("rwCari").value.trim().toLowerCase();
+
+  const hasil = [];
+
+  if (!jenisFilter || jenisFilter === "sbbk") {
+    const { data } = await supabaseClient.from("sbbk_penerimaan").select("id, no_sbbk, tanggal_terima, sumber, status, total_item, total_nilai, sbbk_penerimaan_item(nama_item)").order("tanggal_terima", { ascending: false }).limit(40);
+    (data || []).forEach(s => {
+      const namaItem = (s.sbbk_penerimaan_item || []).map(i => i.nama_item).join(", ");
+      hasil.push({
+        tanggal: s.tanggal_terima, jenisLabel: "Penerimaan SBBK",
+        keterangan: `No. ${s.no_sbbk} — ${LABEL_SUMBER[s.sumber] || s.sumber} (${LABEL_STATUS_SBBK[s.status]})`,
+        itemText: namaItem || "-", jumlahText: `${s.total_item} item / ${formatRupiah(s.total_nilai)}`,
+        cariText: `${s.no_sbbk} ${namaItem}`.toLowerCase()
+      });
+    });
+  }
+
+  if (!jenisFilter || jenisFilter === "keluar") {
+    const { data } = await supabaseClient.from("mutasi_keluar").select("id, tanggal, tujuan_tipe, penerima_nama, klaster:tujuan_klaster_id(nama), pustu:tujuan_pustu_id(nama), mutasi_keluar_item(jumlah, satuan, obat(nama_obat, dosis))").order("tanggal", { ascending: false }).limit(40);
+    (data || []).forEach(m => {
+      const tujuan = m.tujuan_tipe === "klaster" ? (m.klaster?.nama || "-") : (m.pustu?.nama || "-");
+      const items = m.mutasi_keluar_item || [];
+      const namaItem = items.map(i => i.obat?.nama_obat || "-").join(", ");
+      hasil.push({
+        tanggal: m.tanggal, jenisLabel: "Mutasi Keluar",
+        keterangan: `Ke ${m.tujuan_tipe === "klaster" ? "Klaster" : "Pustu"}: ${tujuan}`,
+        itemText: namaItem || "-", jumlahText: `${items.length} item`,
+        cariText: `${tujuan} ${namaItem}`.toLowerCase()
+      });
+    });
+  }
+
+  if (!jenisFilter || jenisFilter === "internal") {
+    const { data } = await supabaseClient.from("mutasi_internal").select("*, obat(nama_obat, dosis)").order("tanggal", { ascending: false }).limit(40);
+    (data || []).forEach(m => {
+      const nama = `${m.obat?.nama_obat || "-"}${m.obat?.dosis ? " " + m.obat.dosis : ""}`;
+      hasil.push({
+        tanggal: m.tanggal, jenisLabel: "Mutasi Internal",
+        keterangan: `${m.dari_lokasi} → ${m.ke_lokasi}`,
+        itemText: nama, jumlahText: `${m.jumlah}`,
+        cariText: `${nama} ${m.dari_lokasi} ${m.ke_lokasi}`.toLowerCase()
+      });
+    });
+  }
+
+  if (!jenisFilter || jenisFilter === "retur") {
+    const { data } = await supabaseClient.from("retur").select("*, obat(nama_obat, dosis)").order("tanggal", { ascending: false }).limit(40);
+    (data || []).forEach(r => {
+      const nama = `${r.obat?.nama_obat || "-"}${r.obat?.dosis ? " " + r.obat.dosis : ""}`;
+      hasil.push({
+        tanggal: r.tanggal, jenisLabel: r.arah === "masuk" ? "Retur Masuk" : "Retur ke Dinas",
+        keterangan: `${r.asal_tujuan || "-"} — alasan: ${r.alasan || "-"}`,
+        itemText: nama, jumlahText: `${r.jumlah} ${r.satuan}`,
+        cariText: `${nama} ${r.asal_tujuan || ""} ${r.alasan || ""}`.toLowerCase()
+      });
+    });
+  }
+
+  let hasilFilter = hasil;
+  if (cari) hasilFilter = hasil.filter(h => h.cariText.includes(cari));
+  hasilFilter.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+  if (!hasilFilter.length) { tbody.innerHTML = `<tr><td colspan="5">Tidak ada transaksi ditemukan.</td></tr>`; return; }
+
+  tbody.innerHTML = hasilFilter.map(h => `
+    <tr>
+      <td>${new Date(h.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${h.jenisLabel}</td>
+      <td>${h.keterangan}</td>
+      <td>${h.itemText}</td>
+      <td>${h.jumlahText}</td>
+    </tr>
+  `).join("");
+}
 </script>
 
 </body>

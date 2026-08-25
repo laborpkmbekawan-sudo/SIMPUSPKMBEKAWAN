@@ -396,6 +396,143 @@ alter table resep add constraint resep_status_check
 -- ============================================================
 
 -- ============================================================
+-- 19. MODUL APOTEK — FASE 2: MUTASI & PENERIMAAN
+--     (Penerimaan SBBK dari Dinas, Mutasi Keluar ke Klaster/Pustu,
+--     Mutasi Internal antar lokasi simpan, Retur)
+-- ============================================================
+
+-- Sinkronisasi kolom obat.jenis_item, sudah dipakai apotek.html sejak
+-- Fase 1 tapi belum pernah tercatat resmi di schema.sql. Aman diulang.
+alter table obat add column if not exists jenis_item text
+  default 'obat' check (jenis_item in ('obat','bmhp'));
+create index if not exists idx_obat_jenis_item on obat(jenis_item);
+
+-- Master Pustu / Poskesdes / Polindes (tujuan mutasi di luar gedung induk)
+create table if not exists pustu (
+  id serial primary key,
+  nama text not null,
+  tipe text not null default 'pustu' check (tipe in ('pustu','poskesdes','polindes')),
+  wilayah text,
+  aktif boolean not null default true
+);
+
+-- Tambah pilihan jenis kartu_stok buat transaksi Fase 2.
+alter table kartu_stok drop constraint if exists kartu_stok_jenis_check;
+alter table kartu_stok add constraint kartu_stok_jenis_check
+  check (jenis in ('masuk','keluar','opname_tambah','opname_kurang',
+                    'mutasi_keluar','mutasi_masuk','penerimaan_sbbk',
+                    'retur_masuk','retur_keluar'));
+
+-- ---------- 19a. Penerimaan dari Dinas Kesehatan (SBBK) ----------
+create table if not exists sbbk_penerimaan (
+  id uuid primary key default gen_random_uuid(),
+  no_sbbk text not null,
+  tanggal_terima date not null default current_date,
+  sumber text not null default 'dinas_kesehatan_kab'
+    check (sumber in ('dinas_kesehatan_kab','gudang_farmasi_kab','droping_program')),
+  petugas_id uuid references profil_pegawai(id),
+  file_url text,
+  status text not null default 'draft' check (status in ('draft','diverifikasi','selesai')),
+  total_item int not null default 0,
+  total_nilai numeric(14,2) not null default 0,
+  catatan text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists sbbk_penerimaan_item (
+  id uuid primary key default gen_random_uuid(),
+  sbbk_id uuid not null references sbbk_penerimaan(id) on delete cascade,
+  jenis_item text not null default 'obat' check (jenis_item in ('obat','bmhp')),
+  nama_item text not null,
+  dosis text,
+  no_batch text,
+  exp_date date,
+  jumlah int not null,
+  satuan text not null,
+  harga_satuan numeric(12,2) not null default 0,
+  subtotal numeric(14,2) not null default 0,
+  obat_id uuid references obat(id) -- terisi setelah status "Selesai" (link ke master stok)
+);
+
+create index if not exists idx_sbbk_item_sbbk on sbbk_penerimaan_item(sbbk_id);
+
+-- ---------- 19b. Mutasi Keluar (ke Klaster internal / Pustu) ----------
+create table if not exists mutasi_keluar (
+  id uuid primary key default gen_random_uuid(),
+  tanggal date not null default current_date,
+  tujuan_tipe text not null check (tujuan_tipe in ('klaster','pustu')),
+  tujuan_klaster_id int references klaster(id),
+  tujuan_pustu_id int references pustu(id),
+  penerima_nama text,
+  penerima_jabatan text,
+  catatan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists mutasi_keluar_item (
+  id uuid primary key default gen_random_uuid(),
+  mutasi_id uuid not null references mutasi_keluar(id) on delete cascade,
+  obat_id uuid not null references obat(id),
+  jenis_item text not null default 'obat' check (jenis_item in ('obat','bmhp')),
+  jumlah int not null,
+  satuan text not null
+);
+
+create index if not exists idx_mutasi_keluar_item_mutasi on mutasi_keluar_item(mutasi_id);
+
+-- ---------- 19c. Mutasi Internal (antar lokasi simpan, gak ubah total stok) ----------
+create table if not exists mutasi_internal (
+  id uuid primary key default gen_random_uuid(),
+  tanggal date not null default current_date,
+  obat_id uuid not null references obat(id),
+  jenis_item text not null default 'obat' check (jenis_item in ('obat','bmhp')),
+  jumlah int not null,
+  dari_lokasi text not null,
+  ke_lokasi text not null,
+  catatan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+-- ---------- 19d. Retur (klaster/Pustu -> Farmasi, atau Farmasi -> Dinas) ----------
+create table if not exists retur (
+  id uuid primary key default gen_random_uuid(),
+  tanggal date not null default current_date,
+  arah text not null check (arah in ('masuk','ke_dinas')), -- masuk = balik ke Farmasi, ke_dinas = keluar ke Dinas
+  asal_tujuan text, -- nama klaster/Pustu asal (arah=masuk) atau catatan tujuan Dinas (arah=ke_dinas)
+  obat_id uuid not null references obat(id),
+  jenis_item text not null default 'obat' check (jenis_item in ('obat','bmhp')),
+  jumlah int not null,
+  satuan text not null,
+  alasan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+alter table pustu enable row level security;
+alter table sbbk_penerimaan enable row level security;
+alter table sbbk_penerimaan_item enable row level security;
+alter table mutasi_keluar enable row level security;
+alter table mutasi_keluar_item enable row level security;
+alter table mutasi_internal enable row level security;
+alter table retur enable row level security;
+
+create policy "authenticated_all_pustu" on pustu for all to authenticated using (true) with check (true);
+create policy "authenticated_all_sbbk_penerimaan" on sbbk_penerimaan for all to authenticated using (true) with check (true);
+create policy "authenticated_all_sbbk_penerimaan_item" on sbbk_penerimaan_item for all to authenticated using (true) with check (true);
+create policy "authenticated_all_mutasi_keluar" on mutasi_keluar for all to authenticated using (true) with check (true);
+create policy "authenticated_all_mutasi_keluar_item" on mutasi_keluar_item for all to authenticated using (true) with check (true);
+create policy "authenticated_all_mutasi_internal" on mutasi_internal for all to authenticated using (true) with check (true);
+create policy "authenticated_all_retur" on retur for all to authenticated using (true) with check (true);
+
+insert into pustu (nama, tipe, wilayah) values
+  ('Pustu Contoh 1', 'pustu', 'Ganti sesuai wilayah kerja'),
+  ('Pustu Contoh 2', 'pustu', 'Ganti sesuai wilayah kerja')
+on conflict do nothing;
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
