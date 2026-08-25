@@ -579,7 +579,7 @@ async function muatFamilyFolder() {
 
   window._familyFolderCache = data;
   tbody.innerHTML = data.map((p, i) => `
-    <tr${p.id === pasienTerpilih.id ? ' style="background:#eef7f5;"' : ""}>
+    <tr${p.id === pasienTerpilih.id ? ' style="background:#eaeff4;"' : ""}>
       <td>${p.nama}${p.id === pasienTerpilih.id ? " (dipilih)" : ""}</td>
       <td>${p.tanggal_lahir ? new Date(p.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
       <td>${p.jenis_kelamin === "L" ? "L" : "P"}</td>
