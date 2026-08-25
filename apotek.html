@@ -1299,11 +1299,36 @@
       </table>
     </div>
 
+    <div class="card" style="--accent:#e0793c">
+      <h2><span class="card-num">2</span>Waktu Tunggu Pelayanan Resep</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Standar Kepmenkes 129/2008: non-racikan ≤ 30 menit, racikan ≤ 60 menit. Dihitung dari resep dibuat sampai diserahkan.</p>
+
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div>
+          <label>Periode</label>
+          <select id="wtPeriodeSelect" onchange="gantiPeriodeWaktuTunggu()"></select>
+        </div>
+      </div>
+
+      <div class="lap-summary-strip">
+        <div class="lap-sum-card"><div class="label">Rata² Non-Racikan</div><div class="value" id="wtRataNon">-</div></div>
+        <div class="lap-sum-card"><div class="label">Rata² Racikan</div><div class="value" id="wtRataRacik">-</div></div>
+        <div class="lap-sum-card" id="wtCardTercapaiNon"><div class="label">% Tercapai Non-Racikan (≤30mnt)</div><div class="value" id="wtPersenNon">-</div></div>
+        <div class="lap-sum-card" id="wtCardTercapaiRacik"><div class="label">% Tercapai Racikan (≤60mnt)</div><div class="value" id="wtPersenRacik">-</div></div>
+      </div>
+
+      <div class="section-title" style="font-size:13px; font-weight:700; margin:8px 0;">20 Resep Terlama (perlu perhatian)</div>
+      <table>
+        <thead><tr><th>No. Kunjungan</th><th>Jenis</th><th>Jam Masuk Resep</th><th>Jam Diserahkan</th><th>Durasi</th><th>Status</th></tr></thead>
+        <tbody id="wtTabel"><tr><td colspan="6">Pilih periode dulu.</td></tr></tbody>
+      </table>
+    </div>
+
     <div class="card">
       <div class="lap-segera" style="padding:24px 20px;">
         <div class="ic">📊</div>
         <div class="t">Segera dibangun</div>
-        Indikator Peresepan (POR), Waktu Tunggu Pelayanan Resep, dan Rekap PIO — nyusul giliran berikutnya.
+        Indikator Peresepan (POR) dan Rekap PIO — nyusul giliran berikutnya.
       </div>
     </div>
 
@@ -4459,6 +4484,7 @@ function siapkanTopObat() {
   } else {
     muatTopObat();
   }
+  siapkanWaktuTunggu();
 }
 
 function gantiPeriodeTop() {
@@ -4514,6 +4540,97 @@ async function muatTopObat() {
       </td>
     </tr>
   `).join("");
+}
+
+// ---------- 4b. Waktu Tunggu Pelayanan Resep ----------
+let wtInit = false;
+let wtPeriodeAktif = null;
+
+function siapkanWaktuTunggu() {
+  if (!wtInit) {
+    wtInit = true;
+    const sel = document.getElementById("wtPeriodeSelect");
+    const now = new Date();
+    let opsi = "";
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      opsi += `<option value="${d.getFullYear()}-${d.getMonth() + 1}">${BULAN_LABEL_LPLPO[d.getMonth() + 1]} ${d.getFullYear()}</option>`;
+    }
+    sel.innerHTML = opsi;
+    sel.value = `${now.getFullYear()}-${now.getMonth() + 1}`;
+    gantiPeriodeWaktuTunggu();
+  } else {
+    muatWaktuTunggu();
+  }
+}
+
+function gantiPeriodeWaktuTunggu() {
+  const [tahun, bulan] = document.getElementById("wtPeriodeSelect").value.split("-").map(Number);
+  wtPeriodeAktif = { tahun, bulan };
+  muatWaktuTunggu();
+}
+
+function fmtMenit(m) {
+  return m >= 60 ? `${Math.floor(m / 60)} jam ${m % 60} mnt` : `${m} mnt`;
+}
+
+async function muatWaktuTunggu() {
+  const { tahun, bulan } = wtPeriodeAktif;
+  const tbody = document.getElementById("wtTabel");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const awalBulan = `${tahun}-${String(bulan).padStart(2, "0")}-01T00:00:00`;
+  const akhirTgl = new Date(tahun, bulan, 0).getDate();
+  const akhirBulan = `${tahun}-${String(bulan).padStart(2, "0")}-${String(akhirTgl).padStart(2, "0")}T23:59:59`;
+
+  const { data, error } = await supabaseClient.from("resep")
+    .select("id, created_at, diserahkan_at, daftar_obat, kunjungan:kunjungan_id(no_kunjungan)")
+    .eq("status", "diserahkan")
+    .gte("diserahkan_at", awalBulan).lte("diserahkan_at", akhirBulan)
+    .not("diserahkan_at", "is", null);
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  if (!data || !data.length) {
+    tbody.innerHTML = `<tr><td colspan="6">Belum ada resep diserahkan di periode ini.</td></tr>`;
+    ["wtRataNon", "wtRataRacik", "wtPersenNon", "wtPersenRacik"].forEach(id => document.getElementById(id).textContent = "-");
+    return;
+  }
+
+  const list = data.map(r => {
+    const menit = Math.round((new Date(r.diserahkan_at) - new Date(r.created_at)) / 60000);
+    const racikan = Array.isArray(r.daftar_obat) && r.daftar_obat.some(it => it && it.racikan === true);
+    return { noKunjungan: r.kunjungan?.no_kunjungan || "-", masuk: r.created_at, selesai: r.diserahkan_at, menit, racikan };
+  });
+
+  const nonRacik = list.filter(r => !r.racikan);
+  const racik = list.filter(r => r.racikan);
+  const rata = (arr) => arr.length ? Math.round(arr.reduce((s, r) => s + r.menit, 0) / arr.length) : null;
+  const persenTercapai = (arr, batas) => arr.length ? Math.round((arr.filter(r => r.menit <= batas).length / arr.length) * 100) : null;
+
+  const rataNon = rata(nonRacik), rataRacik = rata(racik);
+  const persenNon = persenTercapai(nonRacik, 30), persenRacikPct = persenTercapai(racik, 60);
+
+  document.getElementById("wtRataNon").textContent = rataNon === null ? "-" : fmtMenit(rataNon);
+  document.getElementById("wtRataRacik").textContent = rataRacik === null ? "-" : fmtMenit(rataRacik);
+  document.getElementById("wtPersenNon").textContent = persenNon === null ? "-" : `${persenNon}%`;
+  document.getElementById("wtPersenRacik").textContent = persenRacikPct === null ? "-" : `${persenRacikPct}%`;
+  document.getElementById("wtCardTercapaiNon").className = "lap-sum-card " + (persenNon !== null && persenNon < 80 ? "danger" : "ok");
+  document.getElementById("wtCardTercapaiRacik").className = "lap-sum-card " + (persenRacikPct !== null && persenRacikPct < 80 ? "danger" : "ok");
+
+  const terlama = [...list].sort((a, b) => b.menit - a.menit).slice(0, 20);
+  tbody.innerHTML = terlama.map(r => {
+    const batas = r.racikan ? 60 : 30;
+    const tercapai = r.menit <= batas;
+    return `
+    <tr>
+      <td>${r.noKunjungan}</td>
+      <td><span class="lplpo-tag ${r.racikan ? "bmhp" : "obat"}">${r.racikan ? "Racikan" : "Non-Racikan"}</span></td>
+      <td>${new Date(r.masuk).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${new Date(r.selesai).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
+      <td style="font-weight:700;">${fmtMenit(r.menit)}</td>
+      <td>${tercapai ? '<span class="lap-status-pill lengkap">Tercapai</span>' : '<span class="lap-status-pill kosong">Melebihi Standar</span>'}</td>
+    </tr>`;
+  }).join("");
 }
 </script>
 
