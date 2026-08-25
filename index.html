@@ -225,6 +225,14 @@
       <div class="info-row"><label>Jenis Kelamin</label><span id="rJenisKelamin"></span></div>
     </div>
 
+    <div id="cardFamilyFolder" style="display:none; margin-top:14px; border:1px solid #e5e7eb; border-radius:8px; padding:14px;">
+      <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:8px;">👪 Family Folder — Anggota Keluarga (No. KK: <span id="ffNoKk">-</span>)</div>
+      <table>
+        <thead><tr><th>Nama</th><th>Tgl Lahir</th><th>JK</th><th>No. RM</th><th></th></tr></thead>
+        <tbody id="ffTabel"><tr><td colspan="5">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
     <div class="grid-2" style="margin-top:16px;">
       <div>
         <label>Lokasi Pemeriksaan *</label>
@@ -542,6 +550,46 @@ function isiInfoRegistrasi() {
     : "-";
   document.getElementById("rJenisKunjungan").textContent = jenisKunjunganTerpilih === "lama" ? "Lama" : "Baru";
   document.getElementById("rJenisKelamin").textContent = pasienTerpilih.jenis_kelamin === "L" ? "Laki-laki" : "Perempuan";
+  muatFamilyFolder();
+}
+
+// ---------- Family Folder: tampilkan anggota keluarga lain (1 No. KK) ----------
+async function muatFamilyFolder() {
+  const card = document.getElementById("cardFamilyFolder");
+  const tbody = document.getElementById("ffTabel");
+  const noKk = (pasienTerpilih.no_kk || "").trim();
+
+  if (!noKk) { card.style.display = "none"; return; }
+
+  card.style.display = "block";
+  document.getElementById("ffNoKk").textContent = noKk;
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("id, nama, tanggal_lahir, jenis_kelamin, no_rm, nik")
+    .eq("no_kk", noKk)
+    .order("tanggal_lahir");
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data || data.length <= 1) {
+    tbody.innerHTML = `<tr><td colspan="5">Belum ada anggota keluarga lain terdaftar dengan No. KK ini.</td></tr>`;
+    return;
+  }
+
+  window._familyFolderCache = data;
+  tbody.innerHTML = data.map((p, i) => `
+    <tr${p.id === pasienTerpilih.id ? ' style="background:#eef7f5;"' : ""}>
+      <td>${p.nama}${p.id === pasienTerpilih.id ? " (dipilih)" : ""}</td>
+      <td>${p.tanggal_lahir ? new Date(p.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
+      <td>${p.jenis_kelamin === "L" ? "L" : "P"}</td>
+      <td>${p.no_rm || "-"}</td>
+      <td>${p.id === pasienTerpilih.id ? "" : `<button type="button" class="btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="pilihAnggotaKeluarga(${i})">Daftarkan Ini</button>`}</td>
+    </tr>`).join("");
+}
+
+function pilihAnggotaKeluarga(index) {
+  pilihPasien(window._familyFolderCache[index]);
 }
 
 document.getElementById("formPasienBaru").addEventListener("submit", async (e) => {
