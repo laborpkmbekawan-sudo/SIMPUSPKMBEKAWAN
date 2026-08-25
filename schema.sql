@@ -775,6 +775,68 @@ alter table vaksin_suhu_log enable row level security;
 create policy "authenticated_all_vaksin_suhu_log" on vaksin_suhu_log for all to authenticated using (true) with check (true);
 
 -- ============================================================
+-- 24. MODUL APOTEK — LAPORAN: Keselamatan Pasien
+--     Medication Error, Efek Samping Obat (KTD/ADR), FMEA
+--     Kefarmasian. Nama pasien free-text (bukan FK pasien) —
+--     laporan ini kadang perlu tetap tercatat walau identitas
+--     pasien gak lengkap/anonim demi kepatuhan lapor insiden.
+-- ============================================================
+create table if not exists medication_error_log (
+  id uuid primary key default gen_random_uuid(),
+  tanggal date not null,
+  tahap text not null check (tahap in ('peresepan','pengkajian_resep','peracikan','penyerahan','penggunaan')),
+  jenis_error text not null,
+  nama_pasien text,
+  obat_terkait text,
+  deskripsi text not null,
+  tingkat_keparahan text not null check (tingkat_keparahan in ('nyaris_cidera','tanpa_cidera','cidera_ringan','cidera_sedang','cidera_berat','kematian')),
+  tindak_lanjut text,
+  pelapor_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists efek_samping_obat (
+  id uuid primary key default gen_random_uuid(),
+  tanggal date not null,
+  nama_pasien text not null,
+  obat_terkait text not null,
+  gejala text not null,
+  tingkat_keparahan text not null check (tingkat_keparahan in ('ringan','sedang','berat')),
+  tindakan text,
+  pelapor_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists fmea_kefarmasian (
+  id uuid primary key default gen_random_uuid(),
+  proses text not null,
+  failure_mode text not null,
+  efek text,
+  penyebab text,
+  severity int not null check (severity between 1 and 10),
+  occurrence int not null check (occurrence between 1 and 10),
+  detection int not null check (detection between 1 and 10),
+  rpn int generated always as (severity * occurrence * detection) stored,
+  tindakan_perbaikan text,
+  pj text,
+  tanggal date not null default current_date,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_medication_error_tanggal on medication_error_log(tanggal);
+create index if not exists idx_efek_samping_tanggal on efek_samping_obat(tanggal);
+create index if not exists idx_fmea_rpn on fmea_kefarmasian(rpn desc);
+
+alter table medication_error_log enable row level security;
+alter table efek_samping_obat enable row level security;
+alter table fmea_kefarmasian enable row level security;
+
+create policy "authenticated_all_medication_error_log" on medication_error_log for all to authenticated using (true) with check (true);
+create policy "authenticated_all_efek_samping_obat" on efek_samping_obat for all to authenticated using (true) with check (true);
+create policy "authenticated_all_fmea_kefarmasian" on fmea_kefarmasian for all to authenticated using (true) with check (true);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

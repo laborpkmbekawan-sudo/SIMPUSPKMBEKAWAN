@@ -1617,7 +1617,213 @@
   </div>
 
   <div id="lapPanelKeselamatan" style="display:none;">
-    <div class="card"><div class="lap-segera"><div class="ic">🛡️</div><div class="t">Keselamatan Pasien</div>Medication error, FMEA kefarmasian, efek samping obat/KTD — segera dibangun.</div></div>
+
+    <div class="card" style="--accent:#c0503f">
+      <h2><span class="card-num">1</span>Medication Error</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Insiden kesalahan obat di tiap tahap alur farmasi (peresepan s/d penggunaan) — dasar evaluasi mutu & akreditasi.</p>
+
+      <div id="msgMedError"></div>
+      <div class="grid-3">
+        <div>
+          <label>Tanggal *</label>
+          <input type="date" id="meTanggal">
+        </div>
+        <div>
+          <label>Tahap Kejadian *</label>
+          <select id="meTahap">
+            <option value="peresepan">Peresepan</option>
+            <option value="pengkajian_resep">Pengkajian Resep</option>
+            <option value="peracikan">Peracikan/Dispensing</option>
+            <option value="penyerahan">Penyerahan</option>
+            <option value="penggunaan">Penggunaan oleh Pasien</option>
+          </select>
+        </div>
+        <div>
+          <label>Jenis Error *</label>
+          <select id="meJenis">
+            <option value="kesalahan_obat">Kesalahan Obat (Salah Item)</option>
+            <option value="kesalahan_dosis">Kesalahan Dosis</option>
+            <option value="kesalahan_pasien">Kesalahan Pasien</option>
+            <option value="kesalahan_rute">Kesalahan Rute/Cara Pakai</option>
+            <option value="kesalahan_waktu">Kesalahan Waktu/Jadwal</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div>
+          <label>Nama Pasien</label>
+          <input type="text" id="meNamaPasien" placeholder="Opsional kalau anonim">
+        </div>
+        <div>
+          <label>Obat Terkait</label>
+          <input type="text" id="meObat" placeholder="Contoh: Amlodipin 10mg">
+        </div>
+        <div>
+          <label>Tingkat Keparahan *</label>
+          <select id="meKeparahan">
+            <option value="nyaris_cidera">Nyaris Cidera (Near Miss)</option>
+            <option value="tanpa_cidera">Tanpa Cidera</option>
+            <option value="cidera_ringan">Cidera Ringan</option>
+            <option value="cidera_sedang">Cidera Sedang</option>
+            <option value="cidera_berat">Cidera Berat</option>
+            <option value="kematian">Kematian</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label>Deskripsi Kejadian *</label>
+        <input type="text" id="meDeskripsi" placeholder="Ceritakan singkat kronologi kejadian">
+      </div>
+      <div>
+        <label>Tindak Lanjut</label>
+        <input type="text" id="meTindakLanjut" placeholder="Opsional, misal: obat ditukar, edukasi ulang pasien">
+      </div>
+      <button type="button" class="btn-primary" onclick="simpanMedError()">Simpan Laporan</button>
+
+      <div class="lap-summary-strip" style="margin-top:18px;">
+        <div class="lap-sum-card"><div class="label">Total Kejadian</div><div class="value" id="meSumTotal">0</div></div>
+        <div class="lap-sum-card"><div class="label">Nyaris Cidera</div><div class="value" id="meSumNyaris">0</div></div>
+        <div class="lap-sum-card warn"><div class="label">Ada Cidera</div><div class="value" id="meSumCidera">0</div></div>
+      </div>
+
+      <h3 style="margin-top:18px; font-size:15px;">Riwayat</h3>
+      <div class="grid-3" style="margin-bottom:10px;">
+        <div>
+          <label>Dari Tanggal</label>
+          <input type="date" id="meDari">
+        </div>
+        <div>
+          <label>Sampai Tanggal</label>
+          <input type="date" id="meSampai">
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button type="button" onclick="muatRiwayatMedError()">Tampilkan</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Tahap</th><th>Jenis</th><th>Pasien</th><th>Obat</th><th>Keparahan</th><th>Deskripsi</th><th></th></tr></thead>
+        <tbody id="meTabel"><tr><td colspan="8">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card" style="--accent:#e0793c">
+      <h2><span class="card-num">2</span>Efek Samping Obat (KTD/ADR)</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Kejadian Tidak Diharapkan / Adverse Drug Reaction yang dialami pasien setelah pakai obat.</p>
+
+      <div id="msgEso"></div>
+      <div class="grid-3">
+        <div>
+          <label>Tanggal *</label>
+          <input type="date" id="esoTanggal">
+        </div>
+        <div>
+          <label>Nama Pasien *</label>
+          <input type="text" id="esoNamaPasien" placeholder="Nama pasien">
+        </div>
+        <div>
+          <label>Obat Terkait *</label>
+          <input type="text" id="esoObat" placeholder="Contoh: Amoksisilin 500mg">
+        </div>
+      </div>
+      <div class="grid-3">
+        <div style="grid-column: span 2;">
+          <label>Gejala *</label>
+          <input type="text" id="esoGejala" placeholder="Contoh: ruam kulit, gatal, sesak napas">
+        </div>
+        <div>
+          <label>Tingkat Keparahan *</label>
+          <select id="esoKeparahan">
+            <option value="ringan">Ringan</option>
+            <option value="sedang">Sedang</option>
+            <option value="berat">Berat</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label>Tindakan</label>
+        <input type="text" id="esoTindakan" placeholder="Opsional, misal: obat dihentikan, rujuk">
+      </div>
+      <button type="button" class="btn-primary" onclick="simpanEso()">Simpan Laporan</button>
+
+      <h3 style="margin-top:18px; font-size:15px;">Riwayat</h3>
+      <div class="grid-3" style="margin-bottom:10px;">
+        <div>
+          <label>Dari Tanggal</label>
+          <input type="date" id="esoDari">
+        </div>
+        <div>
+          <label>Sampai Tanggal</label>
+          <input type="date" id="esoSampai">
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button type="button" onclick="muatRiwayatEso()">Tampilkan</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Pasien</th><th>Obat</th><th>Gejala</th><th>Keparahan</th><th>Tindakan</th><th></th></tr></thead>
+        <tbody id="esoTabel"><tr><td colspan="7">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card" style="--accent:#6a4c93">
+      <h2><span class="card-num">3</span>FMEA Kefarmasian</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Failure Mode & Effect Analysis — analisis risiko proses farmasi sebelum insiden terjadi. RPN (Risk Priority Number) = Severity × Occurrence × Detection, makin tinggi makin prioritas dibenahi.</p>
+
+      <div id="msgFmea"></div>
+      <div class="grid-3">
+        <div>
+          <label>Proses yang Dianalisis *</label>
+          <input type="text" id="fmProses" placeholder="Contoh: Peracikan puyer">
+        </div>
+        <div>
+          <label>Failure Mode (Potensi Kegagalan) *</label>
+          <input type="text" id="fmFailure" placeholder="Contoh: Salah takaran racikan">
+        </div>
+        <div>
+          <label>Efek Kalau Terjadi</label>
+          <input type="text" id="fmEfek" placeholder="Contoh: Dosis kurang/lebih pada pasien">
+        </div>
+      </div>
+      <div class="grid-3">
+        <div style="grid-column: span 2;">
+          <label>Penyebab</label>
+          <input type="text" id="fmPenyebab" placeholder="Contoh: Timbangan tidak dikalibrasi rutin">
+        </div>
+        <div>
+          <label>Penanggung Jawab</label>
+          <input type="text" id="fmPj" placeholder="Nama/jabatan">
+        </div>
+      </div>
+      <div class="grid-3">
+        <div>
+          <label>Severity (1-10) *</label>
+          <input type="number" min="1" max="10" id="fmSeverity" placeholder="Keparahan efek">
+        </div>
+        <div>
+          <label>Occurrence (1-10) *</label>
+          <input type="number" min="1" max="10" id="fmOccurrence" placeholder="Frekuensi kejadian">
+        </div>
+        <div>
+          <label>Detection (1-10) *</label>
+          <input type="number" min="1" max="10" id="fmDetection" placeholder="10 = paling sulit dideteksi">
+        </div>
+      </div>
+      <div>
+        <label>Tindakan Perbaikan</label>
+        <input type="text" id="fmTindakan" placeholder="Opsional, misal: kalibrasi timbangan tiap bulan">
+      </div>
+      <button type="button" class="btn-primary" onclick="simpanFmea()">Simpan Analisis</button>
+
+      <h3 style="margin-top:18px; font-size:15px;">Daftar FMEA (Urut RPN Tertinggi)</h3>
+      <table>
+        <thead><tr><th>Proses</th><th>Failure Mode</th><th>S</th><th>O</th><th>D</th><th>RPN</th><th>Tindakan Perbaikan</th><th>PJ</th><th></th></tr></thead>
+        <tbody id="fmTabel"><tr><td colspan="9">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
   </div>
 
   </div>
@@ -4533,6 +4739,7 @@ function gantiTabLaporan(tab) {
   if (tab === "fornas") siapkanFornasReport();
   if (tab === "khusus") { siapkanSipnap(); siapkanHighAlertLasa(); siapkanSuhuVaksin(); }
   if (tab === "evaluasi") siapkanTopObat();
+  if (tab === "keselamatan") { siapkanMedError(); siapkanEso(); muatDaftarFmea(); }
 }
 
 // ---------- 1. Data Stok & Ketersediaan Obat ----------
@@ -5411,6 +5618,258 @@ function renderTabelFornasRef() {
       <td>${f.kekuatan || "-"}</td>
       <td><button type="button" style="font-size:11px; padding:3px 8px; background:#fee2e2; color:#991b1b; border-color:#fecaca;" onclick="nonaktifkanFornasRef('${f.id}')">Nonaktifkan</button></td>
     </tr>`).join("");
+}
+
+// ================= Keselamatan Pasien =================
+const LABEL_TAHAP_ME = { peresepan: "Peresepan", pengkajian_resep: "Pengkajian Resep", peracikan: "Peracikan/Dispensing", penyerahan: "Penyerahan", penggunaan: "Penggunaan Pasien" };
+const LABEL_JENIS_ME = { kesalahan_obat: "Kesalahan Obat", kesalahan_dosis: "Kesalahan Dosis", kesalahan_pasien: "Kesalahan Pasien", kesalahan_rute: "Kesalahan Rute", kesalahan_waktu: "Kesalahan Waktu", lainnya: "Lainnya" };
+const LABEL_KEPARAHAN_ME = { nyaris_cidera: "Nyaris Cidera", tanpa_cidera: "Tanpa Cidera", cidera_ringan: "Cidera Ringan", cidera_sedang: "Cidera Sedang", cidera_berat: "Cidera Berat", kematian: "Kematian" };
+
+let medErrorInit = false;
+
+function siapkanMedError() {
+  if (!medErrorInit) {
+    medErrorInit = true;
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("meTanggal").value = today;
+    const dari = new Date(); dari.setDate(dari.getDate() - 29);
+    document.getElementById("meDari").value = dari.toISOString().split("T")[0];
+    document.getElementById("meSampai").value = today;
+  }
+  muatRiwayatMedError();
+}
+
+async function simpanMedError() {
+  const msgBox = document.getElementById("msgMedError");
+  msgBox.innerHTML = "";
+
+  const tanggal = document.getElementById("meTanggal").value;
+  const tahap = document.getElementById("meTahap").value;
+  const jenisError = document.getElementById("meJenis").value;
+  const namaPasien = document.getElementById("meNamaPasien").value.trim() || null;
+  const obatTerkait = document.getElementById("meObat").value.trim() || null;
+  const keparahan = document.getElementById("meKeparahan").value;
+  const deskripsi = document.getElementById("meDeskripsi").value.trim();
+  const tindakLanjut = document.getElementById("meTindakLanjut").value.trim() || null;
+
+  if (!tanggal || !deskripsi) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dan deskripsi kejadian dulu.</div>`;
+    return;
+  }
+
+  const { error } = await supabaseClient.from("medication_error_log").insert({
+    tanggal, tahap, jenis_error: jenisError, nama_pasien: namaPasien, obat_terkait: obatTerkait,
+    deskripsi, tingkat_keparahan: keparahan, tindak_lanjut: tindakLanjut, pelapor_id: profilSaya.id
+  });
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`;
+    return;
+  }
+  msgBox.innerHTML = `<div class="msg msg-success">Laporan medication error tersimpan.</div>`;
+  document.getElementById("meNamaPasien").value = "";
+  document.getElementById("meObat").value = "";
+  document.getElementById("meDeskripsi").value = "";
+  document.getElementById("meTindakLanjut").value = "";
+  await muatRiwayatMedError();
+}
+
+async function muatRiwayatMedError() {
+  const tbody = document.getElementById("meTabel");
+  const dari = document.getElementById("meDari").value;
+  const sampai = document.getElementById("meSampai").value;
+  if (!dari || !sampai) { tbody.innerHTML = `<tr><td colspan="8">Pilih rentang tanggal dulu.</td></tr>`; return; }
+
+  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
+  const { data, error } = await supabaseClient
+    .from("medication_error_log")
+    .select("*")
+    .gte("tanggal", dari)
+    .lte("tanggal", sampai)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  const nyaris = (data || []).filter(r => r.tingkat_keparahan === "nyaris_cidera" || r.tingkat_keparahan === "tanpa_cidera").length;
+  const cidera = (data || []).length - nyaris;
+  document.getElementById("meSumTotal").textContent = (data || []).length;
+  document.getElementById("meSumNyaris").textContent = nyaris;
+  document.getElementById("meSumCidera").textContent = cidera;
+
+  if (!data || !data.length) { tbody.innerHTML = `<tr><td colspan="8">Belum ada laporan di rentang ini.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${LABEL_TAHAP_ME[r.tahap] || r.tahap}</td>
+      <td>${LABEL_JENIS_ME[r.jenis_error] || r.jenis_error}</td>
+      <td>${r.nama_pasien || "-"}</td>
+      <td>${r.obat_terkait || "-"}</td>
+      <td>${r.tingkat_keparahan === "cidera_berat" || r.tingkat_keparahan === "kematian" ? `<span class="badge badge-batal">${LABEL_KEPARAHAN_ME[r.tingkat_keparahan]}</span>` : (LABEL_KEPARAHAN_ME[r.tingkat_keparahan] || r.tingkat_keparahan)}</td>
+      <td>${r.deskripsi}</td>
+      <td><button type="button" style="font-size:11px; padding:3px 8px; background:#fee2e2; color:#991b1b; border-color:#fecaca;" onclick="hapusMedError('${r.id}')">Hapus</button></td>
+    </tr>`).join("");
+}
+
+async function hapusMedError(id) {
+  if (!confirm("Hapus laporan medication error ini?")) return;
+  const { error } = await supabaseClient.from("medication_error_log").delete().eq("id", id);
+  if (error) { alert("Gagal hapus: " + error.message); return; }
+  await muatRiwayatMedError();
+}
+
+// ---------- Efek Samping Obat (KTD/ADR) ----------
+let esoInit = false;
+
+function siapkanEso() {
+  if (!esoInit) {
+    esoInit = true;
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("esoTanggal").value = today;
+    const dari = new Date(); dari.setDate(dari.getDate() - 29);
+    document.getElementById("esoDari").value = dari.toISOString().split("T")[0];
+    document.getElementById("esoSampai").value = today;
+  }
+  muatRiwayatEso();
+}
+
+async function simpanEso() {
+  const msgBox = document.getElementById("msgEso");
+  msgBox.innerHTML = "";
+
+  const tanggal = document.getElementById("esoTanggal").value;
+  const namaPasien = document.getElementById("esoNamaPasien").value.trim();
+  const obat = document.getElementById("esoObat").value.trim();
+  const gejala = document.getElementById("esoGejala").value.trim();
+  const keparahan = document.getElementById("esoKeparahan").value;
+  const tindakan = document.getElementById("esoTindakan").value.trim() || null;
+
+  if (!tanggal || !namaPasien || !obat || !gejala) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal, nama pasien, obat, dan gejala dulu.</div>`;
+    return;
+  }
+
+  const { error } = await supabaseClient.from("efek_samping_obat").insert({
+    tanggal, nama_pasien: namaPasien, obat_terkait: obat, gejala,
+    tingkat_keparahan: keparahan, tindakan, pelapor_id: profilSaya.id
+  });
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`;
+    return;
+  }
+  msgBox.innerHTML = `<div class="msg msg-success">Laporan efek samping obat tersimpan.</div>`;
+  document.getElementById("esoNamaPasien").value = "";
+  document.getElementById("esoObat").value = "";
+  document.getElementById("esoGejala").value = "";
+  document.getElementById("esoTindakan").value = "";
+  await muatRiwayatEso();
+}
+
+async function muatRiwayatEso() {
+  const tbody = document.getElementById("esoTabel");
+  const dari = document.getElementById("esoDari").value;
+  const sampai = document.getElementById("esoSampai").value;
+  if (!dari || !sampai) { tbody.innerHTML = `<tr><td colspan="7">Pilih rentang tanggal dulu.</td></tr>`; return; }
+
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+  const { data, error } = await supabaseClient
+    .from("efek_samping_obat")
+    .select("*")
+    .gte("tanggal", dari)
+    .lte("tanggal", sampai)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data || !data.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada laporan di rentang ini.</td></tr>`; return; }
+
+  const badgeKeparahan = { ringan: "", sedang: "background:#fef08a; color:#854d0e;", berat: "background:#fee2e2; color:#991b1b;" };
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.nama_pasien}</td>
+      <td>${r.obat_terkait}</td>
+      <td>${r.gejala}</td>
+      <td>${badgeKeparahan[r.tingkat_keparahan] ? `<span class="badge" style="${badgeKeparahan[r.tingkat_keparahan]}">${r.tingkat_keparahan}</span>` : r.tingkat_keparahan}</td>
+      <td>${r.tindakan || "-"}</td>
+      <td><button type="button" style="font-size:11px; padding:3px 8px; background:#fee2e2; color:#991b1b; border-color:#fecaca;" onclick="hapusEso('${r.id}')">Hapus</button></td>
+    </tr>`).join("");
+}
+
+async function hapusEso(id) {
+  if (!confirm("Hapus laporan efek samping obat ini?")) return;
+  const { error } = await supabaseClient.from("efek_samping_obat").delete().eq("id", id);
+  if (error) { alert("Gagal hapus: " + error.message); return; }
+  await muatRiwayatEso();
+}
+
+// ---------- FMEA Kefarmasian ----------
+async function simpanFmea() {
+  const msgBox = document.getElementById("msgFmea");
+  msgBox.innerHTML = "";
+
+  const proses = document.getElementById("fmProses").value.trim();
+  const failure = document.getElementById("fmFailure").value.trim();
+  const efek = document.getElementById("fmEfek").value.trim() || null;
+  const penyebab = document.getElementById("fmPenyebab").value.trim() || null;
+  const pj = document.getElementById("fmPj").value.trim() || null;
+  const severity = parseInt(document.getElementById("fmSeverity").value);
+  const occurrence = parseInt(document.getElementById("fmOccurrence").value);
+  const detection = parseInt(document.getElementById("fmDetection").value);
+  const tindakan = document.getElementById("fmTindakan").value.trim() || null;
+
+  if (!proses || !failure || !severity || !occurrence || !detection) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi proses, failure mode, dan nilai S/O/D (1-10) dulu.</div>`;
+    return;
+  }
+  if ([severity, occurrence, detection].some(v => v < 1 || v > 10)) {
+    msgBox.innerHTML = `<div class="msg msg-error">Nilai Severity/Occurrence/Detection harus 1-10.</div>`;
+    return;
+  }
+
+  const { error } = await supabaseClient.from("fmea_kefarmasian").insert({
+    proses, failure_mode: failure, efek, penyebab, severity, occurrence, detection,
+    tindakan_perbaikan: tindakan, pj, petugas_id: profilSaya.id
+  });
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`;
+    return;
+  }
+  msgBox.innerHTML = `<div class="msg msg-success">Analisis FMEA tersimpan.</div>`;
+  ["fmProses","fmFailure","fmEfek","fmPenyebab","fmPj","fmSeverity","fmOccurrence","fmDetection","fmTindakan"].forEach(id => document.getElementById(id).value = "");
+  await muatDaftarFmea();
+}
+
+async function muatDaftarFmea() {
+  const tbody = document.getElementById("fmTabel");
+  const { data, error } = await supabaseClient.from("fmea_kefarmasian").select("*").order("rpn", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="9">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data || !data.length) { tbody.innerHTML = `<tr><td colspan="9">Belum ada analisis FMEA. Isi form di atas.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => {
+    const rpnStyle = r.rpn >= 200 ? "background:#fee2e2; color:#991b1b;" : (r.rpn >= 100 ? "background:#fef08a; color:#854d0e;" : "background:#d1fae5; color:#065f46;");
+    return `
+    <tr>
+      <td>${r.proses}</td>
+      <td>${r.failure_mode}</td>
+      <td>${r.severity}</td>
+      <td>${r.occurrence}</td>
+      <td>${r.detection}</td>
+      <td><span class="badge" style="${rpnStyle}">${r.rpn}</span></td>
+      <td>${r.tindakan_perbaikan || "-"}</td>
+      <td>${r.pj || "-"}</td>
+      <td><button type="button" style="font-size:11px; padding:3px 8px; background:#fee2e2; color:#991b1b; border-color:#fecaca;" onclick="hapusFmea('${r.id}')">Hapus</button></td>
+    </tr>`;
+  }).join("");
+}
+
+async function hapusFmea(id) {
+  if (!confirm("Hapus analisis FMEA ini?")) return;
+  const { error } = await supabaseClient.from("fmea_kefarmasian").delete().eq("id", id);
+  if (error) { alert("Gagal hapus: " + error.message); return; }
+  await muatDaftarFmea();
 }
 </script>
 
