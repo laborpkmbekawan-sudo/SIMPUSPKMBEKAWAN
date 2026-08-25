@@ -61,6 +61,7 @@
             <div class="queue-label">NOMOR ANTRIAN DIPANGGIL</div>
             <div class="queue-number" id="queueNumber">—</div>
             <div class="queue-sub" id="queueSub">Belum ada antrian dipanggil</div>
+            <div id="queuePrioritasAlert" style="display:none; font-size:12.5px; font-weight:700; color:#c62836; background:#fde7e9; border-radius:6px; padding:6px 10px; margin-bottom:12px;"></div>
             <div class="queue-actions">
               <button class="btn-primary" onclick="panggilAntrean()">Panggil</button>
               <button class="btn-secondary" onclick="panggilUlang()">Panggil Ulang</button>
@@ -267,6 +268,18 @@
       </div>
     </div>
 
+    <div class="grid-2" style="align-items:center; background:#fff8f8; border:1px solid #fde7e9; border-radius:8px; padding:10px 14px; margin-top:14px;">
+      <div>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="kPrioritas" onchange="toggleKeteranganPrioritas()" style="width:16px; height:16px;">
+          🚨 Pasien Gawat Darurat / Prioritas?
+        </label>
+      </div>
+      <div id="wrapKeteranganPrioritas" style="display:none;">
+        <input type="text" id="kKeteranganPrioritas" placeholder="Kondisi darurat singkat, mis: sesak napas berat">
+      </div>
+    </div>
+
     <label>Keluhan Awal</label>
     <textarea id="kKeluhan" placeholder="Keluhan singkat saat pendaftaran"></textarea>
 
@@ -415,7 +428,8 @@ async function lewatiAntrean() {
 
 function tampilkanNomorDipanggil(k) {
   document.getElementById("queueNumber").textContent = k.no_antrian;
-  document.getElementById("queueSub").textContent = `${k.pasien?.nama || "-"} — ${k.klaster?.kode || "-"} ${k.klaster?.nama || ""}`;
+  document.getElementById("queueNumber").style.color = k.is_prioritas ? "#c62836" : "";
+  document.getElementById("queueSub").textContent = `${k.is_prioritas ? "🚨 DARURAT — " : ""}${k.pasien?.nama || "-"} — ${k.klaster?.kode || "-"} ${k.klaster?.nama || ""}`;
   document.getElementById("statAntrianSaatIni").textContent = k.no_antrian;
 }
 
@@ -586,6 +600,12 @@ function sesuaikanJenisBayar() {
   // no-op hook, kept for future validasi kalau perlu; jenis_bayar diturunkan otomatis di buatKunjungan()
 }
 
+function toggleKeteranganPrioritas() {
+  const isPrioritas = document.getElementById("kPrioritas").checked;
+  document.getElementById("wrapKeteranganPrioritas").style.display = isPrioritas ? "" : "none";
+  if (!isPrioritas) document.getElementById("kKeteranganPrioritas").value = "";
+}
+
 function turunkanJenisBayar(jenisPasien) {
   return jenisPasien.startsWith("JKN") ? "BPJS" : "Umum";
 }
@@ -604,6 +624,8 @@ async function buatKunjungan() {
   const kodeAdmin = document.getElementById("kKodeAdmin").value.trim();
   const jenisBayar = turunkanJenisBayar(jenisPasien);
   const keluhan = document.getElementById("kKeluhan").value.trim();
+  const isPrioritas = document.getElementById("kPrioritas").checked;
+  const keteranganPrioritas = isPrioritas ? (document.getElementById("kKeteranganPrioritas").value.trim() || null) : null;
 
   if (!klasterId) {
     msgBox.innerHTML = `<div class="msg msg-error">Pilih klaster tujuan.</div>`;
@@ -634,6 +656,8 @@ async function buatKunjungan() {
     kode_administrasi_pasien: kodeAdmin || null,
     no_antrian: noAntrianData,
     keluhan_awal: keluhan,
+    is_prioritas: isPrioritas,
+    keterangan_prioritas: keteranganPrioritas,
     tekanan_darah: document.getElementById("kTd").value.trim(),
     suhu: document.getElementById("kSuhu").value.trim(),
     nadi: document.getElementById("kNadi").value.trim(),
@@ -670,6 +694,8 @@ async function buatKunjungan() {
   document.getElementById("cardDaftarKunjungan").style.display = "none";
   document.getElementById("cariNik").value = "";
   document.getElementById("hasilCari").innerHTML = "";
+  document.getElementById("kPrioritas").checked = false;
+  toggleKeteranganPrioritas();
   pasienTerpilih = null;
   jenisKunjunganTerpilih = null;
 
@@ -699,6 +725,7 @@ async function muatAntrian() {
     .from("kunjungan")
     .select("*, pasien(nama, no_rm, nik), klaster(nama, kode)")
     .eq("tanggal", today)
+    .order("is_prioritas", { ascending: false })
     .order("no_antrian");
 
   if (error) {
@@ -716,7 +743,7 @@ async function muatAntrian() {
 
   tbody.innerHTML = data.map((k, i) => `
     <tr>
-      <td>${k.no_antrian}</td>
+      <td>${k.no_antrian}${k.is_prioritas ? ' <span class="badge badge-darurat" title="${k.keterangan_prioritas || \'Prioritas/Gawat Darurat\'}">🚨 Darurat</span>' : ""}</td>
       <td>${k.no_kunjungan}</td>
       <td>${k.pasien?.no_rm || "-"}</td>
       <td>${k.pasien?.nama || "-"}</td>
@@ -741,6 +768,15 @@ function isiStatDashboard(data) {
   document.getElementById("statLama").textContent = lama;
   document.getElementById("statBpjs").textContent = bpjs;
   document.getElementById("statUmum").textContent = umum;
+
+  const menungguDarurat = data.filter(k => k.is_prioritas && k.status === "menunggu").length;
+  const alertBox = document.getElementById("queuePrioritasAlert");
+  if (menungguDarurat > 0) {
+    alertBox.style.display = "block";
+    alertBox.textContent = `🚨 ${menungguDarurat} pasien darurat/prioritas sedang menunggu — akan dipanggil lebih dulu.`;
+  } else {
+    alertBox.style.display = "none";
+  }
 }
 
 function cetakUlang(index) {

@@ -837,6 +837,17 @@ create policy "authenticated_all_efek_samping_obat" on efek_samping_obat for all
 create policy "authenticated_all_fmea_kefarmasian" on fmea_kefarmasian for all to authenticated using (true) with check (true);
 
 -- ============================================================
+-- 25. PENDAFTARAN — Triase Prioritas/Gawat Darurat (Standar 7.2.3)
+--     Loket bisa tandai pasien darurat saat daftar kunjungan.
+--     Antrian diurutkan prioritas dulu baru no urut biasa, jadi
+--     panggilAntrean() otomatis ambil pasien darurat duluan
+--     tanpa perlu ubah logika panggil (cukup ubah urutan query).
+-- ============================================================
+alter table kunjungan add column if not exists is_prioritas boolean not null default false;
+alter table kunjungan add column if not exists keterangan_prioritas text;
+create index if not exists idx_kunjungan_prioritas on kunjungan(tanggal, is_prioritas);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
