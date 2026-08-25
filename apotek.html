@@ -225,6 +225,52 @@
 .mi-combo-sub { color: var(--muted); font-size: 11.5px; }
 .mi-combo-empty { padding: 10px; font-size: 12.5px; color: var(--muted); }
 
+/* ---- LPLPO ---- */
+.lp-status-flow { display: flex; align-items: center; gap: 0; margin-top: 10px; flex-wrap: wrap; }
+.lp-status-step { font-size: 11px; padding: 6px 14px; color: var(--muted); background: #f0f5f6; border: 1px solid var(--border); position: relative; }
+.lp-status-step:first-child { border-radius: 14px 0 0 14px; }
+.lp-status-step:last-child { border-radius: 0 14px 14px 0; }
+.lp-status-step.done { background: #16865c; color: #fff; border-color: #16865c; font-weight: 600; }
+.lp-status-step.current { background: var(--orange); color: #fff; border-color: var(--orange); font-weight: 700; }
+.lp-sum-strip { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.lp-sum-card { flex: 1; min-width: 160px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 15px; }
+.lp-sum-card .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+.lp-sum-card .val { font-size: 17px; font-weight: 700; color: var(--navy); margin-top: 4px; }
+.lp-sum-card.warn .val { color: var(--orange); }
+.lp-sum-card.split { display: flex; justify-content: space-between; align-items: center; }
+.lp-sum-card.split .half { text-align: center; }
+.lp-sum-card.split .val { font-size: 15px; }
+.lp-sum-card.split .tagmini { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+.lp-sum-card.split .tagmini.obat { background: #e7f3fb; color: var(--teal-a); }
+.lp-sum-card.split .tagmini.bmhp { background: #f2ecf9; color: var(--plum); }
+.lp-jenis-toggle { display: flex; gap: 6px; margin-bottom: 10px; }
+.lp-jenis-btn { font-size: 11px; padding: 5px 12px; border-radius: 14px; border: 1px solid var(--border); background: #fff; color: var(--muted); cursor: pointer; }
+.lp-jenis-btn.active { background: var(--navy-2); color: #fff; border-color: var(--navy-2); font-weight: 700; }
+.lp-table-wrap { background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow: auto; margin-bottom: 6px; }
+.lp-table-wrap table { min-width: 1500px; font-size: 11px; }
+.lp-table-wrap th, .lp-table-wrap td { text-align: center; padding: 6px; }
+.lp-table-wrap td.nama { text-align: left; font-weight: 600; color: var(--navy); min-width: 200px; }
+.lp-tag { display: inline-block; font-size: 8.5px; padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+.lp-tag.obat { background: #e7f3fb; color: var(--teal-a); }
+.lp-tag.bmhp { background: #f2ecf9; color: var(--plum); }
+.lp-cell-input { width: 56px; border: 1px solid var(--border); border-radius: 4px; padding: 4px; font-size: 11px; text-align: right; }
+.lp-cell-input:disabled { background: #f0f5f6; color: var(--muted); }
+.lp-catatan-input { width: 120px; font-size: 10.5px; padding: 4px; border: 1px solid var(--border); border-radius: 4px; }
+.lp-stok-akhir { font-weight: 700; color: var(--navy); background: #eefaf9; }
+.lp-selisih.ok { color: #16865c; font-weight: 700; }
+.lp-selisih.bad { color: #b91c1c; font-weight: 700; }
+.lp-group-header td { background: #f0f5f6; font-weight: 700; color: var(--navy); text-align: left !important; }
+.lp-lampiran-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 20px; }
+.lp-lampiran-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; }
+.lp-lampiran-card:hover { border-color: var(--teal-2); }
+.lp-lampiran-card .ic { font-size: 18px; margin-bottom: 6px; }
+.lp-lampiran-card .t { font-size: 12px; font-weight: 700; color: var(--navy); }
+.lp-lampiran-card .d { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.lp-hist-status { font-size: 10.5px; padding: 3px 10px; border-radius: 12px; font-weight: 700; }
+.lp-hist-status.draft { background: #f4f6f8; color: #6b7280; }
+.lp-hist-status.diajukan { background: #fff6ee; color: var(--orange); }
+.lp-hist-status.disetujui_dinas { background: #e7f3fb; color: var(--teal-a); }
+.lp-hist-status.diterima { background: #eafaee; color: #16865c; }
 @media (max-width: 1100px) {
   .ph-grid-3 { grid-template-columns: 1fr; }
   .ph-quick-grid { grid-template-columns: repeat(2, 1fr); }
@@ -260,7 +306,7 @@
     <a id="navMutasi" onclick="gantiSubtab('mutasi')">Mutasi & Penerimaan</a>
 
     <div class="ph-group-title">Pengadaan & Laporan</div>
-    <a class="disabled">LPLPO <span class="ph-badge-soon">Segera</span></a>
+    <a id="navLplpo" onclick="gantiSubtab('lplpo')">LPLPO</a>
     <a class="disabled">Laporan <span class="ph-badge-soon">Segera</span></a>
 
     <div class="ph-group-title">Modul Lain</div>
@@ -312,7 +358,7 @@
         <div class="ph-quick-tile" onclick="gantiSubtab('pelayanan')">Verifikasi Resep</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('stok')">Master Data Obat</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('kartustok')">Kartu Stok</div>
-        <div class="ph-quick-tile disabled">LPLPO</div>
+        <div class="ph-quick-tile" onclick="gantiSubtab('lplpo')">LPLPO</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('stokopname')">Stok Opname</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('mutasi')">Penerimaan Obat</div>
         <div class="ph-quick-tile" onclick="gantiSubtab('racikan')">Racikan Obat</div>
@@ -1013,6 +1059,122 @@
   </div>
   <!-- /panelMutasi -->
 
+  <div id="panelLplpo" style="display:none;">
+
+    <div class="ph-tabs" style="display:flex; gap:6px; margin-bottom:16px; border-bottom:1px solid var(--border);">
+      <div class="lp-tab-btn active" id="lpTabLaporan" onclick="gantiTabLplpo('laporan')" style="padding:9px 16px; font-size:12.5px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent;">Laporan LPLPO</div>
+      <div class="lp-tab-btn" id="lpTabRiwayat" onclick="gantiTabLplpo('riwayat')" style="padding:9px 16px; font-size:12.5px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent;">Riwayat LPLPO</div>
+    </div>
+
+    <!-- ===== Sub-view: Laporan (kerja bulan berjalan) ===== -->
+    <div id="lpViewLaporan">
+
+      <div class="card" style="--accent:#173b5e">
+        <h2><span class="card-num">1</span>Header Laporan</h2>
+        <div class="grid-3" style="margin-bottom:6px;">
+          <div><label>Puskesmas</label><div style="font-size:13px; font-weight:600; color:var(--navy);">UPTD Puskesmas Bekawan</div></div>
+          <div>
+            <label>Periode</label>
+            <select id="lpPeriode" onchange="gantiPeriodeLplpo()"></select>
+          </div>
+          <div><label>Petugas Penyusun</label><div id="lpPetugas" style="font-size:13px; font-weight:600; color:var(--navy);">-</div></div>
+        </div>
+        <div id="lpStatusFlow" class="lp-status-flow"></div>
+      </div>
+
+      <div id="lpKosong" style="display:none; text-align:center; padding:40px 0;">
+        <p style="color:var(--muted); font-size:13.5px; margin-bottom:14px;">Belum ada laporan LPLPO buat periode ini.</p>
+        <button type="button" class="btn-primary" onclick="generateLplpoPeriode()">Generate Laporan Periode Ini</button>
+      </div>
+
+      <div id="lpIsi" style="display:none;">
+
+        <div class="lp-sum-strip">
+          <div class="lp-sum-card split">
+            <div class="half"><span class="tagmini obat" style="font-size:9px; font-weight:700; padding:1px 6px; border-radius:4px; background:#e7f3fb; color:var(--teal-a);">OBAT</span><div class="val" id="lpSumObat">0</div></div>
+            <div class="half"><span class="tagmini bmhp" style="font-size:9px; font-weight:700; padding:1px 6px; border-radius:4px; background:#f2ecf9; color:var(--plum);">BMHP</span><div class="val" id="lpSumBmhp">0</div></div>
+          </div>
+          <div class="lp-sum-card"><div class="lbl">Total Nilai Stok Akhir</div><div class="val" id="lpSumNilai">Rp 0</div></div>
+          <div class="lp-sum-card warn"><div class="lbl">Item Stok Kritis (&lt;30% rata²)</div><div class="val" id="lpSumKritis">0</div></div>
+        </div>
+
+        <h2 style="font-size:13px; font-weight:700; color:var(--navy); margin:0 0 8px;">Data Pemakaian &amp; Lembar Permintaan</h2>
+        <div class="lp-jenis-toggle">
+          <button type="button" class="lp-jenis-btn active" onclick="filterJenisLplpo('all', this)">Semua</button>
+          <button type="button" class="lp-jenis-btn" onclick="filterJenisLplpo('obat', this)">Obat</button>
+          <button type="button" class="lp-jenis-btn" onclick="filterJenisLplpo('bmhp', this)">BMHP</button>
+        </div>
+
+        <div class="lp-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Jenis</th><th>Nama Item</th><th>Satuan</th><th>Harga Satuan</th>
+                <th>Stok Awal</th><th>Penerimaan (SBBK)</th><th>Pemakaian (Klaster+Pustu)</th>
+                <th>Stok Akhir Sistem</th><th>Sisa Stok (SO Fisik)</th><th>Selisih</th>
+                <th>Rata² 3 Bulan</th><th>Permintaan</th><th>Catatan</th>
+              </tr>
+            </thead>
+            <tbody id="lpBody"></tbody>
+          </table>
+        </div>
+        <p style="font-size:10.5px; color:var(--muted); margin:6px 2px 14px;">
+          Stok Akhir Sistem = Stok Awal + Penerimaan − Pemakaian &nbsp;•&nbsp; Selisih = Sisa Stok (SO) − Stok Akhir Sistem &nbsp;•&nbsp; Permintaan default = (Rata² 3 Bulan × 2) − Sisa Stok. Selisih bukan berarti salah input — bisa juga dari dispensing langsung ke pasien, retur, atau koreksi opname yang gak masuk kolom Penerimaan/Pemakaian di atas; isi Catatan buat jelasin.
+        </p>
+
+        <h2 style="font-size:13px; font-weight:700; color:var(--navy); margin:18px 0 8px;">Lampiran Pendukung</h2>
+        <div class="lp-lampiran-grid">
+          <div class="lp-lampiran-card" onclick="gantiSubtab('kartustok')"><div class="ic">📇</div><div class="t">Kartu Stok</div><div class="d">Rekap kartu stok Obat &amp; BMHP</div></div>
+          <div class="lp-lampiran-card" onclick="gantiSubtab('stokopname')"><div class="ic">📋</div><div class="t">Stok Opname</div><div class="d">Hasil SO Obat &amp; BMHP</div></div>
+          <div class="lp-lampiran-card" onclick="gantiSubtab('mutasi'); gantiTabMutasi('keluar')"><div class="ic">↦</div><div class="t">Mutasi Keluar</div><div class="d">Rekap pengeluaran ke Klaster &amp; Pustu</div></div>
+          <div class="lp-lampiran-card" onclick="gantiSubtab('mutasi'); gantiTabMutasi('sbbk')"><div class="ic">📥</div><div class="t">Penerimaan SBBK</div><div class="d">Rekap penerimaan barang dari Dinas</div></div>
+        </div>
+
+        <div id="msgLplpo"></div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin:10px 0 28px; flex-wrap:wrap;">
+          <button type="button" class="btn-secondary" id="lpBtnGenerateUlang" onclick="generateLplpoPeriode()">↻ Generate Ulang Otomatis</button>
+          <button type="button" class="btn-secondary" id="lpBtnSimpan" onclick="simpanDraftLplpo()">Simpan Draft</button>
+          <button type="button" class="btn-primary" id="lpBtnLanjut" onclick="lanjutkanStatusLplpo()">Ajukan ke Dinas</button>
+        </div>
+
+      </div>
+      <!-- /lpIsi -->
+
+    </div>
+    <!-- /lpViewLaporan -->
+
+    <!-- ===== Sub-view: Riwayat ===== -->
+    <div id="lpViewRiwayat" style="display:none;">
+      <div class="card" style="--accent:#1c7d7f">
+        <h2><span class="card-num">1</span>Riwayat LPLPO</h2>
+        <div class="grid-3" style="margin-bottom:14px;">
+          <div>
+            <label>Filter Status</label>
+            <select id="lpRwStatus" onchange="muatRiwayatLplpo()">
+              <option value="">Semua Status</option>
+              <option value="draft">Draft</option>
+              <option value="diajukan">Diajukan</option>
+              <option value="disetujui_dinas">Disetujui Dinas</option>
+              <option value="diterima">Barang Diterima</option>
+            </select>
+          </div>
+          <div>
+            <label>Cari Periode</label>
+            <input type="text" id="lpRwCari" placeholder="misal: Juni 2026" oninput="muatRiwayatLplpo()">
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Periode</th><th>Tanggal Diajukan</th><th>Total Nilai Stok Akhir</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="lpRwBody"><tr><td colspan="5">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- /lpViewRiwayat -->
+
+  </div>
+  <!-- /panelLplpo -->
+
     </div>
 
   </div>
@@ -1130,13 +1292,14 @@ async function muatRiwayatObatApotek() {
 
 // ---------- Sub-tab Beranda / Pelayanan / Stok ----------
 function gantiSubtab(tab) {
-  ["beranda", "pelayanan", "entrimanual", "stok", "kartustok", "stokopname", "racikan", "riwayatobat", "mutasi"].forEach(t => {
+  ["beranda", "pelayanan", "entrimanual", "stok", "kartustok", "stokopname", "racikan", "riwayatobat", "mutasi", "lplpo"].forEach(t => {
     document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? "block" : "none";
     const nav = document.getElementById("nav" + t.charAt(0).toUpperCase() + t.slice(1));
     if (nav) nav.classList.toggle("active", t === tab);
   });
   if (tab === "stokopname") muatStokOpname();
   if (tab === "mutasi") siapkanMutasi();
+  if (tab === "lplpo") siapkanLplpo();
 }
 
 // ---------- Stok Opname (cocokkan stok sistem vs fisik, per baris/batch) ----------
@@ -3311,6 +3474,484 @@ async function muatRiwayatMutasi() {
       <td>${h.jumlahText}</td>
     </tr>
   `).join("");
+}
+
+// ============================================================
+// LPLPO — Laporan Pemakaian & Lembar Permintaan Obat
+// ============================================================
+const BULAN_LABEL_LPLPO = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+const LABEL_STATUS_LPLPO = { draft: "Draft", diajukan: "Diajukan", disetujui_dinas: "Disetujui Dinas", diterima: "Barang Diterima" };
+const ORDER_STATUS_LPLPO = ["draft", "diajukan", "disetujui_dinas", "diterima"];
+const LABEL_TOMBOL_LANJUT_LPLPO = { draft: "Ajukan ke Dinas", diajukan: "Tandai Disetujui Dinas", disetujui_dinas: "Tandai Barang Diterima" };
+
+let lplpoTahunSekarang = new Date().getFullYear();
+let lplpoBulanSekarang = new Date().getMonth() + 1;
+let lplpoPeriodeAktif = { bulan: lplpoBulanSekarang, tahun: lplpoTahunSekarang };
+let lplpoHeaderAktif = null;   // row tabel lplpo utk periode aktif (null kalau belum pernah digenerate)
+let lplpoItemsAktif = [];      // array lplpo_item periode aktif
+
+async function siapkanLplpo() {
+  const elPetugas = document.getElementById("lpPetugas");
+  if (elPetugas) elPetugas.textContent = (profilSaya && profilSaya.nama) ? profilSaya.nama : "-";
+  isiPeriodeSelectLplpo();
+  gantiTabLplpo("laporan");
+  await muatPeriodeLplpo(lplpoPeriodeAktif.bulan, lplpoPeriodeAktif.tahun);
+}
+
+function gantiTabLplpo(tab) {
+  document.getElementById("lpTabLaporan").classList.toggle("active", tab === "laporan");
+  document.getElementById("lpTabRiwayat").classList.toggle("active", tab === "riwayat");
+  document.getElementById("lpTabLaporan").style.borderBottomColor = tab === "laporan" ? "var(--orange)" : "transparent";
+  document.getElementById("lpTabRiwayat").style.borderBottomColor = tab === "riwayat" ? "var(--orange)" : "transparent";
+  document.getElementById("lpViewLaporan").style.display = tab === "laporan" ? "block" : "none";
+  document.getElementById("lpViewRiwayat").style.display = tab === "riwayat" ? "block" : "none";
+  if (tab === "riwayat") muatRiwayatLplpo();
+}
+
+// Dropdown periode: 12 bulan terakhir s.d. bulan berjalan
+function isiPeriodeSelectLplpo() {
+  const sel = document.getElementById("lpPeriode");
+  sel.innerHTML = "";
+  let b = lplpoBulanSekarang, t = lplpoTahunSekarang;
+  const opsi = [];
+  for (let i = 0; i < 12; i++) {
+    opsi.push({ bulan: b, tahun: t });
+    b--; if (b < 1) { b = 12; t--; }
+  }
+  opsi.reverse().forEach(o => {
+    const opt = document.createElement("option");
+    opt.value = `${o.bulan}-${o.tahun}`;
+    opt.textContent = `${BULAN_LABEL_LPLPO[o.bulan]} ${o.tahun}`;
+    if (o.bulan === lplpoPeriodeAktif.bulan && o.tahun === lplpoPeriodeAktif.tahun) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function gantiPeriodeLplpo() {
+  const [b, t] = document.getElementById("lpPeriode").value.split("-").map(Number);
+  lplpoPeriodeAktif = { bulan: b, tahun: t };
+  muatPeriodeLplpo(b, t);
+}
+
+function tanggalAwalAkhirPeriode(bulan, tahun) {
+  const awal = `${tahun}-${String(bulan).padStart(2, "0")}-01`;
+  const akhirDate = new Date(tahun, bulan, 0); // hari terakhir bulan itu
+  const akhir = `${akhirDate.getFullYear()}-${String(akhirDate.getMonth() + 1).padStart(2, "0")}-${String(akhirDate.getDate()).padStart(2, "0")}`;
+  return { awal, akhir };
+}
+
+function periodeSebelumnya(bulan, tahun) {
+  let b = bulan - 1, t = tahun;
+  if (b < 1) { b = 12; t = t - 1; }
+  return { bulan: b, tahun: t };
+}
+
+// Muat laporan periode terpilih: kalau belum ada -> tampilkan tombol Generate.
+// Kalau sudah ada -> tarik lplpo + lplpo_item, render tabel.
+async function muatPeriodeLplpo(bulan, tahun) {
+  document.getElementById("msgLplpo").innerHTML = "";
+  const { data: header, error } = await supabaseClient
+    .from("lplpo")
+    .select("*")
+    .eq("periode_bulan", bulan)
+    .eq("periode_tahun", tahun)
+    .maybeSingle();
+
+  if (error) {
+    document.getElementById("msgLplpo").innerHTML = `<div class="msg msg-error">Gagal muat data: ${error.message}</div>`;
+    return;
+  }
+
+  if (!header) {
+    lplpoHeaderAktif = null;
+    lplpoItemsAktif = [];
+    document.getElementById("lpKosong").style.display = "block";
+    document.getElementById("lpIsi").style.display = "none";
+    renderStatusFlowLplpo("draft");
+    return;
+  }
+
+  lplpoHeaderAktif = header;
+  document.getElementById("lpKosong").style.display = "none";
+  document.getElementById("lpIsi").style.display = "block";
+  renderStatusFlowLplpo(header.status);
+
+  const { data: items, error: errItem } = await supabaseClient
+    .from("lplpo_item")
+    .select("*")
+    .eq("lplpo_id", header.id)
+    .order("jenis_item").order("nama_item");
+
+  if (errItem) {
+    document.getElementById("msgLplpo").innerHTML = `<div class="msg msg-error">Gagal muat item: ${errItem.message}</div>`;
+    return;
+  }
+
+  lplpoItemsAktif = items || [];
+  renderTabelLplpo();
+  hitungRingkasanLplpo();
+
+  const bisaEdit = header.status === "draft";
+  document.getElementById("lpBtnSimpan").style.display = bisaEdit ? "" : "none";
+  document.getElementById("lpBtnGenerateUlang").style.display = bisaEdit ? "" : "none";
+  const btnLanjut = document.getElementById("lpBtnLanjut");
+  if (header.status === "diterima") {
+    btnLanjut.style.display = "none";
+  } else {
+    btnLanjut.style.display = "";
+    btnLanjut.textContent = LABEL_TOMBOL_LANJUT_LPLPO[header.status] || "Lanjutkan";
+  }
+}
+
+function renderStatusFlowLplpo(status) {
+  const idx = ORDER_STATUS_LPLPO.indexOf(status);
+  const el = document.getElementById("lpStatusFlow");
+  el.innerHTML = ORDER_STATUS_LPLPO.map((s, i) => {
+    const cls = i < idx ? "done" : (i === idx ? "current" : "");
+    return `<div class="lp-status-step ${cls}">${LABEL_STATUS_LPLPO[s]}</div>`;
+  }).join("");
+}
+
+// Sumber data mentah dipakai buat isi lplpo_item pas generate.
+async function generateLplpoPeriode() {
+  const { bulan, tahun } = lplpoPeriodeAktif;
+  const msgBox = document.getElementById("msgLplpo");
+  if (msgBox) msgBox.innerHTML = "";
+
+  // 1. Pastikan header lplpo ada (insert kalau belum)
+  let headerId = lplpoHeaderAktif ? lplpoHeaderAktif.id : null;
+  if (!headerId) {
+    const { data: baru, error: errBaru } = await supabaseClient
+      .from("lplpo")
+      .insert({ periode_bulan: bulan, periode_tahun: tahun, petugas_id: profilSaya.id })
+      .select()
+      .single();
+    if (errBaru) {
+      alert("Gagal buat laporan: " + errBaru.message);
+      return;
+    }
+    headerId = baru.id;
+    lplpoHeaderAktif = baru;
+  }
+
+  // 2. Ambil semua master obat/BMHP
+  const { data: semuaObat, error: errObat } = await supabaseClient
+    .from("obat")
+    .select("id, nama_obat, dosis, satuan, harga, jenis_item, sumber_dana, stok");
+  if (errObat) { alert("Gagal muat master obat: " + errObat.message); return; }
+
+  // 3. Item lplpo yang sudah ada di periode ini (biar input SO/permintaan/catatan yang
+  //    udah diisi user gak ketimpa pas Generate Ulang)
+  const { data: itemLama } = await supabaseClient
+    .from("lplpo_item")
+    .select("*")
+    .eq("lplpo_id", headerId);
+  const petaItemLama = {};
+  (itemLama || []).forEach(it => { petaItemLama[it.obat_id] = it; });
+
+  // 4. Stok akhir sistem periode SEBELUMNYA -> jadi Stok Awal periode ini
+  const prevPeriode = periodeSebelumnya(bulan, tahun);
+  const petaStokAwal = {};
+  const { data: headerPrev } = await supabaseClient
+    .from("lplpo")
+    .select("id")
+    .eq("periode_bulan", prevPeriode.bulan)
+    .eq("periode_tahun", prevPeriode.tahun)
+    .maybeSingle();
+  if (headerPrev) {
+    const { data: itemPrev } = await supabaseClient
+      .from("lplpo_item")
+      .select("obat_id, stok_akhir_sistem")
+      .eq("lplpo_id", headerPrev.id);
+    (itemPrev || []).forEach(it => { petaStokAwal[it.obat_id] = it.stok_akhir_sistem; });
+  }
+
+  // 5. Rata² pemakaian 3 periode terakhir (sebelum periode ini)
+  const { data: lplpoLalu } = await supabaseClient
+    .from("lplpo")
+    .select("id, periode_bulan, periode_tahun")
+    .order("periode_tahun", { ascending: false })
+    .order("periode_bulan", { ascending: false });
+  const idLplpoSebelum = (lplpoLalu || [])
+    .filter(l => (l.periode_tahun < tahun) || (l.periode_tahun === tahun && l.periode_bulan < bulan))
+    .slice(0, 3)
+    .map(l => l.id);
+  const petaRata = {};
+  if (idLplpoSebelum.length) {
+    const { data: itemLalu } = await supabaseClient
+      .from("lplpo_item")
+      .select("obat_id, pemakaian")
+      .in("lplpo_id", idLplpoSebelum);
+    const kumpul = {};
+    (itemLalu || []).forEach(it => {
+      if (!kumpul[it.obat_id]) kumpul[it.obat_id] = { total: 0, n: 0 };
+      kumpul[it.obat_id].total += (it.pemakaian || 0);
+      kumpul[it.obat_id].n += 1;
+    });
+    Object.keys(kumpul).forEach(k => { petaRata[k] = kumpul[k].total / kumpul[k].n; });
+  }
+
+  // 6. Penerimaan (SBBK) & Pemakaian (mutasi ke klaster+Pustu) periode ini, dari Kartu Stok
+  const { awal, akhir } = tanggalAwalAkhirPeriode(bulan, tahun);
+  const { data: kartuPeriode, error: errKartu } = await supabaseClient
+    .from("kartu_stok")
+    .select("obat_id, jenis, jumlah")
+    .in("jenis", ["penerimaan_sbbk", "mutasi_keluar"])
+    .gte("tanggal", awal)
+    .lte("tanggal", akhir);
+  if (errKartu) { alert("Gagal muat kartu stok: " + errKartu.message); return; }
+  const petaPenerimaan = {}, petaPemakaian = {};
+  (kartuPeriode || []).forEach(k => {
+    if (k.jenis === "penerimaan_sbbk") petaPenerimaan[k.obat_id] = (petaPenerimaan[k.obat_id] || 0) + k.jumlah;
+    if (k.jenis === "mutasi_keluar") petaPemakaian[k.obat_id] = (petaPemakaian[k.obat_id] || 0) + k.jumlah;
+  });
+
+  // 7. Susun payload upsert
+  const payload = semuaObat.map(o => {
+    const lama = petaItemLama[o.id];
+    const stokAwal = petaStokAwal[o.id] !== undefined ? petaStokAwal[o.id] : (o.stok || 0);
+    const penerimaan = petaPenerimaan[o.id] || 0;
+    const pemakaian = petaPemakaian[o.id] || 0;
+    const stokAkhirSistem = stokAwal + penerimaan - pemakaian;
+    const rata2 = petaRata[o.id] || 0;
+    // input manual (SO, permintaan, catatan): pertahankan kalau udah pernah diisi
+    const sisaFisik = lama ? lama.sisa_stok_fisik : stokAkhirSistem;
+    const permintaan = lama ? lama.permintaan : Math.max(0, Math.round(rata2 * 2 - sisaFisik));
+    const catatan = lama ? lama.catatan : null;
+    const selisih = sisaFisik - stokAkhirSistem;
+
+    return {
+      lplpo_id: headerId,
+      obat_id: o.id,
+      jenis_item: o.jenis_item || "obat",
+      nama_item: o.nama_obat,
+      dosis: o.dosis,
+      satuan: o.satuan,
+      harga_satuan: o.harga || 0,
+      sumber_dana: o.sumber_dana,
+      stok_awal: stokAwal,
+      penerimaan,
+      pemakaian,
+      stok_akhir_sistem: stokAkhirSistem,
+      sisa_stok_fisik: sisaFisik,
+      selisih,
+      rata2_3bulan: Math.round(rata2 * 100) / 100,
+      permintaan,
+      catatan,
+      updated_at: new Date().toISOString()
+    };
+  });
+
+  const { error: errUpsert } = await supabaseClient
+    .from("lplpo_item")
+    .upsert(payload, { onConflict: "lplpo_id,obat_id" });
+  if (errUpsert) { alert("Gagal simpan item: " + errUpsert.message); return; }
+
+  await supabaseClient.from("lplpo").update({ updated_at: new Date().toISOString() }).eq("id", headerId);
+
+  msgBox.innerHTML = `<div class="msg msg-success">Data ditarik ulang dari Kartu Stok, SBBK & LPLPO periode sebelumnya.</div>`;
+  await muatPeriodeLplpo(bulan, tahun);
+}
+
+let lplpoFilterJenisAktif = "all";
+
+function renderTabelLplpo() {
+  const tbody = document.getElementById("lpBody");
+  if (!lplpoItemsAktif.length) {
+    tbody.innerHTML = `<tr><td colspan="13">Belum ada item obat/BMHP di Master Data.</td></tr>`;
+    return;
+  }
+
+  // Kelompokkan per sumber_dana, urut Obat dulu baru BMHP di dalam tiap grup
+  const grup = {};
+  lplpoItemsAktif.forEach(it => {
+    const key = it.sumber_dana || "Tanpa Sumber Dana";
+    if (!grup[key]) grup[key] = [];
+    grup[key].push(it);
+  });
+
+  const bisaEdit = lplpoHeaderAktif && lplpoHeaderAktif.status === "draft";
+  let html = "";
+  Object.keys(grup).sort().forEach(key => {
+    html += `<tr class="lp-group-header" data-group="1"><td colspan="13">${key}</td></tr>`;
+    grup[key].forEach(it => {
+      const disabled = bisaEdit ? "" : "disabled";
+      html += `
+        <tr data-jenis="${it.jenis_item}" data-id="${it.id}">
+          <td><span class="lp-tag ${it.jenis_item}">${it.jenis_item === "bmhp" ? "BMHP" : "Obat"}</span></td>
+          <td class="nama">${it.nama_item}${it.dosis ? " " + it.dosis : ""}</td>
+          <td>${it.satuan}</td>
+          <td>${formatRupiah(it.harga_satuan)}</td>
+          <td><input class="lp-cell-input awal" type="text" value="${it.stok_awal}" disabled></td>
+          <td><input class="lp-cell-input terima" type="text" value="${it.penerimaan}" ${disabled} oninput="hitungBarisLplpo(this)"></td>
+          <td><input class="lp-cell-input pakai" type="text" value="${it.pemakaian}" ${disabled} oninput="hitungBarisLplpo(this)"></td>
+          <td class="lp-stok-akhir">${it.stok_akhir_sistem}</td>
+          <td><input class="lp-cell-input so" type="text" value="${it.sisa_stok_fisik}" ${disabled} oninput="hitungBarisLplpo(this)"></td>
+          <td class="lp-selisih ${it.selisih === 0 ? "ok" : "bad"}">${it.selisih > 0 ? "+" : ""}${it.selisih}</td>
+          <td>${it.rata2_3bulan}</td>
+          <td><input class="lp-cell-input minta" type="text" value="${it.permintaan}" ${disabled}></td>
+          <td><input class="lp-catatan-input" type="text" value="${it.catatan || ""}" placeholder="Catatan..." ${disabled}></td>
+        </tr>`;
+    });
+  });
+  tbody.innerHTML = html;
+  filterJenisLplpo(lplpoFilterJenisAktif, document.querySelector(".lp-jenis-btn.active") || document.querySelector(".lp-jenis-btn"));
+}
+
+function hitungBarisLplpo(el) {
+  const row = el.closest("tr");
+  const awal = parseFloat(row.querySelector(".awal").value) || 0;
+  const terima = parseFloat(row.querySelector(".terima").value) || 0;
+  const pakai = parseFloat(row.querySelector(".pakai").value) || 0;
+  const so = parseFloat(row.querySelector(".so").value) || 0;
+
+  const stokAkhirSistem = awal + terima - pakai;
+  const selisih = so - stokAkhirSistem;
+
+  row.querySelector(".lp-stok-akhir").textContent = stokAkhirSistem;
+  const selCell = row.querySelector(".lp-selisih");
+  selCell.textContent = (selisih > 0 ? "+" : "") + selisih;
+  selCell.className = "lp-selisih " + (selisih === 0 ? "ok" : "bad");
+
+  hitungRingkasanLplpo();
+}
+
+function hitungRingkasanLplpo() {
+  let itemObat = 0, itemBmhp = 0, totalNilai = 0, kritis = 0;
+  document.querySelectorAll("#lpBody tr[data-id]").forEach(row => {
+    const jenis = row.dataset.jenis;
+    if (jenis === "bmhp") itemBmhp++; else itemObat++;
+    const item = lplpoItemsAktif.find(it => it.id === row.dataset.id);
+    if (!item) return;
+    const so = parseFloat(row.querySelector(".so").value) || 0;
+    totalNilai += so * (item.harga_satuan || 0);
+    if (item.rata2_3bulan > 0 && so < item.rata2_3bulan * 0.3) kritis++;
+  });
+  document.getElementById("lpSumObat").textContent = itemObat;
+  document.getElementById("lpSumBmhp").textContent = itemBmhp;
+  document.getElementById("lpSumNilai").textContent = formatRupiah(totalNilai);
+  document.getElementById("lpSumKritis").textContent = kritis;
+}
+
+function filterJenisLplpo(jenis, btn) {
+  document.querySelectorAll(".lp-jenis-btn").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  lplpoFilterJenisAktif = jenis;
+  document.querySelectorAll("#lpBody tr[data-jenis]").forEach(row => {
+    row.style.display = (jenis === "all" || row.dataset.jenis === jenis) ? "" : "none";
+  });
+}
+
+// Simpan semua input di tabel (penerimaan/pemakaian/SO/permintaan/catatan) ke DB.
+async function simpanDraftLplpo() {
+  const msgBox = document.getElementById("msgLplpo");
+  msgBox.innerHTML = "";
+  const baris = document.querySelectorAll("#lpBody tr[data-id]");
+  const updates = [];
+  baris.forEach(row => {
+    const id = row.dataset.id;
+    const awal = parseFloat(row.querySelector(".awal").value) || 0;
+    const terima = parseFloat(row.querySelector(".terima").value) || 0;
+    const pakai = parseFloat(row.querySelector(".pakai").value) || 0;
+    const so = parseFloat(row.querySelector(".so").value) || 0;
+    const minta = parseFloat(row.querySelector(".minta").value) || 0;
+    const catatan = row.querySelector(".lp-catatan-input").value || null;
+    const stokAkhirSistem = awal + terima - pakai;
+    const selisih = so - stokAkhirSistem;
+    updates.push(
+      supabaseClient.from("lplpo_item").update({
+        penerimaan: terima, pemakaian: pakai, stok_akhir_sistem: stokAkhirSistem,
+        sisa_stok_fisik: so, selisih, permintaan: minta, catatan,
+        updated_at: new Date().toISOString()
+      }).eq("id", id)
+    );
+  });
+
+  const hasil = await Promise.all(updates);
+  const gagal = hasil.filter(h => h.error);
+  if (gagal.length) {
+    msgBox.innerHTML = `<div class="msg msg-error">${gagal.length} baris gagal disimpan: ${gagal[0].error.message}</div>`;
+    return;
+  }
+  await supabaseClient.from("lplpo").update({ updated_at: new Date().toISOString() }).eq("id", lplpoHeaderAktif.id);
+  msgBox.innerHTML = `<div class="msg msg-success">Draft LPLPO tersimpan.</div>`;
+  await muatPeriodeLplpo(lplpoPeriodeAktif.bulan, lplpoPeriodeAktif.tahun);
+}
+
+// Maju satu tahap status: draft -> diajukan -> disetujui_dinas -> diterima
+async function lanjutkanStatusLplpo() {
+  if (!lplpoHeaderAktif) return;
+  const status = lplpoHeaderAktif.status;
+  const idx = ORDER_STATUS_LPLPO.indexOf(status);
+  const berikutnya = ORDER_STATUS_LPLPO[idx + 1];
+  if (!berikutnya) return;
+
+  if (status === "draft" && !confirm("Ajukan LPLPO periode ini ke Dinas? Setelah diajukan, tabel gak bisa diedit lagi.")) return;
+  if (status !== "draft" && !confirm(`Tandai status jadi "${LABEL_STATUS_LPLPO[berikutnya]}"?`)) return;
+
+  // Simpan dulu draft kalau masih draft, biar data terbaru gak ilang
+  if (status === "draft") await simpanDraftLplpo();
+
+  const patch = { status: berikutnya, updated_at: new Date().toISOString() };
+  if (berikutnya === "diajukan") patch.tanggal_diajukan = new Date().toISOString();
+  if (berikutnya === "disetujui_dinas") patch.tanggal_disetujui = new Date().toISOString();
+  if (berikutnya === "diterima") patch.tanggal_diterima = new Date().toISOString();
+
+  const { error } = await supabaseClient.from("lplpo").update(patch).eq("id", lplpoHeaderAktif.id);
+  if (error) { alert("Gagal update status: " + error.message); return; }
+  await muatPeriodeLplpo(lplpoPeriodeAktif.bulan, lplpoPeriodeAktif.tahun);
+}
+
+// Riwayat LPLPO: daftar semua periode + total nilai stok akhir
+async function muatRiwayatLplpo() {
+  const tbody = document.getElementById("lpRwBody");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const statusFilter = document.getElementById("lpRwStatus").value;
+  const cari = (document.getElementById("lpRwCari").value || "").toLowerCase();
+
+  let query = supabaseClient.from("lplpo").select("*").order("periode_tahun", { ascending: false }).order("periode_bulan", { ascending: false });
+  if (statusFilter) query = query.eq("status", statusFilter);
+  const { data: headers, error } = await query;
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!headers || !headers.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada riwayat LPLPO.</td></tr>`; return; }
+
+  const idHeaders = headers.map(h => h.id);
+  const { data: semuaItem } = await supabaseClient
+    .from("lplpo_item")
+    .select("lplpo_id, harga_satuan, sisa_stok_fisik")
+    .in("lplpo_id", idHeaders);
+  const petaNilai = {};
+  (semuaItem || []).forEach(it => {
+    petaNilai[it.lplpo_id] = (petaNilai[it.lplpo_id] || 0) + (it.harga_satuan || 0) * (it.sisa_stok_fisik || 0);
+  });
+
+  const filtered = headers.filter(h => {
+    if (!cari) return true;
+    return `${BULAN_LABEL_LPLPO[h.periode_bulan]} ${h.periode_tahun}`.toLowerCase().includes(cari);
+  });
+
+  if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="5">Tidak ada periode cocok filter.</td></tr>`; return; }
+
+  tbody.innerHTML = filtered.map(h => {
+    const nilai = petaNilai[h.id] || 0;
+    const tglDiajukan = h.tanggal_diajukan ? new Date(h.tanggal_diajukan).toLocaleDateString("id-ID") : "-";
+    return `
+      <tr>
+        <td>${BULAN_LABEL_LPLPO[h.periode_bulan]} ${h.periode_tahun}</td>
+        <td>${tglDiajukan}</td>
+        <td>${formatRupiah(nilai)}</td>
+        <td><span class="lp-hist-status ${h.status}">${LABEL_STATUS_LPLPO[h.status]}</span></td>
+        <td><span class="link-btn" style="font-size:11px; color:var(--teal-a); cursor:pointer; font-weight:600;" onclick="bukaPeriodeDariRiwayatLplpo(${h.periode_bulan}, ${h.periode_tahun})">Lihat / Buka</span></td>
+      </tr>`;
+  }).join("");
+}
+
+function bukaPeriodeDariRiwayatLplpo(bulan, tahun) {
+  lplpoPeriodeAktif = { bulan, tahun };
+  isiPeriodeSelectLplpo();
+  gantiTabLplpo("laporan");
+  muatPeriodeLplpo(bulan, tahun);
 }
 </script>
 

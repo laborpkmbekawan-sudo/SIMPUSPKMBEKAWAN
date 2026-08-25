@@ -533,6 +533,80 @@ insert into pustu (nama, tipe, wilayah) values
 on conflict do nothing;
 
 -- ============================================================
+-- 20. MODUL APOTEK — LPLPO (Laporan Pemakaian & Lembar Permintaan Obat)
+--     Header per periode (lplpo) + item per obat/BMHP (lplpo_item).
+--     Aman dijalankan ulang.
+-- ============================================================
+
+-- Sumber anggaran per item (DAK 2017 E-Katalog, BHP DAK 2018, APBN Diare, dst)
+-- Dipakai buat group-header di tabel LPLPO. Kosong = "Tanpa Sumber Dana".
+alter table obat add column if not exists sumber_dana text;
+create index if not exists idx_obat_sumber_dana on obat(sumber_dana);
+
+-- ---------- Header LPLPO per periode ----------
+create table if not exists lplpo (
+  id uuid primary key default gen_random_uuid(),
+  periode_bulan int not null check (periode_bulan between 1 and 12),
+  periode_tahun int not null check (periode_tahun between 2020 and 2100),
+  status text not null default 'draft'
+    check (status in ('draft', 'diajukan', 'disetujui_dinas', 'diterima')),
+  tanggal_cetak date not null default current_date,
+  petugas_id uuid references profil_pegawai(id),
+  tanggal_diajukan timestamptz,
+  tanggal_disetujui timestamptz,
+  tanggal_diterima timestamptz,
+  catatan text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (periode_bulan, periode_tahun)
+);
+
+create index if not exists idx_lplpo_periode on lplpo(periode_tahun, periode_bulan);
+create index if not exists idx_lplpo_status on lplpo(status);
+
+-- ---------- Item per obat/BMHP di 1 LPLPO ----------
+-- Nama/satuan/harga/sumber_dana di-snapshot pas generate, biar laporan lama
+-- gak berubah walau master obat diedit belakangan.
+create table if not exists lplpo_item (
+  id uuid primary key default gen_random_uuid(),
+  lplpo_id uuid not null references lplpo(id) on delete cascade,
+  obat_id uuid not null references obat(id),
+  jenis_item text not null default 'obat' check (jenis_item in ('obat', 'bmhp')),
+
+  -- snapshot data master (biar histori gak berubah kalau master diedit)
+  nama_item text not null,
+  dosis text,
+  satuan text not null,
+  harga_satuan numeric(12,2) not null default 0,
+  sumber_dana text,
+
+  -- angka laporan
+  stok_awal int not null default 0,          -- carry-over stok akhir sistem periode lalu
+  penerimaan int not null default 0,         -- auto dari SBBK, editable
+  pemakaian int not null default 0,          -- auto dari mutasi_keluar (klaster+Pustu), editable
+  stok_akhir_sistem int not null default 0,  -- = stok_awal + penerimaan - pemakaian
+  sisa_stok_fisik int not null default 0,    -- input manual hasil stok opname
+  selisih int not null default 0,            -- = sisa_stok_fisik - stok_akhir_sistem
+  rata2_3bulan numeric(10,2) not null default 0,  -- rata pemakaian 3 LPLPO terakhir
+  permintaan int not null default 0,         -- default (rata2_3bulan*2) - sisa_stok_fisik, editable
+  catatan text,
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (lplpo_id, obat_id)
+);
+
+create index if not exists idx_lplpo_item_lplpo on lplpo_item(lplpo_id);
+create index if not exists idx_lplpo_item_obat on lplpo_item(obat_id);
+create index if not exists idx_lplpo_item_jenis on lplpo_item(jenis_item);
+
+alter table lplpo enable row level security;
+alter table lplpo_item enable row level security;
+
+create policy "authenticated_all_lplpo" on lplpo for all to authenticated using (true) with check (true);
+create policy "authenticated_all_lplpo_item" on lplpo_item for all to authenticated using (true) with check (true);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
