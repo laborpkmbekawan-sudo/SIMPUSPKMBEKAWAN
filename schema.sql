@@ -607,6 +607,147 @@ create policy "authenticated_all_lplpo" on lplpo for all to authenticated using 
 create policy "authenticated_all_lplpo_item" on lplpo_item for all to authenticated using (true) with check (true);
 
 -- ============================================================
+-- 21. MODUL APOTEK — LAPORAN: Indikator Peresepan (POR) & Rekap PIO
+--     Cuma butuh 1 kolom baru buat tandai obat golongan antibiotik
+--     (dipakai hitung % resep dengan antibiotik). Rekap PIO reuse
+--     field pio_diberikan yang sudah ada di daftar_obat (jsonb resep).
+-- ============================================================
+alter table obat add column if not exists is_antibiotik boolean not null default false;
+
+-- ============================================================
+-- 22. MODUL APOTEK — LAPORAN: Formularium Nasional (Fornas)
+--     Tabel referensi Fornas (bukan cuma flag boolean) + link ke
+--     master obat, biar bisa lihat kelas terapi & cari per item.
+-- ============================================================
+
+-- ---------- Tabel referensi Fornas ----------
+create table if not exists fornas_referensi (
+  id uuid primary key default gen_random_uuid(),
+  kelas_terapi text not null,
+  nama_obat text not null,
+  bentuk_sediaan text,
+  kekuatan text,
+  keterangan text,
+  aktif boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists idx_fornas_referensi_unik
+  on fornas_referensi (nama_obat, bentuk_sediaan, coalesce(kekuatan, ''));
+create index if not exists idx_fornas_referensi_kelas on fornas_referensi(kelas_terapi);
+create index if not exists idx_fornas_referensi_nama on fornas_referensi(nama_obat);
+
+alter table fornas_referensi enable row level security;
+create policy "authenticated_all_fornas_referensi" on fornas_referensi for all to authenticated using (true) with check (true);
+
+-- ---------- Link master obat ke referensi Fornas ----------
+-- Kosong (null) = belum dicocokkan / di luar Fornas, ditandai manual
+-- oleh Farmasi lewat Master Data Obat.
+alter table obat add column if not exists fornas_ref_id uuid references fornas_referensi(id);
+create index if not exists idx_obat_fornas_ref on obat(fornas_ref_id);
+
+-- ---------- Seed data referensi Fornas ----------
+-- Daftar ini REPRESENTATIF (obat esensial yang lazim dipakai di Puskesmas),
+-- BUKAN salinan lengkap dokumen resmi Fornas Kepmenkes (ribuan item, semua
+-- tingkat layanan). Farmasi tetap perlu cek & tambah item sesuai Fornas
+-- terbaru yang berlaku, lewat menu Kelola Referensi Fornas di aplikasi.
+insert into fornas_referensi (kelas_terapi, nama_obat, bentuk_sediaan, kekuatan, keterangan) values
+('Analgesik, Antipiretik, Antiinflamasi Nonsteroid', 'Paracetamol', 'Tablet', '500 mg', ''),
+('Analgesik, Antipiretik, Antiinflamasi Nonsteroid', 'Paracetamol', 'Sirup', '120 mg/5 ml', ''),
+('Analgesik, Antipiretik, Antiinflamasi Nonsteroid', 'Asam Mefenamat', 'Tablet', '500 mg', ''),
+('Analgesik, Antipiretik, Antiinflamasi Nonsteroid', 'Ibuprofen', 'Tablet', '400 mg', ''),
+('Analgesik, Antipiretik, Antiinflamasi Nonsteroid', 'Natrium Diklofenak', 'Tablet', '50 mg', ''),
+('Anestetik', 'Lidokain HCl', 'Injeksi', '2%', ''),
+('Antialergi dan Obat untuk Anafilaksis', 'Chlorpheniramine Maleate (CTM)', 'Tablet', '4 mg', ''),
+('Antialergi dan Obat untuk Anafilaksis', 'Cetirizine', 'Tablet', '10 mg', ''),
+('Antialergi dan Obat untuk Anafilaksis', 'Difenhidramin HCl', 'Injeksi', '10 mg/ml', ''),
+('Antialergi dan Obat untuk Anafilaksis', 'Epinefrin (Adrenalin)', 'Injeksi', '0,1%', 'Emergensi anafilaksis'),
+('Antidotum dan Obat Lain untuk Keracunan', 'Norit / Karbon Aktif', 'Tablet', '250 mg', ''),
+('Antiepilepsi-Antikonvulsi', 'Fenitoin', 'Tablet', '100 mg', ''),
+('Antiepilepsi-Antikonvulsi', 'Diazepam', 'Tablet', '2 mg', ''),
+('Antiepilepsi-Antikonvulsi', 'Diazepam', 'Injeksi', '5 mg/ml', ''),
+('Obat Infeksi Parasit', 'Albendazol', 'Tablet', '400 mg', ''),
+('Obat Infeksi Parasit', 'Pirantel Pamoat', 'Tablet', '125 mg', ''),
+('Antibakteri', 'Amoksisilin', 'Tablet', '500 mg', ''),
+('Antibakteri', 'Amoksisilin', 'Sirup Kering', '125 mg/5 ml', ''),
+('Antibakteri', 'Ampisilin', 'Kapsul', '500 mg', ''),
+('Antibakteri', 'Ciprofloxacin', 'Tablet', '500 mg', ''),
+('Antibakteri', 'Cotrimoxazole (Sulfametoksazol-Trimetoprim)', 'Tablet', '480 mg', ''),
+('Antibakteri', 'Cotrimoxazole', 'Suspensi', '240 mg/5 ml', ''),
+('Antibakteri', 'Eritromisin', 'Tablet', '500 mg', ''),
+('Antibakteri', 'Metronidazol', 'Tablet', '500 mg', ''),
+('Antibakteri', 'Doksisiklin', 'Kapsul', '100 mg', ''),
+('Antibakteri', 'Kloramfenikol', 'Kapsul', '250 mg', ''),
+('Antituberkulosis', 'OAT Kombipak Kategori 1', 'Tablet', 'Fase Intensif', 'Program TB Nasional'),
+('Antituberkulosis', 'Rifampisin + Isoniazid (FDC)', 'Tablet', '150/75 mg', ''),
+('Antifungi', 'Griseofulvin', 'Tablet', '125 mg', ''),
+('Antifungi', 'Ketokonazol', 'Krim', '2%', ''),
+('Antifungi', 'Nistatin', 'Suspensi Oral', '100.000 IU/ml', ''),
+('Obat Saluran Cerna', 'Antasida DOEN (Al(OH)3 + Mg(OH)2)', 'Tablet Kunyah', null, ''),
+('Obat Saluran Cerna', 'Antasida', 'Sirup', null, ''),
+('Obat Saluran Cerna', 'Omeprazole', 'Kapsul', '20 mg', ''),
+('Obat Saluran Cerna', 'Ranitidin', 'Tablet', '150 mg', ''),
+('Obat Saluran Cerna', 'Domperidon', 'Tablet', '10 mg', ''),
+('Obat Saluran Cerna', 'Oralit', 'Serbuk', 'Sachet 200 ml', ''),
+('Obat Saluran Cerna', 'Zink', 'Tablet Dispersible', '20 mg', 'Diare balita'),
+('Obat Saluran Cerna', 'Attapulgite', 'Tablet', '600 mg', ''),
+('Obat Saluran Cerna', 'Laktulosa', 'Sirup', '3,3 g/5 ml', ''),
+('Obat Saluran Napas', 'Salbutamol', 'Tablet', '2 mg', ''),
+('Obat Saluran Napas', 'Salbutamol', 'Inhalasi Aerosol', '100 mcg/dosis', ''),
+('Obat Saluran Napas', 'Ambroksol', 'Sirup', '15 mg/5 ml', ''),
+('Obat Saluran Napas', 'Gliseril Guaiakolat (GG)', 'Tablet', '100 mg', ''),
+('Obat Saluran Napas', 'Dekstrometorfan', 'Sirup', '10 mg/5 ml', ''),
+('Obat Saluran Napas', 'Aminofilin', 'Tablet', '200 mg', ''),
+('Obat Kardiovaskular', 'Amlodipin', 'Tablet', '5 mg', ''),
+('Obat Kardiovaskular', 'Amlodipin', 'Tablet', '10 mg', ''),
+('Obat Kardiovaskular', 'Captopril', 'Tablet', '25 mg', ''),
+('Obat Kardiovaskular', 'Hidroklorotiazid (HCT)', 'Tablet', '25 mg', ''),
+('Obat Kardiovaskular', 'Furosemid', 'Tablet', '40 mg', ''),
+('Obat Kardiovaskular', 'Bisoprolol', 'Tablet', '5 mg', ''),
+('Obat Kardiovaskular', 'Simvastatin', 'Tablet', '10 mg', ''),
+('Obat Kardiovaskular', 'Digoksin', 'Tablet', '0,25 mg', ''),
+('Hormon dan Antidiabetes', 'Metformin', 'Tablet', '500 mg', ''),
+('Hormon dan Antidiabetes', 'Glibenklamid', 'Tablet', '5 mg', ''),
+('Hormon dan Antidiabetes', 'Insulin Manusia (Human Insulin)', 'Injeksi', '100 IU/ml', ''),
+('Hormon dan Antidiabetes', 'Levotiroksin', 'Tablet', '100 mcg', ''),
+('Vitamin dan Mineral', 'Vitamin B Kompleks', 'Tablet', null, ''),
+('Vitamin dan Mineral', 'Vitamin B1 (Tiamin)', 'Tablet', '50 mg', ''),
+('Vitamin dan Mineral', 'Vitamin C', 'Tablet', '50 mg', ''),
+('Vitamin dan Mineral', 'Asam Folat', 'Tablet', '1 mg', ''),
+('Vitamin dan Mineral', 'Tablet Tambah Darah (Fe + Asam Folat)', 'Tablet', '60 mg', 'Program ibu hamil'),
+('Vitamin dan Mineral', 'Kalsium Laktat', 'Tablet', '500 mg', ''),
+('Vitamin dan Mineral', 'Vitamin A', 'Kapsul', '100.000 IU', 'Program balita'),
+('Vitamin dan Mineral', 'Vitamin A', 'Kapsul', '200.000 IU', 'Program balita/nifas'),
+('Obat Mata', 'Kloramfenikol', 'Tetes Mata', '0,5%', ''),
+('Obat Mata', 'Kloramfenikol', 'Salep Mata', '1%', ''),
+('Obat THT', 'H2O2 (Karbol Gliserin)', 'Tetes Telinga', '3%', ''),
+('Obat Kulit', 'Betametason', 'Krim', '0,1%', ''),
+('Obat Kulit', 'Hidrokortison', 'Krim', '1%', ''),
+('Obat Kulit', 'Permetrin', 'Krim/Lotion', '5%', 'Skabisid'),
+('Obat Kulit', 'Asam Salisilat + Sulfur', 'Salep', null, ''),
+('Obat Kulit', 'Gentamisin', 'Salep/Krim', '0,1%', ''),
+('Antiseptik-Disinfektan', 'Povidon Iodine', 'Larutan', '10%', ''),
+('Antiseptik-Disinfektan', 'Alkohol 70%', 'Larutan', null, ''),
+('Larutan Elektrolit dan Nutrisi Parenteral', 'Ringer Laktat', 'Infus', '500 ml', ''),
+('Larutan Elektrolit dan Nutrisi Parenteral', 'NaCl 0,9%', 'Infus', '500 ml', ''),
+('Larutan Elektrolit dan Nutrisi Parenteral', 'Dekstrosa 5%', 'Infus', '500 ml', ''),
+('Larutan Elektrolit dan Nutrisi Parenteral', 'Dekstrosa 40%', 'Injeksi', '25 ml', 'Emergensi hipoglikemia'),
+('Kesehatan Ibu', 'Metildopa', 'Tablet', '250 mg', ''),
+('Kesehatan Ibu', 'Nifedipin', 'Tablet', '10 mg', 'Tokolitik/hipertensi kehamilan'),
+('Kesehatan Ibu', 'Oksitosin', 'Injeksi', '10 IU/ml', ''),
+('Kesehatan Ibu', 'MgSO4', 'Injeksi', '20%', 'Preeklampsia/eklampsia'),
+('Kesehatan Ibu', 'Metilergometrin', 'Injeksi', '0,2 mg/ml', ''),
+('Kontrasepsi', 'Pil KB Kombinasi', 'Tablet', null, 'Program KB'),
+('Kontrasepsi', 'Suntik KB (DMPA)', 'Injeksi', '150 mg/ml', 'Program KB'),
+('Anestetik Lokal', 'Etil Klorida', 'Semprot', null, ''),
+('Vaksin', 'Vaksin BCG', 'Injeksi', null, 'Program imunisasi'),
+('Vaksin', 'Vaksin DPT-HB-Hib (Pentavalen)', 'Injeksi', null, 'Program imunisasi'),
+('Vaksin', 'Vaksin Polio (OPV)', 'Tetes Oral', null, 'Program imunisasi'),
+('Vaksin', 'Vaksin Campak-Rubella (MR)', 'Injeksi', null, 'Program imunisasi'),
+('Vaksin', 'Vaksin Tetanus Toksoid (TT)', 'Injeksi', null, 'Program imunisasi ibu hamil')
+on conflict do nothing;
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

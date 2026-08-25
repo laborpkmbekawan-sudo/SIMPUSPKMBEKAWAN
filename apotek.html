@@ -589,6 +589,13 @@
           <option value="true">Ya, Antibiotik</option>
         </select>
       </div>
+      <div style="grid-column: span 2;">
+        <label>Cocokkan ke Referensi Fornas <span style="font-weight:400; color:var(--muted);">(ketik cari, kosongkan kalau di luar Fornas)</span></label>
+        <input type="text" id="oFornasCari" list="fornasRefList" placeholder="Cari nama obat di Fornas..." oninput="cariFornasRef()" autocomplete="off">
+        <datalist id="fornasRefList"></datalist>
+        <input type="hidden" id="oFornasRefId" value="">
+        <div id="oFornasStatus" style="font-size:11px; margin-top:4px; color:var(--muted);">Belum dicocokkan.</div>
+      </div>
     </div>
     <div>
       <label>Keterangan</label>
@@ -1275,7 +1282,87 @@
 
   <!-- ===== 3–6. Segera dibangun ===== -->
   <div id="lapPanelFornas" style="display:none;">
-    <div class="card"><div class="lap-segera"><div class="ic">📚</div><div class="t">Formularium (FORNAS)</div>Kepatuhan ketersediaan & peresepan terhadap Formularium Nasional — segera dibangun, giliran berikutnya.</div></div>
+
+    <div class="card" style="--accent:#173b5e">
+      <h2><span class="card-num">1</span>Kepatuhan Master Data Obat terhadap Fornas</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Item Obat (bukan BMHP — BMHP di luar cakupan Fornas) yang sudah dicocokkan ke Referensi Fornas lewat Master Data Obat.</p>
+      <div class="lap-summary-strip">
+        <div class="lap-sum-card"><div class="label">Total Item Obat Terdaftar</div><div class="value" id="fnTotalObat">-</div></div>
+        <div class="lap-sum-card ok"><div class="label">Cocok Fornas</div><div class="value" id="fnCocok">-</div></div>
+        <div class="lap-sum-card warn"><div class="label">Di Luar Fornas</div><div class="value" id="fnLuar">-</div></div>
+        <div class="lap-sum-card"><div class="label">% Kepatuhan Stok</div><div class="value" id="fnPersenStok">-</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#1c7d7f">
+      <h2><span class="card-num">2</span>Kepatuhan Peresepan terhadap Fornas</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Persentase item obat yang diresepkan & diserahkan pada periode terpilih yang termasuk Fornas.</p>
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div>
+          <label>Periode</label>
+          <select id="fnPeriodeSelect" onchange="gantiPeriodeFornas()"></select>
+        </div>
+      </div>
+      <div class="lap-summary-strip">
+        <div class="lap-sum-card"><div class="label">Total Item Diserahkan</div><div class="value" id="fnTotalResep">-</div></div>
+        <div class="lap-sum-card ok"><div class="label">Item Fornas</div><div class="value" id="fnResepCocok">-</div></div>
+        <div class="lap-sum-card warn"><div class="label">Item Di Luar Fornas</div><div class="value" id="fnResepLuar">-</div></div>
+        <div class="lap-sum-card"><div class="label">% Kepatuhan Peresepan</div><div class="value" id="fnPersenResep">-</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#e0793c">
+      <h2><span class="card-num">3</span>Daftar Obat di Luar Fornas (Perlu Ditinjau)</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Obat aktif di stok tapi belum/tidak cocok referensi Fornas — cek lagi di Master Data Obat, atau tambahkan ke Referensi Fornas kalau memang seharusnya masuk.</p>
+      <table>
+        <thead><tr><th>Nama Obat</th><th>Dosis</th><th>Kategori</th><th>Stok</th><th>Aksi</th></tr></thead>
+        <tbody id="fnTabelLuar"><tr><td colspan="5">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card" style="--accent:#6a4c93">
+      <h2><span class="card-num">4</span>Kelola Referensi Fornas</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Tambah item baru kalau ada obat Fornas terbaru yang belum ada di daftar referensi (daftar bawaan bersifat representatif, bukan salinan resmi lengkap).</p>
+
+      <div class="grid-3">
+        <div>
+          <label>Kelas Terapi</label>
+          <input type="text" id="frKelas" placeholder="Contoh: Antibakteri">
+        </div>
+        <div>
+          <label>Nama Obat</label>
+          <input type="text" id="frNama" placeholder="Contoh: Amoksisilin">
+        </div>
+        <div>
+          <label>Bentuk Sediaan</label>
+          <input type="text" id="frBentuk" placeholder="Contoh: Tablet">
+        </div>
+      </div>
+      <div class="grid-3">
+        <div>
+          <label>Kekuatan</label>
+          <input type="text" id="frKekuatan" placeholder="Contoh: 500 mg">
+        </div>
+        <div style="grid-column: span 2;">
+          <label>Keterangan</label>
+          <input type="text" id="frKeterangan" placeholder="Opsional">
+        </div>
+      </div>
+      <button type="button" class="btn-primary" onclick="tambahFornasRef()">+ Tambah ke Referensi</button>
+      <div id="msgFornasRef" style="margin-top:8px;"></div>
+
+      <div class="grid-2" style="margin:16px 0 10px;">
+        <div>
+          <label>Cari Referensi</label>
+          <input type="text" id="frCariTabel" placeholder="Cari nama obat / kelas terapi..." oninput="renderTabelFornasRef()">
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Kelas Terapi</th><th>Nama Obat</th><th>Bentuk</th><th>Kekuatan</th><th>Aksi</th></tr></thead>
+        <tbody id="fnTabelReferensi"><tr><td colspan="5">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
   </div>
   <div id="lapPanelEvaluasi" style="display:none;">
 
@@ -1474,6 +1561,7 @@ let riwayatRangeAktif = "harian"; // filter riwayat pasien: harian/mingguan/bula
   try { await muatDashboardApotek(); } catch (e) { console.error("muatDashboardApotek gagal:", e); }
   try { await siapkanEntriResepManual(); } catch (e) { console.error("siapkanEntriResepManual gagal:", e); }
   try { await siapkanRacikan(); } catch (e) { console.error("siapkanRacikan gagal:", e); }
+  try { await muatFornasRefCache(); } catch (e) { console.error("muatFornasRefCache gagal:", e); }
 })();
 
 // ---------- Riwayat Obat Diserahkan (filter tanggal & nama pasien) ----------
@@ -1914,6 +2002,60 @@ function gantiTabJenisStok(jenis) {
   renderTabelObatFiltered();
 }
 
+// ---------- Referensi Fornas: cache + pencocokan di form Master Data Obat ----------
+let fornasRefCache = null;
+
+async function muatFornasRefCache() {
+  if (fornasRefCache) return fornasRefCache;
+  const { data, error } = await supabaseClient.from("fornas_referensi")
+    .select("*").eq("aktif", true).order("kelas_terapi").order("nama_obat");
+  if (error) { console.error("muatFornasRefCache:", error.message); fornasRefCache = []; return fornasRefCache; }
+  fornasRefCache = data || [];
+  const dl = document.getElementById("fornasRefList");
+  if (dl) {
+    dl.innerHTML = fornasRefCache.map(f => {
+      const label = labelFornasRef(f);
+      return `<option value="${label.replace(/"/g, "&quot;")}">${f.kelas_terapi}</option>`;
+    }).join("");
+  }
+  return fornasRefCache;
+}
+
+function labelFornasRef(f) {
+  return `${f.nama_obat}${f.bentuk_sediaan ? " - " + f.bentuk_sediaan : ""}${f.kekuatan ? " " + f.kekuatan : ""}`;
+}
+
+function cariFornasRef() {
+  const val = document.getElementById("oFornasCari").value.trim();
+  const status = document.getElementById("oFornasStatus");
+  const hidden = document.getElementById("oFornasRefId");
+  if (!fornasRefCache) { status.textContent = "Memuat referensi..."; return; }
+  const match = fornasRefCache.find(f => labelFornasRef(f) === val);
+  if (match) {
+    hidden.value = match.id;
+    status.innerHTML = `<span style="color:#1c7d7f; font-weight:600;">✓ Cocok Fornas — ${match.kelas_terapi}</span>`;
+  } else {
+    hidden.value = "";
+    status.textContent = val ? "Tidak cocok referensi Fornas manapun (dianggap di luar Fornas)." : "Belum dicocokkan.";
+  }
+}
+
+function setFornasFieldDariObat(o) {
+  const cariInput = document.getElementById("oFornasCari");
+  const hidden = document.getElementById("oFornasRefId");
+  const status = document.getElementById("oFornasStatus");
+  const ref = o.fornas_ref_id ? (fornasRefCache || []).find(f => f.id === o.fornas_ref_id) : null;
+  if (ref) {
+    cariInput.value = labelFornasRef(ref);
+    hidden.value = ref.id;
+    status.innerHTML = `<span style="color:#1c7d7f; font-weight:600;">✓ Cocok Fornas — ${ref.kelas_terapi}</span>`;
+  } else {
+    cariInput.value = "";
+    hidden.value = "";
+    status.textContent = "Belum dicocokkan.";
+  }
+}
+
 async function muatDaftarObat() {
   const tbody = document.getElementById("tabelObat");
   const { data, error } = await supabaseClient.from("obat").select("*").order("nama_obat").order("exp_date");
@@ -1944,7 +2086,7 @@ function renderTabelObatFiltered() {
     const kategoriKelas = o.kategori && o.kategori !== "bebas" ? `badge-${o.kategori.replace("_terbatas","")}` : null;
     return `
     <tr>
-      <td>${o.nama_obat}${o.is_antibiotik ? ' <span class="badge" style="background:#fee2e2; color:#991b1b;">AB</span>' : ""}</td>
+      <td>${o.nama_obat}${o.is_antibiotik ? ' <span class="badge" style="background:#fee2e2; color:#991b1b;">AB</span>' : ""}${o.fornas_ref_id ? ' <span class="badge" style="background:#e0f2f1; color:#1c7d7f;">Fornas</span>' : ""}</td>
       <td>${o.dosis || "-"}</td>
       <td>${kategoriKelas ? `<span class="badge ${kategoriKelas}">${LABEL_KATEGORI[o.kategori]}</span>` : (LABEL_KATEGORI[o.kategori] || "Bebas")}</td>
       <td>${o.satuan}</td>
@@ -1990,6 +2132,7 @@ function editObat(id) {
   document.getElementById("oStokMin").value = o.stok_minimum ?? 10;
   document.getElementById("oGenerik").value = o.nama_generik ? "true" : "false";
   document.getElementById("oAntibiotik").value = o.is_antibiotik ? "true" : "false";
+  setFornasFieldDariObat(o);
   document.getElementById("oKeterangan").value = o.keterangan || "";
 
   document.getElementById("judulFormObat").textContent = `Edit: ${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`;
@@ -2013,6 +2156,9 @@ function batalEditObat() {
   document.getElementById("oStokMin").value = "";
   document.getElementById("oGenerik").value = "true";
   document.getElementById("oAntibiotik").value = "false";
+  document.getElementById("oFornasCari").value = "";
+  document.getElementById("oFornasRefId").value = "";
+  document.getElementById("oFornasStatus").textContent = "Belum dicocokkan.";
   document.getElementById("judulFormObat").textContent = stokTabAktif === "bmhp" ? "Tambah / Update Stok BMHP" : "Tambah / Update Stok Obat";
   document.getElementById("btnSimpanObat").textContent = "Simpan Obat";
   document.getElementById("btnBatalEditObat").style.display = "none";
@@ -2196,6 +2342,7 @@ async function simpanObat() {
   const stokMinimum = parseInt(document.getElementById("oStokMin").value) || 10;
   const namaGenerik = document.getElementById("oGenerik").value === "true";
   const isAntibiotik = document.getElementById("oAntibiotik").value === "true";
+  const fornasRefId = document.getElementById("oFornasRefId").value || null;
 
   if (!nama || (jenisItem === "obat" && !dosis)) {
     msgBox.innerHTML = `<div class="msg msg-error">Isi nama${jenisItem === "obat" ? " dan dosis" : ""} dulu.</div>`;
@@ -2215,7 +2362,7 @@ async function simpanObat() {
       satuan, merk, no_lot: noLot, exp_date: exp,
       stok: stokInput,
       kategori, bentuk_sediaan: bentukSediaan, harga,
-      stok_minimum: stokMinimum, nama_generik: namaGenerik, is_antibiotik: isAntibiotik,
+      stok_minimum: stokMinimum, nama_generik: namaGenerik, is_antibiotik: isAntibiotik, fornas_ref_id: fornasRefId,
       keterangan,
       updated_by: profilSaya.id,
       updated_at: new Date().toISOString()
@@ -2262,6 +2409,7 @@ async function simpanObat() {
         stok_minimum: stokMinimum,
         nama_generik: namaGenerik,
         is_antibiotik: isAntibiotik,
+        fornas_ref_id: fornasRefId,
         keterangan: keterangan || existing.keterangan,
         updated_by: profilSaya.id,
         updated_at: new Date().toISOString()
@@ -2284,6 +2432,7 @@ async function simpanObat() {
       stok_minimum: stokMinimum,
       nama_generik: namaGenerik,
       is_antibiotik: isAntibiotik,
+      fornas_ref_id: fornasRefId,
       keterangan,
       updated_by: profilSaya.id
     }).select().single();
@@ -4248,6 +4397,7 @@ function gantiTabLaporan(tab) {
   });
   if (tab === "stok") muatLaporanStok();
   if (tab === "lplpoRing") muatLaporanLplpoRing();
+  if (tab === "fornas") siapkanFornasReport();
   if (tab === "khusus") siapkanSipnap();
   if (tab === "evaluasi") siapkanTopObat();
 }
@@ -4821,6 +4971,172 @@ async function muatPor() {
       tbodyPio.innerHTML += `<tr><td colspan="4" style="color:var(--muted);">...dan ${belumPio.length - 50} item lain. Persempit periode buat lihat semua.</td></tr>`;
     }
   }
+}
+
+// ---------- 2. Formularium (Fornas): kepatuhan stok, kepatuhan resep, kelola referensi ----------
+let fornasReportInit = false;
+let fornasPeriodeAktif = null;
+
+async function siapkanFornasReport() {
+  await muatFornasRefCache();
+  await muatKepatuhanMasterFornas();
+  renderTabelFornasRef();
+
+  if (!fornasReportInit) {
+    fornasReportInit = true;
+    const sel = document.getElementById("fnPeriodeSelect");
+    const now = new Date();
+    let opsi = "";
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      opsi += `<option value="${d.getFullYear()}-${d.getMonth() + 1}">${BULAN_LABEL_LPLPO[d.getMonth() + 1]} ${d.getFullYear()}</option>`;
+    }
+    sel.innerHTML = opsi;
+    sel.value = `${now.getFullYear()}-${now.getMonth() + 1}`;
+    gantiPeriodeFornas();
+  } else {
+    muatKepatuhanResepFornas();
+  }
+}
+
+async function muatKepatuhanMasterFornas() {
+  if (!daftarObatCache.length) await muatDaftarObat();
+  const daftarObatSaja = daftarObatCache.filter(o => (o.jenis_item || "obat") === "obat");
+  const total = daftarObatSaja.length;
+  const cocok = daftarObatSaja.filter(o => o.fornas_ref_id).length;
+  const luar = total - cocok;
+
+  document.getElementById("fnTotalObat").textContent = total;
+  document.getElementById("fnCocok").textContent = cocok;
+  document.getElementById("fnLuar").textContent = luar;
+  document.getElementById("fnPersenStok").textContent = total ? `${Math.round((cocok / total) * 100)}%` : "-";
+
+  const tbody = document.getElementById("fnTabelLuar");
+  const daftarLuar = daftarObatSaja.filter(o => !o.fornas_ref_id);
+  if (!daftarLuar.length) {
+    tbody.innerHTML = `<tr><td colspan="5">Semua item Obat sudah dicocokkan ke Fornas.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = daftarLuar.map(o => `
+    <tr>
+      <td>${o.nama_obat}</td>
+      <td>${o.dosis || "-"}</td>
+      <td>${LABEL_KATEGORI[o.kategori] || "Bebas"}</td>
+      <td>${o.stok}</td>
+      <td><button type="button" style="font-size:11px; padding:3px 8px;" onclick="gantiSubtab('stok'); setTimeout(()=>editObat('${o.id}'), 60)">Cocokkan</button></td>
+    </tr>`).join("");
+}
+
+function gantiPeriodeFornas() {
+  const [tahun, bulan] = document.getElementById("fnPeriodeSelect").value.split("-").map(Number);
+  fornasPeriodeAktif = { tahun, bulan };
+  muatKepatuhanResepFornas();
+}
+
+async function muatKepatuhanResepFornas() {
+  const { tahun, bulan } = fornasPeriodeAktif;
+  if (!daftarObatCache.length) await muatDaftarObat();
+
+  const petaFornas = {};
+  daftarObatCache.forEach(o => {
+    if ((o.jenis_item || "obat") === "obat") {
+      petaFornas[o.nama_obat.trim().toLowerCase()] = !!o.fornas_ref_id;
+    }
+  });
+
+  const awalBulan = `${tahun}-${String(bulan).padStart(2, "0")}-01T00:00:00`;
+  const akhirTgl = new Date(tahun, bulan, 0).getDate();
+  const akhirBulan = `${tahun}-${String(bulan).padStart(2, "0")}-${String(akhirTgl).padStart(2, "0")}T23:59:59`;
+
+  const { data, error } = await supabaseClient.from("resep")
+    .select("daftar_obat")
+    .gte("created_at", awalBulan).lte("created_at", akhirBulan);
+  if (error) {
+    ["fnTotalResep", "fnResepCocok", "fnResepLuar", "fnPersenResep"].forEach(id => document.getElementById(id).textContent = "-");
+    return;
+  }
+
+  let totalDiserahkan = 0, cocokFornas = 0;
+  (data || []).forEach(r => {
+    (r.daftar_obat || []).forEach(it => {
+      if (!it.diserahkan) return;
+      if (it.racikan) {
+        (it.komponen || []).forEach(k => {
+          totalDiserahkan++;
+          if (petaFornas[(k.nama_obat || "").trim().toLowerCase()]) cocokFornas++;
+        });
+      } else {
+        const namaCek = (it.diganti ? it.nama_obat_diberikan : it.nama_obat) || "";
+        totalDiserahkan++;
+        if (petaFornas[namaCek.trim().toLowerCase()]) cocokFornas++;
+      }
+    });
+  });
+
+  document.getElementById("fnTotalResep").textContent = totalDiserahkan;
+  document.getElementById("fnResepCocok").textContent = cocokFornas;
+  document.getElementById("fnResepLuar").textContent = totalDiserahkan - cocokFornas;
+  document.getElementById("fnPersenResep").textContent = totalDiserahkan ? `${Math.round((cocokFornas / totalDiserahkan) * 100)}%` : "-";
+}
+
+async function tambahFornasRef() {
+  const msg = document.getElementById("msgFornasRef");
+  const kelas = document.getElementById("frKelas").value.trim();
+  const nama = document.getElementById("frNama").value.trim();
+  const bentuk = document.getElementById("frBentuk").value.trim();
+  const kekuatan = document.getElementById("frKekuatan").value.trim();
+  const keterangan = document.getElementById("frKeterangan").value.trim();
+
+  if (!kelas || !nama) {
+    msg.innerHTML = `<div class="msg msg-error">Isi Kelas Terapi dan Nama Obat dulu.</div>`;
+    return;
+  }
+
+  const { error } = await supabaseClient.from("fornas_referensi").insert({
+    kelas_terapi: kelas, nama_obat: nama, bentuk_sediaan: bentuk || null,
+    kekuatan: kekuatan || null, keterangan: keterangan || null
+  });
+
+  if (error) {
+    msg.innerHTML = `<div class="msg msg-error">Gagal tambah: ${error.message}</div>`;
+    return;
+  }
+
+  msg.innerHTML = `<div class="msg msg-success">"${nama}" berhasil ditambahkan ke Referensi Fornas.</div>`;
+  ["frKelas", "frNama", "frBentuk", "frKekuatan", "frKeterangan"].forEach(id => document.getElementById(id).value = "");
+  fornasRefCache = null;
+  await muatFornasRefCache();
+  renderTabelFornasRef();
+}
+
+async function nonaktifkanFornasRef(id) {
+  if (!confirm("Nonaktifkan item referensi ini dari Fornas? Obat yang sudah pernah dicocokkan ke item ini tetap tersimpan, tapi item ini gak muncul lagi di pencarian baru.")) return;
+  const { error } = await supabaseClient.from("fornas_referensi").update({ aktif: false }).eq("id", id);
+  if (error) { alert("Gagal nonaktifkan: " + error.message); return; }
+  fornasRefCache = null;
+  await muatFornasRefCache();
+  renderTabelFornasRef();
+}
+
+function renderTabelFornasRef() {
+  const tbody = document.getElementById("fnTabelReferensi");
+  if (!fornasRefCache) { tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`; return; }
+  const cari = (document.getElementById("frCariTabel")?.value || "").trim().toLowerCase();
+  const data = fornasRefCache.filter(f =>
+    !cari || f.nama_obat.toLowerCase().includes(cari) || f.kelas_terapi.toLowerCase().includes(cari)
+  );
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="5">Tidak ada referensi yang cocok.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(f => `
+    <tr>
+      <td>${f.kelas_terapi}</td>
+      <td>${f.nama_obat}</td>
+      <td>${f.bentuk_sediaan || "-"}</td>
+      <td>${f.kekuatan || "-"}</td>
+      <td><button type="button" style="font-size:11px; padding:3px 8px; background:#fee2e2; color:#991b1b; border-color:#fecaca;" onclick="nonaktifkanFornasRef('${f.id}')">Nonaktifkan</button></td>
+    </tr>`).join("");
 }
 </script>
 
