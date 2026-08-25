@@ -1272,8 +1272,61 @@
     <div class="card"><div class="lap-segera"><div class="ic">📊</div><div class="t">Evaluasi & Analisis Mutu</div>Indikator mutu farmasi, fast/slow moving, stockout rate — segera dibangun.</div></div>
   </div>
   <div id="lapPanelKhusus" style="display:none;">
-    <div class="card"><div class="lap-segera"><div class="ic">💊</div><div class="t">Obat Khusus</div>SIPNAP narkotika-psikotropika, High Alert & LASA, vaksin cold chain — segera dibangun.</div></div>
+
+    <div class="card" style="--accent:#c0503f">
+      <h2><span class="card-num">1</span>Laporan Narkotika & Psikotropika (SIPNAP)</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Stok awal, masuk, keluar, stok akhir per item narkotika/psikotropika — wajib lapor ke Dinas/BPOM paling lambat tanggal 10 bulan berikutnya.</p>
+
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div>
+          <label>Periode</label>
+          <select id="sipnapPeriodeSelect" onchange="gantiPeriodeSipnap()"></select>
+        </div>
+        <div>
+          <label>Batas Lapor</label>
+          <div class="ph-info-row" style="border:1px solid var(--border); border-radius:8px; padding:8px 12px;"><span id="sipnapDeadline">-</span></div>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <div><span id="sipnapDeadlineBadge">-</span></div>
+        </div>
+      </div>
+
+      <div class="lap-summary-strip">
+        <div class="lap-sum-card"><div class="label">Item Narkotika</div><div class="value" id="sipnapSumNarkotika">0</div></div>
+        <div class="lap-sum-card"><div class="label">Item Psikotropika</div><div class="value" id="sipnapSumPsikotropika">0</div></div>
+        <div class="lap-sum-card warn"><div class="label">Selisih Tidak Cocok</div><div class="value" id="sipnapSumSelisih">0</div></div>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <button type="button" onclick="exportSipnapCsv()">⬇️ Export CSV</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Golongan</th><th>Nama Item</th><th>Bentuk Sediaan</th><th>Satuan</th>
+            <th>Stok Awal</th><th>Masuk</th><th>Keluar</th><th>Stok Akhir</th><th>Selisih</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="sipnapTabel"><tr><td colspan="10">Pilih periode dulu.</td></tr></tbody>
+      </table>
+      <p style="font-size:10.5px; color:var(--muted); margin-top:8px;">
+        Stok Akhir diambil dari saldo Kartu Stok terakhir tiap item pada periode ini (bukan hasil hitung manual), jadi selalu sinkron dengan riwayat mutasi sebenarnya. Klik "Rincian" buat lihat transaksi per baris.
+      </p>
+    </div>
+
+    <div class="card" style="--accent:#6a4c93">
+      <h2><span class="card-num">2</span>High Alert & LASA, Vaksin Cold Chain</h2>
+      <div class="lap-segera" style="padding:24px 20px;">
+        <div class="ic">💉</div>
+        <div class="t">Segera dibangun</div>
+        Butuh tambahan penanda "High Alert"/"LASA" di Master Data Obat dan log suhu harian buat vaksin — nyusul giliran berikutnya.
+      </div>
+    </div>
+
   </div>
+
   <div id="lapPanelKeselamatan" style="display:none;">
     <div class="card"><div class="lap-segera"><div class="ic">🛡️</div><div class="t">Keselamatan Pasien</div>Medication error, FMEA kefarmasian, efek samping obat/KTD — segera dibangun.</div></div>
   </div>
@@ -4087,6 +4140,7 @@ function gantiTabLaporan(tab) {
   });
   if (tab === "stok") muatLaporanStok();
   if (tab === "lplpoRing") muatLaporanLplpoRing();
+  if (tab === "khusus") siapkanSipnap();
 }
 
 // ---------- 1. Data Stok & Ketersediaan Obat ----------
@@ -4187,6 +4241,164 @@ async function muatLaporanLplpoRing() {
   document.getElementById("lapLpBmhp").textContent = itemBmhp;
   document.getElementById("lapLpNilai").textContent = formatRupiah(nilai);
   document.getElementById("lapLpStatus").textContent = `${LABEL_STATUS_LPLPO[header.status]} (${BULAN_LABEL_LPLPO[header.periode_bulan]} ${header.periode_tahun})`;
+}
+
+// ---------- 5a. Laporan Narkotika & Psikotropika (SIPNAP) ----------
+const LABEL_JENIS_KS = {
+  masuk: "Masuk (manual)", keluar: "Keluar (resep)", opname_tambah: "Koreksi SO (+)", opname_kurang: "Koreksi SO (−)",
+  mutasi_keluar: "Mutasi Keluar", mutasi_masuk: "Mutasi Masuk", penerimaan_sbbk: "Penerimaan SBBK",
+  retur_masuk: "Retur Masuk", retur_keluar: "Retur ke Dinas"
+};
+let sipnapInit = false;
+let sipnapPeriodeAktif = null;
+let sipnapCache = [];
+
+function siapkanSipnap() {
+  if (!sipnapInit) {
+    sipnapInit = true;
+    const sel = document.getElementById("sipnapPeriodeSelect");
+    const now = new Date();
+    let opsi = "";
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      opsi += `<option value="${d.getFullYear()}-${d.getMonth() + 1}">${BULAN_LABEL_LPLPO[d.getMonth() + 1]} ${d.getFullYear()}</option>`;
+    }
+    sel.innerHTML = opsi;
+    sel.value = `${now.getFullYear()}-${now.getMonth() + 1}`;
+    gantiPeriodeSipnap();
+  } else {
+    muatSipnapPeriode();
+  }
+}
+
+function gantiPeriodeSipnap() {
+  const [tahun, bulan] = document.getElementById("sipnapPeriodeSelect").value.split("-").map(Number);
+  sipnapPeriodeAktif = { tahun, bulan };
+  muatSipnapPeriode();
+}
+
+async function muatSipnapPeriode() {
+  const { tahun, bulan } = sipnapPeriodeAktif;
+  const tbody = document.getElementById("sipnapTabel");
+  tbody.innerHTML = `<tr><td colspan="10">Memuat...</td></tr>`;
+
+  // deadline lapor = tanggal 10 bulan berikutnya
+  const deadline = new Date(tahun, bulan, 10); // bulan (1-based) sbg param bulan 0-based Date = bulan berikutnya
+  document.getElementById("sipnapDeadline").textContent = deadline.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  document.getElementById("sipnapDeadlineBadge").innerHTML = new Date() > deadline
+    ? '<span class="lap-status-pill kosong">Lewat Batas Lapor</span>'
+    : '<span class="lap-status-pill lengkap">Masih Dalam Tenggat</span>';
+
+  if (!daftarObatCache.length) await muatDaftarObat();
+  const narkoItems = daftarObatCache.filter(o => o.kategori === "narkotika" || o.kategori === "psikotropika");
+
+  if (!narkoItems.length) {
+    tbody.innerHTML = `<tr><td colspan="10">Belum ada item narkotika/psikotropika terdaftar di Master Data Obat.</td></tr>`;
+    document.getElementById("sipnapSumNarkotika").textContent = 0;
+    document.getElementById("sipnapSumPsikotropika").textContent = 0;
+    document.getElementById("sipnapSumSelisih").textContent = 0;
+    sipnapCache = [];
+    return;
+  }
+
+  const ids = narkoItems.map(o => o.id);
+  const awalBulan = `${tahun}-${String(bulan).padStart(2, "0")}-01`;
+  const akhirTgl = new Date(tahun, bulan, 0).getDate();
+  const akhirBulan = `${tahun}-${String(bulan).padStart(2, "0")}-${String(akhirTgl).padStart(2, "0")}`;
+
+  // Satu query ambil semua histori s/d akhir periode, biar Stok Awal/Akhir bisa dihitung dari
+  // saldo_setelah asli (bukan hasil kalkulasi ulang) — selalu sinkron dengan Kartu Stok sebenarnya.
+  const { data: ks, error } = await supabaseClient.from("kartu_stok")
+    .select("obat_id, tanggal, jenis, jumlah, saldo_setelah, referensi, keterangan")
+    .in("obat_id", ids).lte("tanggal", akhirBulan)
+    .order("tanggal", { ascending: true }).order("created_at", { ascending: true });
+  if (error) { tbody.innerHTML = `<tr><td colspan="10">Gagal muat Kartu Stok: ${error.message}</td></tr>`; return; }
+
+  const perItem = {};
+  ids.forEach(id => perItem[id] = { stokAwal: 0, stokAkhir: 0, masuk: 0, keluar: 0, transaksi: [], adaSebelum: false, adaSampai: false });
+
+  (ks || []).forEach(r => {
+    const it = perItem[r.obat_id];
+    if (!it) return;
+    if (r.tanggal < awalBulan) { it.stokAwal = r.saldo_setelah; it.adaSebelum = true; }
+    if (r.tanggal <= akhirBulan) { it.stokAkhir = r.saldo_setelah; it.adaSampai = true; }
+    if (r.tanggal >= awalBulan && r.tanggal <= akhirBulan) {
+      if (["masuk", "penerimaan_sbbk", "retur_masuk", "opname_tambah"].includes(r.jenis)) it.masuk += r.jumlah;
+      if (["keluar", "mutasi_keluar", "retur_keluar", "opname_kurang"].includes(r.jenis)) it.keluar += r.jumlah;
+      it.transaksi.push(r);
+    }
+  });
+
+  sipnapCache = narkoItems.map(o => {
+    const it = perItem[o.id];
+    const stokAkhir = it.adaSampai ? it.stokAkhir : o.stok;
+    const stokAwal = it.adaSebelum ? it.stokAwal : (it.adaSampai ? Math.max(0, stokAkhir - it.masuk + it.keluar) : o.stok);
+    const selisih = (stokAwal + it.masuk - it.keluar) - stokAkhir;
+    return {
+      kategori: o.kategori, nama: `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`,
+      bentuk: o.bentuk_sediaan || "-", satuan: o.satuan,
+      stokAwal, masuk: it.masuk, keluar: it.keluar, stokAkhir, selisih, transaksi: it.transaksi
+    };
+  }).sort((a, b) => a.kategori.localeCompare(b.kategori) || a.nama.localeCompare(b.nama));
+
+  renderSipnapTabel();
+}
+
+function renderSipnapTabel() {
+  const tbody = document.getElementById("sipnapTabel");
+  if (!sipnapCache.length) { tbody.innerHTML = `<tr><td colspan="10">Tidak ada data.</td></tr>`; return; }
+
+  let narkotika = 0, psikotropika = 0, selisihCount = 0, html = "";
+  sipnapCache.forEach((it, idx) => {
+    if (it.kategori === "narkotika") narkotika++; else psikotropika++;
+    if (it.selisih !== 0) selisihCount++;
+    html += `
+    <tr>
+      <td><span class="lap-status-pill ${it.kategori === "narkotika" ? "kosong" : "proses"}">${LABEL_KATEGORI[it.kategori]}</span></td>
+      <td style="text-align:left;">${it.nama}</td>
+      <td>${it.bentuk}</td>
+      <td>${it.satuan}</td>
+      <td>${it.stokAwal}</td>
+      <td>${it.masuk}</td>
+      <td>${it.keluar}</td>
+      <td style="font-weight:700;">${it.stokAkhir}</td>
+      <td style="color:${it.selisih === 0 ? "#2f9e5c" : "#c0503f"}; font-weight:700;">${it.selisih}</td>
+      <td><span class="lap-link-btn" onclick="toggleRincianSipnap(${idx})">Rincian</span></td>
+    </tr>
+    <tr id="sipnapRow_${idx}" style="display:none;"><td colspan="10" style="text-align:left; background:#fafbfa;">
+      ${it.transaksi.length ? `
+      <table style="margin:0;">
+        <thead><tr><th>Tanggal</th><th>Jenis</th><th>Jumlah</th><th>Saldo Setelah</th><th>Referensi</th><th>Keterangan</th></tr></thead>
+        <tbody>
+          ${it.transaksi.map(t => `<tr><td>${new Date(t.tanggal).toLocaleDateString("id-ID")}</td><td>${LABEL_JENIS_KS[t.jenis] || t.jenis}</td><td>${t.jumlah}</td><td>${t.saldo_setelah}</td><td>${t.referensi || "-"}</td><td>${t.keterangan || "-"}</td></tr>`).join("")}
+        </tbody>
+      </table>` : `<span style="color:var(--muted); font-size:12px;">Tidak ada transaksi di periode ini.</span>`}
+    </td></tr>`;
+  });
+  tbody.innerHTML = html;
+  document.getElementById("sipnapSumNarkotika").textContent = narkotika;
+  document.getElementById("sipnapSumPsikotropika").textContent = psikotropika;
+  document.getElementById("sipnapSumSelisih").textContent = selisihCount;
+}
+
+function toggleRincianSipnap(idx) {
+  const row = document.getElementById(`sipnapRow_${idx}`);
+  if (row) row.style.display = row.style.display === "none" ? "table-row" : "none";
+}
+
+function exportSipnapCsv() {
+  if (!sipnapCache.length) { alert("Belum ada data buat diexport."); return; }
+  const header = ["Golongan", "Nama Item", "Bentuk Sediaan", "Satuan", "Stok Awal", "Masuk", "Keluar", "Stok Akhir", "Selisih"];
+  const rows = sipnapCache.map(it => [LABEL_KATEGORI[it.kategori], it.nama, it.bentuk, it.satuan, it.stokAwal, it.masuk, it.keluar, it.stokAkhir, it.selisih]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const { tahun, bulan } = sipnapPeriodeAktif;
+  a.href = url;
+  a.download = `SIPNAP_${BULAN_LABEL_LPLPO[bulan]}_${tahun}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 
