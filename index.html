@@ -1220,6 +1220,118 @@
           </table>
         </div>
 
+        <div id="lapDetailRmBaruAktif" style="display:none;">
+          <h2>RM Baru / Aktif</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:6px;">RM Baru = pasien pertama kali terdaftar (created_at) di periode ini. RM Aktif = pasien punya minimal 1 kunjungan dalam 1 tahun terakhir dari tanggal Sampai.</p>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapRmDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapRmSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanRmBaruAktif()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanRmBaruAktifCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">RM Baru (di periode)</div>
+              <div class="value" id="lapRmStatBaru">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Total RM Terdaftar</div>
+              <div class="value" id="lapRmStatTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">RM Aktif (1 th terakhir)</div>
+              <div class="value" id="lapRmStatAktif">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">RM Tidak Aktif</div>
+              <div class="value" id="lapRmStatTidakAktif">0</div>
+            </div>
+          </div>
+
+          <h4 style="margin-bottom:8px;">Daftar RM Baru di Periode Ini</h4>
+          <table>
+            <thead><tr><th>Tanggal Daftar</th><th>No. RM</th><th>Nama</th><th>NIK</th></tr></thead>
+            <tbody id="lapRmTabelBaru"><tr><td colspan="4">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div id="lapDetailDuplikasiRm" style="display:none;">
+          <h2>Duplikasi RM</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">RM ganda yang sudah ditemukan &amp; digabung lewat fitur "Gabung Rekam Medis" — bukti kepatuhan SOP deduplikasi data.</p>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapDpDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapDpSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanDuplikasiRm()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanDuplikasiRmCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Total Digabung (periode)</div>
+              <div class="value" id="lapDpStatTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Total Digabung (sepanjang waktu)</div>
+              <div class="value" id="lapDpStatSepanjangWaktu">0</div>
+            </div>
+          </div>
+
+          <table>
+            <thead><tr><th>Nama Pasien Duplikat</th><th>NIK Duplikat</th><th>Digabung ke (Pasien Utama)</th><th>NIK Utama</th></tr></thead>
+            <tbody id="lapDpTabel"><tr><td colspan="4">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div id="lapDetailFamilyFolder" style="display:none;">
+          <h2>Family Folder</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Pengelompokan pasien berdasar No. KK — mendukung pendekatan keluarga (ILP). Hanya pasien dengan No. KK terisi yang terhitung.</p>
+          <div style="margin-bottom:14px; display:flex; align-items:flex-end; gap:8px;">
+            <button type="button" class="btn-primary" onclick="muatLaporanFamilyFolder()">Tampilkan</button>
+            <button type="button" class="btn-secondary" onclick="exportLaporanFamilyFolderCsv()">⬇️ Export CSV</button>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Total Family Folder</div>
+              <div class="value" id="lapFfStatTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Rata-rata Anggota/Keluarga</div>
+              <div class="value" id="lapFfStatRata">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Keluarga Terbesar</div>
+              <div class="value" id="lapFfStatTerbesar">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Pasien Tanpa No. KK</div>
+              <div class="value" id="lapFfStatTanpaKk">0</div>
+            </div>
+          </div>
+
+          <table>
+            <thead><tr><th>No. KK</th><th>Jumlah Anggota</th><th>Nama Anggota</th></tr></thead>
+            <tbody id="lapFfTabel"><tr><td colspan="3">Klik Tampilkan.</td></tr></tbody>
+          </table>
+        </div>
+
         <div id="lapDetailBelumDibangun" style="display:none;">
           <h2 id="lapBelumJudul">Laporan</h2>
           <p style="font-size:13px; color:var(--muted);">Laporan ini belum dibangun — bakal nyusul bertahap.</p>
@@ -1455,6 +1567,9 @@ function bukaLaporan(kode) {
   document.getElementById("lapDetailKelompokSasaran").style.display = "none";
   document.getElementById("lapDetailRujukan").style.display = "none";
   document.getElementById("lapDetailKepuasan").style.display = "none";
+  document.getElementById("lapDetailRmBaruAktif").style.display = "none";
+  document.getElementById("lapDetailDuplikasiRm").style.display = "none";
+  document.getElementById("lapDetailFamilyFolder").style.display = "none";
   document.getElementById("lapDetailBelumDibangun").style.display = "none";
 
   if (kode === "kunjungan") {
@@ -1500,6 +1615,25 @@ function bukaLaporan(kode) {
       document.getElementById("lapKpSampai").value = now.toISOString().split("T")[0];
     }
     muatLaporanKepuasan();
+  } else if (kode === "rm_baru_aktif") {
+    document.getElementById("lapDetailRmBaruAktif").style.display = "block";
+    if (!document.getElementById("lapRmDari").value) {
+      const now = new Date();
+      document.getElementById("lapRmDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      document.getElementById("lapRmSampai").value = now.toISOString().split("T")[0];
+    }
+    muatLaporanRmBaruAktif();
+  } else if (kode === "duplikasi_rm") {
+    document.getElementById("lapDetailDuplikasiRm").style.display = "block";
+    if (!document.getElementById("lapDpDari").value) {
+      const now = new Date();
+      document.getElementById("lapDpDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      document.getElementById("lapDpSampai").value = now.toISOString().split("T")[0];
+    }
+    muatLaporanDuplikasiRm();
+  } else if (kode === "family_folder") {
+    document.getElementById("lapDetailFamilyFolder").style.display = "block";
+    muatLaporanFamilyFolder();
   } else {
     document.getElementById("lapDetailBelumDibangun").style.display = "block";
     document.getElementById("lapBelumJudul").textContent = LAPORAN_JUDUL[kode] || "Laporan";
@@ -2127,6 +2261,222 @@ function exportLaporanKepuasanCsv() {
   const sampaiInput = document.getElementById("lapKpSampai").value;
   a.href = url;
   a.download = `Laporan_Kepuasan_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== Laporan RM: RM Baru / Aktif =====
+let laporanRmBaruCache = [];
+
+async function muatLaporanRmBaruAktif() {
+  const tbody = document.getElementById("lapRmTabelBaru");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapRmDari").value;
+  const sampaiInput = document.getElementById("lapRmSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbody.innerHTML = `<tr><td colspan="4">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const sampaiEksklusif = new Date(sampaiInput);
+  sampaiEksklusif.setDate(sampaiEksklusif.getDate() + 1);
+  const sampaiEksklusifStr = sampaiEksklusif.toISOString().split("T")[0];
+
+  const { data: baru, error: errBaru } = await supabaseClient
+    .from("pasien")
+    .select("no_rm, nama, nik, created_at")
+    .is("digabung_ke_id", null)
+    .gte("created_at", dariInput)
+    .lt("created_at", sampaiEksklusifStr)
+    .order("created_at", { ascending: false });
+
+  const { count: totalRm, error: errTotal } = await supabaseClient
+    .from("pasien")
+    .select("id", { count: "exact", head: true })
+    .is("digabung_ke_id", null);
+
+  const setahunLalu = new Date(sampaiInput);
+  setahunLalu.setFullYear(setahunLalu.getFullYear() - 1);
+  const { data: kunjunganSetahun, error: errKunjungan } = await supabaseClient
+    .from("kunjungan")
+    .select("pasien_id")
+    .gte("tanggal", setahunLalu.toISOString().split("T")[0])
+    .lte("tanggal", sampaiInput)
+    .neq("status", "batal");
+
+  if (errBaru || errTotal || errKunjungan) {
+    const msg = (errBaru || errTotal || errKunjungan).message;
+    tbody.innerHTML = `<tr><td colspan="4">Gagal muat laporan: ${msg}</td></tr>`;
+    return;
+  }
+
+  laporanRmBaruCache = baru || [];
+  const pasienAktifIds = new Set((kunjunganSetahun || []).map(k => k.pasien_id));
+  const rmAktif = pasienAktifIds.size;
+  const rmTidakAktif = Math.max(0, (totalRm || 0) - rmAktif);
+
+  document.getElementById("lapRmStatBaru").textContent = laporanRmBaruCache.length;
+  document.getElementById("lapRmStatTotal").textContent = totalRm || 0;
+  document.getElementById("lapRmStatAktif").textContent = rmAktif;
+  document.getElementById("lapRmStatTidakAktif").textContent = rmTidakAktif;
+
+  tbody.innerHTML = laporanRmBaruCache.length ? laporanRmBaruCache.map(p => `
+    <tr>
+      <td>${new Date(p.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</td>
+      <td>${p.no_rm || "-"}</td>
+      <td>${p.nama}</td>
+      <td>${p.nik}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">Tidak ada RM baru di rentang ini.</td></tr>`;
+}
+
+function exportLaporanRmBaruAktifCsv() {
+  if (!laporanRmBaruCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Tanggal Daftar", "No. RM", "Nama", "NIK"];
+  const rows = laporanRmBaruCache.map(p => [
+    new Date(p.created_at).toISOString().split("T")[0],
+    p.no_rm || "-",
+    p.nama,
+    p.nik
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapRmDari").value;
+  const sampaiInput = document.getElementById("lapRmSampai").value;
+  a.href = url;
+  a.download = `RM_Baru_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== Laporan RM: Duplikasi RM =====
+// Sumber data: pasien.digabung_ke_id (diisi lewat fitur "Gabung Rekam Medis").
+// created_at pasien duplikat dipakai sebagai proksi "kapan RM itu dibuat" -
+// sistem belum catat tanggal aksi gabung terpisah dari tanggal RM duplikat dibuat.
+let laporanDuplikasiRmCache = [];
+
+async function muatLaporanDuplikasiRm() {
+  const tbody = document.getElementById("lapDpTabel");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapDpDari").value;
+  const sampaiInput = document.getElementById("lapDpSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbody.innerHTML = `<tr><td colspan="4">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const sampaiEksklusif = new Date(sampaiInput);
+  sampaiEksklusif.setDate(sampaiEksklusif.getDate() + 1);
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("nama, nik, created_at, digabung_ke_id, utama:digabung_ke_id(nama, nik)")
+    .not("digabung_ke_id", "is", null)
+    .gte("created_at", dariInput)
+    .lt("created_at", sampaiEksklusif.toISOString().split("T")[0])
+    .order("created_at", { ascending: false });
+
+  const { count: totalSepanjangWaktu, error: errTotal } = await supabaseClient
+    .from("pasien")
+    .select("id", { count: "exact", head: true })
+    .not("digabung_ke_id", "is", null);
+
+  if (error || errTotal) {
+    tbody.innerHTML = `<tr><td colspan="4">Gagal muat laporan: ${(error || errTotal).message}</td></tr>`;
+    return;
+  }
+
+  laporanDuplikasiRmCache = data || [];
+  document.getElementById("lapDpStatTotal").textContent = laporanDuplikasiRmCache.length;
+  document.getElementById("lapDpStatSepanjangWaktu").textContent = totalSepanjangWaktu || 0;
+
+  tbody.innerHTML = laporanDuplikasiRmCache.length ? laporanDuplikasiRmCache.map(p => `
+    <tr>
+      <td>${p.nama}</td>
+      <td>${p.nik}</td>
+      <td>${p.utama?.nama || "-"}</td>
+      <td>${p.utama?.nik || "-"}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">Tidak ada penggabungan RM di rentang ini.</td></tr>`;
+}
+
+function exportLaporanDuplikasiRmCsv() {
+  if (!laporanDuplikasiRmCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Nama Pasien Duplikat", "NIK Duplikat", "Digabung ke (Nama Utama)", "NIK Utama"];
+  const rows = laporanDuplikasiRmCache.map(p => [p.nama, p.nik, p.utama?.nama || "-", p.utama?.nik || "-"]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapDpDari").value;
+  const sampaiInput = document.getElementById("lapDpSampai").value;
+  a.href = url;
+  a.download = `Duplikasi_RM_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== Laporan RM: Family Folder (kelompok No. KK) =====
+let laporanFamilyFolderCache = [];
+
+async function muatLaporanFamilyFolder() {
+  const tbody = document.getElementById("lapFfTabel");
+  tbody.innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("no_kk, nama")
+    .is("digabung_ke_id", null)
+    .order("no_kk");
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="3">Gagal muat laporan: ${error.message}</td></tr>`;
+    return;
+  }
+
+  const semua = data || [];
+  const tanpaKk = semua.filter(p => !p.no_kk || !p.no_kk.trim()).length;
+
+  const grup = {};
+  semua.forEach(p => {
+    if (!p.no_kk || !p.no_kk.trim()) return;
+    (grup[p.no_kk] ||= []).push(p.nama);
+  });
+
+  laporanFamilyFolderCache = Object.keys(grup).sort().map(kk => ({ no_kk: kk, anggota: grup[kk] }));
+  const totalFolder = laporanFamilyFolderCache.length;
+  const totalAnggota = laporanFamilyFolderCache.reduce((a, f) => a + f.anggota.length, 0);
+  const rata = totalFolder ? (totalAnggota / totalFolder) : 0;
+  const terbesar = totalFolder ? Math.max(...laporanFamilyFolderCache.map(f => f.anggota.length)) : 0;
+
+  document.getElementById("lapFfStatTotal").textContent = totalFolder;
+  document.getElementById("lapFfStatRata").textContent = rata.toFixed(1);
+  document.getElementById("lapFfStatTerbesar").textContent = terbesar;
+  document.getElementById("lapFfStatTanpaKk").textContent = tanpaKk;
+
+  tbody.innerHTML = totalFolder ? laporanFamilyFolderCache.map(f => `
+    <tr>
+      <td>${f.no_kk}</td>
+      <td>${f.anggota.length}</td>
+      <td>${f.anggota.join(", ")}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="3">Belum ada pasien dengan No. KK terisi.</td></tr>`;
+}
+
+function exportLaporanFamilyFolderCsv() {
+  if (!laporanFamilyFolderCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["No. KK", "Jumlah Anggota", "Nama Anggota"];
+  const rows = laporanFamilyFolderCache.map(f => [f.no_kk, f.anggota.length, f.anggota.join("; ")]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Family_Folder_${new Date().toISOString().split("T")[0]}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
