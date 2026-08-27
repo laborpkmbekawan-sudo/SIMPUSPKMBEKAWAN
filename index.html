@@ -1048,6 +1048,62 @@
           </table>
         </div>
 
+        <div id="lapDetailKelompokSasaran" style="display:none;">
+          <h2>Kunjungan per Kelompok Sasaran</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:6px;">Rekap kunjungan berdasar kelompok umur (selaras data ILP): Bayi/Balita (0-<5th), Usia Sekolah (5-<18th), Remaja (10-<18th, khusus indikator remaja overlap dgn usia sekolah dipisah di kolom sendiri), Dewasa (18-<60th), Lansia (≥60th).</p>
+          <p style="font-size:11.5px; color:var(--muted); margin-bottom:14px; font-style:italic;">Umur dihitung dari tanggal_lahir pasien per tanggal kunjungan.</p>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapKsDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapKsSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanKelompokSasaran()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanKelompokSasaranCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Bayi/Balita (0-4th)</div>
+              <div class="value" id="lapKsStatBalita">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Usia Sekolah (5-9th)</div>
+              <div class="value" id="lapKsStatSekolah">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Remaja (10-17th)</div>
+              <div class="value" id="lapKsStatRemaja">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Dewasa (18-59th)</div>
+              <div class="value" id="lapKsStatDewasa">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Lansia (≥60th)</div>
+              <div class="value" id="lapKsStatLansia">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Total Kunjungan</div>
+              <div class="value" id="lapKsStatTotal">0</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr><th>Klaster</th><th>Bayi/Balita</th><th>Usia Sekolah</th><th>Remaja</th><th>Dewasa</th><th>Lansia</th><th>Total</th></tr>
+            </thead>
+            <tbody id="lapKsTabelKlaster">
+              <tr><td colspan="7">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
         <div id="lapDetailBelumDibangun" style="display:none;">
           <h2 id="lapBelumJudul">Laporan</h2>
           <p style="font-size:13px; color:var(--muted);">Laporan ini belum dibangun — bakal nyusul bertahap.</p>
@@ -1280,6 +1336,7 @@ function bukaLaporan(kode) {
   document.getElementById("lapDetailKunjungan").style.display = "none";
   document.getElementById("lapDetailWaktuTunggu").style.display = "none";
   document.getElementById("lapDetailSkrining").style.display = "none";
+  document.getElementById("lapDetailKelompokSasaran").style.display = "none";
   document.getElementById("lapDetailBelumDibangun").style.display = "none";
 
   if (kode === "kunjungan") {
@@ -1301,6 +1358,14 @@ function bukaLaporan(kode) {
       document.getElementById("lapSkrSampai").value = now.toISOString().split("T")[0];
     }
     muatLaporanSkrining();
+  } else if (kode === "kelompok_sasaran") {
+    document.getElementById("lapDetailKelompokSasaran").style.display = "block";
+    if (!document.getElementById("lapKsDari").value) {
+      const now = new Date();
+      document.getElementById("lapKsDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      document.getElementById("lapKsSampai").value = now.toISOString().split("T")[0];
+    }
+    muatLaporanKelompokSasaran();
   } else {
     document.getElementById("lapDetailBelumDibangun").style.display = "block";
     document.getElementById("lapBelumJudul").textContent = LAPORAN_JUDUL[kode] || "Laporan";
@@ -1625,6 +1690,119 @@ function exportLaporanSkriningCsv() {
   const sampaiInput = document.getElementById("lapSkrSampai").value;
   a.href = url;
   a.download = `Laporan_Skrining_Awal_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== Laporan Pendaftaran: Kunjungan per Kelompok Sasaran (step 4) =====
+// Kategori umur dihitung dari tanggal_lahir pasien per tanggal kunjungan, selaras ILP:
+// Bayi/Balita 0-4th, Usia Sekolah 5-9th, Remaja 10-17th, Dewasa 18-59th, Lansia >=60th.
+let laporanKelompokSasaranCache = [];
+
+function hitungUmurTahun(tanggalLahir, tanggalAcuan) {
+  const lahir = new Date(tanggalLahir);
+  const acuan = new Date(tanggalAcuan);
+  let umur = acuan.getFullYear() - lahir.getFullYear();
+  const belumUlangTahun = (acuan.getMonth() < lahir.getMonth())
+    || (acuan.getMonth() === lahir.getMonth() && acuan.getDate() < lahir.getDate());
+  if (belumUlangTahun) umur--;
+  return umur;
+}
+
+function kelompokUsia(umur) {
+  if (umur < 5) return "balita";
+  if (umur < 10) return "sekolah";
+  if (umur < 18) return "remaja";
+  if (umur < 60) return "dewasa";
+  return "lansia";
+}
+
+async function muatLaporanKelompokSasaran() {
+  const tbody = document.getElementById("lapKsTabelKlaster");
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapKsDari").value;
+  const sampaiInput = document.getElementById("lapKsSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbody.innerHTML = `<tr><td colspan="7">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("tanggal, klaster(nama, kode), pasien(tanggal_lahir)")
+    .gte("tanggal", dariInput)
+    .lte("tanggal", sampaiInput)
+    .neq("status", "batal");
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="7">Gagal muat laporan: ${error.message}</td></tr>`;
+    return;
+  }
+
+  laporanKelompokSasaranCache = (data || [])
+    .filter(k => k.pasien?.tanggal_lahir)
+    .map(k => {
+      const umur = hitungUmurTahun(k.pasien.tanggal_lahir, k.tanggal);
+      return {
+        tanggal: k.tanggal,
+        klaster: k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "Tanpa Klaster",
+        umur,
+        kelompok: kelompokUsia(umur)
+      };
+    });
+
+  const hitung = { balita: 0, sekolah: 0, remaja: 0, dewasa: 0, lansia: 0 };
+  laporanKelompokSasaranCache.forEach(k => hitung[k.kelompok]++);
+  const total = laporanKelompokSasaranCache.length;
+
+  document.getElementById("lapKsStatBalita").textContent = hitung.balita;
+  document.getElementById("lapKsStatSekolah").textContent = hitung.sekolah;
+  document.getElementById("lapKsStatRemaja").textContent = hitung.remaja;
+  document.getElementById("lapKsStatDewasa").textContent = hitung.dewasa;
+  document.getElementById("lapKsStatLansia").textContent = hitung.lansia;
+  document.getElementById("lapKsStatTotal").textContent = total;
+
+  if (!total) {
+    tbody.innerHTML = `<tr><td colspan="7">Tidak ada kunjungan (dengan data tanggal lahir) di rentang ini.</td></tr>`;
+    return;
+  }
+
+  const grup = {};
+  laporanKelompokSasaranCache.forEach(k => {
+    if (!grup[k.klaster]) grup[k.klaster] = { balita: 0, sekolah: 0, remaja: 0, dewasa: 0, lansia: 0, total: 0 };
+    grup[k.klaster][k.kelompok]++;
+    grup[k.klaster].total++;
+  });
+
+  const namaKlaster = Object.keys(grup).sort();
+  tbody.innerHTML = namaKlaster.map(k => `
+    <tr>
+      <td>${k}</td>
+      <td>${grup[k].balita}</td>
+      <td>${grup[k].sekolah}</td>
+      <td>${grup[k].remaja}</td>
+      <td>${grup[k].dewasa}</td>
+      <td>${grup[k].lansia}</td>
+      <td>${grup[k].total}</td>
+    </tr>
+  `).join("");
+}
+
+const KS_LABEL = { balita: "Bayi/Balita", sekolah: "Usia Sekolah", remaja: "Remaja", dewasa: "Dewasa", lansia: "Lansia" };
+
+function exportLaporanKelompokSasaranCsv() {
+  if (!laporanKelompokSasaranCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Tanggal", "Klaster", "Umur (tahun)", "Kelompok Sasaran"];
+  const rows = laporanKelompokSasaranCache.map(k => [k.tanggal, k.klaster, k.umur, KS_LABEL[k.kelompok]]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapKsDari").value;
+  const sampaiInput = document.getElementById("lapKsSampai").value;
+  a.href = url;
+  a.download = `Kelompok_Sasaran_${dariInput}_${sampaiInput}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
