@@ -330,65 +330,24 @@
   </div>
 
   <div class="card" id="cardRiwayatRM" style="display:none;">
-    <h2>Riwayat Pemeriksaan</h2>
-    <button type="button" class="btn-secondary" onclick="cetakRingkasanRiwayat()" style="margin-bottom:10px;">Cetak Ringkasan Riwayat</button>
     <table>
-      <thead>
-        <tr>
-          <th>Tanggal</th>
-          <th>Klaster</th>
-          <th>Keluhan</th>
-          <th>Diagnosa (ICD-10)</th>
-          <th>Plan / Terapi</th>
-        </tr>
-      </thead>
-      <tbody id="tabelRiwayatRM">
-        <tr><td colspan="5">Belum ada pasien dipilih.</td></tr>
-      </tbody>
+      <tbody id="tabelRiwayatRM"></tbody>
     </table>
   </div>
 
-  <div class="card" id="cardRiwayatRujukanRM" style="display:none;">
-    <h2>Riwayat Rujukan Internal</h2>
-    <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Rujukan antar klaster/poli untuk pasien ini (read-only).</p>
-    <table>
-      <thead>
-        <tr>
-          <th>Tanggal</th>
-          <th>Dari Klaster</th>
-          <th>Ke Klaster</th>
-          <th>Alasan</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="tabelRiwayatRujukan">
-        <tr><td colspan="5">Belum ada pasien dipilih.</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="card" id="cardRiwayatLabRM" style="display:none;">
-    <h2>Riwayat Hasil Laboratorium</h2>
-    <table>
-      <thead>
-        <tr><th>Tanggal</th><th>Pemeriksaan Diminta</th><th>Hasil</th></tr>
-      </thead>
-      <tbody id="tabelRiwayatLab">
-        <tr><td colspan="3">Belum ada pasien dipilih.</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="card" id="cardRiwayatTindakanRM" style="display:none;">
-    <h2>Riwayat Tindakan Medis</h2>
-    <table>
-      <thead>
-        <tr><th>Tanggal</th><th>Klaster</th><th>Tindakan</th><th>Catatan</th></tr>
-      </thead>
-      <tbody id="tabelRiwayatTindakan">
-        <tr><td colspan="4">Belum ada pasien dipilih.</td></tr>
-      </tbody>
-    </table>
+  <div class="card" id="cardTimelineRM" style="display:none;">
+    <h2>Riwayat Pelayanan Lengkap</h2>
+    <button type="button" class="btn-secondary" onclick="cetakRingkasanRiwayat()" style="margin-bottom:14px;">Cetak Ringkasan Riwayat</button>
+    <div class="filter-row" id="filterRowTimeline">
+      <div class="filter-chip active" data-kategori="semua" onclick="filterTimeline('semua')">Semua</div>
+      <div class="filter-chip" data-kategori="klaster" onclick="filterTimeline('klaster')">Klaster</div>
+      <div class="filter-chip" data-kategori="lab" onclick="filterTimeline('lab')">Laboratorium</div>
+      <div class="filter-chip" data-kategori="rujuk" onclick="filterTimeline('rujuk')">Rujukan</div>
+      <div class="filter-chip" data-kategori="farmasi" onclick="filterTimeline('farmasi')">Farmasi</div>
+    </div>
+    <div class="timeline" id="timelineRiwayat">
+      <p style="color:var(--muted); font-size:13px;">Belum ada pasien dipilih.</p>
+    </div>
   </div>
 
   </div>
@@ -1390,6 +1349,7 @@ async function cariPasienRM() {
   hasilDiv.innerHTML = "";
   document.getElementById("cardPasienRM").style.display = "none";
   document.getElementById("cardRiwayatRM").style.display = "none";
+  document.getElementById("cardTimelineRM").style.display = "none";
 
   if (!kunci) {
     msgBox.innerHTML = `<div class="msg msg-error">Isi nama, NIK, No. RM, atau No. BPJS dulu.</div>`;
@@ -1464,123 +1424,182 @@ function pilihPasienRM(p) {
   document.getElementById("epRiwayatObat").value = p.riwayat_obat || "";
 
   document.getElementById("cardPasienRM").style.display = "block";
-  document.getElementById("cardRiwayatRM").style.display = "block";
-  document.getElementById("cardRiwayatRujukanRM").style.display = "block";
-  document.getElementById("cardRiwayatLabRM").style.display = "block";
-  document.getElementById("cardRiwayatTindakanRM").style.display = "block";
+  document.getElementById("cardTimelineRM").style.display = "block";
   muatRiwayatRM(p.id);
-  muatRiwayatRujukan(p.id);
-  muatRiwayatLab(p.id);
-  muatRiwayatTindakan(p.id);
+  muatTimelineRiwayat(p.id);
 }
 
-async function muatRiwayatLab(pasienId) {
-  const tbody = document.getElementById("tabelRiwayatLab");
-  tbody.innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+// Ambil semua sumber riwayat pelayanan pasien (klaster/RM+obat+tindakan, hasil lab,
+// rujukan internal, rujukan FKRTL, farmasi diserahkan), gabung jadi 1 timeline
+// terurut tanggal terbaru di atas — biar gak perlu buka banyak tab buat lihat histori pasien.
+async function muatTimelineRiwayat(pasienId) {
+  const wrap = document.getElementById("timelineRiwayat");
+  wrap.innerHTML = `<p style="color:var(--muted); font-size:13px;">Memuat riwayat...</p>`;
 
-  const { data: kunjunganPasien, error: errKunjungan } = await supabaseClient
+  const { data: kunjunganPasien } = await supabaseClient
     .from("kunjungan")
     .select("id")
     .eq("pasien_id", pasienId);
+  const idKunjungan = (kunjunganPasien || []).map(k => k.id);
 
-  if (errKunjungan || !kunjunganPasien?.length) {
-    tbody.innerHTML = `<tr><td colspan="3">Belum ada riwayat hasil lab.</td></tr>`;
+  if (!idKunjungan.length) {
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:13px;">Belum ada riwayat kunjungan.</p>`;
     return;
   }
 
-  const idKunjungan = kunjunganPasien.map(k => k.id);
+  const [klasterRes, labRes, rujukanInternalRes, rujukanRes, farmasiRes] = await Promise.all([
+    supabaseClient.from("kunjungan")
+      .select("id, tanggal, keluhan_awal, klaster(nama, kode), rekam_medis(assessment, kode_icd10, plan, created_at), resep(daftar_obat), tindakan_medis(daftar_tindakan)")
+      .eq("pasien_id", pasienId).order("tanggal", { ascending: false }).limit(30),
+    supabaseClient.from("hasil_lab")
+      .select("created_at, item_hasil, rujukan_lab(jenis_pemeriksaan)")
+      .in("kunjungan_asal_id", idKunjungan),
+    supabaseClient.from("rujukan_internal")
+      .select("created_at, alasan, status, kunjungan_asal:kunjungan_asal_id(klaster(nama, kode)), kunjungan_tujuan:kunjungan_tujuan_id(klaster(nama, kode))")
+      .or(`kunjungan_asal_id.in.(${idKunjungan.join(",")}),kunjungan_tujuan_id.in.(${idKunjungan.join(",")})`),
+    supabaseClient.from("rujukan")
+      .select("created_at, jenis, faskes_tujuan, klaster_tujuan_id, diagnosa_rujukan, alasan_rujukan, status, klaster:klaster_tujuan_id(nama, kode)")
+      .in("kunjungan_asal_id", idKunjungan),
+    supabaseClient.from("resep")
+      .select("diserahkan_at, daftar_obat, kunjungan!inner(pasien_id)")
+      .eq("kunjungan.pasien_id", pasienId).eq("status", "diserahkan")
+  ]);
 
-  const { data, error } = await supabaseClient
-    .from("hasil_lab")
-    .select("created_at, item_hasil, rujukan_lab(jenis_pemeriksaan)")
-    .in("kunjungan_asal_id", idKunjungan)
-    .order("created_at", { ascending: false });
+  const events = [];
 
-  if (error || !data?.length) {
-    tbody.innerHTML = `<tr><td colspan="3">Belum ada riwayat hasil lab.</td></tr>`;
+  (klasterRes.data || []).filter(k => k.rekam_medis && k.rekam_medis.length).forEach(k => {
+    const rm = k.rekam_medis[0];
+    const obatTxt = (k.resep || []).flatMap(r => (r.daftar_obat || []).map(o => `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`)).join(", ");
+    const tindakanTxt = (k.tindakan_medis || []).flatMap(t => (t.daftar_tindakan || []).map(x => x.nama_tindakan)).join(", ");
+    events.push({
+      tanggal: new Date(rm.created_at || k.tanggal),
+      kategori: "klaster",
+      html: `
+        <div class="tl-item klaster" data-kategori="klaster">
+          <div class="tl-dot"></div>
+          <div class="tl-card klaster">
+            <div class="tl-top">
+              <div class="tl-title"><span class="kategori-tag klaster">${k.klaster?.kode || "-"}</span> ${rm.assessment || k.keluhan_awal || "Pemeriksaan"}</div>
+              <div class="tl-date">${fmtTglJam(rm.created_at || k.tanggal)}</div>
+            </div>
+            <div class="tl-body">${k.keluhan_awal || "-"}</div>
+            <div class="tl-detail">
+              <div>Diagnosa: <b>${rm.assessment || "-"} ${rm.kode_icd10 ? "(" + rm.kode_icd10 + ")" : ""}</b></div>
+              <div>Plan: <b>${rm.plan || "-"}</b></div>
+              ${obatTxt ? `<div>Obat: <b>${obatTxt}</b></div>` : ""}
+              ${tindakanTxt ? `<div>Tindakan: <b>${tindakanTxt}</b></div>` : ""}
+            </div>
+          </div>
+        </div>`
+    });
+  });
+
+  (labRes.data || []).forEach(l => {
+    const hasilTxt = (l.item_hasil || []).map(it => `${it.nama_pemeriksaan}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}`).join(", ");
+    events.push({
+      tanggal: new Date(l.created_at),
+      kategori: "lab",
+      html: `
+        <div class="tl-item lab" data-kategori="lab">
+          <div class="tl-dot"></div>
+          <div class="tl-card lab">
+            <div class="tl-top">
+              <div class="tl-title"><span class="kategori-tag lab">Laboratorium</span> ${l.rujukan_lab?.jenis_pemeriksaan || "Pemeriksaan Lab"}</div>
+              <div class="tl-date">${fmtTglJam(l.created_at)}</div>
+            </div>
+            <div class="tl-body">Hasil: ${hasilTxt || "-"}</div>
+          </div>
+        </div>`
+    });
+  });
+
+  (rujukanInternalRes.data || []).forEach(r => {
+    const badgeClass = r.status === "selesai" ? "selesai" : r.status === "batal" ? "batal" : "menunggu";
+    events.push({
+      tanggal: new Date(r.created_at),
+      kategori: "rujuk",
+      html: `
+        <div class="tl-item rujuk" data-kategori="rujuk">
+          <div class="tl-dot"></div>
+          <div class="tl-card rujuk">
+            <div class="tl-top">
+              <div class="tl-title"><span class="kategori-tag rujuk">Rujukan Internal</span> ${r.kunjungan_asal?.klaster?.kode || "-"} → ${r.kunjungan_tujuan?.klaster?.kode || "-"}</div>
+              <div class="tl-date">${fmtTglJam(r.created_at)}</div>
+            </div>
+            <div class="tl-body">${r.alasan}</div>
+            <div class="tl-outcome ${badgeClass}">${r.status === "selesai" ? "✓ Selesai" : r.status === "batal" ? "✗ Batal" : "⏳ Menunggu"}</div>
+          </div>
+        </div>`
+    });
+  });
+
+  (rujukanRes.data || []).forEach(r => {
+    const badgeClass = r.status === "selesai" ? "selesai" : r.status === "batal" ? "batal" : "menunggu";
+    const tujuan = r.jenis === "fkrtl" ? (r.faskes_tujuan || "FKRTL") : (r.klaster ? `${r.klaster.kode} — ${r.klaster.nama}` : "-");
+    events.push({
+      tanggal: new Date(r.created_at),
+      kategori: "rujuk",
+      html: `
+        <div class="tl-item rujuk" data-kategori="rujuk">
+          <div class="tl-dot"></div>
+          <div class="tl-card rujuk">
+            <div class="tl-top">
+              <div class="tl-title"><span class="kategori-tag rujuk">${r.jenis === "fkrtl" ? "Rujukan FKRTL" : "Rujukan"}</span> ${tujuan}</div>
+              <div class="tl-date">${fmtTglJam(r.created_at)}</div>
+            </div>
+            <div class="tl-body">${r.alasan_rujukan}${r.diagnosa_rujukan ? " — Diagnosa: " + r.diagnosa_rujukan : ""}</div>
+            <div class="tl-outcome ${badgeClass}">${r.status === "selesai" ? "✓ Selesai" : r.status === "batal" ? "✗ Batal" : "⏳ " + r.status}</div>
+          </div>
+        </div>`
+    });
+  });
+
+  (farmasiRes.data || []).filter(r => r.diserahkan_at).forEach(r => {
+    const obatTxt = (r.daftar_obat || []).map(o => {
+      const nama = o.racikan ? o.nama_racikan : `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`;
+      const jumlah = o.racikan ? `${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul` : `${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}`;
+      return `${nama} (${jumlah})`;
+    }).join(", ");
+    events.push({
+      tanggal: new Date(r.diserahkan_at),
+      kategori: "farmasi",
+      html: `
+        <div class="tl-item farmasi" data-kategori="farmasi">
+          <div class="tl-dot"></div>
+          <div class="tl-card farmasi">
+            <div class="tl-top">
+              <div class="tl-title"><span class="kategori-tag farmasi">Farmasi</span> Obat Diserahkan</div>
+              <div class="tl-date">${fmtTglJam(r.diserahkan_at)}</div>
+            </div>
+            <div class="tl-body">${obatTxt || "-"}</div>
+          </div>
+        </div>`
+    });
+  });
+
+  if (!events.length) {
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:13px;">Belum ada riwayat pelayanan.</p>`;
     return;
   }
 
-  tbody.innerHTML = data.map(l => {
-    const tgl = new Date(l.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-    const hasilTxt = (l.item_hasil || [])
-      .map(it => `${it.nama_pemeriksaan}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}${it.nilai_rujukan ? " (rujukan: " + it.nilai_rujukan + ")" : ""}`)
-      .join("<br>");
-    return `<tr>
-      <td>${tgl}</td>
-      <td>${l.rujukan_lab?.jenis_pemeriksaan || "-"}</td>
-      <td>${hasilTxt || "-"}</td>
-    </tr>`;
-  }).join("");
+  events.sort((a, b) => b.tanggal - a.tanggal);
+  wrap.innerHTML = events.map(e => e.html).join("");
+  filterTimeline(document.querySelector("#filterRowTimeline .filter-chip.active")?.dataset.kategori || "semua");
 }
 
-async function muatRiwayatTindakan(pasienId) {
-  const tbody = document.getElementById("tabelRiwayatTindakan");
-  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
-
-  const { data, error } = await supabaseClient
-    .from("tindakan_medis")
-    .select("created_at, daftar_tindakan, kunjungan!inner(pasien_id, klaster(nama, kode))")
-    .eq("kunjungan.pasien_id", pasienId)
-    .order("created_at", { ascending: false });
-
-  if (error || !data?.length) {
-    tbody.innerHTML = `<tr><td colspan="4">Belum ada riwayat tindakan medis.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = data.map(t => {
-    const tgl = new Date(t.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-    const namaTxt = (t.daftar_tindakan || []).map(x => x.nama_tindakan).join(", ");
-    const catatanTxt = (t.daftar_tindakan || []).map(x => x.catatan || "-").join(", ");
-    return `<tr>
-      <td>${tgl}</td>
-      <td>${t.kunjungan?.klaster?.kode || "-"}</td>
-      <td>${namaTxt || "-"}</td>
-      <td>${catatanTxt || "-"}</td>
-    </tr>`;
-  }).join("");
+function fmtTglJam(nilai) {
+  const d = new Date(nilai);
+  return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) +
+    (d.getHours() || d.getMinutes() ? ", " + d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "");
 }
 
-async function muatRiwayatRujukan(pasienId) {
-  const tbody = document.getElementById("tabelRiwayatRujukan");
-  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
-
-  // Ambil dulu semua kunjungan pasien ini, biar bisa cari rujukan yg asal/tujuan-nya kunjungan pasien ini.
-  const { data: kunjunganPasien, error: errKunjungan } = await supabaseClient
-    .from("kunjungan")
-    .select("id")
-    .eq("pasien_id", pasienId);
-
-  if (errKunjungan || !kunjunganPasien?.length) {
-    tbody.innerHTML = `<tr><td colspan="5">Belum ada riwayat rujukan internal.</td></tr>`;
-    return;
-  }
-
-  const idKunjungan = kunjunganPasien.map(k => k.id);
-
-  const { data, error } = await supabaseClient
-    .from("rujukan_internal")
-    .select("created_at, alasan, status, kunjungan_asal:kunjungan_asal_id(klaster(nama, kode)), kunjungan_tujuan:kunjungan_tujuan_id(klaster(nama, kode))")
-    .or(`kunjungan_asal_id.in.(${idKunjungan.join(",")}),kunjungan_tujuan_id.in.(${idKunjungan.join(",")})`)
-    .order("created_at", { ascending: false });
-
-  if (error || !data?.length) {
-    tbody.innerHTML = `<tr><td colspan="5">Belum ada riwayat rujukan internal.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = data.map(r => {
-    const tgl = new Date(r.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-    const badge = r.status === "selesai" ? "✅ Selesai" : r.status === "batal" ? "❌ Batal" : "⏳ Menunggu";
-    return `<tr>
-      <td>${tgl}</td>
-      <td>${r.kunjungan_asal?.klaster?.kode || "-"} — ${r.kunjungan_asal?.klaster?.nama || "-"}</td>
-      <td>${r.kunjungan_tujuan?.klaster?.kode || "-"} — ${r.kunjungan_tujuan?.klaster?.nama || "-"}</td>
-      <td>${r.alasan}</td>
-      <td>${badge}</td>
-    </tr>`;
-  }).join("");
+function filterTimeline(kategori) {
+  document.querySelectorAll("#filterRowTimeline .filter-chip").forEach(chip => {
+    chip.classList.toggle("active", chip.dataset.kategori === kategori);
+  });
+  document.querySelectorAll("#timelineRiwayat .tl-item").forEach(item => {
+    item.style.display = (kategori === "semua" || item.dataset.kategori === kategori) ? "" : "none";
+  });
 }
 
 document.getElementById("formEditPasien").addEventListener("submit", async (e) => {
