@@ -484,10 +484,47 @@
     </div>
 
     <div id="panelKoordinasi" class="dash-content" style="display:none;">
+
       <div class="card">
-        <h2>Koordinasi Antar Unit</h2>
-        <p style="font-size:13px; color:var(--muted);">Komunikasi status pasien antar loket, klaster, dan unit penunjang (lab, apotek). Belum dibangun.</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+          <h2 style="margin-bottom:0;">Status Pasien Real-Time Antar Klaster</h2>
+          <div style="font-size:12px; color:var(--muted);">Update otomatis tiap 15 detik — terakhir: <span id="koorUpdateTerakhir">-</span></div>
+        </div>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Lihat status pasien di semua klaster tanpa perlu telepon/tanya langsung.</p>
+
+        <div class="grid-2" style="margin-bottom:14px;">
+          <div>
+            <label>Filter Klaster Tujuan</label>
+            <select id="koorFilterKlaster" onchange="renderKoordinasi()">
+              <option value="">Semua Klaster</option>
+            </select>
+          </div>
+          <div>
+            <label>Filter Status</label>
+            <select id="koorFilterStatus" onchange="renderKoordinasi()">
+              <option value="">Semua Status</option>
+              <option value="menunggu">Menunggu</option>
+              <option value="dipanggil">Dipanggil</option>
+              <option value="diperiksa">Diperiksa</option>
+              <option value="selesai">Selesai</option>
+            </select>
+          </div>
+        </div>
+
+        <table>
+          <thead><tr><th>No. Antrian</th><th>Nama Pasien</th><th>No. RM</th><th>Klaster Tujuan</th><th>Status</th><th>Jam Daftar</th></tr></thead>
+          <tbody id="koorTabelStatus"><tr><td colspan="6">Memuat...</td></tr></tbody>
+        </table>
       </div>
+
+      <div class="card">
+        <h2>Ringkasan Beban per Klaster (Saat Ini)</h2>
+        <table>
+          <thead><tr><th>Klaster</th><th>Menunggu</th><th>Diperiksa</th><th>Selesai</th></tr></thead>
+          <tbody id="koorTabelBeban"><tr><td colspan="4">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
     </div>
 
     <div id="panelRujukan" class="dash-content" style="display:none;">
@@ -568,6 +605,7 @@ let profilSaya = null;
 })();
 
 const SUBTAB_PENDAFTARAN = ["dashboard", "identifikasi", "skrining", "koordinasi", "rujukan", "kerahasiaan", "survei", "laporan", "audit"];
+let koordinasiInterval = null;
 
 function gantiSubtabPendaftaran(tab) {
   SUBTAB_PENDAFTARAN.forEach(t => {
@@ -578,6 +616,15 @@ function gantiSubtabPendaftaran(tab) {
   });
   if (tab === "dashboard") muatDashboardRingkas();
   if (tab === "skrining") muatSkrining();
+
+  if (tab === "koordinasi") {
+    muatKoordinasi();
+    if (koordinasiInterval) clearInterval(koordinasiInterval);
+    koordinasiInterval = setInterval(muatKoordinasi, 15000);
+  } else if (koordinasiInterval) {
+    clearInterval(koordinasiInterval);
+    koordinasiInterval = null;
+  }
 }
 
 async function muatDashboardRingkas() {
@@ -723,6 +770,12 @@ async function muatKlaster() {
   const select = document.getElementById("kKlaster");
   select.innerHTML = '<option value="">Pilih klaster</option>' +
     data.map(k => `<option value="${k.id}">${k.kode} — ${k.nama}</option>`).join("");
+
+  const koorSelect = document.getElementById("koorFilterKlaster");
+  if (koorSelect) {
+    koorSelect.innerHTML = '<option value="">Semua Klaster</option>' +
+      data.map(k => `<option value="${k.id}">${k.kode} — ${k.nama}</option>`).join("");
+  }
 }
 
 function hitungUmur() {
@@ -1244,6 +1297,74 @@ async function simpanSkrining() {
 
   batalSkrining();
   await muatSkrining();
+}
+
+// ---------- Koordinasi Antar Unit (status pasien real-time lintas klaster) ----------
+async function muatKoordinasi() {
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("*, pasien(nama, no_rm), klaster(nama, kode)")
+    .eq("tanggal", today)
+    .neq("status", "batal")
+    .order("no_antrian");
+
+  const tbody = document.getElementById("koorTabelStatus");
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`;
+    return;
+  }
+
+  window._koordinasiData = data;
+  document.getElementById("koorUpdateTerakhir").textContent = new Date().toLocaleTimeString("id-ID");
+  renderKoordinasi();
+  renderKoordinasiBeban(data);
+}
+
+function renderKoordinasi() {
+  const data = window._koordinasiData || [];
+  const filterKlaster = document.getElementById("koorFilterKlaster").value;
+  const filterStatus = document.getElementById("koorFilterStatus").value;
+  const tbody = document.getElementById("koorTabelStatus");
+
+  const filtered = data.filter(k =>
+    (!filterKlaster || String(k.klaster_id) === filterKlaster) &&
+    (!filterStatus || k.status === filterStatus)
+  );
+
+  tbody.innerHTML = filtered.length ? filtered.map(k => `
+    <tr>
+      <td>${k.no_antrian}</td>
+      <td>${k.pasien?.nama || "-"}</td>
+      <td>${k.pasien?.no_rm || "-"}</td>
+      <td>${k.klaster?.kode || "-"} — ${k.klaster?.nama || "-"}</td>
+      <td><span class="badge badge-${k.status}">${k.status}</span></td>
+      <td>${new Date(k.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Tidak ada data untuk filter ini.</td></tr>`;
+}
+
+function renderKoordinasiBeban(data) {
+  const grup = {};
+  data.forEach(k => {
+    const key = k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "Tanpa Klaster";
+    if (!grup[key]) grup[key] = { menunggu: 0, diperiksa: 0, selesai: 0 };
+    if (k.status === "menunggu" || k.status === "dipanggil") grup[key].menunggu++;
+    else if (k.status === "diperiksa") grup[key].diperiksa++;
+    else if (k.status === "selesai") grup[key].selesai++;
+  });
+
+  const tbody = document.getElementById("koorTabelBeban");
+  const namaKlaster = Object.keys(grup);
+  tbody.innerHTML = namaKlaster.length ? namaKlaster.map(k => `
+    <tr>
+      <td>${k}</td>
+      <td>${grup[k].menunggu}</td>
+      <td>${grup[k].diperiksa}</td>
+      <td>${grup[k].selesai}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">Belum ada kunjungan hari ini.</td></tr>`;
 }
 </script>
 
