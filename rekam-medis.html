@@ -353,10 +353,9 @@
         <div class="list-head">Daftar Kunjungan (klik untuk lihat detail)</div>
         <div class="filter-row" id="filterRowTimeline">
           <div class="filter-chip active" data-kategori="semua" onclick="filterTimeline('semua')">Semua</div>
-          <div class="filter-chip" data-kategori="klaster" onclick="filterTimeline('klaster')">Klaster</div>
-          <div class="filter-chip" data-kategori="lab" onclick="filterTimeline('lab')">Laboratorium</div>
-          <div class="filter-chip" data-kategori="rujuk" onclick="filterTimeline('rujuk')">Rujukan</div>
-          <div class="filter-chip" data-kategori="farmasi" onclick="filterTimeline('farmasi')">Farmasi</div>
+          <div class="filter-chip" data-kategori="lab" onclick="filterTimeline('lab')">Ada Lab</div>
+          <div class="filter-chip" data-kategori="rujuk" onclick="filterTimeline('rujuk')">Ada Rujukan</div>
+          <div class="filter-chip" data-kategori="farmasi" onclick="filterTimeline('farmasi')">Ada Obat Diserahkan</div>
         </div>
         <div class="filter-row filter-row-tanggal" id="filterRowTanggal" style="display:none;"></div>
         <div id="listRiwayat">
@@ -430,7 +429,7 @@
 
 <div id="areaCetakDetailRiwayat" class="kartu-cetak" style="width:520px;">
   <h2>UPTD PUSKESMAS BEKAWAN</h2>
-  <p class="sub">Riwayat Kunjungan — Satu Tanggal</p>
+  <p class="sub">Riwayat Kunjungan Lengkap</p>
   <div class="garis"></div>
   <div class="baris"><span>Nama Pasien</span><span id="dtrNama"></span></div>
   <div class="baris"><span>No. RM</span><span id="dtrNoRm"></span></div>
@@ -440,15 +439,7 @@
   <p class="sub" style="text-align:left; margin-top:10px; margin-bottom:2px;"><span id="dtrKategori" style="font-weight:700;"></span></p>
   <div class="baris"><span id="dtrJudul" style="font-weight:600;"></span><span id="dtrTanggalKunjungan"></span></div>
   <div class="garis"></div>
-  <div id="dtrGrid"></div>
-  <div id="dtrCatatanWrap" style="margin-top:10px;">
-    <p class="sub" style="text-align:left; margin-bottom:2px;">Catatan</p>
-    <p id="dtrCatatan" style="font-size:13px;"></p>
-  </div>
-  <div id="dtrOutcomeWrap" style="margin-top:10px;">
-    <p class="sub" style="text-align:left; margin-bottom:2px;">Status</p>
-    <p id="dtrOutcome" style="font-size:13px; font-weight:600;"></p>
-  </div>
+  <div id="dtrIsi"></div>
   <p class="catatan" style="margin-top:16px;">Dicetak oleh petugas Rekam Medis UPTD Puskesmas Bekawan.</p>
 </div>
 
@@ -1473,9 +1464,10 @@ function pilihPasienRM(p) {
   muatTimelineRiwayat(p.id);
 }
 
-// Ambil semua sumber riwayat pelayanan pasien (klaster/RM+obat+tindakan, hasil lab,
-// rujukan internal, rujukan FKRTL, farmasi diserahkan), jadikan daftar kunjungan
-// terstruktur (list kiri, klik → detail kanan) — bukan feed timeline lagi.
+// Ambil semua sumber riwayat pelayanan pasien, GABUNG per kunjungan (episode):
+// 1 baris kunjungan klaster = pemeriksaan + tindakan + obat (resep+status diserahkan)
+// + hasil lab + rujukan yang nempel di kunjungan itu — jadi klik 1x langsung
+// keliatan semua & tinggal cetak, gak kepencar per jenis data lagi.
 let riwayatEventsAktif = [];
 
 // Toggle card yang disembunyikan (Gabung RM, Riwayat Obat Diserahkan) dari dropdown "Menu Lainnya".
@@ -1505,105 +1497,82 @@ async function muatTimelineRiwayat(pasienId) {
     return;
   }
 
-  const [klasterRes, labRes, rujukanInternalRes, rujukanRes, farmasiRes] = await Promise.all([
+  const [klasterRes, labRes, rujukanInternalRes, rujukanRes] = await Promise.all([
     supabaseClient.from("kunjungan")
       .select("id, tanggal, keluhan_awal, klaster(nama, kode), rekam_medis(assessment, kode_icd10, plan, created_at), resep(daftar_obat), tindakan_medis(daftar_tindakan)")
       .eq("pasien_id", pasienId).order("tanggal", { ascending: false }).limit(30),
     supabaseClient.from("hasil_lab")
-      .select("created_at, item_hasil, rujukan_lab(jenis_pemeriksaan)")
+      .select("created_at, item_hasil, kunjungan_asal_id, rujukan_lab(jenis_pemeriksaan)")
       .in("kunjungan_asal_id", idKunjungan),
     supabaseClient.from("rujukan_internal")
-      .select("created_at, alasan, status, kunjungan_asal:kunjungan_asal_id(klaster(nama, kode)), kunjungan_tujuan:kunjungan_tujuan_id(klaster(nama, kode))")
-      .or(`kunjungan_asal_id.in.(${idKunjungan.join(",")}),kunjungan_tujuan_id.in.(${idKunjungan.join(",")})`),
-    supabaseClient.from("rujukan")
-      .select("created_at, jenis, faskes_tujuan, klaster_tujuan_id, diagnosa_rujukan, alasan_rujukan, status, klaster:klaster_tujuan_id(nama, kode)")
+      .select("created_at, alasan, status, kunjungan_asal_id, kunjungan_tujuan:kunjungan_tujuan_id(klaster(nama, kode))")
       .in("kunjungan_asal_id", idKunjungan),
-    supabaseClient.from("resep")
-      .select("diserahkan_at, daftar_obat, kunjungan!inner(pasien_id)")
-      .eq("kunjungan.pasien_id", pasienId).eq("status", "diserahkan")
+    supabaseClient.from("rujukan")
+      .select("created_at, jenis, faskes_tujuan, diagnosa_rujukan, alasan_rujukan, status, kunjungan_asal_id, klaster:klaster_tujuan_id(nama, kode)")
+      .in("kunjungan_asal_id", idKunjungan)
   ]);
+
+  // Kelompokkan hasil lab & rujukan per kunjungan asal, biar tinggal nempel ke kunjungan klasternya.
+  const labByKunjungan = {};
+  (labRes.data || []).forEach(l => {
+    (labByKunjungan[l.kunjungan_asal_id] ||= []).push(l);
+  });
+  const rujukanByKunjungan = {};
+  (rujukanInternalRes.data || []).forEach(r => {
+    (rujukanByKunjungan[r.kunjungan_asal_id] ||= []).push({
+      label: "Rujukan Internal",
+      tujuan: r.kunjungan_tujuan?.klaster ? `${r.kunjungan_tujuan.klaster.kode} — ${r.kunjungan_tujuan.klaster.nama}` : "-",
+      alasan: r.alasan, status: r.status
+    });
+  });
+  (rujukanRes.data || []).forEach(r => {
+    const tujuan = r.jenis === "fkrtl" ? (r.faskes_tujuan || "FKRTL") : (r.klaster ? `${r.klaster.kode} — ${r.klaster.nama}` : "-");
+    (rujukanByKunjungan[r.kunjungan_asal_id] ||= []).push({
+      label: r.jenis === "fkrtl" ? "Rujukan FKRTL" : "Rujukan",
+      tujuan, alasan: r.alasan_rujukan, diagnosa: r.diagnosa_rujukan, status: r.status
+    });
+  });
 
   const events = [];
   let seq = 0;
 
   (klasterRes.data || []).filter(k => k.rekam_medis && k.rekam_medis.length).forEach(k => {
     const rm = k.rekam_medis[0];
-    const obatTxt = (k.resep || []).flatMap(r => (r.daftar_obat || []).map(o => `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`)).join(", ");
-    const tindakanTxt = (k.tindakan_medis || []).flatMap(t => (t.daftar_tindakan || []).map(x => x.nama_tindakan)).join(", ");
     const tanggal = new Date(rm.created_at || k.tanggal);
+
+    const obatList = (k.resep || []).flatMap(r => (r.daftar_obat || []).map(o => ({
+      nama: o.racikan ? o.nama_racikan : `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`,
+      jumlah: o.racikan ? `${o.jumlah_bungkus} bungkus/kapsul` : `${o.jumlah}${o.satuan ? " " + o.satuan : ""}`,
+      aturan: o.aturan_pakai || "",
+      diserahkan: !!o.diserahkan,
+      jumlahDiserahkan: o.racikan ? `${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul` : `${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}`
+    })));
+
+    const tindakanList = (k.tindakan_medis || []).flatMap(t => (t.daftar_tindakan || []));
+
+    const labList = (labByKunjungan[k.id] || []).map(l => ({
+      jenis: l.rujukan_lab?.jenis_pemeriksaan || "Pemeriksaan Lab",
+      item: l.item_hasil || []
+    }));
+
+    const rujukanList = rujukanByKunjungan[k.id] || [];
+
+    const kategoriTags = [
+      ...(labList.length ? ["lab"] : []),
+      ...(rujukanList.length ? ["rujuk"] : []),
+      ...(obatList.some(o => o.diserahkan) ? ["farmasi"] : [])
+    ];
+
     events.push({
-      id: `ev${seq++}`, tanggal, kategori: "klaster",
+      id: `ev${seq++}`, tanggal, kategoriTags,
       labelBadge: k.klaster?.kode || "-",
+      klasterNama: k.klaster?.nama || "-",
       title: rm.assessment || k.keluhan_awal || "Pemeriksaan",
-      detailGrid: [
-        ["Diagnosa", `${rm.assessment || "-"} ${rm.kode_icd10 ? "(" + rm.kode_icd10 + ")" : ""}`],
-        ["Plan", rm.plan || "-"],
-        ...(obatTxt ? [["Obat", obatTxt]] : []),
-        ...(tindakanTxt ? [["Tindakan", tindakanTxt]] : [])
-      ],
-      narasi: k.keluhan_awal || "-",
-      outcome: null
-    });
-  });
-
-  (labRes.data || []).forEach(l => {
-    const hasilTxt = (l.item_hasil || []).map(it => `${it.nama_pemeriksaan}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}`).join(", ");
-    events.push({
-      id: `ev${seq++}`, tanggal: new Date(l.created_at), kategori: "lab",
-      labelBadge: "Laboratorium",
-      title: l.rujukan_lab?.jenis_pemeriksaan || "Pemeriksaan Lab",
-      detailGrid: (l.item_hasil || []).map(it => [it.nama_pemeriksaan, `${it.hasil}${it.satuan ? " " + it.satuan : ""}${it.nilai_rujukan ? " (rujukan: " + it.nilai_rujukan + ")" : ""}`]),
-      narasi: hasilTxt || "-",
-      outcome: null
-    });
-  });
-
-  (rujukanInternalRes.data || []).forEach(r => {
-    const badgeClass = r.status === "selesai" ? "selesai" : r.status === "batal" ? "batal" : "menunggu";
-    const badgeTeks = r.status === "selesai" ? "✓ Selesai" : r.status === "batal" ? "✗ Batal" : "⏳ Menunggu";
-    events.push({
-      id: `ev${seq++}`, tanggal: new Date(r.created_at), kategori: "rujuk",
-      labelBadge: "Rujukan Internal",
-      title: `${r.kunjungan_asal?.klaster?.kode || "-"} → ${r.kunjungan_tujuan?.klaster?.kode || "-"}`,
-      detailGrid: [
-        ["Dari Klaster", r.kunjungan_asal?.klaster?.nama || "-"],
-        ["Ke Klaster", r.kunjungan_tujuan?.klaster?.nama || "-"]
-      ],
-      narasi: r.alasan || "-",
-      outcome: { type: badgeClass, text: badgeTeks }
-    });
-  });
-
-  (rujukanRes.data || []).forEach(r => {
-    const badgeClass = r.status === "selesai" ? "selesai" : r.status === "batal" ? "batal" : "menunggu";
-    const badgeTeks = r.status === "selesai" ? "✓ Selesai" : r.status === "batal" ? "✗ Batal" : "⏳ " + r.status;
-    const tujuan = r.jenis === "fkrtl" ? (r.faskes_tujuan || "FKRTL") : (r.klaster ? `${r.klaster.kode} — ${r.klaster.nama}` : "-");
-    events.push({
-      id: `ev${seq++}`, tanggal: new Date(r.created_at), kategori: "rujuk",
-      labelBadge: r.jenis === "fkrtl" ? "Rujukan FKRTL" : "Rujukan",
-      title: tujuan,
-      detailGrid: [
-        ["Tujuan Rujukan", tujuan],
-        ...(r.diagnosa_rujukan ? [["Diagnosa", r.diagnosa_rujukan]] : [])
-      ],
-      narasi: r.alasan_rujukan || "-",
-      outcome: { type: badgeClass, text: badgeTeks }
-    });
-  });
-
-  (farmasiRes.data || []).filter(r => r.diserahkan_at).forEach(r => {
-    const items = (r.daftar_obat || []).map(o => {
-      const nama = o.racikan ? o.nama_racikan : `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`;
-      const jumlah = o.racikan ? `${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul` : `${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}`;
-      return [nama, jumlah];
-    });
-    events.push({
-      id: `ev${seq++}`, tanggal: new Date(r.diserahkan_at), kategori: "farmasi",
-      labelBadge: "Farmasi",
-      title: "Obat Diserahkan",
-      detailGrid: items,
-      narasi: null,
-      outcome: null
+      keluhan: k.keluhan_awal || "-",
+      diagnosa: rm.assessment || "-",
+      icd10: rm.kode_icd10 || "",
+      plan: rm.plan || "-",
+      obatList, tindakanList, labList, rujukanList
     });
   });
 
@@ -1616,18 +1585,25 @@ async function muatTimelineRiwayat(pasienId) {
   events.sort((a, b) => b.tanggal - a.tanggal);
   riwayatEventsAktif = events;
 
-  listWrap.innerHTML = events.map(e => `
-    <div class="list-row ${e.kategori}" data-id="${e.id}" data-kategori="${e.kategori}" data-tanggal="${tglKey(e.tanggal)}" onclick="pilihRiwayat('${e.id}')">
+  listWrap.innerHTML = events.map(e => {
+    const subTags = [
+      e.tindakanList.length ? "Tindakan" : "",
+      e.labList.length ? "Lab" : "",
+      e.rujukanList.length ? "Rujukan" : "",
+      e.obatList.some(o => o.diserahkan) ? "Obat" : ""
+    ].filter(Boolean).join(" · ");
+    return `
+    <div class="list-row ${e.kategoriTags[0] || "klaster"}" data-id="${e.id}" data-kategori="${e.kategoriTags.join(" ")}" data-tanggal="${tglKey(e.tanggal)}" onclick="pilihRiwayat('${e.id}')">
       <div class="list-dot"></div>
       <div>
         <div class="list-title">${e.title}</div>
-        <div class="list-sub">${e.labelBadge}</div>
+        <div class="list-sub">${e.labelBadge}${subTags ? " · " + subTags : ""}</div>
         <div class="list-date">${fmtTglJam(e.tanggal)}</div>
       </div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 
   // Chip tanggal: daftar tanggal unik yang ada riwayatnya, urut terbaru dulu.
-  // Pilih klaster (kategori) dulu kalau perlu, baru klik tanggal buat nyaring ke hari itu aja.
   const tanggalUnik = [...new Set(events.map(e => tglKey(e.tanggal)))];
   const tanggalWrap = document.getElementById("filterRowTanggal");
   tanggalWrap.style.display = tanggalUnik.length ? "flex" : "none";
@@ -1656,6 +1632,8 @@ function fmtTglJam(nilai) {
 let timelineKategoriAktif = "semua";
 let timelineTanggalAktif = "semua";
 
+// Kategori sekarang = "isi apa aja yang ada di kunjungan itu" (lab/rujuk/farmasi),
+// bukan jenis data terpisah lagi. Klik "Laboratorium" nyaring kunjungan yang ADA hasil labnya.
 function filterTimeline(kategori) {
   timelineKategoriAktif = kategori;
   document.querySelectorAll("#filterRowTimeline .filter-chip").forEach(chip => {
@@ -1672,17 +1650,17 @@ function filterTimelineTanggal(tanggal) {
   terapkanFilterTimeline();
 }
 
-// Gabungkan filter kategori (klaster/lab/rujuk/farmasi) dan filter tanggal —
-// baris list cuma tampil kalau lolos dua-duanya.
 function terapkanFilterTimeline() {
   document.querySelectorAll("#listRiwayat .list-row").forEach(row => {
-    const lolosKategori = timelineKategoriAktif === "semua" || row.dataset.kategori === timelineKategoriAktif;
+    const tagRow = (row.dataset.kategori || "").split(" ").filter(Boolean);
+    const lolosKategori = timelineKategoriAktif === "semua" || tagRow.includes(timelineKategoriAktif);
     const lolosTanggal = timelineTanggalAktif === "semua" || row.dataset.tanggal === timelineTanggalAktif;
     row.style.display = (lolosKategori && lolosTanggal) ? "" : "none";
   });
 }
 
-// Klik 1 baris kunjungan di list kiri → isi detail panel kanan.
+// Klik 1 baris kunjungan di list kiri → isi detail panel kanan, GABUNG semua
+// (pemeriksaan + tindakan + obat + hasil lab + rujukan) dalam 1 kunjungan itu.
 function pilihRiwayat(id) {
   const e = riwayatEventsAktif.find(x => x.id === id);
   if (!e) return;
@@ -1691,37 +1669,69 @@ function pilihRiwayat(id) {
     row.classList.toggle("active", row.dataset.id === id);
   });
 
-  const gridHtml = (e.detailGrid || []).map(([label, val]) => `
-    <div><span class="label">${label}</span><span class="val">${val}</span></div>
-  `).join("");
-
-  const narasiHtml = e.narasi ? `
+  const tindakanHtml = e.tindakanList.length ? `
     <div class="detail-section">
-      <h4>Catatan</h4>
-      <div class="narasi">${e.narasi}</div>
+      <h4>Tindakan Medis</h4>
+      <div class="narasi">${e.tindakanList.map(t => `${t.nama_tindakan}${t.catatan ? " — " + t.catatan : ""}`).join("<br>")}</div>
     </div>` : "";
 
-  const outcomeHtml = e.outcome ? `<div class="outcome-box ${e.outcome.type}">${e.outcome.text}</div>` : "";
+  const obatHtml = e.obatList.length ? `
+    <div class="detail-section">
+      <h4>Obat</h4>
+      <div class="narasi">${e.obatList.map(o =>
+        `${o.nama} — ${o.diserahkan ? o.jumlahDiserahkan + " <b style='color:var(--green)'>(sudah diserahkan)</b>" : o.jumlah + " (belum diserahkan)"}${o.aturan ? " — " + o.aturan : ""}`
+      ).join("<br>")}</div>
+    </div>` : "";
+
+  const labHtml = e.labList.length ? `
+    <div class="detail-section">
+      <h4>Hasil Laboratorium</h4>
+      ${e.labList.map(l => `
+        <div style="margin-bottom:6px;">
+          <div style="font-size:12px; font-weight:600; color:var(--navy);">${l.jenis}</div>
+          <div class="narasi">${(l.item || []).map(it => `${it.nama_pemeriksaan}: <b>${it.hasil}${it.satuan ? " " + it.satuan : ""}</b>${it.nilai_rujukan ? " (rujukan: " + it.nilai_rujukan + ")" : ""}`).join("<br>")}</div>
+        </div>`).join("")}
+    </div>` : "";
+
+  const rujukanHtml = e.rujukanList.length ? `
+    <div class="detail-section">
+      <h4>Rujukan</h4>
+      ${e.rujukanList.map(r => {
+        const badgeClass = r.status === "selesai" ? "selesai" : r.status === "batal" ? "batal" : "menunggu";
+        const badgeTeks = r.status === "selesai" ? "✓ Selesai" : r.status === "batal" ? "✗ Batal" : "⏳ " + r.status;
+        return `<div style="margin-bottom:8px;">
+          <div class="narasi"><b>${r.label}</b> → ${r.tujuan}<br>${r.alasan}${r.diagnosa ? " — Diagnosa: " + r.diagnosa : ""}</div>
+          <div class="outcome-box ${badgeClass}">${badgeTeks}</div>
+        </div>`;
+      }).join("")}
+    </div>` : "";
 
   document.getElementById("detailRiwayat").innerHTML = `
     <div class="detail-head">
       <div>
-        <span class="kategori-tag ${e.kategori}">${e.labelBadge}</span>
+        <span class="kategori-tag klaster">${e.labelBadge}</span>
         <div class="detail-title">${e.title}</div>
         <div class="detail-date">${fmtTglJam(e.tanggal)}</div>
       </div>
       <button type="button" class="btn-secondary" onclick="cetakDetailRiwayat('${e.id}')">🖨️ Cetak Riwayat Ini</button>
     </div>
     <div class="detail-section">
-      <h4>Ringkasan</h4>
-      <div class="detail-grid">${gridHtml || "<div>-</div>"}</div>
+      <h4>Pemeriksaan</h4>
+      <div class="detail-grid">
+        <div><span class="label">Keluhan</span><span class="val">${e.keluhan}</span></div>
+        <div><span class="label">Diagnosa</span><span class="val">${e.diagnosa} ${e.icd10 ? "(" + e.icd10 + ")" : ""}</span></div>
+        <div><span class="label">Plan</span><span class="val">${e.plan}</span></div>
+      </div>
     </div>
-    ${narasiHtml}
-    ${outcomeHtml}
+    ${tindakanHtml}
+    ${obatHtml}
+    ${labHtml}
+    ${rujukanHtml}
   `;
 }
 
-// Cetak 1 kunjungan aja (bukan seluruh riwayat) — dipicu tombol "Cetak Riwayat Ini" di detail panel.
+// Cetak 1 kunjungan aja (gabung pemeriksaan+tindakan+obat+lab+rujukan) — dipicu
+// tombol "Cetak Riwayat Ini" di detail panel.
 function cetakDetailRiwayat(id) {
   const e = riwayatEventsAktif.find(x => x.id === id);
   if (!e || !pasienRmAktif) return;
@@ -1734,15 +1744,51 @@ function cetakDetailRiwayat(id) {
   document.getElementById("dtrJudul").textContent = e.title;
   document.getElementById("dtrTanggalKunjungan").textContent = fmtTglJam(e.tanggal);
 
-  document.getElementById("dtrGrid").innerHTML = (e.detailGrid || []).map(([label, val]) => `
-    <div class="baris"><span>${label}</span><span>${val}</span></div>
-  `).join("") || `<div class="baris"><span>-</span><span>-</span></div>`;
+  const bagian = [];
 
-  document.getElementById("dtrCatatanWrap").style.display = e.narasi ? "" : "none";
-  document.getElementById("dtrCatatan").textContent = e.narasi || "-";
+  bagian.push(`
+    <p class="sub" style="text-align:left; margin:10px 0 2px 0; font-weight:700;">Pemeriksaan</p>
+    <div class="baris"><span>Keluhan</span><span>${e.keluhan}</span></div>
+    <div class="baris"><span>Diagnosa</span><span>${e.diagnosa} ${e.icd10 ? "(" + e.icd10 + ")" : ""}</span></div>
+    <div class="baris"><span>Plan</span><span>${e.plan}</span></div>
+  `);
 
-  document.getElementById("dtrOutcomeWrap").style.display = e.outcome ? "" : "none";
-  document.getElementById("dtrOutcome").textContent = e.outcome ? e.outcome.text : "";
+  if (e.tindakanList.length) {
+    bagian.push(`
+      <p class="sub" style="text-align:left; margin:10px 0 2px 0; font-weight:700;">Tindakan Medis</p>
+      ${e.tindakanList.map(t => `<div class="baris"><span>${t.nama_tindakan}</span><span>${t.catatan || "-"}</span></div>`).join("")}
+    `);
+  }
+
+  if (e.obatList.length) {
+    bagian.push(`
+      <p class="sub" style="text-align:left; margin:10px 0 2px 0; font-weight:700;">Obat</p>
+      ${e.obatList.map(o => `<div class="baris"><span>${o.nama}</span><span>${o.diserahkan ? o.jumlahDiserahkan + " (diserahkan)" : o.jumlah + " (belum diserahkan)"}</span></div>`).join("")}
+    `);
+  }
+
+  if (e.labList.length) {
+    bagian.push(`
+      <p class="sub" style="text-align:left; margin:10px 0 2px 0; font-weight:700;">Hasil Laboratorium</p>
+      ${e.labList.map(l => `
+        <div class="baris" style="font-weight:600;"><span>${l.jenis}</span><span></span></div>
+        ${(l.item || []).map(it => `<div class="baris"><span>${it.nama_pemeriksaan}</span><span>${it.hasil}${it.satuan ? " " + it.satuan : ""}${it.nilai_rujukan ? " (rujukan: " + it.nilai_rujukan + ")" : ""}</span></div>`).join("")}
+      `).join("")}
+    `);
+  }
+
+  if (e.rujukanList.length) {
+    bagian.push(`
+      <p class="sub" style="text-align:left; margin:10px 0 2px 0; font-weight:700;">Rujukan</p>
+      ${e.rujukanList.map(r => {
+        const statusTeks = r.status === "selesai" ? "Selesai" : r.status === "batal" ? "Batal" : "Menunggu";
+        return `<div class="baris"><span>${r.label} → ${r.tujuan}</span><span>${statusTeks}</span></div>
+          <div class="baris"><span style="color:#666;">${r.alasan}${r.diagnosa ? " — " + r.diagnosa : ""}</span><span></span></div>`;
+      }).join("")}
+    `);
+  }
+
+  document.getElementById("dtrIsi").innerHTML = bagian.join("");
 
   document.getElementById("areaCetakDetailRiwayat").classList.add("aktif-cetak");
   document.getElementById("areaCetakRingkasan")?.classList.remove("aktif-cetak");
