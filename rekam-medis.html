@@ -224,7 +224,16 @@
   <div id="modePendaftaran" style="display:none;">
 
   <div class="card">
-    <h2>Cari Pasien</h2>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+      <h2>Cari Pasien</h2>
+      <details class="menu-dropdown">
+        <summary class="btn-secondary">⋮ Menu Lainnya</summary>
+        <div class="menu-dropdown-list">
+          <div class="menu-dropdown-item" onclick="bukaMenuLain('cardGabungRM', this)">Gabung Rekam Medis (Data Duplikat)</div>
+          <div class="menu-dropdown-item" onclick="bukaMenuLain('cardRiwayatObatDiserahkan', this)">Riwayat Obat Diserahkan</div>
+        </div>
+      </details>
+    </div>
     <div id="msgBoxRp"></div>
     <div class="grid-2">
       <div>
@@ -416,6 +425,30 @@
     </thead>
     <tbody id="rksTabelRiwayat"></tbody>
   </table>
+  <p class="catatan" style="margin-top:16px;">Dicetak oleh petugas Rekam Medis UPTD Puskesmas Bekawan.</p>
+</div>
+
+<div id="areaCetakDetailRiwayat" class="kartu-cetak" style="width:520px;">
+  <h2>UPTD PUSKESMAS BEKAWAN</h2>
+  <p class="sub">Riwayat Kunjungan — Satu Tanggal</p>
+  <div class="garis"></div>
+  <div class="baris"><span>Nama Pasien</span><span id="dtrNama"></span></div>
+  <div class="baris"><span>No. RM</span><span id="dtrNoRm"></span></div>
+  <div class="baris"><span>NIK</span><span id="dtrNik"></span></div>
+  <div class="baris"><span>Tanggal Cetak</span><span id="dtrTanggalCetak"></span></div>
+  <div class="garis"></div>
+  <p class="sub" style="text-align:left; margin-top:10px; margin-bottom:2px;"><span id="dtrKategori" style="font-weight:700;"></span></p>
+  <div class="baris"><span id="dtrJudul" style="font-weight:600;"></span><span id="dtrTanggalKunjungan"></span></div>
+  <div class="garis"></div>
+  <div id="dtrGrid"></div>
+  <div id="dtrCatatanWrap" style="margin-top:10px;">
+    <p class="sub" style="text-align:left; margin-bottom:2px;">Catatan</p>
+    <p id="dtrCatatan" style="font-size:13px;"></p>
+  </div>
+  <div id="dtrOutcomeWrap" style="margin-top:10px;">
+    <p class="sub" style="text-align:left; margin-bottom:2px;">Status</p>
+    <p id="dtrOutcome" style="font-size:13px; font-weight:600;"></p>
+  </div>
   <p class="catatan" style="margin-top:16px;">Dicetak oleh petugas Rekam Medis UPTD Puskesmas Bekawan.</p>
 </div>
 
@@ -1445,6 +1478,15 @@ function pilihPasienRM(p) {
 // terstruktur (list kiri, klik → detail kanan) — bukan feed timeline lagi.
 let riwayatEventsAktif = [];
 
+// Toggle card yang disembunyikan (Gabung RM, Riwayat Obat Diserahkan) dari dropdown "Menu Lainnya".
+function bukaMenuLain(idCard, itemEl) {
+  const el = document.getElementById(idCard);
+  const tampil = el.style.display === "none" || !el.style.display;
+  el.style.display = tampil ? "block" : "none";
+  itemEl.closest("details").removeAttribute("open");
+  if (tampil) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 async function muatTimelineRiwayat(pasienId) {
   const listWrap = document.getElementById("listRiwayat");
   const detailWrap = document.getElementById("detailRiwayat");
@@ -1668,6 +1710,7 @@ function pilihRiwayat(id) {
         <div class="detail-title">${e.title}</div>
         <div class="detail-date">${fmtTglJam(e.tanggal)}</div>
       </div>
+      <button type="button" class="btn-secondary" onclick="cetakDetailRiwayat('${e.id}')">🖨️ Cetak Riwayat Ini</button>
     </div>
     <div class="detail-section">
       <h4>Ringkasan</h4>
@@ -1676,6 +1719,36 @@ function pilihRiwayat(id) {
     ${narasiHtml}
     ${outcomeHtml}
   `;
+}
+
+// Cetak 1 kunjungan aja (bukan seluruh riwayat) — dipicu tombol "Cetak Riwayat Ini" di detail panel.
+function cetakDetailRiwayat(id) {
+  const e = riwayatEventsAktif.find(x => x.id === id);
+  if (!e || !pasienRmAktif) return;
+
+  document.getElementById("dtrNama").textContent = pasienRmAktif.nama;
+  document.getElementById("dtrNoRm").textContent = pasienRmAktif.no_rm || "-";
+  document.getElementById("dtrNik").textContent = pasienRmAktif.nik;
+  document.getElementById("dtrTanggalCetak").textContent = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  document.getElementById("dtrKategori").textContent = e.labelBadge;
+  document.getElementById("dtrJudul").textContent = e.title;
+  document.getElementById("dtrTanggalKunjungan").textContent = fmtTglJam(e.tanggal);
+
+  document.getElementById("dtrGrid").innerHTML = (e.detailGrid || []).map(([label, val]) => `
+    <div class="baris"><span>${label}</span><span>${val}</span></div>
+  `).join("") || `<div class="baris"><span>-</span><span>-</span></div>`;
+
+  document.getElementById("dtrCatatanWrap").style.display = e.narasi ? "" : "none";
+  document.getElementById("dtrCatatan").textContent = e.narasi || "-";
+
+  document.getElementById("dtrOutcomeWrap").style.display = e.outcome ? "" : "none";
+  document.getElementById("dtrOutcome").textContent = e.outcome ? e.outcome.text : "";
+
+  document.getElementById("areaCetakDetailRiwayat").classList.add("aktif-cetak");
+  document.getElementById("areaCetakRingkasan")?.classList.remove("aktif-cetak");
+  document.getElementById("areaCetak")?.classList.remove("aktif-cetak");
+  document.getElementById("areaCetakRujukan")?.classList.remove("aktif-cetak");
+  window.print();
 }
 
 document.getElementById("formEditPasien").addEventListener("submit", async (e) => {
@@ -1777,6 +1850,7 @@ function cetakRingkasanRiwayat() {
   }).join("") : `<tr><td colspan="4">Belum ada riwayat kunjungan.</td></tr>`;
 
   document.getElementById("areaCetakRingkasan").classList.add("aktif-cetak");
+  document.getElementById("areaCetakDetailRiwayat")?.classList.remove("aktif-cetak");
   document.getElementById("areaCetak")?.classList.remove("aktif-cetak");
   document.getElementById("areaCetakRujukan")?.classList.remove("aktif-cetak");
   window.print();
