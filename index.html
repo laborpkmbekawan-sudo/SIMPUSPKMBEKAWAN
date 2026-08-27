@@ -151,6 +151,7 @@
 
     <form id="formPasienBaru" style="display:none; margin-top:16px; border-top:1px solid #e5e7eb; padding-top:16px;">
       <h2>Data Pasien Baru</h2>
+      <div id="msgDuplikat"></div>
       <div class="grid-2">
         <div>
           <label>NIK *</label>
@@ -1068,6 +1069,7 @@ async function cariPasien() {
     .from("pasien")
     .select("*")
     .or(`nik.eq.${kunci},no_rm.eq.${kunci},no_bpjs.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
     .order("nama")
     .limit(20);
 
@@ -1099,6 +1101,8 @@ async function cariPasien() {
       document.getElementById("pNama").value = kunci;
     }
     document.getElementById("formPasienBaru").style.display = "block";
+    window._lewatiCekDuplikat = false;
+    document.getElementById("msgDuplikat").innerHTML = "";
   }
 }
 
@@ -1180,15 +1184,45 @@ document.getElementById("formPasienBaru").addEventListener("submit", async (e) =
     return;
   }
 
+  const nama = document.getElementById("pNama").value.trim();
+  const tglLahir = document.getElementById("pTglLahir").value;
+
+  // Cek duplikasi (nama + tanggal lahir sama) sebelum simpan, kecuali sudah dikonfirmasi lewat.
+  if (!window._lewatiCekDuplikat) {
+    const { data: kandidat } = await supabaseClient
+      .from("pasien")
+      .select("id, nama, nik, no_rm, tanggal_lahir, alamat")
+      .ilike("nama", nama)
+      .eq("tanggal_lahir", tglLahir)
+      .is("digabung_ke_id", null);
+
+    if (kandidat && kandidat.length) {
+      const dupBox = document.getElementById("msgDuplikat");
+      dupBox.innerHTML = `
+        <div class="msg msg-error">
+          ⚠️ Ditemukan ${kandidat.length} pasien dengan nama &amp; tanggal lahir sama. Cek dulu, jangan sampai bikin RM ganda:
+          <ul style="margin:8px 0 0 18px;">
+            ${kandidat.map(k => `<li>${k.nama} — NIK ${k.nik} — No. RM ${k.no_rm || "-"} — ${k.alamat || "-"}
+              <button type="button" class="btn-secondary" style="margin-left:8px; padding:2px 8px; font-size:12px;" onclick="pakaiPasienDuplikat('${k.id}')">Pakai Pasien Ini</button>
+            </li>`).join("")}
+          </ul>
+          <button type="button" class="btn-primary" style="margin-top:10px;" onclick="window._lewatiCekDuplikat=true; document.getElementById('formPasienBaru').requestSubmit();">Tetap Simpan Sebagai Pasien Baru</button>
+        </div>`;
+      return;
+    }
+  }
+  window._lewatiCekDuplikat = false;
+  document.getElementById("msgDuplikat").innerHTML = "";
+
   const { data: { user } } = await supabaseClient.auth.getUser();
 
   const payload = {
     nik: nik,
     no_rm: document.getElementById("pNoRmManual").value.trim() || null,
-    nama: document.getElementById("pNama").value.trim(),
+    nama: nama,
     jenis_kelamin: document.getElementById("pJk").value,
     tempat_lahir: document.getElementById("pTempatLahir").value.trim(),
-    tanggal_lahir: document.getElementById("pTglLahir").value,
+    tanggal_lahir: tglLahir,
     no_hp: document.getElementById("pHp").value.trim(),
     no_kk: document.getElementById("pNoKk").value.trim(),
     nama_kk: document.getElementById("pNamaKk").value.trim(),
@@ -1221,6 +1255,19 @@ document.getElementById("formPasienBaru").addEventListener("submit", async (e) =
   isiInfoRegistrasi();
   document.getElementById("cardDaftarKunjungan").style.display = "block";
 });
+
+function pakaiPasienDuplikat(id) {
+  supabaseClient.from("pasien").select("*").eq("id", id).single().then(({ data }) => {
+    if (!data) return;
+    pasienTerpilih = data;
+    jenisKunjunganTerpilih = "lama";
+    document.getElementById("formPasienBaru").style.display = "none";
+    document.getElementById("msgDuplikat").innerHTML = "";
+    document.getElementById("msgBox").innerHTML = `<div class="msg msg-success">Pakai data pasien lama: ${data.nama} (No. RM ${data.no_rm || "-"})</div>`;
+    isiInfoRegistrasi();
+    document.getElementById("cardDaftarKunjungan").style.display = "block";
+  });
+}
 
 function sesuaikanJenisBayar() {
   // no-op hook, kept for future validasi kalau perlu; jenis_bayar diturunkan otomatis di buatKunjungan()

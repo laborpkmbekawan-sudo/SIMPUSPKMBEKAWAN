@@ -181,6 +181,31 @@
     <div id="rpHasilList"></div>
   </div>
 
+  <div class="card" id="cardGabungRM">
+    <h2>Gabung Rekam Medis (Data Duplikat)</h2>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Dipakai kalau ketemu 2 RM buat 1 pasien yang sama (misal NIK beda karena typo). Pilih pasien utama (dipertahankan) dan pasien duplikat (riwayatnya dipindah lalu disembunyikan). <strong>Aksi ini tidak bisa dibatalkan.</strong></p>
+    <div id="gbMsgBox"></div>
+
+    <div class="grid-2">
+      <div>
+        <label>Cari Pasien Utama (dipertahankan)</label>
+        <input type="text" id="gbCariUtama" placeholder="Ketik NIK/No.RM/nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariGabung('utama');}">
+        <button type="button" class="btn-secondary" onclick="cariGabung('utama')" style="margin-top:6px;">Cari</button>
+        <div id="gbHasilUtama" style="margin-top:8px;"></div>
+        <div id="gbTerpilihUtama" style="margin-top:8px; font-size:13px;"></div>
+      </div>
+      <div>
+        <label>Cari Pasien Duplikat (akan digabung)</label>
+        <input type="text" id="gbCariDuplikat" placeholder="Ketik NIK/No.RM/nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariGabung('duplikat');}">
+        <button type="button" class="btn-secondary" onclick="cariGabung('duplikat')" style="margin-top:6px;">Cari</button>
+        <div id="gbHasilDuplikat" style="margin-top:8px;"></div>
+        <div id="gbTerpilihDuplikat" style="margin-top:8px; font-size:13px;"></div>
+      </div>
+    </div>
+
+    <button type="button" class="btn-primary" style="margin-top:14px;" onclick="konfirmasiGabungRM()">Gabungkan Rekam Medis</button>
+  </div>
+
   <div class="card" id="cardPasienRM" style="display:none;">
     <h2>Data Pasien — <span id="rpNamaAktif"></span></h2>
     <div id="msgBoxEditPasien"></div>
@@ -249,6 +274,7 @@
 
   <div class="card" id="cardRiwayatRM" style="display:none;">
     <h2>Riwayat Pemeriksaan</h2>
+    <button type="button" class="btn-secondary" onclick="cetakRingkasanRiwayat()" style="margin-bottom:10px;">Cetak Ringkasan Riwayat</button>
     <table>
       <thead>
         <tr>
@@ -322,6 +348,24 @@
     </table>
   </div>
 
+</div>
+
+<div id="areaCetakRingkasan" class="kartu-cetak" style="width:520px;">
+  <h2>UPTD PUSKESMAS BEKAWAN</h2>
+  <p class="sub">Ringkasan Riwayat Kunjungan</p>
+  <div class="garis"></div>
+  <div class="baris"><span>Nama Pasien</span><span id="rksNama"></span></div>
+  <div class="baris"><span>No. RM</span><span id="rksNoRm"></span></div>
+  <div class="baris"><span>NIK</span><span id="rksNik"></span></div>
+  <div class="baris"><span>Tanggal Cetak</span><span id="rksTanggalCetak"></span></div>
+  <div class="garis"></div>
+  <table style="width:100%; font-size:12px; margin-top:8px;">
+    <thead>
+      <tr><th>Tanggal</th><th>Klaster</th><th>Diagnosa (ICD-10)</th><th>Plan/Terapi</th></tr>
+    </thead>
+    <tbody id="rksTabelRiwayat"></tbody>
+  </table>
+  <p class="catatan" style="margin-top:16px;">Dicetak oleh petugas Rekam Medis UPTD Puskesmas Bekawan.</p>
 </div>
 
 <script src="js/supabaseClient.js"></script>
@@ -909,6 +953,86 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
 // edit data pasien. Dipakai akun petugas/staff/admin.
 // ============================================================
 let pasienRmAktif = null;
+let gbUtama = null;
+let gbDuplikat = null;
+
+async function cariGabung(sisi) {
+  const kunci = document.getElementById(sisi === "utama" ? "gbCariUtama" : "gbCariDuplikat").value.trim();
+  const hasilDiv = document.getElementById(sisi === "utama" ? "gbHasilUtama" : "gbHasilDuplikat");
+  hasilDiv.innerHTML = "";
+  if (!kunci) return;
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("id, nama, nik, no_rm, tanggal_lahir, alamat")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(10);
+
+  if (error || !data?.length) {
+    hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan.</div>`;
+    return;
+  }
+
+  hasilDiv.innerHTML = data.map(p => `
+    <div style="padding:6px 0; border-bottom:1px solid #e5e7eb; font-size:13px;">
+      ${p.nama} — NIK ${p.nik} — RM ${p.no_rm || "-"}
+      <button type="button" class="btn-secondary" style="margin-left:6px; padding:2px 8px; font-size:12px;" onclick='pilihGabung("${sisi}", ${JSON.stringify(p).replace(/'/g, "&#39;")})'>Pilih</button>
+    </div>`).join("");
+}
+
+function pilihGabung(sisi, p) {
+  if (sisi === "utama") {
+    gbUtama = p;
+    document.getElementById("gbTerpilihUtama").innerHTML = `<strong>Terpilih:</strong> ${p.nama} — NIK ${p.nik} — RM ${p.no_rm || "-"}`;
+    document.getElementById("gbHasilUtama").innerHTML = "";
+  } else {
+    gbDuplikat = p;
+    document.getElementById("gbTerpilihDuplikat").innerHTML = `<strong>Terpilih:</strong> ${p.nama} — NIK ${p.nik} — RM ${p.no_rm || "-"}`;
+    document.getElementById("gbHasilDuplikat").innerHTML = "";
+  }
+}
+
+async function konfirmasiGabungRM() {
+  const msgBox = document.getElementById("gbMsgBox");
+  msgBox.innerHTML = "";
+
+  if (!gbUtama || !gbDuplikat) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien utama dan pasien duplikat dulu.</div>`;
+    return;
+  }
+  if (gbUtama.id === gbDuplikat.id) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pasien utama dan duplikat tidak boleh sama.</div>`;
+    return;
+  }
+
+  const yakin = window.confirm(
+    `PERINGATAN — aksi ini permanen.\n\n` +
+    `Seluruh riwayat kunjungan, rekam medis, dan consent milik:\n"${gbDuplikat.nama}" (NIK ${gbDuplikat.nik})\n\n` +
+    `akan dipindah ke:\n"${gbUtama.nama}" (NIK ${gbUtama.nik}, No. RM ${gbUtama.no_rm || "-"}).\n\n` +
+    `Data "${gbDuplikat.nama}" akan disembunyikan dari pencarian setelah ini. Lanjutkan?`
+  );
+  if (!yakin) return;
+
+  const { error } = await supabaseClient.rpc("gabung_rekam_medis", {
+    p_utama: gbUtama.id,
+    p_duplikat: gbDuplikat.id
+  });
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal menggabung: ${error.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Berhasil digabung. Riwayat "${gbDuplikat.nama}" sekarang tercatat di bawah RM ${gbUtama.no_rm || gbUtama.nama}.</div>`;
+  gbUtama = null;
+  gbDuplikat = null;
+  document.getElementById("gbTerpilihUtama").innerHTML = "";
+  document.getElementById("gbTerpilihDuplikat").innerHTML = "";
+  document.getElementById("gbCariUtama").value = "";
+  document.getElementById("gbCariDuplikat").value = "";
+}
 
 async function cariPasienRM() {
   const kunci = document.getElementById("rpCari").value.trim();
@@ -928,6 +1052,7 @@ async function cariPasienRM() {
     .from("pasien")
     .select("*")
     .or(`nik.eq.${kunci},no_rm.eq.${kunci},no_bpjs.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
     .order("nama")
     .limit(20);
 
@@ -1094,8 +1219,11 @@ async function muatRiwayatRM(pasienId) {
 
   if (!data.length) {
     tbody.innerHTML = `<tr><td colspan="5">Belum ada riwayat kunjungan.</td></tr>`;
+    window._riwayatRmCache = [];
     return;
   }
+
+  window._riwayatRmCache = data;
 
   tbody.innerHTML = data.map(k => {
     const rm = (k.rekam_medis && k.rekam_medis[0]) || null;
@@ -1110,6 +1238,33 @@ async function muatRiwayatRM(pasienId) {
     </tr>
   `;
   }).join("");
+}
+
+function cetakRingkasanRiwayat() {
+  if (!pasienRmAktif) return;
+
+  document.getElementById("rksNama").textContent = pasienRmAktif.nama;
+  document.getElementById("rksNoRm").textContent = pasienRmAktif.no_rm || "-";
+  document.getElementById("rksNik").textContent = pasienRmAktif.nik;
+  document.getElementById("rksTanggalCetak").textContent = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+
+  const riwayat = window._riwayatRmCache || [];
+  const tbody = document.getElementById("rksTabelRiwayat");
+  tbody.innerHTML = riwayat.length ? riwayat.map(k => {
+    const rm = (k.rekam_medis && k.rekam_medis[0]) || null;
+    const tgl = new Date(k.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    return `<tr>
+      <td>${tgl}</td>
+      <td>${k.klaster?.kode || "-"}</td>
+      <td>${rm ? `${rm.assessment || "-"} (${rm.kode_icd10 || "-"})` : "Belum diperiksa"}</td>
+      <td>${rm ? (rm.plan || "-") : "-"}</td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="4">Belum ada riwayat kunjungan.</td></tr>`;
+
+  document.getElementById("areaCetakRingkasan").classList.add("aktif-cetak");
+  document.getElementById("areaCetak")?.classList.remove("aktif-cetak");
+  document.getElementById("areaCetakRujukan")?.classList.remove("aktif-cetak");
+  window.print();
 }
 </script>
 

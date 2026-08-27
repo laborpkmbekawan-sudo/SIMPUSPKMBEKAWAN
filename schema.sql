@@ -985,6 +985,27 @@ create policy "authenticated_all_survei_kepuasan" on survei_kepuasan for all to 
 create policy "anon_insert_survei_kepuasan" on survei_kepuasan for insert to anon with check (true);
 
 -- ============================================================
+-- 32. GABUNG REKAM MEDIS — deteksi & gabung RM duplikat
+-- ============================================================
+alter table pasien add column if not exists digabung_ke_id uuid references pasien(id);
+create index if not exists idx_pasien_digabung on pasien(digabung_ke_id);
+
+create or replace function gabung_rekam_medis(p_utama uuid, p_duplikat uuid)
+returns void as $$
+begin
+  if p_utama = p_duplikat then
+    raise exception 'Pasien utama dan duplikat tidak boleh sama';
+  end if;
+
+  update kunjungan set pasien_id = p_utama where pasien_id = p_duplikat;
+  update consent_pasien set pasien_id = p_utama where pasien_id = p_duplikat;
+  update log_akses_rm set pasien_id = p_utama where pasien_id = p_duplikat;
+
+  update pasien set digabung_ke_id = p_utama where id = p_duplikat;
+end;
+$$ language plpgsql;
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
