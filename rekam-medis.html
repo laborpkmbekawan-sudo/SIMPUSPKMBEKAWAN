@@ -338,16 +338,26 @@
   <div class="card" id="cardTimelineRM" style="display:none;">
     <h2>Riwayat Pelayanan Lengkap</h2>
     <button type="button" class="btn-secondary" onclick="cetakRingkasanRiwayat()" style="margin-bottom:14px;">Cetak Ringkasan Riwayat</button>
-    <div class="filter-row" id="filterRowTimeline">
-      <div class="filter-chip active" data-kategori="semua" onclick="filterTimeline('semua')">Semua</div>
-      <div class="filter-chip" data-kategori="klaster" onclick="filterTimeline('klaster')">Klaster</div>
-      <div class="filter-chip" data-kategori="lab" onclick="filterTimeline('lab')">Laboratorium</div>
-      <div class="filter-chip" data-kategori="rujuk" onclick="filterTimeline('rujuk')">Rujukan</div>
-      <div class="filter-chip" data-kategori="farmasi" onclick="filterTimeline('farmasi')">Farmasi</div>
-    </div>
-    <div class="filter-row filter-row-tanggal" id="filterRowTanggal" style="display:none;"></div>
-    <div class="timeline" id="timelineRiwayat">
-      <p style="color:var(--muted); font-size:13px;">Belum ada pasien dipilih.</p>
+
+    <div class="riwayat-layout">
+      <div class="list-panel">
+        <div class="list-head">Daftar Kunjungan (klik untuk lihat detail)</div>
+        <div class="filter-row" id="filterRowTimeline">
+          <div class="filter-chip active" data-kategori="semua" onclick="filterTimeline('semua')">Semua</div>
+          <div class="filter-chip" data-kategori="klaster" onclick="filterTimeline('klaster')">Klaster</div>
+          <div class="filter-chip" data-kategori="lab" onclick="filterTimeline('lab')">Laboratorium</div>
+          <div class="filter-chip" data-kategori="rujuk" onclick="filterTimeline('rujuk')">Rujukan</div>
+          <div class="filter-chip" data-kategori="farmasi" onclick="filterTimeline('farmasi')">Farmasi</div>
+        </div>
+        <div class="filter-row filter-row-tanggal" id="filterRowTanggal" style="display:none;"></div>
+        <div id="listRiwayat">
+          <p style="color:var(--muted); font-size:13px; padding:14px 16px;">Belum ada pasien dipilih.</p>
+        </div>
+      </div>
+
+      <div class="detail-panel" id="detailRiwayat">
+        <div class="detail-empty">Pilih kunjungan di sebelah kiri untuk lihat detail riwayat.</div>
+      </div>
     </div>
   </div>
 
@@ -1431,11 +1441,15 @@ function pilihPasienRM(p) {
 }
 
 // Ambil semua sumber riwayat pelayanan pasien (klaster/RM+obat+tindakan, hasil lab,
-// rujukan internal, rujukan FKRTL, farmasi diserahkan), gabung jadi 1 timeline
-// terurut tanggal terbaru di atas — biar gak perlu buka banyak tab buat lihat histori pasien.
+// rujukan internal, rujukan FKRTL, farmasi diserahkan), jadikan daftar kunjungan
+// terstruktur (list kiri, klik → detail kanan) — bukan feed timeline lagi.
+let riwayatEventsAktif = [];
+
 async function muatTimelineRiwayat(pasienId) {
-  const wrap = document.getElementById("timelineRiwayat");
-  wrap.innerHTML = `<p style="color:var(--muted); font-size:13px;">Memuat riwayat...</p>`;
+  const listWrap = document.getElementById("listRiwayat");
+  const detailWrap = document.getElementById("detailRiwayat");
+  listWrap.innerHTML = `<p style="color:var(--muted); font-size:13px; padding:14px 16px;">Memuat riwayat...</p>`;
+  detailWrap.innerHTML = `<div class="detail-empty">Pilih kunjungan di sebelah kiri untuk lihat detail riwayat.</div>`;
 
   const { data: kunjunganPasien } = await supabaseClient
     .from("kunjungan")
@@ -1444,7 +1458,8 @@ async function muatTimelineRiwayat(pasienId) {
   const idKunjungan = (kunjunganPasien || []).map(k => k.id);
 
   if (!idKunjungan.length) {
-    wrap.innerHTML = `<p style="color:var(--muted); font-size:13px;">Belum ada riwayat kunjungan.</p>`;
+    listWrap.innerHTML = `<p style="color:var(--muted); font-size:13px; padding:14px 16px;">Belum ada riwayat kunjungan.</p>`;
+    riwayatEventsAktif = [];
     return;
   }
 
@@ -1467,124 +1482,107 @@ async function muatTimelineRiwayat(pasienId) {
   ]);
 
   const events = [];
+  let seq = 0;
 
   (klasterRes.data || []).filter(k => k.rekam_medis && k.rekam_medis.length).forEach(k => {
     const rm = k.rekam_medis[0];
     const obatTxt = (k.resep || []).flatMap(r => (r.daftar_obat || []).map(o => `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`)).join(", ");
     const tindakanTxt = (k.tindakan_medis || []).flatMap(t => (t.daftar_tindakan || []).map(x => x.nama_tindakan)).join(", ");
+    const tanggal = new Date(rm.created_at || k.tanggal);
     events.push({
-      tanggal: new Date(rm.created_at || k.tanggal),
-      kategori: "klaster",
-      html: `
-        <div class="tl-item klaster" data-kategori="klaster" data-tanggal="${tglKey(rm.created_at || k.tanggal)}">
-          <div class="tl-dot"></div>
-          <div class="tl-card klaster">
-            <div class="tl-top">
-              <div class="tl-title"><span class="kategori-tag klaster">${k.klaster?.kode || "-"}</span> ${rm.assessment || k.keluhan_awal || "Pemeriksaan"}</div>
-              <div class="tl-date">${fmtTglJam(rm.created_at || k.tanggal)}</div>
-            </div>
-            <div class="tl-body">${k.keluhan_awal || "-"}</div>
-            <div class="tl-detail">
-              <div>Diagnosa: <b>${rm.assessment || "-"} ${rm.kode_icd10 ? "(" + rm.kode_icd10 + ")" : ""}</b></div>
-              <div>Plan: <b>${rm.plan || "-"}</b></div>
-              ${obatTxt ? `<div>Obat: <b>${obatTxt}</b></div>` : ""}
-              ${tindakanTxt ? `<div>Tindakan: <b>${tindakanTxt}</b></div>` : ""}
-            </div>
-          </div>
-        </div>`
+      id: `ev${seq++}`, tanggal, kategori: "klaster",
+      labelBadge: k.klaster?.kode || "-",
+      title: rm.assessment || k.keluhan_awal || "Pemeriksaan",
+      detailGrid: [
+        ["Diagnosa", `${rm.assessment || "-"} ${rm.kode_icd10 ? "(" + rm.kode_icd10 + ")" : ""}`],
+        ["Plan", rm.plan || "-"],
+        ...(obatTxt ? [["Obat", obatTxt]] : []),
+        ...(tindakanTxt ? [["Tindakan", tindakanTxt]] : [])
+      ],
+      narasi: k.keluhan_awal || "-",
+      outcome: null
     });
   });
 
   (labRes.data || []).forEach(l => {
     const hasilTxt = (l.item_hasil || []).map(it => `${it.nama_pemeriksaan}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}`).join(", ");
     events.push({
-      tanggal: new Date(l.created_at),
-      kategori: "lab",
-      html: `
-        <div class="tl-item lab" data-kategori="lab" data-tanggal="${tglKey(l.created_at)}">
-          <div class="tl-dot"></div>
-          <div class="tl-card lab">
-            <div class="tl-top">
-              <div class="tl-title"><span class="kategori-tag lab">Laboratorium</span> ${l.rujukan_lab?.jenis_pemeriksaan || "Pemeriksaan Lab"}</div>
-              <div class="tl-date">${fmtTglJam(l.created_at)}</div>
-            </div>
-            <div class="tl-body">Hasil: ${hasilTxt || "-"}</div>
-          </div>
-        </div>`
+      id: `ev${seq++}`, tanggal: new Date(l.created_at), kategori: "lab",
+      labelBadge: "Laboratorium",
+      title: l.rujukan_lab?.jenis_pemeriksaan || "Pemeriksaan Lab",
+      detailGrid: (l.item_hasil || []).map(it => [it.nama_pemeriksaan, `${it.hasil}${it.satuan ? " " + it.satuan : ""}${it.nilai_rujukan ? " (rujukan: " + it.nilai_rujukan + ")" : ""}`]),
+      narasi: hasilTxt || "-",
+      outcome: null
     });
   });
 
   (rujukanInternalRes.data || []).forEach(r => {
     const badgeClass = r.status === "selesai" ? "selesai" : r.status === "batal" ? "batal" : "menunggu";
+    const badgeTeks = r.status === "selesai" ? "✓ Selesai" : r.status === "batal" ? "✗ Batal" : "⏳ Menunggu";
     events.push({
-      tanggal: new Date(r.created_at),
-      kategori: "rujuk",
-      html: `
-        <div class="tl-item rujuk" data-kategori="rujuk" data-tanggal="${tglKey(r.created_at)}">
-          <div class="tl-dot"></div>
-          <div class="tl-card rujuk">
-            <div class="tl-top">
-              <div class="tl-title"><span class="kategori-tag rujuk">Rujukan Internal</span> ${r.kunjungan_asal?.klaster?.kode || "-"} → ${r.kunjungan_tujuan?.klaster?.kode || "-"}</div>
-              <div class="tl-date">${fmtTglJam(r.created_at)}</div>
-            </div>
-            <div class="tl-body">${r.alasan}</div>
-            <div class="tl-outcome ${badgeClass}">${r.status === "selesai" ? "✓ Selesai" : r.status === "batal" ? "✗ Batal" : "⏳ Menunggu"}</div>
-          </div>
-        </div>`
+      id: `ev${seq++}`, tanggal: new Date(r.created_at), kategori: "rujuk",
+      labelBadge: "Rujukan Internal",
+      title: `${r.kunjungan_asal?.klaster?.kode || "-"} → ${r.kunjungan_tujuan?.klaster?.kode || "-"}`,
+      detailGrid: [
+        ["Dari Klaster", r.kunjungan_asal?.klaster?.nama || "-"],
+        ["Ke Klaster", r.kunjungan_tujuan?.klaster?.nama || "-"]
+      ],
+      narasi: r.alasan || "-",
+      outcome: { type: badgeClass, text: badgeTeks }
     });
   });
 
   (rujukanRes.data || []).forEach(r => {
     const badgeClass = r.status === "selesai" ? "selesai" : r.status === "batal" ? "batal" : "menunggu";
+    const badgeTeks = r.status === "selesai" ? "✓ Selesai" : r.status === "batal" ? "✗ Batal" : "⏳ " + r.status;
     const tujuan = r.jenis === "fkrtl" ? (r.faskes_tujuan || "FKRTL") : (r.klaster ? `${r.klaster.kode} — ${r.klaster.nama}` : "-");
     events.push({
-      tanggal: new Date(r.created_at),
-      kategori: "rujuk",
-      html: `
-        <div class="tl-item rujuk" data-kategori="rujuk" data-tanggal="${tglKey(r.created_at)}">
-          <div class="tl-dot"></div>
-          <div class="tl-card rujuk">
-            <div class="tl-top">
-              <div class="tl-title"><span class="kategori-tag rujuk">${r.jenis === "fkrtl" ? "Rujukan FKRTL" : "Rujukan"}</span> ${tujuan}</div>
-              <div class="tl-date">${fmtTglJam(r.created_at)}</div>
-            </div>
-            <div class="tl-body">${r.alasan_rujukan}${r.diagnosa_rujukan ? " — Diagnosa: " + r.diagnosa_rujukan : ""}</div>
-            <div class="tl-outcome ${badgeClass}">${r.status === "selesai" ? "✓ Selesai" : r.status === "batal" ? "✗ Batal" : "⏳ " + r.status}</div>
-          </div>
-        </div>`
+      id: `ev${seq++}`, tanggal: new Date(r.created_at), kategori: "rujuk",
+      labelBadge: r.jenis === "fkrtl" ? "Rujukan FKRTL" : "Rujukan",
+      title: tujuan,
+      detailGrid: [
+        ["Tujuan Rujukan", tujuan],
+        ...(r.diagnosa_rujukan ? [["Diagnosa", r.diagnosa_rujukan]] : [])
+      ],
+      narasi: r.alasan_rujukan || "-",
+      outcome: { type: badgeClass, text: badgeTeks }
     });
   });
 
   (farmasiRes.data || []).filter(r => r.diserahkan_at).forEach(r => {
-    const obatTxt = (r.daftar_obat || []).map(o => {
+    const items = (r.daftar_obat || []).map(o => {
       const nama = o.racikan ? o.nama_racikan : `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`;
       const jumlah = o.racikan ? `${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul` : `${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}`;
-      return `${nama} (${jumlah})`;
-    }).join(", ");
+      return [nama, jumlah];
+    });
     events.push({
-      tanggal: new Date(r.diserahkan_at),
-      kategori: "farmasi",
-      html: `
-        <div class="tl-item farmasi" data-kategori="farmasi" data-tanggal="${tglKey(r.diserahkan_at)}">
-          <div class="tl-dot"></div>
-          <div class="tl-card farmasi">
-            <div class="tl-top">
-              <div class="tl-title"><span class="kategori-tag farmasi">Farmasi</span> Obat Diserahkan</div>
-              <div class="tl-date">${fmtTglJam(r.diserahkan_at)}</div>
-            </div>
-            <div class="tl-body">${obatTxt || "-"}</div>
-          </div>
-        </div>`
+      id: `ev${seq++}`, tanggal: new Date(r.diserahkan_at), kategori: "farmasi",
+      labelBadge: "Farmasi",
+      title: "Obat Diserahkan",
+      detailGrid: items,
+      narasi: null,
+      outcome: null
     });
   });
 
   if (!events.length) {
-    wrap.innerHTML = `<p style="color:var(--muted); font-size:13px;">Belum ada riwayat pelayanan.</p>`;
+    listWrap.innerHTML = `<p style="color:var(--muted); font-size:13px; padding:14px 16px;">Belum ada riwayat pelayanan.</p>`;
+    riwayatEventsAktif = [];
     return;
   }
 
   events.sort((a, b) => b.tanggal - a.tanggal);
-  wrap.innerHTML = events.map(e => e.html).join("");
+  riwayatEventsAktif = events;
+
+  listWrap.innerHTML = events.map(e => `
+    <div class="list-row ${e.kategori}" data-id="${e.id}" data-kategori="${e.kategori}" data-tanggal="${tglKey(e.tanggal)}" onclick="pilihRiwayat('${e.id}')">
+      <div class="list-dot"></div>
+      <div>
+        <div class="list-title">${e.title}</div>
+        <div class="list-sub">${e.labelBadge}</div>
+        <div class="list-date">${fmtTglJam(e.tanggal)}</div>
+      </div>
+    </div>`).join("");
 
   // Chip tanggal: daftar tanggal unik yang ada riwayatnya, urut terbaru dulu.
   // Pilih klaster (kategori) dulu kalau perlu, baru klik tanggal buat nyaring ke hari itu aja.
@@ -1633,13 +1631,51 @@ function filterTimelineTanggal(tanggal) {
 }
 
 // Gabungkan filter kategori (klaster/lab/rujuk/farmasi) dan filter tanggal —
-// item cuma tampil kalau lolos dua-duanya.
+// baris list cuma tampil kalau lolos dua-duanya.
 function terapkanFilterTimeline() {
-  document.querySelectorAll("#timelineRiwayat .tl-item").forEach(item => {
-    const lolosKategori = timelineKategoriAktif === "semua" || item.dataset.kategori === timelineKategoriAktif;
-    const lolosTanggal = timelineTanggalAktif === "semua" || item.dataset.tanggal === timelineTanggalAktif;
-    item.style.display = (lolosKategori && lolosTanggal) ? "" : "none";
+  document.querySelectorAll("#listRiwayat .list-row").forEach(row => {
+    const lolosKategori = timelineKategoriAktif === "semua" || row.dataset.kategori === timelineKategoriAktif;
+    const lolosTanggal = timelineTanggalAktif === "semua" || row.dataset.tanggal === timelineTanggalAktif;
+    row.style.display = (lolosKategori && lolosTanggal) ? "" : "none";
   });
+}
+
+// Klik 1 baris kunjungan di list kiri → isi detail panel kanan.
+function pilihRiwayat(id) {
+  const e = riwayatEventsAktif.find(x => x.id === id);
+  if (!e) return;
+
+  document.querySelectorAll("#listRiwayat .list-row").forEach(row => {
+    row.classList.toggle("active", row.dataset.id === id);
+  });
+
+  const gridHtml = (e.detailGrid || []).map(([label, val]) => `
+    <div><span class="label">${label}</span><span class="val">${val}</span></div>
+  `).join("");
+
+  const narasiHtml = e.narasi ? `
+    <div class="detail-section">
+      <h4>Catatan</h4>
+      <div class="narasi">${e.narasi}</div>
+    </div>` : "";
+
+  const outcomeHtml = e.outcome ? `<div class="outcome-box ${e.outcome.type}">${e.outcome.text}</div>` : "";
+
+  document.getElementById("detailRiwayat").innerHTML = `
+    <div class="detail-head">
+      <div>
+        <span class="kategori-tag ${e.kategori}">${e.labelBadge}</span>
+        <div class="detail-title">${e.title}</div>
+        <div class="detail-date">${fmtTglJam(e.tanggal)}</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>Ringkasan</h4>
+      <div class="detail-grid">${gridHtml || "<div>-</div>"}</div>
+    </div>
+    ${narasiHtml}
+    ${outcomeHtml}
+  `;
 }
 
 document.getElementById("formEditPasien").addEventListener("submit", async (e) => {
