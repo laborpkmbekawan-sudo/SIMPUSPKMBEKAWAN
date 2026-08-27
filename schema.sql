@@ -857,6 +857,32 @@ alter table rekam_medis add column if not exists tanggal_kontrol_berikutnya date
 create index if not exists idx_rm_kontrol_berikutnya on rekam_medis(tanggal_kontrol_berikutnya);
 
 -- ============================================================
+-- 27. SKRINING AWAL — Faktor Risiko PTM sebelum pasien masuk klaster
+--     Diisi petugas pendaftaran, jadi bagian pengkajian awal RM.
+--     1 kunjungan = maksimal 1 skrining.
+-- ============================================================
+create table if not exists skrining_awal (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_id uuid not null unique references kunjungan(id),
+  merokok boolean not null default false,
+  riwayat_keluarga_dm boolean not null default false,
+  riwayat_keluarga_hipertensi boolean not null default false,
+  riwayat_penyakit_menular text,
+  gula_darah_sewaktu text,
+  kolesterol text,
+  lingkar_perut text,
+  imt numeric(5,2),
+  catatan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_skrining_kunjungan on skrining_awal(kunjungan_id);
+
+alter table skrining_awal enable row level security;
+create policy "authenticated_all_skrining_awal" on skrining_awal for all to authenticated using (true) with check (true);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

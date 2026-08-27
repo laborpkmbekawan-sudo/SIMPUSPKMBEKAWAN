@@ -415,10 +415,72 @@
     </div>
 
     <div id="panelSkrining" class="dash-content" style="display:none;">
+
       <div class="card">
-        <h2>Skrining Awal</h2>
-        <p style="font-size:13px; color:var(--muted);">Skrining risiko awal pasien (keluhan, riwayat penyakit menular, faktor risiko) saat pendaftaran. Belum dibangun — menyusul setelah Dashboard.</p>
+        <h2>Pasien Menunggu Skrining Awal</h2>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Kunjungan hari ini yang belum diskrining. Isi faktor risiko PTM sebelum pasien masuk klaster.</p>
+        <table>
+          <thead><tr><th>No. Antrian</th><th>Nama Pasien</th><th>Klaster</th><th>Aksi</th></tr></thead>
+          <tbody id="skrTabelMenunggu"><tr><td colspan="4">Memuat...</td></tr></tbody>
+        </table>
       </div>
+
+      <div class="card" id="skrCardForm" style="display:none;">
+        <h2>Form Skrining Awal — <span id="skrNamaPasien"></span></h2>
+        <div id="skrMsgBox"></div>
+
+        <div class="info-block">
+          <div class="info-row"><label>Tekanan Darah / Suhu / Nadi</label><span id="skrVitalTdSuhuNadi"></span></div>
+          <div class="info-row"><label>Berat / Tinggi Badan</label><span id="skrVitalBbTb"></span></div>
+          <div class="info-row"><label>IMT (otomatis)</label><span id="skrImt">-</span></div>
+        </div>
+
+        <div class="grid-2" style="margin-top:14px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="skrMerokok" style="width:16px; height:16px;"> Merokok / mantan perokok
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="skrKeluargaDm" style="width:16px; height:16px;"> Riwayat keluarga Diabetes
+          </label>
+        </div>
+        <div class="grid-2">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="skrKeluargaHt" style="width:16px; height:16px;"> Riwayat keluarga Hipertensi
+          </label>
+          <div>
+            <label>Lingkar Perut (cm)</label>
+            <input type="text" id="skrLingkarPerut" placeholder="cm">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label>Gula Darah Sewaktu</label>
+            <input type="text" id="skrGds" placeholder="mg/dL">
+          </div>
+          <div>
+            <label>Kolesterol</label>
+            <input type="text" id="skrKolesterol" placeholder="mg/dL">
+          </div>
+        </div>
+        <label>Riwayat Penyakit Menular (kalau ada)</label>
+        <textarea id="skrPenyakitMenular" placeholder="Contoh: batuk >2 minggu, kontak TBC"></textarea>
+        <label>Catatan Tambahan</label>
+        <textarea id="skrCatatan"></textarea>
+
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="btn-primary" onclick="simpanSkrining()">Simpan Skrining</button>
+          <button class="btn-secondary" onclick="batalSkrining()">Batal</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Riwayat Skrining Hari Ini</h2>
+        <table>
+          <thead><tr><th>Nama Pasien</th><th>Klaster</th><th>IMT</th><th>Faktor Risiko</th><th>GDS</th></tr></thead>
+          <tbody id="skrTabelRiwayat"><tr><td colspan="5">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
     </div>
 
     <div id="panelKoordinasi" class="dash-content" style="display:none;">
@@ -515,6 +577,7 @@ function gantiSubtabPendaftaran(tab) {
     if (nav) nav.classList.toggle("active", t === tab);
   });
   if (tab === "dashboard") muatDashboardRingkas();
+  if (tab === "skrining") muatSkrining();
 }
 
 async function muatDashboardRingkas() {
@@ -1052,6 +1115,135 @@ function cetakUlang(index) {
     tanggal: new Date(k.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
   });
   window.print();
+}
+
+// ---------- Skrining Awal (faktor risiko PTM sebelum masuk klaster) ----------
+let skrKunjunganTerpilih = null;
+
+async function muatSkrining() {
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data: kunjunganHariIni, error: errK } = await supabaseClient
+    .from("kunjungan")
+    .select("*, pasien(nama, no_rm), klaster(nama, kode)")
+    .eq("tanggal", today)
+    .neq("status", "batal")
+    .order("no_antrian");
+
+  const { data: sudahSkrining, error: errS } = await supabaseClient
+    .from("skrining_awal")
+    .select("kunjungan_id, imt, merokok, riwayat_keluarga_dm, riwayat_keluarga_hipertensi, gula_darah_sewaktu, kunjungan(pasien(nama), klaster(nama, kode), tanggal)");
+
+  const tbodyMenunggu = document.getElementById("skrTabelMenunggu");
+  const tbodyRiwayat = document.getElementById("skrTabelRiwayat");
+
+  if (errK) { tbodyMenunggu.innerHTML = `<tr><td colspan="4">Gagal muat: ${errK.message}</td></tr>`; return; }
+
+  const sudahIds = new Set((sudahSkrining || []).map(s => s.kunjungan_id));
+  window._kunjunganUntukSkrining = kunjunganHariIni;
+  const belum = kunjunganHariIni.filter(k => !sudahIds.has(k.id));
+
+  tbodyMenunggu.innerHTML = belum.length ? belum.map((k, i) => `
+    <tr>
+      <td>${k.no_antrian}</td>
+      <td>${k.pasien?.nama || "-"}</td>
+      <td>${k.klaster?.kode || "-"} — ${k.klaster?.nama || "-"}</td>
+      <td><button class="btn-secondary" onclick="bukaFormSkrining(${i})">Skrining</button></td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">Semua pasien hari ini sudah diskrining.</td></tr>`;
+
+  if (errS) { tbodyRiwayat.innerHTML = `<tr><td colspan="5">Gagal muat riwayat: ${errS.message}</td></tr>`; return; }
+
+  const riwayatHariIni = (sudahSkrining || []).filter(s => s.kunjungan?.tanggal === today);
+  tbodyRiwayat.innerHTML = riwayatHariIni.length ? riwayatHariIni.map(s => {
+    const risiko = [];
+    if (s.merokok) risiko.push("Merokok");
+    if (s.riwayat_keluarga_dm) risiko.push("Ket. DM");
+    if (s.riwayat_keluarga_hipertensi) risiko.push("Ket. HT");
+    return `
+      <tr>
+        <td>${s.kunjungan?.pasien?.nama || "-"}</td>
+        <td>${s.kunjungan?.klaster?.kode || "-"} — ${s.kunjungan?.klaster?.nama || "-"}</td>
+        <td>${s.imt || "-"}</td>
+        <td>${risiko.length ? risiko.join(", ") : "-"}</td>
+        <td>${s.gula_darah_sewaktu || "-"}</td>
+      </tr>`;
+  }).join("") : `<tr><td colspan="5">Belum ada skrining hari ini.</td></tr>`;
+}
+
+function bukaFormSkrining(index) {
+  const k = window._kunjunganUntukSkrining[index];
+  skrKunjunganTerpilih = k;
+
+  document.getElementById("skrNamaPasien").textContent = k.pasien?.nama || "-";
+  document.getElementById("skrVitalTdSuhuNadi").textContent = `${k.tekanan_darah || "-"} / ${k.suhu || "-"} / ${k.nadi || "-"}`;
+  document.getElementById("skrVitalBbTb").textContent = `${k.berat_badan || "-"} kg / ${k.tinggi_badan || "-"} cm`;
+
+  const bb = parseFloat(k.berat_badan);
+  const tb = parseFloat(k.tinggi_badan);
+  let imt = null;
+  if (bb && tb) {
+    imt = bb / ((tb / 100) * (tb / 100));
+    document.getElementById("skrImt").textContent = `${imt.toFixed(2)} (${kategoriImt(imt)})`;
+  } else {
+    document.getElementById("skrImt").textContent = "Data BB/TB belum lengkap saat pendaftaran";
+  }
+  window._skrImtHitung = imt;
+
+  document.getElementById("skrMerokok").checked = false;
+  document.getElementById("skrKeluargaDm").checked = false;
+  document.getElementById("skrKeluargaHt").checked = false;
+  document.getElementById("skrLingkarPerut").value = "";
+  document.getElementById("skrGds").value = "";
+  document.getElementById("skrKolesterol").value = "";
+  document.getElementById("skrPenyakitMenular").value = "";
+  document.getElementById("skrCatatan").value = "";
+  document.getElementById("skrMsgBox").innerHTML = "";
+
+  document.getElementById("skrCardForm").style.display = "block";
+  document.getElementById("skrCardForm").scrollIntoView({ behavior: "smooth" });
+}
+
+function kategoriImt(imt) {
+  if (imt < 18.5) return "Kurus";
+  if (imt < 25) return "Normal";
+  if (imt < 27) return "Gemuk";
+  return "Obesitas";
+}
+
+function batalSkrining() {
+  skrKunjunganTerpilih = null;
+  document.getElementById("skrCardForm").style.display = "none";
+}
+
+async function simpanSkrining() {
+  const msgBox = document.getElementById("skrMsgBox");
+  if (!skrKunjunganTerpilih) return;
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  const payload = {
+    kunjungan_id: skrKunjunganTerpilih.id,
+    merokok: document.getElementById("skrMerokok").checked,
+    riwayat_keluarga_dm: document.getElementById("skrKeluargaDm").checked,
+    riwayat_keluarga_hipertensi: document.getElementById("skrKeluargaHt").checked,
+    riwayat_penyakit_menular: document.getElementById("skrPenyakitMenular").value.trim() || null,
+    gula_darah_sewaktu: document.getElementById("skrGds").value.trim() || null,
+    kolesterol: document.getElementById("skrKolesterol").value.trim() || null,
+    lingkar_perut: document.getElementById("skrLingkarPerut").value.trim() || null,
+    imt: window._skrImtHitung ? parseFloat(window._skrImtHitung.toFixed(2)) : null,
+    catatan: document.getElementById("skrCatatan").value.trim() || null,
+    petugas_id: user.id
+  };
+
+  const { error } = await supabaseClient.from("skrining_awal").insert(payload);
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`;
+    return;
+  }
+
+  batalSkrining();
+  await muatSkrining();
 }
 </script>
 
