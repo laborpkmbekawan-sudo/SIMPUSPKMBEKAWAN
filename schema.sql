@@ -961,6 +961,9 @@ create index if not exists idx_survei_tanggal on survei_kepuasan(created_at);
 
 alter table survei_kepuasan enable row level security;
 create policy "authenticated_all_survei_kepuasan" on survei_kepuasan for all to authenticated using (true) with check (true);
+-- Pasien isi survei via scan QR di struk pendaftaran, tanpa login (role anon).
+-- Insert-only: anon gak bisa select/update/delete data survei siapapun.
+create policy "anon_insert_survei_kepuasan" on survei_kepuasan for insert to anon with check (true);
 
 -- ============================================================
 -- SELESAI. Setelah run schema ini:

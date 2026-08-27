@@ -228,6 +228,9 @@ tr:hover td { background: #fafcfc; }
 .kartu-cetak .antrian-besar .label { font-size: 12px; color: #555; letter-spacing: 1px; }
 .kartu-cetak .antrian-besar .nomor { font-size: 48px; font-weight: 700; color: var(--primary); }
 .kartu-cetak .catatan { font-size: 12px; color: #666; text-align: center; margin-top: 10px; }
+.kartu-cetak .qr-survei { text-align: center; margin-top: 14px; border-top: 1px dashed #999; padding-top: 10px; }
+.kartu-cetak .qr-survei #qrSurveiBox { display: inline-block; }
+.kartu-cetak .qr-survei p { font-size: 11px; color: #555; margin-top: 4px; }
 
 /* ============================================================
    LAYOUT LOKET PENDAFTARAN (sidebar + dashboard) — dipakai index.html

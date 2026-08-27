@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Survei Kepuasan Pasien — UPTD Puskesmas Bekawan</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f3f5f7;
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+  }
+  .kartu {
+    background: #fff;
+    max-width: 440px;
+    width: 100%;
+    border-radius: 12px;
+    padding: 24px 20px 28px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+  h1 { font-size: 18px; text-align: center; margin: 0 0 2px; color: #16324f; }
+  p.sub { text-align: center; font-size: 13px; color: #666; margin: 0 0 20px; }
+  label { display: block; font-size: 14px; font-weight: 600; color: #333; margin: 18px 0 8px; }
+  .bintang-row { display: flex; justify-content: space-between; gap: 6px; }
+  .bintang-opsi {
+    flex: 1;
+    text-align: center;
+    padding: 10px 4px;
+    border: 2px solid #e2e5e9;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    user-select: none;
+    transition: all .15s;
+  }
+  .bintang-opsi .angka { display: block; font-size: 10px; color: #888; margin-top: 2px; }
+  .bintang-opsi.aktif { border-color: #16865c; background: #eafbf3; }
+  textarea {
+    width: 100%;
+    min-height: 70px;
+    border: 1px solid #d9dde2;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+  }
+  input[type="text"] {
+    width: 100%;
+    border: 1px solid #d9dde2;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  button {
+    width: 100%;
+    margin-top: 22px;
+    padding: 13px;
+    border: none;
+    border-radius: 8px;
+    background: #16865c;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:disabled { background: #9bb; cursor: not-allowed; }
+  .msg { margin-top: 14px; padding: 10px; border-radius: 8px; font-size: 13px; text-align: center; }
+  .msg-error { background: #fdecec; color: #b42318; }
+  .msg-success { background: #eafbf3; color: #16865c; }
+  .selesai { text-align: center; padding: 20px 0; }
+  .selesai .ikon { font-size: 44px; }
+  .selesai h2 { font-size: 17px; color: #16324f; margin: 10px 0 6px; }
+  .selesai p { font-size: 13px; color: #666; }
+</style>
+</head>
+<body>
+
+<div class="kartu">
+  <div id="formArea">
+    <h1>UPTD Puskesmas Bekawan</h1>
+    <p class="sub">Survei Kepuasan Pasien — masukan Anda membantu kami jadi lebih baik</p>
+    <div id="msgBox"></div>
+
+    <label>Nama (opsional, boleh dikosongkan / anonim)</label>
+    <input type="text" id="srvNama" placeholder="Anonim">
+
+    <label>Kecepatan Pelayanan</label>
+    <div class="bintang-row" data-target="srvKecepatan"></div>
+
+    <label>Keramahan Petugas</label>
+    <div class="bintang-row" data-target="srvKeramahan"></div>
+
+    <label>Kejelasan Informasi</label>
+    <div class="bintang-row" data-target="srvKejelasan"></div>
+
+    <label>Kebersihan Ruang Tunggu</label>
+    <div class="bintang-row" data-target="srvKebersihan"></div>
+
+    <label>Saran / Masukan (opsional)</label>
+    <textarea id="srvSaran" placeholder="Tulis masukan Anda di sini..."></textarea>
+
+    <button id="btnKirim" onclick="kirimSurvei()">Kirim Survei</button>
+  </div>
+
+  <div id="selesaiArea" class="selesai" style="display:none;">
+    <div class="ikon">✅</div>
+    <h2>Terima kasih!</h2>
+    <p>Survei Anda sudah kami terima. Semoga pelayanan kami semakin baik ke depannya.</p>
+  </div>
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+// Halaman publik — tidak wajib login. Diakses via scan QR di struk pendaftaran.
+const params = new URLSearchParams(window.location.search);
+const kunjunganId = params.get("id") || null;
+
+const skor = { srvKecepatan: 0, srvKeramahan: 0, srvKejelasan: 0, srvKebersihan: 0 };
+
+document.querySelectorAll(".bintang-row").forEach(row => {
+  const target = row.dataset.target;
+  row.innerHTML = [1,2,3,4,5].map(n =>
+    `<div class="bintang-opsi" data-val="${n}">⭐<span class="angka">${n}</span></div>`
+  ).join("");
+  row.querySelectorAll(".bintang-opsi").forEach(opsi => {
+    opsi.addEventListener("click", () => {
+      skor[target] = parseInt(opsi.dataset.val);
+      row.querySelectorAll(".bintang-opsi").forEach(o => {
+        o.classList.toggle("aktif", parseInt(o.dataset.val) <= skor[target]);
+      });
+    });
+  });
+});
+
+async function kirimSurvei() {
+  const msgBox = document.getElementById("msgBox");
+  msgBox.innerHTML = "";
+
+  if (!skor.srvKecepatan || !skor.srvKeramahan || !skor.srvKejelasan || !skor.srvKebersihan) {
+    msgBox.innerHTML = `<div class="msg msg-error">Mohon isi semua penilaian bintang dulu ya.</div>`;
+    return;
+  }
+
+  const btn = document.getElementById("btnKirim");
+  btn.disabled = true;
+  btn.textContent = "Mengirim...";
+
+  const payload = {
+    kunjungan_id: kunjunganId,
+    nama_pasien: document.getElementById("srvNama").value.trim() || null,
+    skor_kecepatan: skor.srvKecepatan,
+    skor_keramahan: skor.srvKeramahan,
+    skor_kejelasan_informasi: skor.srvKejelasan,
+    skor_kebersihan: skor.srvKebersihan,
+    saran: document.getElementById("srvSaran").value.trim() || null
+  };
+
+  const { error } = await supabaseClient.from("survei_kepuasan").insert(payload);
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal mengirim survei: ${error.message}</div>`;
+    btn.disabled = false;
+    btn.textContent = "Kirim Survei";
+    return;
+  }
+
+  document.getElementById("formArea").style.display = "none";
+  document.getElementById("selesaiArea").style.display = "block";
+}
+</script>
+</body>
+</html>

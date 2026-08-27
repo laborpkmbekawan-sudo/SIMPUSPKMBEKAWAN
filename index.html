@@ -804,6 +804,10 @@
     <p class="nomor" id="cetakNoAntrian"></p>
   </div>
   <p class="catatan">Simpan kartu ini &amp; tunggu nomor dipanggil di ruang klaster tujuan.</p>
+  <div class="qr-survei">
+    <div id="qrSurveiBox"></div>
+    <p>Sudah selesai dilayani? Scan QR ini untuk isi survei kepuasan.</p>
+  </div>
 </div>
 
 <div id="areaCetakRujukan" class="kartu-cetak" style="width:480px;">
@@ -824,6 +828,7 @@
   <p class="catatan" style="margin-top:20px;">Dibuat oleh petugas pendaftaran UPTD Puskesmas Bekawan.</p>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="js/supabaseClient.js"></script>
 <script>
 let pasienTerpilih = null;
@@ -1289,7 +1294,7 @@ async function buatKunjungan() {
     created_by: user.id
   };
 
-  const { error } = await supabaseClient.from("kunjungan").insert(payload);
+  const { data: kunjunganBaru, error } = await supabaseClient.from("kunjungan").insert(payload).select("id").single();
 
   if (error) {
     msgBox.innerHTML = `<div class="msg msg-error">Gagal daftar kunjungan: ${error.message}</div>`;
@@ -1300,6 +1305,7 @@ async function buatKunjungan() {
   const klasterText = klasterSelect.options[klasterSelect.selectedIndex].text;
 
   isiKartuCetak({
+    id: kunjunganBaru.id,
     nama: pasienTerpilih.nama,
     no_rm: pasienTerpilih.no_rm,
     nik: pasienTerpilih.nik,
@@ -1332,6 +1338,13 @@ function isiKartuCetak(k) {
   document.getElementById("cetakKlaster").textContent = k.klaster;
   document.getElementById("cetakBayar").textContent = k.jenis_bayar;
   document.getElementById("cetakTanggal").textContent = k.tanggal;
+
+  const qrBox = document.getElementById("qrSurveiBox");
+  qrBox.innerHTML = "";
+  if (k.id) {
+    const urlSurvei = `${window.location.origin}/survei.html?id=${k.id}`;
+    new QRCode(qrBox, { text: urlSurvei, width: 110, height: 110, correctLevel: QRCode.CorrectLevel.M });
+  }
 }
 
 function cetakKartu() {
@@ -1405,6 +1418,7 @@ function isiStatDashboard(data) {
 function cetakUlang(index) {
   const k = window._antrianHariIni[index];
   isiKartuCetak({
+    id: k.id,
     nama: k.pasien?.nama || "-",
     no_rm: k.pasien?.no_rm,
     nik: k.pasien?.nik || "-",
