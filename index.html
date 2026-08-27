@@ -528,10 +528,72 @@
     </div>
 
     <div id="panelRujukan" class="dash-content" style="display:none;">
+
       <div class="card">
-        <h2>Rujukan</h2>
-        <p style="font-size:13px; color:var(--muted);">Pencatatan rujukan internal antar klaster dan rujukan eksternal ke faskes lain. Belum dibangun.</p>
+        <h2>Buat Rujukan Baru</h2>
+        <div id="rjkMsgBox"></div>
+
+        <div class="grid-2">
+          <div>
+            <label>Cari Pasien (dari kunjungan hari ini)</label>
+            <input type="text" id="rjkCariPasien" placeholder="Ketik nama / no. antrian" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienRujukan();}">
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button class="btn-primary" onclick="cariPasienRujukan()" style="margin-bottom:12px;">Cari</button>
+          </div>
+        </div>
+        <div id="rjkHasilCari"></div>
+        <div id="rjkDaftarHasilCari"></div>
+
+        <div id="rjkFormLanjut" style="display:none; margin-top:14px; border-top:1px solid #e5e7eb; padding-top:14px;">
+          <div class="info-block">
+            <div class="info-row"><label>Pasien</label><span id="rjkNamaTerpilih"></span></div>
+            <div class="info-row"><label>Klaster Asal</label><span id="rjkKlasterAsal"></span></div>
+          </div>
+
+          <div class="grid-2" style="margin-top:12px;">
+            <div>
+              <label>Jenis Rujukan *</label>
+              <select id="rjkJenis" required onchange="toggleJenisRujukan()">
+                <option value="">Pilih</option>
+                <option value="internal">Rujuk Internal (Antar Klaster)</option>
+                <option value="fkrtl">Rujuk FKRTL (Rumah Sakit/Faskes Lanjutan)</option>
+              </select>
+            </div>
+            <div id="rjkWrapKlasterTujuan" style="display:none;">
+              <label>Klaster Tujuan *</label>
+              <select id="rjkKlasterTujuan"></select>
+            </div>
+            <div id="rjkWrapFaskesTujuan" style="display:none;">
+              <label>Faskes Tujuan *</label>
+              <input type="text" id="rjkFaskesTujuan" placeholder="Contoh: RSUD Dumai">
+            </div>
+          </div>
+
+          <label>Diagnosa / Keluhan yang Dirujuk</label>
+          <input type="text" id="rjkDiagnosa" placeholder="Diagnosa awal / keluhan">
+
+          <label>Alasan Rujukan *</label>
+          <textarea id="rjkAlasan" placeholder="Kenapa perlu dirujuk"></textarea>
+
+          <label>Catatan Tambahan</label>
+          <textarea id="rjkCatatan"></textarea>
+
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <button class="btn-primary" onclick="simpanRujukan()">Simpan Rujukan</button>
+            <button class="btn-secondary" onclick="batalRujukan()">Batal</button>
+          </div>
+        </div>
       </div>
+
+      <div class="card">
+        <h2>Riwayat Rujukan Hari Ini</h2>
+        <table>
+          <thead><tr><th>Pasien</th><th>Jenis</th><th>Tujuan</th><th>Alasan</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="rjkTabelRiwayat"><tr><td colspan="6">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
     </div>
 
     <div id="panelKerahasiaan" class="dash-content" style="display:none;">
@@ -582,6 +644,24 @@
   <p class="catatan">Simpan kartu ini &amp; tunggu nomor dipanggil di ruang klaster tujuan.</p>
 </div>
 
+<div id="areaCetakRujukan" class="kartu-cetak" style="width:480px;">
+  <h2>UPTD PUSKESMAS BEKAWAN</h2>
+  <p class="sub">Surat Pengantar Rujukan</p>
+  <div class="garis"></div>
+  <div class="baris"><span>Tanggal</span><span id="rjkCetakTanggal"></span></div>
+  <div class="baris"><span>Nama Pasien</span><span id="rjkCetakNama"></span></div>
+  <div class="baris"><span>No. RM</span><span id="rjkCetakNoRm"></span></div>
+  <div class="baris"><span>Jenis Rujukan</span><span id="rjkCetakJenis"></span></div>
+  <div class="baris"><span>Tujuan</span><span id="rjkCetakTujuan"></span></div>
+  <div class="baris"><span>Diagnosa</span><span id="rjkCetakDiagnosa"></span></div>
+  <div class="garis"></div>
+  <p style="font-size:13px; margin-top:8px;"><strong>Alasan Rujukan:</strong></p>
+  <p style="font-size:13px;" id="rjkCetakAlasan"></p>
+  <p style="font-size:13px; margin-top:8px;"><strong>Catatan:</strong></p>
+  <p style="font-size:13px;" id="rjkCetakCatatan"></p>
+  <p class="catatan" style="margin-top:20px;">Dibuat oleh petugas pendaftaran UPTD Puskesmas Bekawan.</p>
+</div>
+
 <script src="js/supabaseClient.js"></script>
 <script>
 let pasienTerpilih = null;
@@ -616,6 +696,7 @@ function gantiSubtabPendaftaran(tab) {
   });
   if (tab === "dashboard") muatDashboardRingkas();
   if (tab === "skrining") muatSkrining();
+  if (tab === "rujukan") muatRujukan();
 
   if (tab === "koordinasi") {
     muatKoordinasi();
@@ -1090,6 +1171,8 @@ function isiKartuCetak(k) {
 }
 
 function cetakKartu() {
+  document.getElementById("areaCetak").classList.add("aktif-cetak");
+  document.getElementById("areaCetakRujukan").classList.remove("aktif-cetak");
   window.print();
 }
 
@@ -1167,6 +1250,8 @@ function cetakUlang(index) {
     jenis_bayar: k.jenis_bayar,
     tanggal: new Date(k.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
   });
+  document.getElementById("areaCetak").classList.add("aktif-cetak");
+  document.getElementById("areaCetakRujukan").classList.remove("aktif-cetak");
   window.print();
 }
 
@@ -1365,6 +1450,211 @@ function renderKoordinasiBeban(data) {
       <td>${grup[k].selesai}</td>
     </tr>
   `).join("") : `<tr><td colspan="4">Belum ada kunjungan hari ini.</td></tr>`;
+}
+
+// ---------- Rujukan (internal antar klaster & FKRTL) ----------
+let rjkKunjunganTerpilih = null;
+let rjkDaftarKlaster = [];
+
+async function cariPasienRujukan() {
+  const kunci = document.getElementById("rjkCariPasien").value.trim().toLowerCase();
+  const hasilDiv = document.getElementById("rjkHasilCari");
+  const daftarDiv = document.getElementById("rjkDaftarHasilCari");
+  hasilDiv.innerHTML = "";
+  daftarDiv.innerHTML = "";
+  document.getElementById("rjkFormLanjut").style.display = "none";
+  rjkKunjunganTerpilih = null;
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Ketik nama atau no. antrian dulu.</div>`; return; }
+
+  const today = new Date().toISOString().split("T")[0];
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("*, pasien(nama, no_rm), klaster(nama, kode)")
+    .eq("tanggal", today)
+    .neq("status", "batal")
+    .order("no_antrian");
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+
+  const hasil = data.filter(k =>
+    (k.pasien?.nama || "").toLowerCase().includes(kunci) || String(k.no_antrian) === kunci
+  );
+
+  if (!hasil.length) {
+    hasilDiv.innerHTML = `<div class="msg msg-error">Tidak ditemukan di kunjungan hari ini.</div>`;
+    return;
+  }
+  if (hasil.length === 1) {
+    pilihPasienRujukan(hasil[0]);
+    return;
+  }
+
+  window._rjkHasilCari = hasil;
+  daftarDiv.innerHTML = `<table><thead><tr><th>No. Antrian</th><th>Nama</th><th>Klaster</th><th></th></tr></thead><tbody>` +
+    hasil.map((k, i) => `
+      <tr>
+        <td>${k.no_antrian}</td>
+        <td>${k.pasien?.nama || "-"}</td>
+        <td>${k.klaster?.kode || "-"} — ${k.klaster?.nama || "-"}</td>
+        <td><button class="btn-secondary" onclick="pilihPasienRujukanDariHasil(${i})">Pilih</button></td>
+      </tr>
+    `).join("") + `</tbody></table>`;
+}
+
+function pilihPasienRujukanDariHasil(i) {
+  pilihPasienRujukan(window._rjkHasilCari[i]);
+}
+
+async function pilihPasienRujukan(k) {
+  rjkKunjunganTerpilih = k;
+  document.getElementById("rjkDaftarHasilCari").innerHTML = "";
+  document.getElementById("rjkHasilCari").innerHTML = `<div class="msg msg-success">Pasien dipilih: <strong>${k.pasien?.nama || "-"}</strong></div>`;
+  document.getElementById("rjkNamaTerpilih").textContent = `${k.pasien?.nama || "-"} (No. RM ${k.pasien?.no_rm || "-"})`;
+  document.getElementById("rjkKlasterAsal").textContent = `${k.klaster?.kode || "-"} — ${k.klaster?.nama || "-"}`;
+  document.getElementById("rjkJenis").value = "";
+  document.getElementById("rjkDiagnosa").value = "";
+  document.getElementById("rjkAlasan").value = "";
+  document.getElementById("rjkCatatan").value = "";
+  document.getElementById("rjkFaskesTujuan").value = "";
+  toggleJenisRujukan();
+
+  if (!rjkDaftarKlaster.length) {
+    const { data } = await supabaseClient.from("klaster").select("*").order("id");
+    rjkDaftarKlaster = data || [];
+  }
+  const select = document.getElementById("rjkKlasterTujuan");
+  select.innerHTML = rjkDaftarKlaster
+    .filter(kl => kl.id !== k.klaster_id)
+    .map(kl => `<option value="${kl.id}">${kl.kode} — ${kl.nama}</option>`).join("");
+
+  document.getElementById("rjkFormLanjut").style.display = "block";
+}
+
+function toggleJenisRujukan() {
+  const jenis = document.getElementById("rjkJenis").value;
+  document.getElementById("rjkWrapKlasterTujuan").style.display = jenis === "internal" ? "block" : "none";
+  document.getElementById("rjkWrapFaskesTujuan").style.display = jenis === "fkrtl" ? "block" : "none";
+}
+
+function batalRujukan() {
+  rjkKunjunganTerpilih = null;
+  document.getElementById("rjkFormLanjut").style.display = "none";
+  document.getElementById("rjkCariPasien").value = "";
+  document.getElementById("rjkHasilCari").innerHTML = "";
+}
+
+async function simpanRujukan() {
+  const msgBox = document.getElementById("rjkMsgBox");
+  if (!rjkKunjunganTerpilih) return;
+
+  const jenis = document.getElementById("rjkJenis").value;
+  const alasan = document.getElementById("rjkAlasan").value.trim();
+  const diagnosa = document.getElementById("rjkDiagnosa").value.trim();
+  const catatan = document.getElementById("rjkCatatan").value.trim();
+
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jenis rujukan dulu.</div>`; return; }
+  if (!alasan) { msgBox.innerHTML = `<div class="msg msg-error">Isi alasan rujukan dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  let klasterTujuanId = null;
+  let faskesTujuan = null;
+  let kunjunganTujuanId = null;
+
+  if (jenis === "internal") {
+    klasterTujuanId = parseInt(document.getElementById("rjkKlasterTujuan").value);
+    if (!klasterTujuanId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih klaster tujuan dulu.</div>`; return; }
+
+    // Bikin kunjungan baru otomatis di klaster tujuan biar pasien langsung masuk antrian sana
+    const { data: noKunjunganData, error: errNo } = await supabaseClient.rpc("generate_no_kunjungan");
+    const { data: noAntrianData, error: errAntrian } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: klasterTujuanId });
+    if (errNo || errAntrian) { msgBox.innerHTML = `<div class="msg msg-error">Gagal generate nomor: ${(errNo || errAntrian).message}</div>`; return; }
+
+    const { data: kunjunganBaru, error: errKunjungan } = await supabaseClient.from("kunjungan").insert({
+      no_kunjungan: noKunjunganData,
+      pasien_id: rjkKunjunganTerpilih.pasien_id,
+      klaster_id: klasterTujuanId,
+      jenis_bayar: rjkKunjunganTerpilih.jenis_bayar,
+      jenis_kunjungan: "lama",
+      lokasi_pemeriksaan: rjkKunjunganTerpilih.lokasi_pemeriksaan,
+      jenis_pasien: rjkKunjunganTerpilih.jenis_pasien,
+      pengirim: "Rujukan Internal",
+      no_antrian: noAntrianData,
+      keluhan_awal: alasan,
+      status: "menunggu",
+      created_by: user.id
+    }).select().single();
+
+    if (errKunjungan) { msgBox.innerHTML = `<div class="msg msg-error">Gagal buat kunjungan tujuan: ${errKunjungan.message}</div>`; return; }
+    kunjunganTujuanId = kunjunganBaru.id;
+  } else {
+    faskesTujuan = document.getElementById("rjkFaskesTujuan").value.trim();
+    if (!faskesTujuan) { msgBox.innerHTML = `<div class="msg msg-error">Isi faskes tujuan dulu.</div>`; return; }
+  }
+
+  const payload = {
+    kunjungan_asal_id: rjkKunjunganTerpilih.id,
+    kunjungan_tujuan_id: kunjunganTujuanId,
+    jenis: jenis,
+    klaster_tujuan_id: klasterTujuanId,
+    faskes_tujuan: faskesTujuan,
+    diagnosa_rujukan: diagnosa || null,
+    alasan_rujukan: alasan,
+    catatan: catatan || null,
+    status: jenis === "internal" ? "diterima" : "diajukan",
+    petugas_id: user.id
+  };
+
+  const { error } = await supabaseClient.from("rujukan").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan rujukan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Rujukan berhasil disimpan${jenis === "internal" ? " — antrian baru sudah dibuat di klaster tujuan." : "."}</div>`;
+  batalRujukan();
+  await muatRujukan();
+}
+
+async function muatRujukan() {
+  const today = new Date().toISOString().split("T")[0];
+  const besok = new Date(); besok.setDate(besok.getDate() + 1);
+  const besokStr = besok.toISOString().split("T")[0];
+
+  const { data, error } = await supabaseClient
+    .from("rujukan")
+    .select("*, kunjungan_asal:kunjungan_asal_id(pasien(nama, no_rm)), klaster_tujuan:klaster_tujuan_id(nama, kode)")
+    .gte("created_at", today)
+    .lt("created_at", besokStr)
+    .order("created_at", { ascending: false });
+
+  const tbody = document.getElementById("rjkTabelRiwayat");
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  window._rjkRiwayat = data;
+  tbody.innerHTML = data.length ? data.map((r, i) => `
+    <tr>
+      <td>${r.kunjungan_asal?.pasien?.nama || "-"}</td>
+      <td>${r.jenis === "internal" ? "Internal" : "FKRTL"}</td>
+      <td>${r.jenis === "internal" ? (r.klaster_tujuan ? `${r.klaster_tujuan.kode} — ${r.klaster_tujuan.nama}` : "-") : (r.faskes_tujuan || "-")}</td>
+      <td>${r.alasan_rujukan}</td>
+      <td><span class="badge badge-${r.status === 'diterima' ? 'selesai' : (r.status === 'batal' ? 'batal' : 'menunggu')}">${r.status}</span></td>
+      <td><button class="btn-secondary" onclick="cetakSuratRujukan(${i})">Cetak Surat</button></td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Belum ada rujukan hari ini.</td></tr>`;
+}
+
+function cetakSuratRujukan(index) {
+  const r = window._rjkRiwayat[index];
+  document.getElementById("rjkCetakTanggal").textContent = new Date(r.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  document.getElementById("rjkCetakNama").textContent = r.kunjungan_asal?.pasien?.nama || "-";
+  document.getElementById("rjkCetakNoRm").textContent = r.kunjungan_asal?.pasien?.no_rm || "-";
+  document.getElementById("rjkCetakJenis").textContent = r.jenis === "internal" ? "Internal (Antar Klaster)" : "FKRTL";
+  document.getElementById("rjkCetakTujuan").textContent = r.jenis === "internal" ? (r.klaster_tujuan ? `${r.klaster_tujuan.kode} — ${r.klaster_tujuan.nama}` : "-") : (r.faskes_tujuan || "-");
+  document.getElementById("rjkCetakDiagnosa").textContent = r.diagnosa_rujukan || "-";
+  document.getElementById("rjkCetakAlasan").textContent = r.alasan_rujukan;
+  document.getElementById("rjkCetakCatatan").textContent = r.catatan || "-";
+
+  document.getElementById("areaCetakRujukan").classList.add("aktif-cetak");
+  document.getElementById("areaCetak").classList.remove("aktif-cetak");
+  window.print();
 }
 </script>
 

@@ -366,8 +366,8 @@ tr:hover td { background: #fafcfc; }
 
 @media print {
   body * { visibility: hidden; }
-  .kartu-cetak, .kartu-cetak * { visibility: visible; }
-  .kartu-cetak {
+  .kartu-cetak.aktif-cetak, .kartu-cetak.aktif-cetak * { visibility: visible; }
+  .kartu-cetak.aktif-cetak {
     display: block;
     position: absolute;
     top: 0; left: 0;

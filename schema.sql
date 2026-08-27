@@ -883,6 +883,31 @@ alter table skrining_awal enable row level security;
 create policy "authenticated_all_skrining_awal" on skrining_awal for all to authenticated using (true) with check (true);
 
 -- ============================================================
+-- 28. RUJUKAN — Internal antar klaster & FKRTL (rumah sakit/faskes lanjutan)
+--     Rujukan internal otomatis bikin kunjungan baru di klaster tujuan.
+-- ============================================================
+create table if not exists rujukan (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_asal_id uuid not null references kunjungan(id),
+  kunjungan_tujuan_id uuid references kunjungan(id), -- diisi kalau rujukan internal (kunjungan baru di klaster tujuan)
+  jenis text not null check (jenis in ('internal', 'fkrtl')),
+  klaster_tujuan_id int references klaster(id), -- diisi kalau internal
+  faskes_tujuan text, -- diisi kalau fkrtl, mis. "RSUD Dumai"
+  diagnosa_rujukan text,
+  alasan_rujukan text not null,
+  catatan text,
+  status text not null default 'diajukan' check (status in ('diajukan', 'diterima', 'selesai', 'batal')),
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_rujukan_kunjungan_asal on rujukan(kunjungan_asal_id);
+create index if not exists idx_rujukan_tanggal on rujukan(created_at);
+
+alter table rujukan enable row level security;
+create policy "authenticated_all_rujukan" on rujukan for all to authenticated using (true) with check (true);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
