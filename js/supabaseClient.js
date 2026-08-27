@@ -164,6 +164,7 @@ function sesuaikanTabNav(profil) {
   const izin = halamanIzinUntuk(profil);
   document.querySelectorAll(".tab-nav a, .sidebar nav a").forEach(a => {
     const href = a.getAttribute("href");
+    if (!href) return; // subtab internal (onclick, tanpa href) — bukan link antar modul, jangan disembunyikan
     if (!izin.includes(href)) a.style.display = "none";
   });
 }

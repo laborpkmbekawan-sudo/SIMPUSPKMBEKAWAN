@@ -17,7 +17,22 @@
       <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
     </div>
     <nav>
-      <a href="index.html" class="active">Pendaftaran</a>
+      <div class="ph-group-title">Menu Utama</div>
+      <a class="active" id="navDashboard" onclick="gantiSubtabPendaftaran('dashboard')">Dashboard</a>
+      <a id="navIdentifikasi" onclick="gantiSubtabPendaftaran('identifikasi')">Identifikasi &amp; Pendaftaran</a>
+      <a id="navSkrining" onclick="gantiSubtabPendaftaran('skrining')">Skrining Awal</a>
+
+      <div class="ph-group-title">Koordinasi &amp; Layanan</div>
+      <a id="navKoordinasi" onclick="gantiSubtabPendaftaran('koordinasi')">Koordinasi Antar Unit</a>
+      <a id="navRujukan" onclick="gantiSubtabPendaftaran('rujukan')">Rujukan</a>
+      <a id="navKerahasiaan" onclick="gantiSubtabPendaftaran('kerahasiaan')">Kerahasiaan &amp; Hak Akses</a>
+      <a id="navSurvei" onclick="gantiSubtabPendaftaran('survei')">Survei Kepuasan</a>
+
+      <div class="ph-group-title">Laporan &amp; Audit</div>
+      <a id="navLaporan" onclick="gantiSubtabPendaftaran('laporan')">Laporan</a>
+      <a id="navAudit" onclick="gantiSubtabPendaftaran('audit')">Audit / Keamanan</a>
+
+      <div class="ph-group-title">Modul Lain</div>
       <a href="rekam-medis.html">Rekam Medis</a>
       <a href="apotek.html">Apotek</a>
       <a href="pengaturan.html">Pengaturan</a>
@@ -34,7 +49,55 @@
       </div>
     </div>
 
-    <div class="dash-content">
+    <div id="panelDashboard" class="dash-content">
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="label">Total Kunjungan Hari Ini</div>
+          <div class="value" id="dbStatTotal">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Antrian Masih Menunggu</div>
+          <div class="value" id="dbStatMenunggu">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Pasien Darurat/Prioritas Menunggu</div>
+          <div class="value" id="dbStatDarurat">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Kontrol Lanjutan Jatuh Tempo</div>
+          <div class="value" id="dbStatKontrol">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Ringkasan Kunjungan per Klaster Hari Ini</h2>
+        <table>
+          <thead><tr><th>Klaster</th><th>Total</th><th>Menunggu</th><th>Dipanggil</th><th>Selesai</th></tr></thead>
+          <tbody id="dbTabelRingkasKlaster"><tr><td colspan="5">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Antrian Aktif Tiap Klaster</h2>
+        <table>
+          <thead><tr><th>Klaster</th><th>No. Antrian Berjalan</th><th>Sisa Menunggu</th></tr></thead>
+          <tbody id="dbTabelAntrianAktif"><tr><td colspan="3">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Alert Kontrol Lanjutan Jatuh Tempo</h2>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pasien dengan jadwal kontrol berikutnya (dari Rekam Medis) yang sudah lewat tanggal tapi belum kunjungan ulang.</p>
+        <table>
+          <thead><tr><th>Pasien</th><th>No. RM</th><th>Tanggal Kontrol Dijadwalkan</th><th>Terlambat</th></tr></thead>
+          <tbody id="dbTabelKontrolJatuhTempo"><tr><td colspan="4">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <div id="panelIdentifikasi" class="dash-content" style="display:none;">
 
       <div class="stat-grid">
         <div class="stat-card">
@@ -350,6 +413,56 @@
       </div>
 
     </div>
+
+    <div id="panelSkrining" class="dash-content" style="display:none;">
+      <div class="card">
+        <h2>Skrining Awal</h2>
+        <p style="font-size:13px; color:var(--muted);">Skrining risiko awal pasien (keluhan, riwayat penyakit menular, faktor risiko) saat pendaftaran. Belum dibangun — menyusul setelah Dashboard.</p>
+      </div>
+    </div>
+
+    <div id="panelKoordinasi" class="dash-content" style="display:none;">
+      <div class="card">
+        <h2>Koordinasi Antar Unit</h2>
+        <p style="font-size:13px; color:var(--muted);">Komunikasi status pasien antar loket, klaster, dan unit penunjang (lab, apotek). Belum dibangun.</p>
+      </div>
+    </div>
+
+    <div id="panelRujukan" class="dash-content" style="display:none;">
+      <div class="card">
+        <h2>Rujukan</h2>
+        <p style="font-size:13px; color:var(--muted);">Pencatatan rujukan internal antar klaster dan rujukan eksternal ke faskes lain. Belum dibangun.</p>
+      </div>
+    </div>
+
+    <div id="panelKerahasiaan" class="dash-content" style="display:none;">
+      <div class="card">
+        <h2>Kerahasiaan &amp; Hak Akses</h2>
+        <p style="font-size:13px; color:var(--muted);">Log akses rekam medis pasien dan pengaturan hak akses berdasarkan role. Belum dibangun.</p>
+      </div>
+    </div>
+
+    <div id="panelSurvei" class="dash-content" style="display:none;">
+      <div class="card">
+        <h2>Survei Kepuasan</h2>
+        <p style="font-size:13px; color:var(--muted);">Rekap hasil survei kepuasan pasien. Belum dibangun.</p>
+      </div>
+    </div>
+
+    <div id="panelLaporan" class="dash-content" style="display:none;">
+      <div class="card">
+        <h2>Laporan</h2>
+        <p style="font-size:13px; color:var(--muted);">Laporan kunjungan, demografi pasien, dan kinerja loket. Belum dibangun.</p>
+      </div>
+    </div>
+
+    <div id="panelAudit" class="dash-content" style="display:none;">
+      <div class="card">
+        <h2>Audit / Keamanan</h2>
+        <p style="font-size:13px; color:var(--muted);">Jejak audit perubahan data pasien dan aktivitas login. Belum dibangun.</p>
+      </div>
+    </div>
+
   </div>
 
 <div id="areaCetak" class="kartu-cetak">
@@ -389,7 +502,106 @@ let profilSaya = null;
 
   await muatKlaster();
   await muatAntrian();
+  await muatDashboardRingkas();
 })();
+
+const SUBTAB_PENDAFTARAN = ["dashboard", "identifikasi", "skrining", "koordinasi", "rujukan", "kerahasiaan", "survei", "laporan", "audit"];
+
+function gantiSubtabPendaftaran(tab) {
+  SUBTAB_PENDAFTARAN.forEach(t => {
+    const panel = document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1));
+    if (panel) panel.style.display = (t === tab) ? "block" : "none";
+    const nav = document.getElementById("nav" + t.charAt(0).toUpperCase() + t.slice(1));
+    if (nav) nav.classList.toggle("active", t === tab);
+  });
+  if (tab === "dashboard") muatDashboardRingkas();
+}
+
+async function muatDashboardRingkas() {
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("*, klaster(nama, kode)")
+    .eq("tanggal", today);
+
+  if (!error && data) {
+    const total = data.length;
+    const menunggu = data.filter(k => k.status === "menunggu").length;
+    const darurat = data.filter(k => k.is_prioritas && k.status === "menunggu").length;
+    document.getElementById("dbStatTotal").textContent = total;
+    document.getElementById("dbStatMenunggu").textContent = menunggu;
+    document.getElementById("dbStatDarurat").textContent = darurat;
+
+    const grup = {};
+    data.forEach(k => {
+      const key = k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "Tanpa Klaster";
+      if (!grup[key]) grup[key] = { total: 0, menunggu: 0, dipanggil: 0, selesai: 0 };
+      grup[key].total++;
+      if (k.status === "menunggu") grup[key].menunggu++;
+      else if (k.status === "dipanggil") grup[key].dipanggil++;
+      else grup[key].selesai++;
+    });
+
+    const tbodyRingkas = document.getElementById("dbTabelRingkasKlaster");
+    const namaKlaster = Object.keys(grup);
+    tbodyRingkas.innerHTML = namaKlaster.length ? namaKlaster.map(k => `
+      <tr>
+        <td>${k}</td>
+        <td>${grup[k].total}</td>
+        <td>${grup[k].menunggu}</td>
+        <td>${grup[k].dipanggil}</td>
+        <td>${grup[k].selesai}</td>
+      </tr>
+    `).join("") : `<tr><td colspan="5">Belum ada kunjungan hari ini.</td></tr>`;
+
+    const tbodyAktif = document.getElementById("dbTabelAntrianAktif");
+    tbodyAktif.innerHTML = namaKlaster.length ? namaKlaster.map(k => {
+      const dipanggil = data.filter(x => (x.klaster ? `${x.klaster.kode} — ${x.klaster.nama}` : "Tanpa Klaster") === k && x.status === "dipanggil");
+      const noBerjalan = dipanggil.length ? dipanggil[dipanggil.length - 1].no_antrian : "-";
+      return `<tr><td>${k}</td><td>${noBerjalan}</td><td>${grup[k].menunggu}</td></tr>`;
+    }).join("") : `<tr><td colspan="3">Belum ada antrian hari ini.</td></tr>`;
+  }
+
+  await muatKontrolJatuhTempo(today);
+}
+
+async function muatKontrolJatuhTempo(today) {
+  const tbody = document.getElementById("dbTabelKontrolJatuhTempo");
+  const { data, error } = await supabaseClient
+    .from("rekam_medis")
+    .select("tanggal_kontrol_berikutnya, kunjungan(pasien(nama, no_rm))")
+    .not("tanggal_kontrol_berikutnya", "is", null)
+    .lt("tanggal_kontrol_berikutnya", today)
+    .order("tanggal_kontrol_berikutnya")
+    .limit(30);
+
+  if (error) {
+    // kolom belum ada di schema lama / belum ada data — tampilkan kosong, jangan error ke user
+    document.getElementById("dbStatKontrol").textContent = "0";
+    tbody.innerHTML = `<tr><td colspan="4">Belum ada data kontrol lanjutan.</td></tr>`;
+    return;
+  }
+
+  document.getElementById("dbStatKontrol").textContent = data.length;
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="4">Tidak ada kontrol lanjutan yang jatuh tempo.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(r => {
+    const tglJadwal = new Date(r.tanggal_kontrol_berikutnya);
+    const selisihHari = Math.floor((new Date(today) - tglJadwal) / (1000 * 60 * 60 * 24));
+    return `
+      <tr>
+        <td>${r.kunjungan?.pasien?.nama || "-"}</td>
+        <td>${r.kunjungan?.pasien?.no_rm || "-"}</td>
+        <td>${tglJadwal.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</td>
+        <td>${selisihHari} hari</td>
+      </tr>`;
+  }).join("");
+}
 
 let antrianDipanggil = null; // kunjungan yang lagi aktif dipanggil
 let antrianDilewati = new Set(); // id kunjungan yang di-"Lewati" sesi ini (gak diulang otomatis)

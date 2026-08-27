@@ -848,6 +848,15 @@ alter table kunjungan add column if not exists keterangan_prioritas text;
 create index if not exists idx_kunjungan_prioritas on kunjungan(tanggal, is_prioritas);
 
 -- ============================================================
+-- 26. DASHBOARD PENDAFTARAN — Kontrol Lanjutan Jatuh Tempo
+--     Dokter/perawat/bidan isi tanggal kontrol berikutnya di RM,
+--     Dashboard Pendaftaran tampilkan alert kalau sudah lewat tanggal.
+--     (Input field di rekam-medis.html menyusul di sesi berikutnya.)
+-- ============================================================
+alter table rekam_medis add column if not exists tanggal_kontrol_berikutnya date;
+create index if not exists idx_rm_kontrol_berikutnya on rekam_medis(tanggal_kontrol_berikutnya);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
