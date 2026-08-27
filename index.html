@@ -832,7 +832,7 @@
               <p>Jumlah RM diterbitkan per periode dan jumlah RM aktif (kunjungan dalam 1 tahun terakhir).</p>
               <div class="rc-foot">Lihat &amp; Export →</div>
             </div>
-            <div class="report-card" style="--accent:#c0503f" onclick="bukaLaporan('duplikasi_rm')">
+            <div class="report-card" style="--accent:var(--red)" onclick="bukaLaporan('duplikasi_rm')">
               <div class="rc-top"><div class="rc-icon">⚠</div><span class="rc-tag">Akreditasi</span></div>
               <h4>Duplikasi RM</h4>
               <p>Jumlah RM ganda ditemukan &amp; sudah digabung — indikator kualitas data, bukti kepatuhan SOP.</p>
@@ -927,6 +927,58 @@
             </thead>
             <tbody id="lapTabelKlaster">
               <tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="lapDetailWaktuTunggu" style="display:none;">
+          <h2>Waktu Tunggu Pendaftaran</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:6px;">Rata-rata waktu dari pasien daftar sampai mulai diperiksa (rekam medis pertama dicatat), per hari/klaster.</p>
+          <p style="font-size:11.5px; color:var(--muted); margin-bottom:14px; font-style:italic;">Catatan: sistem belum mencatat jam "selesai antri di loket" terpisah, jadi ukuran yang dipakai adalah selisih waktu daftar → mulai diperiksa dokter/perawat.</p>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapWtDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapWtSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanWaktuTunggu()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanWaktuTungguCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Rata-rata Tunggu</div>
+              <div class="value" id="lapWtStatRata">0 mnt</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Median</div>
+              <div class="value" id="lapWtStatMedian">0 mnt</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Tercepat</div>
+              <div class="value" id="lapWtStatMin">0 mnt</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Terlama</div>
+              <div class="value" id="lapWtStatMax">0 mnt</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Jumlah Sampel</div>
+              <div class="value" id="lapWtStatN">0</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr><th>Klaster</th><th>Jumlah Sampel</th><th>Rata-rata Tunggu</th><th>Tercepat</th><th>Terlama</th></tr>
+            </thead>
+            <tbody id="lapWtTabelKlaster">
+              <tr><td colspan="5">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1135,7 +1187,6 @@ async function muatKontrolJatuhTempo(today) {
 
 // ===== Laporan: navigasi tab (Pendaftaran/RM) & katalog kartu =====
 const LAPORAN_JUDUL = {
-  waktu_tunggu: "Waktu Tunggu Pendaftaran",
   skrining: "Skrining Awal",
   kelompok_sasaran: "Kunjungan per Kelompok Sasaran",
   rujukan: "Rujukan Internal & Eksternal",
@@ -1163,10 +1214,22 @@ function bukaLaporan(kode) {
 
   if (kode === "kunjungan") {
     document.getElementById("lapDetailKunjungan").style.display = "block";
+    document.getElementById("lapDetailWaktuTunggu").style.display = "none";
     document.getElementById("lapDetailBelumDibangun").style.display = "none";
     muatLaporanKunjungan();
+  } else if (kode === "waktu_tunggu") {
+    document.getElementById("lapDetailKunjungan").style.display = "none";
+    document.getElementById("lapDetailWaktuTunggu").style.display = "block";
+    document.getElementById("lapDetailBelumDibangun").style.display = "none";
+    if (!document.getElementById("lapWtDari").value) {
+      const now = new Date();
+      document.getElementById("lapWtDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      document.getElementById("lapWtSampai").value = now.toISOString().split("T")[0];
+    }
+    muatLaporanWaktuTunggu();
   } else {
     document.getElementById("lapDetailKunjungan").style.display = "none";
+    document.getElementById("lapDetailWaktuTunggu").style.display = "none";
     document.getElementById("lapDetailBelumDibangun").style.display = "block";
     document.getElementById("lapBelumJudul").textContent = LAPORAN_JUDUL[kode] || "Laporan";
   }
@@ -1258,6 +1321,104 @@ function exportLaporanKunjunganCsv() {
   const sampaiInput = document.getElementById("lapSampai").value;
   a.href = url;
   a.download = `Rekap_Kunjungan_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== Laporan Pendaftaran: Waktu Tunggu (step 2) =====
+// Diukur dari kunjungan.created_at (waktu daftar) sampai rekam_medis.created_at
+// (waktu RM pertama dicatat / mulai diperiksa) — sistem belum punya jam "selesai
+// antri di loket" terpisah, jadi ini proksi terdekat yang ada datanya.
+let laporanWaktuTungguCache = [];
+
+function median(arr) {
+  if (!arr.length) return 0;
+  const s = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
+async function muatLaporanWaktuTunggu() {
+  const tbody = document.getElementById("lapWtTabelKlaster");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapWtDari").value;
+  const sampaiInput = document.getElementById("lapWtSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbody.innerHTML = `<tr><td colspan="5">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("id, tanggal, created_at, klaster(nama, kode), rekam_medis(created_at)")
+    .gte("tanggal", dariInput)
+    .lte("tanggal", sampaiInput);
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="5">Gagal muat laporan: ${error.message}</td></tr>`;
+    return;
+  }
+
+  laporanWaktuTungguCache = (data || [])
+    .filter(k => k.rekam_medis && k.rekam_medis.length && k.rekam_medis[0].created_at)
+    .map(k => {
+      const daftar = new Date(k.created_at);
+      const mulaiPeriksa = new Date(k.rekam_medis[0].created_at);
+      const menit = Math.max(0, Math.round((mulaiPeriksa - daftar) / 60000));
+      return {
+        tanggal: k.tanggal,
+        klaster: k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "Tanpa Klaster",
+        menit
+      };
+    });
+
+  if (!laporanWaktuTungguCache.length) {
+    tbody.innerHTML = `<tr><td colspan="5">Tidak ada data (belum ada RM tercatat) di rentang ini.</td></tr>`;
+    ["lapWtStatRata", "lapWtStatMedian", "lapWtStatMin", "lapWtStatMax"].forEach(id => document.getElementById(id).textContent = "0 mnt");
+    document.getElementById("lapWtStatN").textContent = "0";
+    return;
+  }
+
+  const semuaMenit = laporanWaktuTungguCache.map(x => x.menit);
+  const rata = Math.round(semuaMenit.reduce((a, b) => a + b, 0) / semuaMenit.length);
+  document.getElementById("lapWtStatRata").textContent = `${rata} mnt`;
+  document.getElementById("lapWtStatMedian").textContent = `${Math.round(median(semuaMenit))} mnt`;
+  document.getElementById("lapWtStatMin").textContent = `${Math.min(...semuaMenit)} mnt`;
+  document.getElementById("lapWtStatMax").textContent = `${Math.max(...semuaMenit)} mnt`;
+  document.getElementById("lapWtStatN").textContent = semuaMenit.length;
+
+  const grup = {};
+  laporanWaktuTungguCache.forEach(x => {
+    (grup[x.klaster] ||= []).push(x.menit);
+  });
+
+  const namaKlaster = Object.keys(grup).sort();
+  tbody.innerHTML = namaKlaster.map(k => {
+    const arr = grup[k];
+    const rataK = Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+    return `<tr>
+      <td>${k}</td>
+      <td>${arr.length}</td>
+      <td>${rataK} mnt</td>
+      <td>${Math.min(...arr)} mnt</td>
+      <td>${Math.max(...arr)} mnt</td>
+    </tr>`;
+  }).join("");
+}
+
+function exportLaporanWaktuTungguCsv() {
+  if (!laporanWaktuTungguCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Tanggal", "Klaster", "Waktu Tunggu (menit)"];
+  const rows = laporanWaktuTungguCache.map(x => [x.tanggal, x.klaster, x.menit]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapWtDari").value;
+  const sampaiInput = document.getElementById("lapWtSampai").value;
+  a.href = url;
+  a.download = `Waktu_Tunggu_${dariInput}_${sampaiInput}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
