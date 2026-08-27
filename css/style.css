@@ -386,6 +386,9 @@ tr:hover td { background: #fafcfc; }
   background: #fff; color: var(--muted); cursor: pointer; font-weight: 500;
 }
 .filter-chip.active { background: var(--navy); color: #fff; border-color: var(--navy); font-weight: 600; }
+.filter-row-tanggal { padding-bottom: 6px; margin-top: -8px; border-bottom: 1px dashed var(--border); }
+.filter-row-tanggal .filter-chip { font-size: 12px; padding: 5px 12px; }
+.filter-row-tanggal .filter-chip.active { background: var(--teal-2); border-color: var(--teal-2); }
 
 .timeline { position: relative; padding-left: 26px; }
 .timeline::before { content: ""; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }

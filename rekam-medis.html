@@ -345,6 +345,7 @@
       <div class="filter-chip" data-kategori="rujuk" onclick="filterTimeline('rujuk')">Rujukan</div>
       <div class="filter-chip" data-kategori="farmasi" onclick="filterTimeline('farmasi')">Farmasi</div>
     </div>
+    <div class="filter-row filter-row-tanggal" id="filterRowTanggal" style="display:none;"></div>
     <div class="timeline" id="timelineRiwayat">
       <p style="color:var(--muted); font-size:13px;">Belum ada pasien dipilih.</p>
     </div>
@@ -1475,7 +1476,7 @@ async function muatTimelineRiwayat(pasienId) {
       tanggal: new Date(rm.created_at || k.tanggal),
       kategori: "klaster",
       html: `
-        <div class="tl-item klaster" data-kategori="klaster">
+        <div class="tl-item klaster" data-kategori="klaster" data-tanggal="${tglKey(rm.created_at || k.tanggal)}">
           <div class="tl-dot"></div>
           <div class="tl-card klaster">
             <div class="tl-top">
@@ -1500,7 +1501,7 @@ async function muatTimelineRiwayat(pasienId) {
       tanggal: new Date(l.created_at),
       kategori: "lab",
       html: `
-        <div class="tl-item lab" data-kategori="lab">
+        <div class="tl-item lab" data-kategori="lab" data-tanggal="${tglKey(l.created_at)}">
           <div class="tl-dot"></div>
           <div class="tl-card lab">
             <div class="tl-top">
@@ -1519,7 +1520,7 @@ async function muatTimelineRiwayat(pasienId) {
       tanggal: new Date(r.created_at),
       kategori: "rujuk",
       html: `
-        <div class="tl-item rujuk" data-kategori="rujuk">
+        <div class="tl-item rujuk" data-kategori="rujuk" data-tanggal="${tglKey(r.created_at)}">
           <div class="tl-dot"></div>
           <div class="tl-card rujuk">
             <div class="tl-top">
@@ -1540,7 +1541,7 @@ async function muatTimelineRiwayat(pasienId) {
       tanggal: new Date(r.created_at),
       kategori: "rujuk",
       html: `
-        <div class="tl-item rujuk" data-kategori="rujuk">
+        <div class="tl-item rujuk" data-kategori="rujuk" data-tanggal="${tglKey(r.created_at)}">
           <div class="tl-dot"></div>
           <div class="tl-card rujuk">
             <div class="tl-top">
@@ -1564,7 +1565,7 @@ async function muatTimelineRiwayat(pasienId) {
       tanggal: new Date(r.diserahkan_at),
       kategori: "farmasi",
       html: `
-        <div class="tl-item farmasi" data-kategori="farmasi">
+        <div class="tl-item farmasi" data-kategori="farmasi" data-tanggal="${tglKey(r.diserahkan_at)}">
           <div class="tl-dot"></div>
           <div class="tl-card farmasi">
             <div class="tl-top">
@@ -1584,7 +1585,26 @@ async function muatTimelineRiwayat(pasienId) {
 
   events.sort((a, b) => b.tanggal - a.tanggal);
   wrap.innerHTML = events.map(e => e.html).join("");
-  filterTimeline(document.querySelector("#filterRowTimeline .filter-chip.active")?.dataset.kategori || "semua");
+
+  // Chip tanggal: daftar tanggal unik yang ada riwayatnya, urut terbaru dulu.
+  // Pilih klaster (kategori) dulu kalau perlu, baru klik tanggal buat nyaring ke hari itu aja.
+  const tanggalUnik = [...new Set(events.map(e => tglKey(e.tanggal)))];
+  const tanggalWrap = document.getElementById("filterRowTanggal");
+  tanggalWrap.style.display = tanggalUnik.length ? "flex" : "none";
+  tanggalWrap.innerHTML = `<div class="filter-chip active" data-tanggal="semua" onclick="filterTimelineTanggal('semua')">Semua Tanggal</div>` +
+    tanggalUnik.map(tk => {
+      const label = new Date(tk + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+      return `<div class="filter-chip" data-tanggal="${tk}" onclick="filterTimelineTanggal('${tk}')">${label}</div>`;
+    }).join("");
+
+  timelineKategoriAktif = "semua";
+  timelineTanggalAktif = "semua";
+  terapkanFilterTimeline();
+}
+
+function tglKey(nilai) {
+  const d = new Date(nilai);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function fmtTglJam(nilai) {
@@ -1593,12 +1613,32 @@ function fmtTglJam(nilai) {
     (d.getHours() || d.getMinutes() ? ", " + d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "");
 }
 
+let timelineKategoriAktif = "semua";
+let timelineTanggalAktif = "semua";
+
 function filterTimeline(kategori) {
+  timelineKategoriAktif = kategori;
   document.querySelectorAll("#filterRowTimeline .filter-chip").forEach(chip => {
     chip.classList.toggle("active", chip.dataset.kategori === kategori);
   });
+  terapkanFilterTimeline();
+}
+
+function filterTimelineTanggal(tanggal) {
+  timelineTanggalAktif = tanggal;
+  document.querySelectorAll("#filterRowTanggal .filter-chip").forEach(chip => {
+    chip.classList.toggle("active", chip.dataset.tanggal === tanggal);
+  });
+  terapkanFilterTimeline();
+}
+
+// Gabungkan filter kategori (klaster/lab/rujuk/farmasi) dan filter tanggal —
+// item cuma tampil kalau lolos dua-duanya.
+function terapkanFilterTimeline() {
   document.querySelectorAll("#timelineRiwayat .tl-item").forEach(item => {
-    item.style.display = (kategori === "semua" || item.dataset.kategori === kategori) ? "" : "none";
+    const lolosKategori = timelineKategoriAktif === "semua" || item.dataset.kategori === timelineKategoriAktif;
+    const lolosTanggal = timelineTanggalAktif === "semua" || item.dataset.tanggal === timelineTanggalAktif;
+    item.style.display = (lolosKategori && lolosTanggal) ? "" : "none";
   });
 }
 
