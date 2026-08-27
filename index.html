@@ -983,6 +983,71 @@
           </table>
         </div>
 
+        <div id="lapDetailSkrining" style="display:none;">
+          <h2>Skrining Awal</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Rekap pasien yang diskrining faktor risiko PTM saat pendaftaran, dan yang perlu tindak lanjut.</p>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapSkrDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapSkrSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanSkrining()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanSkriningCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Total Diskrining</div>
+              <div class="value" id="lapSkrStatTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Cakupan vs Kunjungan</div>
+              <div class="value" id="lapSkrStatCakupan">0%</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Perlu Tindak Lanjut</div>
+              <div class="value" id="lapSkrStatTindakLanjut">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Obesitas (IMT)</div>
+              <div class="value" id="lapSkrStatObesitas">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Merokok</div>
+              <div class="value" id="lapSkrStatMerokok">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Ket. DM / Ket. HT</div>
+              <div class="value" id="lapSkrStatKeturunan">0 / 0</div>
+            </div>
+          </div>
+
+          <table style="margin-bottom:18px;">
+            <thead>
+              <tr><th>Klaster</th><th>Diskrining</th><th>Merokok</th><th>Ket. DM</th><th>Ket. HT</th><th>Obesitas</th><th>Perlu Tindak Lanjut</th></tr>
+            </thead>
+            <tbody id="lapSkrTabelKlaster">
+              <tr><td colspan="7">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
+            </tbody>
+          </table>
+
+          <h4 style="margin-bottom:8px;">Pasien Perlu Tindak Lanjut</h4>
+          <table>
+            <thead>
+              <tr><th>Tanggal</th><th>Nama Pasien</th><th>Klaster</th><th>IMT</th><th>Faktor Risiko</th><th>GDS</th></tr>
+            </thead>
+            <tbody id="lapSkrTabelTindakLanjut">
+              <tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
         <div id="lapDetailBelumDibangun" style="display:none;">
           <h2 id="lapBelumJudul">Laporan</h2>
           <p style="font-size:13px; color:var(--muted);">Laporan ini belum dibangun — bakal nyusul bertahap.</p>
@@ -1212,24 +1277,31 @@ function bukaLaporan(kode) {
   document.querySelectorAll("#panelLaporan .card").forEach(c => { if (c.id !== "lapDetailWrap") c.style.display = "none"; });
   document.getElementById("lapDetailWrap").style.display = "block";
 
+  document.getElementById("lapDetailKunjungan").style.display = "none";
+  document.getElementById("lapDetailWaktuTunggu").style.display = "none";
+  document.getElementById("lapDetailSkrining").style.display = "none";
+  document.getElementById("lapDetailBelumDibangun").style.display = "none";
+
   if (kode === "kunjungan") {
     document.getElementById("lapDetailKunjungan").style.display = "block";
-    document.getElementById("lapDetailWaktuTunggu").style.display = "none";
-    document.getElementById("lapDetailBelumDibangun").style.display = "none";
     muatLaporanKunjungan();
   } else if (kode === "waktu_tunggu") {
-    document.getElementById("lapDetailKunjungan").style.display = "none";
     document.getElementById("lapDetailWaktuTunggu").style.display = "block";
-    document.getElementById("lapDetailBelumDibangun").style.display = "none";
     if (!document.getElementById("lapWtDari").value) {
       const now = new Date();
       document.getElementById("lapWtDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
       document.getElementById("lapWtSampai").value = now.toISOString().split("T")[0];
     }
     muatLaporanWaktuTunggu();
+  } else if (kode === "skrining") {
+    document.getElementById("lapDetailSkrining").style.display = "block";
+    if (!document.getElementById("lapSkrDari").value) {
+      const now = new Date();
+      document.getElementById("lapSkrDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      document.getElementById("lapSkrSampai").value = now.toISOString().split("T")[0];
+    }
+    muatLaporanSkrining();
   } else {
-    document.getElementById("lapDetailKunjungan").style.display = "none";
-    document.getElementById("lapDetailWaktuTunggu").style.display = "none";
     document.getElementById("lapDetailBelumDibangun").style.display = "block";
     document.getElementById("lapBelumJudul").textContent = LAPORAN_JUDUL[kode] || "Laporan";
   }
@@ -1422,6 +1494,141 @@ function exportLaporanWaktuTungguCsv() {
   a.click();
   URL.revokeObjectURL(url);
 }
+// ===== Laporan Pendaftaran: Skrining Awal (step 3) =====
+// "Perlu tindak lanjut" kalau: merokok, riwayat keluarga DM/HT, IMT Obesitas,
+// atau GDS sewaktu >= 200 mg/dL (indikasi risiko DM per skrining PTM).
+let laporanSkriningCache = [];
+
+function skrPerluTindakLanjut(s) {
+  const gds = parseFloat(s.gula_darah_sewaktu);
+  return !!(s.merokok || s.riwayat_keluarga_dm || s.riwayat_keluarga_hipertensi
+    || (s.imt && kategoriImt(s.imt) === "Obesitas")
+    || (!isNaN(gds) && gds >= 200));
+}
+
+async function muatLaporanSkrining() {
+  const tbodyKlaster = document.getElementById("lapSkrTabelKlaster");
+  const tbodyTl = document.getElementById("lapSkrTabelTindakLanjut");
+  tbodyKlaster.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+  tbodyTl.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapSkrDari").value;
+  const sampaiInput = document.getElementById("lapSkrSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbodyKlaster.innerHTML = `<tr><td colspan="7">Pilih rentang tanggal dulu.</td></tr>`;
+    tbodyTl.innerHTML = `<tr><td colspan="6">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("skrining_awal")
+    .select("merokok, riwayat_keluarga_dm, riwayat_keluarga_hipertensi, gula_darah_sewaktu, kolesterol, imt, kunjungan!inner(tanggal, pasien(nama), klaster(nama, kode))")
+    .gte("kunjungan.tanggal", dariInput)
+    .lte("kunjungan.tanggal", sampaiInput);
+
+  const { count: totalKunjungan } = await supabaseClient
+    .from("kunjungan")
+    .select("id", { count: "exact", head: true })
+    .gte("tanggal", dariInput)
+    .lte("tanggal", sampaiInput)
+    .neq("status", "batal");
+
+  if (error) {
+    tbodyKlaster.innerHTML = `<tr><td colspan="7">Gagal muat laporan: ${error.message}</td></tr>`;
+    tbodyTl.innerHTML = `<tr><td colspan="6">Gagal muat laporan: ${error.message}</td></tr>`;
+    return;
+  }
+
+  laporanSkriningCache = data || [];
+
+  const total = laporanSkriningCache.length;
+  const merokok = laporanSkriningCache.filter(s => s.merokok).length;
+  const dm = laporanSkriningCache.filter(s => s.riwayat_keluarga_dm).length;
+  const ht = laporanSkriningCache.filter(s => s.riwayat_keluarga_hipertensi).length;
+  const obesitas = laporanSkriningCache.filter(s => s.imt && kategoriImt(s.imt) === "Obesitas").length;
+  const tindakLanjut = laporanSkriningCache.filter(skrPerluTindakLanjut);
+  const cakupan = totalKunjungan ? Math.round((total / totalKunjungan) * 100) : 0;
+
+  document.getElementById("lapSkrStatTotal").textContent = total;
+  document.getElementById("lapSkrStatCakupan").textContent = `${cakupan}% (${total}/${totalKunjungan || 0})`;
+  document.getElementById("lapSkrStatTindakLanjut").textContent = tindakLanjut.length;
+  document.getElementById("lapSkrStatObesitas").textContent = obesitas;
+  document.getElementById("lapSkrStatMerokok").textContent = merokok;
+  document.getElementById("lapSkrStatKeturunan").textContent = `${dm} / ${ht}`;
+
+  const grup = {};
+  laporanSkriningCache.forEach(s => {
+    const key = s.kunjungan?.klaster ? `${s.kunjungan.klaster.kode} — ${s.kunjungan.klaster.nama}` : "Tanpa Klaster";
+    if (!grup[key]) grup[key] = { total: 0, merokok: 0, dm: 0, ht: 0, obesitas: 0, tl: 0 };
+    grup[key].total++;
+    if (s.merokok) grup[key].merokok++;
+    if (s.riwayat_keluarga_dm) grup[key].dm++;
+    if (s.riwayat_keluarga_hipertensi) grup[key].ht++;
+    if (s.imt && kategoriImt(s.imt) === "Obesitas") grup[key].obesitas++;
+    if (skrPerluTindakLanjut(s)) grup[key].tl++;
+  });
+
+  const namaKlaster = Object.keys(grup).sort();
+  tbodyKlaster.innerHTML = namaKlaster.length ? namaKlaster.map(k => `
+    <tr>
+      <td>${k}</td>
+      <td>${grup[k].total}</td>
+      <td>${grup[k].merokok}</td>
+      <td>${grup[k].dm}</td>
+      <td>${grup[k].ht}</td>
+      <td>${grup[k].obesitas}</td>
+      <td>${grup[k].tl}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="7">Tidak ada skrining di rentang ini.</td></tr>`;
+
+  tbodyTl.innerHTML = tindakLanjut.length ? tindakLanjut.map(s => {
+    const risiko = [];
+    if (s.merokok) risiko.push("Merokok");
+    if (s.riwayat_keluarga_dm) risiko.push("Ket. DM");
+    if (s.riwayat_keluarga_hipertensi) risiko.push("Ket. HT");
+    if (s.imt && kategoriImt(s.imt) === "Obesitas") risiko.push("Obesitas");
+    const gds = parseFloat(s.gula_darah_sewaktu);
+    if (!isNaN(gds) && gds >= 200) risiko.push("GDS Tinggi");
+    return `
+      <tr>
+        <td>${s.kunjungan?.tanggal || "-"}</td>
+        <td>${s.kunjungan?.pasien?.nama || "-"}</td>
+        <td>${s.kunjungan?.klaster ? `${s.kunjungan.klaster.kode} — ${s.kunjungan.klaster.nama}` : "-"}</td>
+        <td>${s.imt || "-"}</td>
+        <td>${risiko.join(", ")}</td>
+        <td>${s.gula_darah_sewaktu || "-"}</td>
+      </tr>`;
+  }).join("") : `<tr><td colspan="6">Tidak ada pasien yang perlu tindak lanjut di rentang ini.</td></tr>`;
+}
+
+function exportLaporanSkriningCsv() {
+  if (!laporanSkriningCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Tanggal", "Nama Pasien", "Klaster", "IMT", "Kategori IMT", "Merokok", "Ket. DM", "Ket. HT", "GDS", "Kolesterol", "Perlu Tindak Lanjut"];
+  const rows = laporanSkriningCache.map(s => [
+    s.kunjungan?.tanggal || "-",
+    s.kunjungan?.pasien?.nama || "-",
+    s.kunjungan?.klaster ? `${s.kunjungan.klaster.kode} — ${s.kunjungan.klaster.nama}` : "-",
+    s.imt || "-",
+    s.imt ? kategoriImt(s.imt) : "-",
+    s.merokok ? "Ya" : "Tidak",
+    s.riwayat_keluarga_dm ? "Ya" : "Tidak",
+    s.riwayat_keluarga_hipertensi ? "Ya" : "Tidak",
+    s.gula_darah_sewaktu || "-",
+    s.kolesterol || "-",
+    skrPerluTindakLanjut(s) ? "Ya" : "Tidak"
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapSkrDari").value;
+  const sampaiInput = document.getElementById("lapSkrSampai").value;
+  a.href = url;
+  a.download = `Laporan_Skrining_Awal_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 let antrianDilewati = new Set(); // id kunjungan yang di-"Lewati" sesi ini (gak diulang otomatis)
 
 async function panggilAntrean() {
