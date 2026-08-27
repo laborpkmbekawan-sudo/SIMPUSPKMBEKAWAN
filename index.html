@@ -672,10 +672,104 @@
     </div>
 
     <div id="panelSurvei" class="dash-content" style="display:none;">
+
       <div class="card">
-        <h2>Survei Kepuasan</h2>
-        <p style="font-size:13px; color:var(--muted);">Rekap hasil survei kepuasan pasien. Belum dibangun.</p>
+        <h2>Isi Survei Kepuasan Pasien</h2>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Diisi petugas berdasarkan feedback pasien setelah selesai dilayani (skala 1 = sangat tidak puas, 5 = sangat puas).</p>
+        <div id="srvMsgBox"></div>
+
+        <div class="grid-2">
+          <div>
+            <label>Nama Pasien (opsional, bisa anonim)</label>
+            <input type="text" id="srvNamaPasien" placeholder="Kosongkan kalau anonim">
+          </div>
+          <div>
+            <label>Kunjungan Terkait (opsional)</label>
+            <select id="srvKunjungan"><option value="">-- Tidak dikaitkan --</option></select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Kecepatan Pelayanan</label>
+            <select id="srvKecepatan">
+              <option value="5">5 - Sangat Puas</option>
+              <option value="4">4 - Puas</option>
+              <option value="3" selected>3 - Cukup</option>
+              <option value="2">2 - Kurang Puas</option>
+              <option value="1">1 - Sangat Tidak Puas</option>
+            </select>
+          </div>
+          <div>
+            <label>Keramahan Petugas</label>
+            <select id="srvKeramahan">
+              <option value="5">5 - Sangat Puas</option>
+              <option value="4">4 - Puas</option>
+              <option value="3" selected>3 - Cukup</option>
+              <option value="2">2 - Kurang Puas</option>
+              <option value="1">1 - Sangat Tidak Puas</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label>Kejelasan Informasi</label>
+            <select id="srvKejelasan">
+              <option value="5">5 - Sangat Puas</option>
+              <option value="4">4 - Puas</option>
+              <option value="3" selected>3 - Cukup</option>
+              <option value="2">2 - Kurang Puas</option>
+              <option value="1">1 - Sangat Tidak Puas</option>
+            </select>
+          </div>
+          <div>
+            <label>Kebersihan Ruang Tunggu</label>
+            <select id="srvKebersihan">
+              <option value="5">5 - Sangat Puas</option>
+              <option value="4">4 - Puas</option>
+              <option value="3" selected>3 - Cukup</option>
+              <option value="2">2 - Kurang Puas</option>
+              <option value="1">1 - Sangat Tidak Puas</option>
+            </select>
+          </div>
+        </div>
+        <label>Saran / Masukan</label>
+        <textarea id="srvSaran" placeholder="Opsional"></textarea>
+
+        <button class="btn-primary" onclick="simpanSurvei()">Simpan Survei</button>
       </div>
+
+      <div class="card">
+        <h2>Rekap Kepuasan (30 Hari Terakhir)</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="label">Kecepatan Pelayanan</div>
+            <div class="value" id="srvAvgKecepatan">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Keramahan Petugas</div>
+            <div class="value" id="srvAvgKeramahan">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Kejelasan Informasi</div>
+            <div class="value" id="srvAvgKejelasan">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Kebersihan</div>
+            <div class="value" id="srvAvgKebersihan">-</div>
+          </div>
+        </div>
+        <p style="font-size:12px; color:var(--muted);">Total responden: <span id="srvTotalResponden">0</span></p>
+      </div>
+
+      <div class="card">
+        <h2>Riwayat Survei Terbaru</h2>
+        <table>
+          <thead><tr><th>Pasien</th><th>Kecepatan</th><th>Keramahan</th><th>Informasi</th><th>Kebersihan</th><th>Saran</th><th>Tanggal</th></tr></thead>
+          <tbody id="srvTabelRiwayat"><tr><td colspan="7">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
     </div>
 
     <div id="panelLaporan" class="dash-content" style="display:none;">
@@ -766,6 +860,7 @@ function gantiSubtabPendaftaran(tab) {
   if (tab === "skrining") muatSkrining();
   if (tab === "rujukan") muatRujukan();
   if (tab === "kerahasiaan") muatKerahasiaan();
+  if (tab === "survei") muatSurvei();
 
   if (tab === "koordinasi") {
     muatKoordinasi();
@@ -1881,6 +1976,80 @@ async function simpanConsent() {
   msgBox.innerHTML = `<div class="msg msg-success">Consent berhasil dicatat.</div>`;
   batalConsent();
   await muatRiwayatConsent();
+}
+
+// ---------- Survei Kepuasan Pasien ----------
+async function muatSurvei() {
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data: kunjunganHariIni } = await supabaseClient
+    .from("kunjungan")
+    .select("id, no_antrian, pasien(nama)")
+    .eq("tanggal", today)
+    .order("no_antrian");
+
+  const select = document.getElementById("srvKunjungan");
+  select.innerHTML = '<option value="">-- Tidak dikaitkan --</option>' +
+    (kunjunganHariIni || []).map(k => `<option value="${k.id}">${k.no_antrian} — ${k.pasien?.nama || "-"}</option>`).join("");
+
+  const batasTanggal = new Date();
+  batasTanggal.setDate(batasTanggal.getDate() - 30);
+
+  const { data, error } = await supabaseClient
+    .from("survei_kepuasan")
+    .select("*")
+    .gte("created_at", batasTanggal.toISOString())
+    .order("created_at", { ascending: false });
+
+  const tbody = document.getElementById("srvTabelRiwayat");
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  const total = data.length;
+  document.getElementById("srvTotalResponden").textContent = total;
+
+  const rerata = (field) => total ? (data.reduce((s, d) => s + d[field], 0) / total).toFixed(1) : "-";
+  document.getElementById("srvAvgKecepatan").textContent = rerata("skor_kecepatan");
+  document.getElementById("srvAvgKeramahan").textContent = rerata("skor_keramahan");
+  document.getElementById("srvAvgKejelasan").textContent = rerata("skor_kejelasan_informasi");
+  document.getElementById("srvAvgKebersihan").textContent = rerata("skor_kebersihan");
+
+  tbody.innerHTML = data.length ? data.slice(0, 30).map(s => `
+    <tr>
+      <td>${s.nama_pasien || "Anonim"}</td>
+      <td>${s.skor_kecepatan}</td>
+      <td>${s.skor_keramahan}</td>
+      <td>${s.skor_kejelasan_informasi}</td>
+      <td>${s.skor_kebersihan}</td>
+      <td>${s.saran || "-"}</td>
+      <td>${new Date(s.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="7">Belum ada survei dalam 30 hari terakhir.</td></tr>`;
+}
+
+async function simpanSurvei() {
+  const msgBox = document.getElementById("srvMsgBox");
+  const payload = {
+    kunjungan_id: document.getElementById("srvKunjungan").value || null,
+    nama_pasien: document.getElementById("srvNamaPasien").value.trim() || null,
+    skor_kecepatan: parseInt(document.getElementById("srvKecepatan").value),
+    skor_keramahan: parseInt(document.getElementById("srvKeramahan").value),
+    skor_kejelasan_informasi: parseInt(document.getElementById("srvKejelasan").value),
+    skor_kebersihan: parseInt(document.getElementById("srvKebersihan").value),
+    saran: document.getElementById("srvSaran").value.trim() || null
+  };
+
+  const { error } = await supabaseClient.from("survei_kepuasan").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Survei berhasil disimpan. Terima kasih!</div>`;
+  document.getElementById("srvNamaPasien").value = "";
+  document.getElementById("srvKunjungan").value = "";
+  document.getElementById("srvSaran").value = "";
+  document.getElementById("srvKecepatan").value = "3";
+  document.getElementById("srvKeramahan").value = "3";
+  document.getElementById("srvKejelasan").value = "3";
+  document.getElementById("srvKebersihan").value = "3";
+  await muatSurvei();
 }
 </script>
 

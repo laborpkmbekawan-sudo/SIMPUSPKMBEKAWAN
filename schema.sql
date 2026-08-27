@@ -943,6 +943,26 @@ alter table log_akses_rm enable row level security;
 create policy "authenticated_all_log_akses_rm" on log_akses_rm for all to authenticated using (true) with check (true);
 
 -- ============================================================
+-- 30. SURVEI KEPUASAN — Feedback pasien soal pelayanan pendaftaran
+-- ============================================================
+create table if not exists survei_kepuasan (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_id uuid references kunjungan(id),
+  nama_pasien text,
+  skor_kecepatan int not null check (skor_kecepatan between 1 and 5),
+  skor_keramahan int not null check (skor_keramahan between 1 and 5),
+  skor_kejelasan_informasi int not null check (skor_kejelasan_informasi between 1 and 5),
+  skor_kebersihan int not null check (skor_kebersihan between 1 and 5),
+  saran text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_survei_tanggal on survei_kepuasan(created_at);
+
+alter table survei_kepuasan enable row level security;
+create policy "authenticated_all_survei_kepuasan" on survei_kepuasan for all to authenticated using (true) with check (true);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
