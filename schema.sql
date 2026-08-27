@@ -1006,6 +1006,60 @@ end;
 $$ language plpgsql;
 
 -- ============================================================
+-- 33. RUJUKAN LAB — centang "Perlu Lab" di rekam medis otomatis
+-- bikin antrian baru di klaster LK (Laboratorium). Hasil lab dicatat
+-- petugas lab, tapi tetap kebaca balik di riwayat rekam medis pasien.
+-- ============================================================
+alter table kunjungan add column if not exists tipe_layanan text not null default 'reguler'
+  check (tipe_layanan in ('reguler','lab'));
+
+create table if not exists rujukan_lab (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_asal_id uuid not null references kunjungan(id),
+  kunjungan_tujuan_id uuid not null references kunjungan(id),
+  jenis_pemeriksaan text not null,
+  status text not null default 'menunggu' check (status in ('menunggu', 'selesai')),
+  dibuat_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists hasil_lab (
+  id uuid primary key default gen_random_uuid(),
+  rujukan_lab_id uuid not null references rujukan_lab(id),
+  kunjungan_asal_id uuid not null references kunjungan(id),
+  item_hasil jsonb not null default '[]', -- [{nama_pemeriksaan, hasil, satuan, nilai_rujukan}]
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_rujukan_lab_asal on rujukan_lab(kunjungan_asal_id);
+create index if not exists idx_rujukan_lab_tujuan on rujukan_lab(kunjungan_tujuan_id);
+create index if not exists idx_hasil_lab_asal on hasil_lab(kunjungan_asal_id);
+
+alter table rujukan_lab enable row level security;
+alter table hasil_lab enable row level security;
+create policy "authenticated_all_rujukan_lab" on rujukan_lab for all to authenticated using (true) with check (true);
+create policy "authenticated_all_hasil_lab" on hasil_lab for all to authenticated using (true) with check (true);
+
+-- ============================================================
+-- 34. TINDAKAN MEDIS — tindakan non-obat (jahit luka, nebulizer,
+-- pasang infus, dll), dicatat bareng rekam medis per kunjungan.
+-- ============================================================
+create table if not exists tindakan_medis (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_id uuid not null references kunjungan(id),
+  rekam_medis_id uuid references rekam_medis(id),
+  daftar_tindakan jsonb not null default '[]', -- [{nama_tindakan, catatan}]
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_tindakan_kunjungan on tindakan_medis(kunjungan_id);
+
+alter table tindakan_medis enable row level security;
+create policy "authenticated_all_tindakan_medis" on tindakan_medis for all to authenticated using (true) with check (true);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

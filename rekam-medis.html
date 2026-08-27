@@ -89,11 +89,35 @@
 
       <div class="grid-2">
         <div>
-          <label><input type="checkbox" id="rmButuhLab" style="width:auto; display:inline-block;"> Perlu rujukan Laboratorium</label>
+          <label><input type="checkbox" id="rmButuhLab" style="width:auto; display:inline-block;" onchange="toggleLabSection()"> Perlu rujukan Laboratorium</label>
         </div>
         <div>
           <label><input type="checkbox" id="rmButuhObat" style="width:auto; display:inline-block;" onchange="toggleResepSection()"> Perlu resep obat</label>
         </div>
+      </div>
+      <div id="labSection" style="display:none; border-top:1px solid #e5e7eb; padding-top:16px; margin-bottom:16px;">
+        <label>Jenis Pemeriksaan Diminta</label>
+        <textarea id="rmJenisLab" placeholder="Contoh: Gula Darah Sewaktu, Hemoglobin, Urin Lengkap"></textarea>
+        <p style="font-size:12px; color:var(--muted);">Pasien otomatis masuk antrian klaster LK (Laboratorium). Hasil dicatat petugas lab, nanti kebaca balik di riwayat pasien.</p>
+      </div>
+
+      <div style="border-top:1px solid #e5e7eb; padding-top:16px; margin-bottom:16px;">
+        <h2>Tindakan Medis (non-obat)</h2>
+        <div class="grid-2">
+          <div>
+            <label>Nama Tindakan</label>
+            <input type="text" id="tmNama" placeholder="Contoh: Jahit luka, Nebulizer, Pasang infus">
+          </div>
+          <div>
+            <label>Catatan</label>
+            <input type="text" id="tmCatatan" placeholder="Opsional">
+          </div>
+        </div>
+        <button type="button" class="btn-secondary" onclick="tambahTindakan()">+ Tambah Tindakan</button>
+        <table style="margin-top:12px;">
+          <thead><tr><th>Tindakan</th><th>Catatan</th><th></th></tr></thead>
+          <tbody id="tabelTindakan"><tr><td colspan="3" style="color:#9ca3af;">Belum ada tindakan ditambahkan.</td></tr></tbody>
+        </table>
       </div>
 
       <div class="grid-2">
@@ -158,6 +182,39 @@
 
       <button type="submit" class="btn-primary">Simpan Rekam Medis & Selesaikan</button>
       <button type="button" class="btn-secondary" onclick="batalkanForm()">Batal</button>
+    </form>
+  </div>
+
+  <div class="card" id="cardFormHasilLab" style="display:none;">
+    <h2>Input Hasil Laboratorium — <span id="namaPasienLabAktif"></span></h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:10px;">Permintaan: <strong id="labJenisDiminta">-</strong></p>
+    <div id="msgBoxLab"></div>
+    <form id="formHasilLab">
+      <div class="grid-3">
+        <div>
+          <label>Nama Pemeriksaan</label>
+          <input type="text" id="hlNama" placeholder="Contoh: Gula Darah Sewaktu">
+        </div>
+        <div>
+          <label>Hasil</label>
+          <input type="text" id="hlHasil" placeholder="Contoh: 120">
+        </div>
+        <div>
+          <label>Satuan</label>
+          <input type="text" id="hlSatuan" placeholder="Contoh: mg/dL">
+        </div>
+      </div>
+      <label>Nilai Rujukan (opsional)</label>
+      <input type="text" id="hlNilaiRujukan" placeholder="Contoh: 70-140 mg/dL">
+      <button type="button" class="btn-secondary" onclick="tambahHasilLab()">+ Tambah Item Hasil</button>
+
+      <table style="margin-top:12px;">
+        <thead><tr><th>Pemeriksaan</th><th>Hasil</th><th>Satuan</th><th>Nilai Rujukan</th><th></th></tr></thead>
+        <tbody id="tabelHasilLab"><tr><td colspan="5" style="color:#9ca3af;">Belum ada hasil ditambahkan.</td></tr></tbody>
+      </table>
+
+      <button type="submit" class="btn-primary">Simpan Hasil Lab & Selesaikan</button>
+      <button type="button" class="btn-secondary" onclick="batalkanFormLab()">Batal</button>
     </form>
   </div>
 
@@ -310,6 +367,30 @@
     </table>
   </div>
 
+  <div class="card" id="cardRiwayatLabRM" style="display:none;">
+    <h2>Riwayat Hasil Laboratorium</h2>
+    <table>
+      <thead>
+        <tr><th>Tanggal</th><th>Pemeriksaan Diminta</th><th>Hasil</th></tr>
+      </thead>
+      <tbody id="tabelRiwayatLab">
+        <tr><td colspan="3">Belum ada pasien dipilih.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" id="cardRiwayatTindakanRM" style="display:none;">
+    <h2>Riwayat Tindakan Medis</h2>
+    <table>
+      <thead>
+        <tr><th>Tanggal</th><th>Klaster</th><th>Tindakan</th><th>Catatan</th></tr>
+      </thead>
+      <tbody id="tabelRiwayatTindakan">
+        <tr><td colspan="4">Belum ada pasien dipilih.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   </div>
   <!-- /modePendaftaran -->
 
@@ -373,6 +454,10 @@
 let kunjunganAktif = null;
 let profilSaya = null;
 let daftarObatResep = [];
+let daftarTindakanMedis = [];
+let kunjunganLabAktif = null;
+let rujukanLabAktif = null;
+let daftarHasilLab = [];
 
 async function muatRiwayatObat() {
   const tbody = document.getElementById("tabelRiwayatObat");
@@ -593,14 +678,53 @@ function toggleRujukanInternal() {
   document.getElementById("rujukanInternalSection").style.display = tampil ? "block" : "none";
 }
 
+function toggleLabSection() {
+  const tampil = document.getElementById("rmButuhLab").checked;
+  document.getElementById("labSection").style.display = tampil ? "block" : "none";
+}
+
 async function muatDaftarKlasterTujuan() {
   const select = document.getElementById("rmKlasterTujuan");
   const { data, error } = await supabaseClient.from("klaster").select("id, kode, nama").order("kode");
   if (error) { console.error(error); return; }
+  window._daftarKlaster = data;
   select.innerHTML = `<option value="">-- Pilih klaster tujuan --</option>` +
     data.map(k => `<option value="${k.id}">${k.kode} — ${k.nama}</option>`).join("");
 }
 muatDaftarKlasterTujuan();
+
+function tambahTindakan() {
+  const nama = document.getElementById("tmNama").value.trim();
+  const catatan = document.getElementById("tmCatatan").value.trim();
+  if (!nama) {
+    alert("Isi nama tindakan dulu.");
+    return;
+  }
+  daftarTindakanMedis.push({ nama_tindakan: nama, catatan });
+  renderTabelTindakan();
+  document.getElementById("tmNama").value = "";
+  document.getElementById("tmCatatan").value = "";
+}
+
+function hapusTindakan(idx) {
+  daftarTindakanMedis.splice(idx, 1);
+  renderTabelTindakan();
+}
+
+function renderTabelTindakan() {
+  const tbody = document.getElementById("tabelTindakan");
+  if (!daftarTindakanMedis.length) {
+    tbody.innerHTML = `<tr><td colspan="3" style="color:#9ca3af;">Belum ada tindakan ditambahkan.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = daftarTindakanMedis.map((t, i) => `
+    <tr>
+      <td>${t.nama_tindakan}</td>
+      <td>${t.catatan || "-"}</td>
+      <td><button type="button" class="btn-secondary" onclick="hapusTindakan(${i})">Hapus</button></td>
+    </tr>
+  `).join("");
+}
 
 function tambahObatResep() {
   const nama = document.getElementById("rObatNama").value.trim();
@@ -708,8 +832,11 @@ async function muatAntrian() {
   tbody.innerHTML = data.map(k => {
     const bisa = bisaLayani(profilSaya, k.klaster_id);
     const kJson = JSON.stringify(k).replace(/'/g, "&#39;");
+    const isLab = k.tipe_layanan === "lab";
     const tombol = bisa
-      ? `<button class="btn-primary" onclick='bukaFormRM(${kJson}, true)'>Periksa</button>`
+      ? (isLab
+          ? `<button class="btn-primary" onclick='bukaFormHasilLab(${kJson})'>Isi Hasil Lab</button>`
+          : `<button class="btn-primary" onclick='bukaFormRM(${kJson}, true)'>Periksa</button>`)
       : `<button class="btn-secondary" onclick='bukaFormRM(${kJson}, false)'>Lihat</button>`;
     return `
     <tr>
@@ -752,10 +879,15 @@ function bukaFormRM(kunjungan, bisaIsi = true) {
   document.getElementById("peringatanIcd").innerHTML = "";
   daftarObatResep = [];
   renderTabelResep();
+  daftarTindakanMedis = [];
+  renderTabelTindakan();
   document.getElementById("resepSection").style.display = "none";
+  document.getElementById("labSection").style.display = "none";
+  document.getElementById("rmJenisLab").value = "";
   document.getElementById("rujukanInternalSection").style.display = "none";
   document.getElementById("rmKlasterTujuan").value = "";
   document.getElementById("rmAlasanRujukan").value = "";
+  document.getElementById("cardFormHasilLab").style.display = "none";
 
   // Mode lihat saja: matikan semua input, sembunyikan tombol simpan
   const form = document.getElementById("formRM");
@@ -791,7 +923,7 @@ async function muatRiwayatPemeriksaanKlinis(pasienId, kunjunganIdSekarang) {
 
   const { data, error } = await supabaseClient
     .from("kunjungan")
-    .select("id, tanggal, klaster(nama, kode), rekam_medis(assessment, kode_icd10, plan)")
+    .select("id, tanggal, klaster(nama, kode), rekam_medis(assessment, kode_icd10, plan), resep(daftar_obat), tindakan_medis(daftar_tindakan)")
     .eq("pasien_id", pasienId)
     .neq("id", kunjunganIdSekarang)
     .order("tanggal", { ascending: false })
@@ -808,13 +940,32 @@ async function muatRiwayatPemeriksaanKlinis(pasienId, kunjunganIdSekarang) {
     return;
   }
 
+  const idKunjungan = punyaRm.map(k => k.id);
+  const { data: labData } = await supabaseClient
+    .from("hasil_lab")
+    .select("kunjungan_asal_id, item_hasil")
+    .in("kunjungan_asal_id", idKunjungan);
+  const labPerKunjungan = {};
+  (labData || []).forEach(l => {
+    (labPerKunjungan[l.kunjungan_asal_id] = labPerKunjungan[l.kunjungan_asal_id] || []).push(...(l.item_hasil || []));
+  });
+
   el.innerHTML = punyaRm.map(k => {
     const rm = k.rekam_medis[0];
     const tgl = new Date(k.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    const obatTxt = (k.resep || []).flatMap(r => (r.daftar_obat || []).map(o => `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`)).join(", ") || "-";
+    const tindakanTxt = (k.tindakan_medis || []).flatMap(t => (t.daftar_tindakan || []).map(x => x.nama_tindakan)).join(", ") || "-";
+    const labItems = labPerKunjungan[k.id] || [];
+    const labTxt = labItems.length
+      ? labItems.map(it => `${it.nama_pemeriksaan}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}`).join(", ")
+      : "-";
     return `<div style="padding:6px 0; border-bottom:1px solid #e5e7eb;">
       <strong>${tgl}</strong> — ${k.klaster?.kode || "-"}<br>
       Diagnosa: ${rm.assessment || "-"} (${rm.kode_icd10 || "-"})<br>
-      Plan: ${rm.plan || "-"}
+      Plan: ${rm.plan || "-"}<br>
+      Obat: ${obatTxt}<br>
+      Tindakan: ${tindakanTxt}<br>
+      Hasil Lab: ${labTxt}
     </div>`;
   }).join("");
 }
@@ -823,6 +974,132 @@ function batalkanForm() {
   kunjunganAktif = null;
   document.getElementById("cardFormRM").style.display = "none";
 }
+
+async function bukaFormHasilLab(kunjungan) {
+  document.getElementById("cardFormRM").style.display = "none";
+  kunjunganLabAktif = kunjungan;
+  daftarHasilLab = [];
+  renderTabelHasilLab();
+  document.getElementById("msgBoxLab").innerHTML = "";
+  document.getElementById("namaPasienLabAktif").textContent = `${kunjungan.pasien.nama} (No. Antrian ${kunjungan.no_antrian})`;
+  document.getElementById("labJenisDiminta").textContent = "Memuat...";
+  document.getElementById("cardFormHasilLab").style.display = "block";
+
+  const { data, error } = await supabaseClient
+    .from("rujukan_lab")
+    .select("*")
+    .eq("kunjungan_tujuan_id", kunjungan.id)
+    .single();
+
+  if (error || !data) {
+    document.getElementById("labJenisDiminta").textContent = "Gagal muat data permintaan lab.";
+    rujukanLabAktif = null;
+    return;
+  }
+
+  rujukanLabAktif = data;
+  document.getElementById("labJenisDiminta").textContent = data.jenis_pemeriksaan;
+
+  window.scrollTo({ top: document.getElementById("cardFormHasilLab").offsetTop - 20, behavior: "smooth" });
+}
+
+function batalkanFormLab() {
+  kunjunganLabAktif = null;
+  rujukanLabAktif = null;
+  document.getElementById("cardFormHasilLab").style.display = "none";
+}
+
+function tambahHasilLab() {
+  const nama = document.getElementById("hlNama").value.trim();
+  const hasil = document.getElementById("hlHasil").value.trim();
+  const satuan = document.getElementById("hlSatuan").value.trim();
+  const nilaiRujukan = document.getElementById("hlNilaiRujukan").value.trim();
+
+  if (!nama || !hasil) {
+    alert("Isi nama pemeriksaan dan hasil dulu.");
+    return;
+  }
+
+  daftarHasilLab.push({ nama_pemeriksaan: nama, hasil, satuan, nilai_rujukan: nilaiRujukan });
+  renderTabelHasilLab();
+
+  document.getElementById("hlNama").value = "";
+  document.getElementById("hlHasil").value = "";
+  document.getElementById("hlSatuan").value = "";
+  document.getElementById("hlNilaiRujukan").value = "";
+}
+
+function hapusHasilLab(idx) {
+  daftarHasilLab.splice(idx, 1);
+  renderTabelHasilLab();
+}
+
+function renderTabelHasilLab() {
+  const tbody = document.getElementById("tabelHasilLab");
+  if (!daftarHasilLab.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#9ca3af;">Belum ada hasil ditambahkan.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = daftarHasilLab.map((h, i) => `
+    <tr>
+      <td>${h.nama_pemeriksaan}</td>
+      <td>${h.hasil}</td>
+      <td>${h.satuan || "-"}</td>
+      <td>${h.nilai_rujukan || "-"}</td>
+      <td><button type="button" class="btn-secondary" onclick="hapusHasilLab(${i})">Hapus</button></td>
+    </tr>
+  `).join("");
+}
+
+document.getElementById("formHasilLab").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msgBox = document.getElementById("msgBoxLab");
+
+  if (!kunjunganLabAktif || !rujukanLabAktif || !profilSaya) {
+    msgBox.innerHTML = `<div class="msg msg-error">Data permintaan lab tidak ditemukan.</div>`;
+    return;
+  }
+  if (!daftarHasilLab.length) {
+    msgBox.innerHTML = `<div class="msg msg-error">Tambah minimal 1 item hasil dulu.</div>`;
+    return;
+  }
+
+  const { error: errHasil } = await supabaseClient.from("hasil_lab").insert({
+    rujukan_lab_id: rujukanLabAktif.id,
+    kunjungan_asal_id: rujukanLabAktif.kunjungan_asal_id,
+    item_hasil: daftarHasilLab,
+    petugas_id: profilSaya.id
+  });
+  if (errHasil) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan hasil lab: ${errHasil.message}</div>`;
+    return;
+  }
+
+  const { error: errStatusRujukan } = await supabaseClient
+    .from("rujukan_lab")
+    .update({ status: "selesai" })
+    .eq("id", rujukanLabAktif.id);
+  if (errStatusRujukan) {
+    msgBox.innerHTML = `<div class="msg msg-error">Hasil lab tersimpan, tapi gagal update status rujukan: ${errStatusRujukan.message}</div>`;
+    return;
+  }
+
+  const { error: errStatusKunjungan } = await supabaseClient
+    .from("kunjungan")
+    .update({ status: "selesai" })
+    .eq("id", kunjunganLabAktif.id);
+  if (errStatusKunjungan) {
+    msgBox.innerHTML = `<div class="msg msg-error">Hasil lab tersimpan, tapi gagal update status kunjungan: ${errStatusKunjungan.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Hasil lab tersimpan, tercatat atas nama ${profilSaya.nama}.</div>`;
+  document.getElementById("cardFormHasilLab").style.display = "none";
+  kunjunganLabAktif = null;
+  rujukanLabAktif = null;
+  daftarHasilLab = [];
+  await muatAntrian();
+});
 
 document.getElementById("formRM").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -878,6 +1155,20 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
     }
   }
 
+  // 2b. Kalau ada tindakan medis (non-obat) ditambahkan, simpan ke tabel tindakan_medis
+  if (daftarTindakanMedis.length > 0) {
+    const { error: errTindakan } = await supabaseClient.from("tindakan_medis").insert({
+      kunjungan_id: kunjunganAktif.id,
+      rekam_medis_id: dataRM.id,
+      daftar_tindakan: daftarTindakanMedis,
+      petugas_id: profilSaya.id
+    });
+    if (errTindakan) {
+      msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi gagal simpan tindakan medis: ${errTindakan.message}</div>`;
+      return;
+    }
+  }
+
   // 3. Update status kunjungan jadi selesai
   const { error: errStatus } = await supabaseClient
     .from("kunjungan")
@@ -887,6 +1178,62 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
   if (errStatus) {
     msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi gagal update status kunjungan: ${errStatus.message}</div>`;
     return;
+  }
+
+  // 3b. Kalau perlu rujukan lab, bikin antrian baru di klaster LK + catat permintaan
+  let pesanLab = "";
+  if (document.getElementById("rmButuhLab").checked) {
+    const jenisLab = document.getElementById("rmJenisLab").value.trim();
+    const klasterLk = (window._daftarKlaster || []).find(k => k.kode === "LK");
+
+    if (!jenisLab) {
+      msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi jenis pemeriksaan lab belum diisi.</div>`;
+      return;
+    }
+    if (!klasterLk) {
+      msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi klaster LK (Laboratorium) tidak ditemukan di master data.</div>`;
+      return;
+    }
+
+    const { data: noKunjunganLab, error: errNoKLab } = await supabaseClient.rpc("generate_no_kunjungan");
+    const { data: noAntrianLab, error: errNoALab } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: klasterLk.id });
+
+    if (errNoKLab || errNoALab) {
+      msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi gagal generate nomor antrian lab: ${(errNoKLab || errNoALab).message}</div>`;
+      return;
+    }
+
+    const { data: kunjunganLab, error: errKunjunganLab } = await supabaseClient.from("kunjungan").insert({
+      no_kunjungan: noKunjunganLab,
+      pasien_id: kunjunganAktif.pasien_id,
+      klaster_id: klasterLk.id,
+      tipe_layanan: "lab",
+      jenis_bayar: kunjunganAktif.jenis_bayar,
+      no_antrian: noAntrianLab,
+      status: "menunggu",
+      keluhan_awal: `Permintaan Lab: ${jenisLab}`,
+      created_by: profilSaya.id
+    }).select("id").single();
+
+    if (errKunjunganLab) {
+      msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi gagal bikin antrian lab: ${errKunjunganLab.message}</div>`;
+      return;
+    }
+
+    const { error: errRujukanLab } = await supabaseClient.from("rujukan_lab").insert({
+      kunjungan_asal_id: kunjunganAktif.id,
+      kunjungan_tujuan_id: kunjunganLab.id,
+      jenis_pemeriksaan: jenisLab,
+      status: "menunggu",
+      dibuat_oleh: profilSaya.id
+    });
+
+    if (errRujukanLab) {
+      msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, antrian lab dibuat, tapi catatan permintaan lab gagal tersimpan: ${errRujukanLab.message}</div>`;
+      return;
+    }
+
+    pesanLab = ` Pasien otomatis masuk antrian No. ${noAntrianLab} di klaster LK (Laboratorium).`;
   }
 
   // 4. Kalau perlu rujukan internal, bikin kunjungan baru di klaster tujuan
@@ -941,10 +1288,11 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
     pesanRujukan = ` Pasien otomatis masuk antrian No. ${noAntrianBaru} di klaster tujuan.`;
   }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Rekam medis tersimpan, tercatat atas nama ${profilSaya.nama}.${pesanRujukan}</div>`;
+  msgBox.innerHTML = `<div class="msg msg-success">Rekam medis tersimpan, tercatat atas nama ${profilSaya.nama}.${pesanLab}${pesanRujukan}</div>`;
   document.getElementById("cardFormRM").style.display = "none";
   kunjunganAktif = null;
   daftarObatResep = [];
+  daftarTindakanMedis = [];
   await muatAntrian();
 });
 
@@ -1118,8 +1466,80 @@ function pilihPasienRM(p) {
   document.getElementById("cardPasienRM").style.display = "block";
   document.getElementById("cardRiwayatRM").style.display = "block";
   document.getElementById("cardRiwayatRujukanRM").style.display = "block";
+  document.getElementById("cardRiwayatLabRM").style.display = "block";
+  document.getElementById("cardRiwayatTindakanRM").style.display = "block";
   muatRiwayatRM(p.id);
   muatRiwayatRujukan(p.id);
+  muatRiwayatLab(p.id);
+  muatRiwayatTindakan(p.id);
+}
+
+async function muatRiwayatLab(pasienId) {
+  const tbody = document.getElementById("tabelRiwayatLab");
+  tbody.innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+
+  const { data: kunjunganPasien, error: errKunjungan } = await supabaseClient
+    .from("kunjungan")
+    .select("id")
+    .eq("pasien_id", pasienId);
+
+  if (errKunjungan || !kunjunganPasien?.length) {
+    tbody.innerHTML = `<tr><td colspan="3">Belum ada riwayat hasil lab.</td></tr>`;
+    return;
+  }
+
+  const idKunjungan = kunjunganPasien.map(k => k.id);
+
+  const { data, error } = await supabaseClient
+    .from("hasil_lab")
+    .select("created_at, item_hasil, rujukan_lab(jenis_pemeriksaan)")
+    .in("kunjungan_asal_id", idKunjungan)
+    .order("created_at", { ascending: false });
+
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="3">Belum ada riwayat hasil lab.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(l => {
+    const tgl = new Date(l.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    const hasilTxt = (l.item_hasil || [])
+      .map(it => `${it.nama_pemeriksaan}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}${it.nilai_rujukan ? " (rujukan: " + it.nilai_rujukan + ")" : ""}`)
+      .join("<br>");
+    return `<tr>
+      <td>${tgl}</td>
+      <td>${l.rujukan_lab?.jenis_pemeriksaan || "-"}</td>
+      <td>${hasilTxt || "-"}</td>
+    </tr>`;
+  }).join("");
+}
+
+async function muatRiwayatTindakan(pasienId) {
+  const tbody = document.getElementById("tabelRiwayatTindakan");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("tindakan_medis")
+    .select("created_at, daftar_tindakan, kunjungan!inner(pasien_id, klaster(nama, kode))")
+    .eq("kunjungan.pasien_id", pasienId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="4">Belum ada riwayat tindakan medis.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(t => {
+    const tgl = new Date(t.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    const namaTxt = (t.daftar_tindakan || []).map(x => x.nama_tindakan).join(", ");
+    const catatanTxt = (t.daftar_tindakan || []).map(x => x.catatan || "-").join(", ");
+    return `<tr>
+      <td>${tgl}</td>
+      <td>${t.kunjungan?.klaster?.kode || "-"}</td>
+      <td>${namaTxt || "-"}</td>
+      <td>${catatanTxt || "-"}</td>
+    </tr>`;
+  }).join("");
 }
 
 async function muatRiwayatRujukan(pasienId) {
