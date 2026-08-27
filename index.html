@@ -597,10 +597,78 @@
     </div>
 
     <div id="panelKerahasiaan" class="dash-content" style="display:none;">
+
       <div class="card">
-        <h2>Kerahasiaan &amp; Hak Akses</h2>
-        <p style="font-size:13px; color:var(--muted);">Log akses rekam medis pasien dan pengaturan hak akses berdasarkan role. Belum dibangun.</p>
+        <h2>Hak Akses per Role</h2>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Halaman yang bisa diakses tiap role, sesuai konfigurasi sistem saat ini.</p>
+        <table>
+          <thead><tr><th>Role</th><th>Halaman yang Bisa Diakses</th></tr></thead>
+          <tbody id="krsTabelHakAkses"><tr><td colspan="2">Memuat...</td></tr></tbody>
+        </table>
       </div>
+
+      <div class="card">
+        <h2>Catat Consent Pasien</h2>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Kalau data RM pasien perlu dibagikan ke pihak luar (asuransi, faskes lain), catat persetujuan pasien dulu di sini.</p>
+        <div id="krsMsgBox"></div>
+
+        <div class="grid-2">
+          <div>
+            <label>Cari Pasien (NIK / No. RM / Nama)</label>
+            <input type="text" id="krsCariPasien" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienConsent();}">
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button class="btn-primary" onclick="cariPasienConsent()" style="margin-bottom:12px;">Cari</button>
+          </div>
+        </div>
+        <div id="krsHasilCari"></div>
+        <div id="krsDaftarHasilCari"></div>
+
+        <div id="krsFormLanjut" style="display:none; margin-top:14px; border-top:1px solid #e5e7eb; padding-top:14px;">
+          <div class="info-block">
+            <div class="info-row"><label>Pasien</label><span id="krsNamaTerpilih"></span></div>
+          </div>
+          <div class="grid-2" style="margin-top:12px;">
+            <div>
+              <label>Jenis Consent *</label>
+              <select id="krsJenisConsent" required>
+                <option value="berbagi_asuransi">Berbagi ke Asuransi</option>
+                <option value="berbagi_faskes_lain">Berbagi ke Faskes Lain</option>
+                <option value="penelitian">Keperluan Penelitian</option>
+                <option value="lainnya">Lainnya</option>
+              </select>
+            </div>
+            <div>
+              <label>Pihak Penerima *</label>
+              <input type="text" id="krsPihakPenerima" placeholder="Contoh: BPJS Kesehatan, RSUD Dumai">
+            </div>
+          </div>
+          <label>Catatan</label>
+          <textarea id="krsCatatan"></textarea>
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <button class="btn-primary" onclick="simpanConsent()">Simpan Consent</button>
+            <button class="btn-secondary" onclick="batalConsent()">Batal</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Riwayat Consent Pasien</h2>
+        <table>
+          <thead><tr><th>Pasien</th><th>Jenis</th><th>Pihak Penerima</th><th>Tanggal</th></tr></thead>
+          <tbody id="krsTabelConsent"><tr><td colspan="4">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Log Akses Rekam Medis (Terbaru)</h2>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Jejak siapa buka/ubah data RM pasien. Log otomatis terisi begitu modul Rekam Medis diintegrasikan mencatat aktivitasnya.</p>
+        <table>
+          <thead><tr><th>Pasien</th><th>Aksi</th><th>Petugas</th><th>Waktu</th></tr></thead>
+          <tbody id="krsTabelLogAkses"><tr><td colspan="4">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
     </div>
 
     <div id="panelSurvei" class="dash-content" style="display:none;">
@@ -697,6 +765,7 @@ function gantiSubtabPendaftaran(tab) {
   if (tab === "dashboard") muatDashboardRingkas();
   if (tab === "skrining") muatSkrining();
   if (tab === "rujukan") muatRujukan();
+  if (tab === "kerahasiaan") muatKerahasiaan();
 
   if (tab === "koordinasi") {
     muatKoordinasi();
@@ -1655,6 +1724,163 @@ function cetakSuratRujukan(index) {
   document.getElementById("areaCetakRujukan").classList.add("aktif-cetak");
   document.getElementById("areaCetak").classList.remove("aktif-cetak");
   window.print();
+}
+
+// ---------- Kerahasiaan & Hak Akses (matrix role, consent pasien, log akses RM) ----------
+const LABEL_HALAMAN = {
+  "index.html": "Pendaftaran",
+  "rekam-medis.html": "Rekam Medis",
+  "apotek.html": "Apotek",
+  "pengaturan.html": "Pengaturan"
+};
+const LABEL_ROLE = {
+  admin: "Admin", petugas: "Petugas Loket", staff: "Staff",
+  dokter: "Dokter", perawat: "Perawat", bidan: "Bidan"
+};
+
+async function muatKerahasiaan() {
+  const tbodyAkses = document.getElementById("krsTabelHakAkses");
+  tbodyAkses.innerHTML = Object.keys(AKSES_HALAMAN).map(role => `
+    <tr>
+      <td>${LABEL_ROLE[role] || role}</td>
+      <td>${AKSES_HALAMAN[role].map(h => LABEL_HALAMAN[h] || h).join(", ")}</td>
+    </tr>
+  `).join("");
+
+  await muatRiwayatConsent();
+  await muatLogAksesRm();
+}
+
+async function muatRiwayatConsent() {
+  const tbody = document.getElementById("krsTabelConsent");
+  const { data, error } = await supabaseClient
+    .from("consent_pasien")
+    .select("*, pasien(nama)")
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  tbody.innerHTML = data.length ? data.map(c => `
+    <tr>
+      <td>${c.pasien?.nama || "-"}</td>
+      <td>${LABEL_JENIS_CONSENT[c.jenis_consent] || c.jenis_consent}</td>
+      <td>${c.pihak_penerima}</td>
+      <td>${new Date(c.tanggal_consent).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">Belum ada consent tercatat.</td></tr>`;
+}
+
+const LABEL_JENIS_CONSENT = {
+  berbagi_asuransi: "Berbagi ke Asuransi",
+  berbagi_faskes_lain: "Berbagi ke Faskes Lain",
+  penelitian: "Keperluan Penelitian",
+  lainnya: "Lainnya"
+};
+
+async function muatLogAksesRm() {
+  const tbody = document.getElementById("krsTabelLogAkses");
+  const { data, error } = await supabaseClient
+    .from("log_akses_rm")
+    .select("*, pasien(nama), profil_pegawai(nama)")
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Belum ada log (modul RM belum kirim data ke sini).</td></tr>`; return; }
+
+  tbody.innerHTML = data.length ? data.map(l => `
+    <tr>
+      <td>${l.pasien?.nama || "-"}</td>
+      <td>${l.aksi === "lihat" ? "Lihat" : "Ubah"}</td>
+      <td>${l.profil_pegawai?.nama || "-"}</td>
+      <td>${new Date(l.created_at).toLocaleString("id-ID")}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">Belum ada log akses RM tercatat.</td></tr>`;
+}
+
+let krsPasienTerpilih = null;
+
+async function cariPasienConsent() {
+  const kunci = document.getElementById("krsCariPasien").value.trim();
+  const hasilDiv = document.getElementById("krsHasilCari");
+  const daftarDiv = document.getElementById("krsDaftarHasilCari");
+  hasilDiv.innerHTML = "";
+  daftarDiv.innerHTML = "";
+  document.getElementById("krsFormLanjut").style.display = "none";
+  krsPasienTerpilih = null;
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienConsent(data[0]);
+    return;
+  }
+
+  window._krsHasilCari = data;
+  daftarDiv.innerHTML = `<table><thead><tr><th>Nama</th><th>No. RM</th><th>NIK</th><th></th></tr></thead><tbody>` +
+    data.map((p, i) => `
+      <tr>
+        <td>${p.nama}</td>
+        <td>${p.no_rm || "-"}</td>
+        <td>${p.nik}</td>
+        <td><button class="btn-secondary" onclick="pilihPasienConsentDariHasil(${i})">Pilih</button></td>
+      </tr>
+    `).join("") + `</tbody></table>`;
+}
+
+function pilihPasienConsentDariHasil(i) {
+  pilihPasienConsent(window._krsHasilCari[i]);
+}
+
+function pilihPasienConsent(p) {
+  krsPasienTerpilih = p;
+  document.getElementById("krsDaftarHasilCari").innerHTML = "";
+  document.getElementById("krsHasilCari").innerHTML = `<div class="msg msg-success">Pasien dipilih: <strong>${p.nama}</strong></div>`;
+  document.getElementById("krsNamaTerpilih").textContent = `${p.nama} (No. RM ${p.no_rm || "-"})`;
+  document.getElementById("krsPihakPenerima").value = "";
+  document.getElementById("krsCatatan").value = "";
+  document.getElementById("krsFormLanjut").style.display = "block";
+}
+
+function batalConsent() {
+  krsPasienTerpilih = null;
+  document.getElementById("krsFormLanjut").style.display = "none";
+  document.getElementById("krsCariPasien").value = "";
+  document.getElementById("krsHasilCari").innerHTML = "";
+}
+
+async function simpanConsent() {
+  const msgBox = document.getElementById("krsMsgBox");
+  if (!krsPasienTerpilih) return;
+
+  const pihakPenerima = document.getElementById("krsPihakPenerima").value.trim();
+  if (!pihakPenerima) { msgBox.innerHTML = `<div class="msg msg-error">Isi pihak penerima dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const payload = {
+    pasien_id: krsPasienTerpilih.id,
+    jenis_consent: document.getElementById("krsJenisConsent").value,
+    pihak_penerima: pihakPenerima,
+    catatan: document.getElementById("krsCatatan").value.trim() || null,
+    petugas_id: user.id
+  };
+
+  const { error } = await supabaseClient.from("consent_pasien").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Consent berhasil dicatat.</div>`;
+  batalConsent();
+  await muatRiwayatConsent();
 }
 </script>
 

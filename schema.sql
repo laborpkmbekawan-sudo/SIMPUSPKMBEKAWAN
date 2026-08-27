@@ -908,6 +908,41 @@ alter table rujukan enable row level security;
 create policy "authenticated_all_rujukan" on rujukan for all to authenticated using (true) with check (true);
 
 -- ============================================================
+-- 29. KERAHASIAAN & HAK AKSES — Consent pasien & log akses RM
+-- ============================================================
+create table if not exists consent_pasien (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  jenis_consent text not null check (jenis_consent in ('berbagi_asuransi', 'berbagi_faskes_lain', 'penelitian', 'lainnya')),
+  pihak_penerima text not null,
+  tanggal_consent date not null default current_date,
+  catatan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_consent_pasien on consent_pasien(pasien_id);
+
+alter table consent_pasien enable row level security;
+create policy "authenticated_all_consent_pasien" on consent_pasien for all to authenticated using (true) with check (true);
+
+create table if not exists log_akses_rm (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  kunjungan_id uuid references kunjungan(id),
+  aksi text not null check (aksi in ('lihat', 'ubah')),
+  keterangan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_log_akses_rm_pasien on log_akses_rm(pasien_id);
+create index if not exists idx_log_akses_rm_tanggal on log_akses_rm(created_at);
+
+alter table log_akses_rm enable row level security;
+create policy "authenticated_all_log_akses_rm" on log_akses_rm for all to authenticated using (true) with check (true);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
