@@ -1104,6 +1104,122 @@
           </table>
         </div>
 
+        <div id="lapDetailRujukan" style="display:none;">
+          <h2>Rujukan Internal &amp; Eksternal</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Rekap rujukan antar klaster (internal) dan ke FKRTL (rumah sakit/faskes lanjutan), per periode.</p>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapRjDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapRjSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanRujukan()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanRujukanCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Total Rujukan</div>
+              <div class="value" id="lapRjStatTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Internal</div>
+              <div class="value" id="lapRjStatInternal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">FKRTL</div>
+              <div class="value" id="lapRjStatFkrtl">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Diajukan</div>
+              <div class="value" id="lapRjStatDiajukan">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Diterima/Selesai</div>
+              <div class="value" id="lapRjStatSelesai">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Batal</div>
+              <div class="value" id="lapRjStatBatal">0</div>
+            </div>
+          </div>
+
+          <h4 style="margin-bottom:8px;">Rujukan Internal — per Klaster Tujuan</h4>
+          <table style="margin-bottom:18px;">
+            <thead><tr><th>Klaster Tujuan</th><th>Jumlah</th></tr></thead>
+            <tbody id="lapRjTabelKlaster"><tr><td colspan="2">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+
+          <h4 style="margin-bottom:8px;">Rujukan FKRTL — per Faskes Tujuan</h4>
+          <table style="margin-bottom:18px;">
+            <thead><tr><th>Faskes Tujuan</th><th>Jumlah</th></tr></thead>
+            <tbody id="lapRjTabelFaskes"><tr><td colspan="2">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+
+          <h4 style="margin-bottom:8px;">Daftar Rujukan</h4>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Nama Pasien</th><th>Jenis</th><th>Tujuan</th><th>Alasan</th><th>Status</th></tr></thead>
+            <tbody id="lapRjTabelDaftar"><tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div id="lapDetailKepuasan" style="display:none;">
+          <h2>Kepuasan Pelanggan</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Rekap survei kepuasan pasien (isi via QR di struk pendaftaran) — rata-rata skor per aspek & saran masuk.</p>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapKpDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapKpSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanKepuasan()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanKepuasanCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Jumlah Responden</div>
+              <div class="value" id="lapKpStatN">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Rata-rata Kecepatan</div>
+              <div class="value" id="lapKpStatKecepatan">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Rata-rata Keramahan</div>
+              <div class="value" id="lapKpStatKeramahan">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Rata-rata Kejelasan Info</div>
+              <div class="value" id="lapKpStatKejelasan">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Rata-rata Kebersihan</div>
+              <div class="value" id="lapKpStatKebersihan">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Indeks Kepuasan (IKM)</div>
+              <div class="value" id="lapKpStatIkm">0</div>
+            </div>
+          </div>
+
+          <h4 style="margin-bottom:8px;">Saran / Masukan Pasien</h4>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Nama Pasien</th><th>Saran</th></tr></thead>
+            <tbody id="lapKpTabelSaran"><tr><td colspan="3">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+        </div>
+
         <div id="lapDetailBelumDibangun" style="display:none;">
           <h2 id="lapBelumJudul">Laporan</h2>
           <p style="font-size:13px; color:var(--muted);">Laporan ini belum dibangun — bakal nyusul bertahap.</p>
@@ -1337,6 +1453,8 @@ function bukaLaporan(kode) {
   document.getElementById("lapDetailWaktuTunggu").style.display = "none";
   document.getElementById("lapDetailSkrining").style.display = "none";
   document.getElementById("lapDetailKelompokSasaran").style.display = "none";
+  document.getElementById("lapDetailRujukan").style.display = "none";
+  document.getElementById("lapDetailKepuasan").style.display = "none";
   document.getElementById("lapDetailBelumDibangun").style.display = "none";
 
   if (kode === "kunjungan") {
@@ -1366,6 +1484,22 @@ function bukaLaporan(kode) {
       document.getElementById("lapKsSampai").value = now.toISOString().split("T")[0];
     }
     muatLaporanKelompokSasaran();
+  } else if (kode === "rujukan") {
+    document.getElementById("lapDetailRujukan").style.display = "block";
+    if (!document.getElementById("lapRjDari").value) {
+      const now = new Date();
+      document.getElementById("lapRjDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      document.getElementById("lapRjSampai").value = now.toISOString().split("T")[0];
+    }
+    muatLaporanRujukan();
+  } else if (kode === "kepuasan") {
+    document.getElementById("lapDetailKepuasan").style.display = "block";
+    if (!document.getElementById("lapKpDari").value) {
+      const now = new Date();
+      document.getElementById("lapKpDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      document.getElementById("lapKpSampai").value = now.toISOString().split("T")[0];
+    }
+    muatLaporanKepuasan();
   } else {
     document.getElementById("lapDetailBelumDibangun").style.display = "block";
     document.getElementById("lapBelumJudul").textContent = LAPORAN_JUDUL[kode] || "Laporan";
@@ -1803,6 +1937,196 @@ function exportLaporanKelompokSasaranCsv() {
   const sampaiInput = document.getElementById("lapKsSampai").value;
   a.href = url;
   a.download = `Kelompok_Sasaran_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== Laporan Pendaftaran: Rujukan Internal & Eksternal (step 5) =====
+let laporanRujukanCache = [];
+
+async function muatLaporanRujukan() {
+  const tbodyKlaster = document.getElementById("lapRjTabelKlaster");
+  const tbodyFaskes = document.getElementById("lapRjTabelFaskes");
+  const tbodyDaftar = document.getElementById("lapRjTabelDaftar");
+  tbodyKlaster.innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+  tbodyFaskes.innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+  tbodyDaftar.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapRjDari").value;
+  const sampaiInput = document.getElementById("lapRjSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbodyKlaster.innerHTML = `<tr><td colspan="2">Pilih rentang tanggal dulu.</td></tr>`;
+    tbodyFaskes.innerHTML = `<tr><td colspan="2">Pilih rentang tanggal dulu.</td></tr>`;
+    tbodyDaftar.innerHTML = `<tr><td colspan="6">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const sampaiEksklusif = new Date(sampaiInput);
+  sampaiEksklusif.setDate(sampaiEksklusif.getDate() + 1);
+
+  const { data, error } = await supabaseClient
+    .from("rujukan")
+    .select("created_at, jenis, faskes_tujuan, alasan_rujukan, status, klaster_tujuan(nama, kode), kunjungan_asal:kunjungan_asal_id(pasien(nama))")
+    .gte("created_at", dariInput)
+    .lt("created_at", sampaiEksklusif.toISOString().split("T")[0])
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    tbodyKlaster.innerHTML = `<tr><td colspan="2">Gagal muat laporan: ${error.message}</td></tr>`;
+    tbodyFaskes.innerHTML = `<tr><td colspan="2">Gagal muat laporan: ${error.message}</td></tr>`;
+    tbodyDaftar.innerHTML = `<tr><td colspan="6">Gagal muat laporan: ${error.message}</td></tr>`;
+    return;
+  }
+
+  laporanRujukanCache = data || [];
+
+  const total = laporanRujukanCache.length;
+  const internal = laporanRujukanCache.filter(r => r.jenis === "internal").length;
+  const fkrtl = laporanRujukanCache.filter(r => r.jenis === "fkrtl").length;
+  const diajukan = laporanRujukanCache.filter(r => r.status === "diajukan").length;
+  const selesai = laporanRujukanCache.filter(r => r.status === "diterima" || r.status === "selesai").length;
+  const batal = laporanRujukanCache.filter(r => r.status === "batal").length;
+
+  document.getElementById("lapRjStatTotal").textContent = total;
+  document.getElementById("lapRjStatInternal").textContent = internal;
+  document.getElementById("lapRjStatFkrtl").textContent = fkrtl;
+  document.getElementById("lapRjStatDiajukan").textContent = diajukan;
+  document.getElementById("lapRjStatSelesai").textContent = selesai;
+  document.getElementById("lapRjStatBatal").textContent = batal;
+
+  const grupKlaster = {};
+  laporanRujukanCache.filter(r => r.jenis === "internal").forEach(r => {
+    const key = r.klaster_tujuan ? `${r.klaster_tujuan.kode} — ${r.klaster_tujuan.nama}` : "Tanpa Klaster";
+    grupKlaster[key] = (grupKlaster[key] || 0) + 1;
+  });
+  const namaKlaster = Object.keys(grupKlaster).sort();
+  tbodyKlaster.innerHTML = namaKlaster.length ? namaKlaster.map(k => `<tr><td>${k}</td><td>${grupKlaster[k]}</td></tr>`).join("")
+    : `<tr><td colspan="2">Tidak ada rujukan internal di rentang ini.</td></tr>`;
+
+  const grupFaskes = {};
+  laporanRujukanCache.filter(r => r.jenis === "fkrtl").forEach(r => {
+    const key = r.faskes_tujuan || "Tanpa Nama Faskes";
+    grupFaskes[key] = (grupFaskes[key] || 0) + 1;
+  });
+  const namaFaskes = Object.keys(grupFaskes).sort();
+  tbodyFaskes.innerHTML = namaFaskes.length ? namaFaskes.map(f => `<tr><td>${f}</td><td>${grupFaskes[f]}</td></tr>`).join("")
+    : `<tr><td colspan="2">Tidak ada rujukan FKRTL di rentang ini.</td></tr>`;
+
+  tbodyDaftar.innerHTML = total ? laporanRujukanCache.map(r => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</td>
+      <td>${r.kunjungan_asal?.pasien?.nama || "-"}</td>
+      <td>${r.jenis === "internal" ? "Internal" : "FKRTL"}</td>
+      <td>${r.jenis === "internal" ? (r.klaster_tujuan ? `${r.klaster_tujuan.kode} — ${r.klaster_tujuan.nama}` : "-") : (r.faskes_tujuan || "-")}</td>
+      <td>${r.alasan_rujukan}</td>
+      <td><span class="badge badge-${r.status === 'diterima' || r.status === 'selesai' ? 'selesai' : (r.status === 'batal' ? 'batal' : 'menunggu')}">${r.status}</span></td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Tidak ada rujukan di rentang ini.</td></tr>`;
+}
+
+function exportLaporanRujukanCsv() {
+  if (!laporanRujukanCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Tanggal", "Nama Pasien", "Jenis", "Tujuan", "Alasan", "Status"];
+  const rows = laporanRujukanCache.map(r => [
+    new Date(r.created_at).toISOString().split("T")[0],
+    r.kunjungan_asal?.pasien?.nama || "-",
+    r.jenis === "internal" ? "Internal" : "FKRTL",
+    r.jenis === "internal" ? (r.klaster_tujuan ? `${r.klaster_tujuan.kode} — ${r.klaster_tujuan.nama}` : "-") : (r.faskes_tujuan || "-"),
+    r.alasan_rujukan,
+    r.status
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapRjDari").value;
+  const sampaiInput = document.getElementById("lapRjSampai").value;
+  a.href = url;
+  a.download = `Laporan_Rujukan_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== Laporan Pendaftaran: Kepuasan Pelanggan (step 6) =====
+let laporanKepuasanCache = [];
+
+function rerataSkor(arr, field) {
+  if (!arr.length) return 0;
+  return (arr.reduce((a, b) => a + (b[field] || 0), 0) / arr.length);
+}
+
+async function muatLaporanKepuasan() {
+  const tbodySaran = document.getElementById("lapKpTabelSaran");
+  tbodySaran.innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapKpDari").value;
+  const sampaiInput = document.getElementById("lapKpSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbodySaran.innerHTML = `<tr><td colspan="3">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const sampaiEksklusif = new Date(sampaiInput);
+  sampaiEksklusif.setDate(sampaiEksklusif.getDate() + 1);
+
+  const { data, error } = await supabaseClient
+    .from("survei_kepuasan")
+    .select("created_at, nama_pasien, skor_kecepatan, skor_keramahan, skor_kejelasan_informasi, skor_kebersihan, saran")
+    .gte("created_at", dariInput)
+    .lt("created_at", sampaiEksklusif.toISOString().split("T")[0])
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    tbodySaran.innerHTML = `<tr><td colspan="3">Gagal muat laporan: ${error.message}</td></tr>`;
+    return;
+  }
+
+  laporanKepuasanCache = data || [];
+  const n = laporanKepuasanCache.length;
+
+  const avgKecepatan = rerataSkor(laporanKepuasanCache, "skor_kecepatan");
+  const avgKeramahan = rerataSkor(laporanKepuasanCache, "skor_keramahan");
+  const avgKejelasan = rerataSkor(laporanKepuasanCache, "skor_kejelasan_informasi");
+  const avgKebersihan = rerataSkor(laporanKepuasanCache, "skor_kebersihan");
+  const ikm = n ? ((avgKecepatan + avgKeramahan + avgKejelasan + avgKebersihan) / 4) : 0;
+
+  document.getElementById("lapKpStatN").textContent = n;
+  document.getElementById("lapKpStatKecepatan").textContent = avgKecepatan.toFixed(2);
+  document.getElementById("lapKpStatKeramahan").textContent = avgKeramahan.toFixed(2);
+  document.getElementById("lapKpStatKejelasan").textContent = avgKejelasan.toFixed(2);
+  document.getElementById("lapKpStatKebersihan").textContent = avgKebersihan.toFixed(2);
+  document.getElementById("lapKpStatIkm").textContent = `${ikm.toFixed(2)} / 5`;
+
+  const adaSaran = laporanKepuasanCache.filter(s => s.saran && s.saran.trim());
+  tbodySaran.innerHTML = adaSaran.length ? adaSaran.map(s => `
+    <tr>
+      <td>${new Date(s.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</td>
+      <td>${s.nama_pasien || "Anonim"}</td>
+      <td>${s.saran}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="3">Tidak ada saran/masukan di rentang ini.</td></tr>`;
+}
+
+function exportLaporanKepuasanCsv() {
+  if (!laporanKepuasanCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Tanggal", "Nama Pasien", "Kecepatan", "Keramahan", "Kejelasan Info", "Kebersihan", "Saran"];
+  const rows = laporanKepuasanCache.map(s => [
+    new Date(s.created_at).toISOString().split("T")[0],
+    s.nama_pasien || "Anonim",
+    s.skor_kecepatan,
+    s.skor_keramahan,
+    s.skor_kejelasan_informasi,
+    s.skor_kebersihan,
+    s.saran || "-"
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapKpDari").value;
+  const sampaiInput = document.getElementById("lapKpSampai").value;
+  a.href = url;
+  a.download = `Laporan_Kepuasan_${dariInput}_${sampaiInput}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
