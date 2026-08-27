@@ -775,55 +775,168 @@
 
     <div id="panelLaporan" class="dash-content" style="display:none;">
       <div class="card">
-        <h2>Laporan Rekap Kunjungan</h2>
-        <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Rekap jumlah kunjungan per klaster & jenis pembayaran dalam periode tertentu.</p>
-        <div class="grid-3" style="margin-bottom:14px;">
-          <div>
-            <label>Dari Tanggal</label>
-            <input type="date" id="lapDari">
-          </div>
-          <div>
-            <label>Sampai Tanggal</label>
-            <input type="date" id="lapSampai">
-          </div>
-          <div style="display:flex; align-items:flex-end; gap:8px;">
-            <button type="button" class="btn-primary" onclick="muatLaporanKunjungan()">Tampilkan</button>
-            <button type="button" class="btn-secondary" onclick="exportLaporanKunjunganCsv()">⬇️ Export CSV</button>
+        <h2>Laporan</h2>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">Laporan Pendaftaran dan Rekam Medis — terpisah per kategori, tetap dalam satu menu.</p>
+
+        <div class="lap-tabs">
+          <div class="lap-tab active" id="lapTabPendaftaran" onclick="gantiTabLaporan('pendaftaran')">📋 Laporan Pendaftaran</div>
+          <div class="lap-tab" id="lapTabRm" onclick="gantiTabLaporan('rm')">🗂 Laporan Rekam Medis</div>
+        </div>
+
+        <div id="lapViewPendaftaran" class="lap-view">
+          <div class="report-grid">
+            <div class="report-card" style="--accent:var(--teal-2)" onclick="bukaLaporan('kunjungan')">
+              <div class="rc-top"><div class="rc-icon">📊</div><span class="rc-tag">Rutin</span></div>
+              <h4>Kunjungan Harian/Bulanan</h4>
+              <p>Jumlah pasien terdaftar per hari/bulan, rekap per klaster tujuan, BPJS vs Umum.</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
+            <div class="report-card" style="--accent:var(--orange)" onclick="bukaLaporan('waktu_tunggu')">
+              <div class="rc-top"><div class="rc-icon">⏱</div><span class="rc-tag">Indikator Mutu</span></div>
+              <h4>Waktu Tunggu Pendaftaran</h4>
+              <p>Rata-rata waktu tunggu dari pasien datang sampai selesai daftar, per hari/minggu.</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
+            <div class="report-card" style="--accent:var(--teal-a)" onclick="bukaLaporan('skrining')">
+              <div class="rc-top"><div class="rc-icon">✚</div><span class="rc-tag">Rutin</span></div>
+              <h4>Skrining Awal</h4>
+              <p>Jumlah pasien yang diskrining PTM/faktor risiko dasar, dan hasil yang perlu tindak lanjut.</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
+            <div class="report-card" style="--accent:var(--red)" onclick="bukaLaporan('kelompok_sasaran')">
+              <div class="rc-top"><div class="rc-icon">👪</div><span class="rc-tag">ILP</span></div>
+              <h4>Kunjungan per Kelompok Sasaran</h4>
+              <p>Rekap Bayi/Balita, Usia Sekolah, Remaja, Dewasa, Lansia — selaras data ILP.</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
+            <div class="report-card" style="--accent:var(--navy-2)" onclick="bukaLaporan('rujukan')">
+              <div class="rc-top"><div class="rc-icon">↦</div><span class="rc-tag">Rutin</span></div>
+              <h4>Rujukan Internal &amp; Eksternal</h4>
+              <p>Jumlah rujukan antar klaster dan jumlah rujukan ke FKRTL.</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
+            <div class="report-card" style="--accent:var(--plum)" onclick="bukaLaporan('kepuasan')">
+              <div class="rc-top"><div class="rc-icon">😊</div><span class="rc-tag">Standar 7.1.5</span></div>
+              <h4>Kepuasan Pelanggan</h4>
+              <p>Rekap hasil survei kepuasan pelayanan pendaftaran secara berkala.</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
           </div>
         </div>
 
-        <div class="stat-grid" style="margin-bottom:18px;">
-          <div class="stat-card">
-            <div class="label">Total Kunjungan</div>
-            <div class="value" id="lapStatTotal">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">BPJS</div>
-            <div class="value" id="lapStatBpjs">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Umum</div>
-            <div class="value" id="lapStatUmum">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Selesai</div>
-            <div class="value" id="lapStatSelesai">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Batal</div>
-            <div class="value" id="lapStatBatal">0</div>
+        <div id="lapViewRm" class="lap-view" style="display:none;">
+          <div class="report-grid">
+            <div class="report-card" style="--accent:var(--navy-2)" onclick="bukaLaporan('rm_baru_aktif')">
+              <div class="rc-top"><div class="rc-icon">🆕</div><span class="rc-tag">Rutin</span></div>
+              <h4>RM Baru / Aktif</h4>
+              <p>Jumlah RM diterbitkan per periode dan jumlah RM aktif (kunjungan dalam 1 tahun terakhir).</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
+            <div class="report-card" style="--accent:#c0503f" onclick="bukaLaporan('duplikasi_rm')">
+              <div class="rc-top"><div class="rc-icon">⚠</div><span class="rc-tag">Akreditasi</span></div>
+              <h4>Duplikasi RM</h4>
+              <p>Jumlah RM ganda ditemukan &amp; sudah digabung — indikator kualitas data, bukti kepatuhan SOP.</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
+            <div class="report-card" style="--accent:var(--teal-2)" onclick="bukaLaporan('family_folder')">
+              <div class="rc-top"><div class="rc-icon">👨‍👩‍👧</div><span class="rc-tag">ILP</span></div>
+              <h4>Family Folder</h4>
+              <p>Jumlah Family Folder aktif dan rata-rata anggota per keluarga.</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
+            <div class="report-card" style="--accent:var(--orange)" onclick="bukaLaporan('pinjam_rm_fisik')">
+              <div class="rc-top"><div class="rc-icon">📇</div><span class="rc-tag">Opsional</span></div>
+              <h4>Peminjaman &amp; Pengembalian RM Fisik</h4>
+              <p>Berkas dipinjam, dikembalikan, dan yang terlambat/belum kembali (kalau masih ada arsip fisik).</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
+            <div class="report-card" style="--accent:var(--plum)" onclick="bukaLaporan('akses_rm')">
+              <div class="rc-top"><div class="rc-icon">🔒</div><span class="rc-tag">Standar 8.4.4</span></div>
+              <h4>Akses &amp; Kerahasiaan RM</h4>
+              <p>Log siapa buka/ubah RM, kapan — termasuk deteksi akses di luar jam kerja/tidak wajar.</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
+            <div class="report-card" style="--accent:var(--teal-a)" onclick="bukaLaporan('kelengkapan_rm')">
+              <div class="rc-top"><div class="rc-icon">📝</div><span class="rc-tag">Indikator Mutu</span></div>
+              <h4>Kelengkapan Pengisian RM</h4>
+              <p>Persentase RM terisi lengkap vs tidak, direkap per klaster.</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
+            <div class="report-card" style="--accent:var(--red)" onclick="bukaLaporan('distribusi_berkas')">
+              <div class="rc-top"><div class="rc-icon">🔀</div><span class="rc-tag">Opsional</span></div>
+              <h4>Distribusi Berkas Antar Unit</h4>
+              <p>Rekap berkas RM fisik dikirim ke tiap klaster per periode (kalau sistem masih hybrid).</p>
+              <div class="rc-foot">Lihat &amp; Export →</div>
+            </div>
           </div>
         </div>
 
-        <table>
-          <thead>
-            <tr><th>Klaster</th><th>Total</th><th>BPJS</th><th>Umum</th><th>Selesai</th><th>Batal</th></tr>
-          </thead>
-          <tbody id="lapTabelKlaster">
-            <tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
-          </tbody>
-        </table>
+        <div class="note-box">
+          <strong>Catatan:</strong> Laporan Pendaftaran fokus pada alur administratif &amp; mutu pelayanan (Standar 7.1). Laporan Rekam Medis fokus pada kualitas &amp; keamanan data (Standar 8.4). Keduanya satu menu biar petugas gak perlu pindah akun, tapi datanya tetap dipisah sesuai fungsinya.
+        </div>
       </div>
+
+      <!-- Detail 1 laporan, muncul pas card diklik -->
+      <div class="card" id="lapDetailWrap" style="display:none;">
+        <button type="button" class="btn-secondary" onclick="tutupLaporanDetail()" style="margin-bottom:14px;">← Kembali ke daftar laporan</button>
+
+        <div id="lapDetailKunjungan" style="display:none;">
+          <h2>Kunjungan Harian/Bulanan</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Rekap jumlah kunjungan per klaster & jenis pembayaran dalam periode tertentu.</p>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanKunjungan()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanKunjunganCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Total Kunjungan</div>
+              <div class="value" id="lapStatTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">BPJS</div>
+              <div class="value" id="lapStatBpjs">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Umum</div>
+              <div class="value" id="lapStatUmum">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Selesai</div>
+              <div class="value" id="lapStatSelesai">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Batal</div>
+              <div class="value" id="lapStatBatal">0</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr><th>Klaster</th><th>Total</th><th>BPJS</th><th>Umum</th><th>Selesai</th><th>Batal</th></tr>
+            </thead>
+            <tbody id="lapTabelKlaster">
+              <tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="lapDetailBelumDibangun" style="display:none;">
+          <h2 id="lapBelumJudul">Laporan</h2>
+          <p style="font-size:13px; color:var(--muted);">Laporan ini belum dibangun — bakal nyusul bertahap.</p>
+        </div>
+      </div>
+
     </div>
 
     <div id="panelAudit" class="dash-content" style="display:none;">
@@ -914,14 +1027,14 @@ function gantiSubtabPendaftaran(tab) {
   if (tab === "kerahasiaan") muatKerahasiaan();
   if (tab === "survei") muatSurvei();
   if (tab === "laporan") {
-    if (!document.getElementById("lapDari").value) {
-      const now = new Date();
-      const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
-      const hariIni = now.toISOString().split("T")[0];
+    const now = new Date();
+    const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+    const hariIni = now.toISOString().split("T")[0];
+    if (document.getElementById("lapDari") && !document.getElementById("lapDari").value) {
       document.getElementById("lapDari").value = awalBulan;
       document.getElementById("lapSampai").value = hariIni;
     }
-    muatLaporanKunjungan();
+    tutupLaporanDetail();
   }
 
   if (tab === "koordinasi") {
@@ -1018,6 +1131,50 @@ async function muatKontrolJatuhTempo(today) {
         <td>${selisihHari} hari</td>
       </tr>`;
   }).join("");
+}
+
+// ===== Laporan: navigasi tab (Pendaftaran/RM) & katalog kartu =====
+const LAPORAN_JUDUL = {
+  waktu_tunggu: "Waktu Tunggu Pendaftaran",
+  skrining: "Skrining Awal",
+  kelompok_sasaran: "Kunjungan per Kelompok Sasaran",
+  rujukan: "Rujukan Internal & Eksternal",
+  kepuasan: "Kepuasan Pelanggan",
+  rm_baru_aktif: "RM Baru / Aktif",
+  duplikasi_rm: "Duplikasi RM",
+  family_folder: "Family Folder",
+  pinjam_rm_fisik: "Peminjaman & Pengembalian RM Fisik",
+  akses_rm: "Akses & Kerahasiaan RM",
+  kelengkapan_rm: "Kelengkapan Pengisian RM",
+  distribusi_berkas: "Distribusi Berkas Antar Unit"
+};
+
+function gantiTabLaporan(tab) {
+  document.getElementById("lapTabPendaftaran").classList.toggle("active", tab === "pendaftaran");
+  document.getElementById("lapTabRm").classList.toggle("active", tab === "rm");
+  document.getElementById("lapViewPendaftaran").style.display = tab === "pendaftaran" ? "block" : "none";
+  document.getElementById("lapViewRm").style.display = tab === "rm" ? "block" : "none";
+}
+
+// Klik kartu laporan → buka detailnya. "kunjungan" udah jalan, sisanya nunggu dibangun bertahap.
+function bukaLaporan(kode) {
+  document.querySelectorAll("#panelLaporan .card").forEach(c => { if (c.id !== "lapDetailWrap") c.style.display = "none"; });
+  document.getElementById("lapDetailWrap").style.display = "block";
+
+  if (kode === "kunjungan") {
+    document.getElementById("lapDetailKunjungan").style.display = "block";
+    document.getElementById("lapDetailBelumDibangun").style.display = "none";
+    muatLaporanKunjungan();
+  } else {
+    document.getElementById("lapDetailKunjungan").style.display = "none";
+    document.getElementById("lapDetailBelumDibangun").style.display = "block";
+    document.getElementById("lapBelumJudul").textContent = LAPORAN_JUDUL[kode] || "Laporan";
+  }
+}
+
+function tutupLaporanDetail() {
+  document.querySelectorAll("#panelLaporan .card").forEach(c => { if (c.id !== "lapDetailWrap") c.style.display = "block"; });
+  document.getElementById("lapDetailWrap").style.display = "none";
 }
 
 // ===== Laporan Pendaftaran: Rekap Kunjungan (step 1) =====
