@@ -96,6 +96,22 @@
         </div>
       </div>
 
+      <div class="grid-2">
+        <div>
+          <label><input type="checkbox" id="rmRujukInternal" style="width:auto; display:inline-block;" onchange="toggleRujukanInternal()"> Rujuk ke klaster/poli lain</label>
+        </div>
+      </div>
+      <div id="rujukanInternalSection" style="display:none; border-top:1px solid #e5e7eb; padding-top:16px; margin-bottom:16px;">
+        <div class="grid-2">
+          <div>
+            <label>Klaster/Poli Tujuan</label>
+            <select id="rmKlasterTujuan"><option value="">-- Pilih klaster tujuan --</option></select>
+          </div>
+        </div>
+        <label>Alasan Rujukan Internal</label>
+        <textarea id="rmAlasanRujukan" placeholder="Contoh: Perlu pemeriksaan gigi lanjutan"></textarea>
+      </div>
+
       <div id="resepSection" style="display:none; border-top:1px solid #e5e7eb; padding-top:16px; margin-bottom:16px;">
         <h2>Tulis Resep</h2>
         <div class="grid-3">
@@ -244,6 +260,25 @@
         </tr>
       </thead>
       <tbody id="tabelRiwayatRM">
+        <tr><td colspan="5">Belum ada pasien dipilih.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" id="cardRiwayatRujukanRM" style="display:none;">
+    <h2>Riwayat Rujukan Internal</h2>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Rujukan antar klaster/poli untuk pasien ini (read-only).</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Dari Klaster</th>
+          <th>Ke Klaster</th>
+          <th>Alasan</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tabelRiwayatRujukan">
         <tr><td colspan="5">Belum ada pasien dipilih.</td></tr>
       </tbody>
     </table>
@@ -509,6 +544,20 @@ function toggleResepSection() {
   document.getElementById("resepSection").style.display = tampil ? "block" : "none";
 }
 
+function toggleRujukanInternal() {
+  const tampil = document.getElementById("rmRujukInternal").checked;
+  document.getElementById("rujukanInternalSection").style.display = tampil ? "block" : "none";
+}
+
+async function muatDaftarKlasterTujuan() {
+  const select = document.getElementById("rmKlasterTujuan");
+  const { data, error } = await supabaseClient.from("klaster").select("id, kode, nama").order("kode");
+  if (error) { console.error(error); return; }
+  select.innerHTML = `<option value="">-- Pilih klaster tujuan --</option>` +
+    data.map(k => `<option value="${k.id}">${k.kode} — ${k.nama}</option>`).join("");
+}
+muatDaftarKlasterTujuan();
+
 function tambahObatResep() {
   const nama = document.getElementById("rObatNama").value.trim();
   const dosis = document.getElementById("rObatDosis").value;
@@ -660,6 +709,9 @@ function bukaFormRM(kunjungan, bisaIsi = true) {
   daftarObatResep = [];
   renderTabelResep();
   document.getElementById("resepSection").style.display = "none";
+  document.getElementById("rujukanInternalSection").style.display = "none";
+  document.getElementById("rmKlasterTujuan").value = "";
+  document.getElementById("rmAlasanRujukan").value = "";
 
   // Mode lihat saja: matikan semua input, sembunyikan tombol simpan
   const form = document.getElementById("formRM");
@@ -793,7 +845,59 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
     return;
   }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Rekam medis tersimpan, tercatat atas nama ${profilSaya.nama}.</div>`;
+  // 4. Kalau perlu rujukan internal, bikin kunjungan baru di klaster tujuan
+  let pesanRujukan = "";
+  if (document.getElementById("rmRujukInternal").checked) {
+    const klasterTujuanId = document.getElementById("rmKlasterTujuan").value;
+    const alasanRujukan = document.getElementById("rmAlasanRujukan").value.trim();
+
+    if (!klasterTujuanId || !alasanRujukan) {
+      msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi rujukan internal gagal: klaster tujuan/alasan belum diisi.</div>`;
+      return;
+    }
+
+    const { data: noKunjunganBaru, error: errNoK } = await supabaseClient.rpc("generate_no_kunjungan");
+    const { data: noAntrianBaru, error: errNoA } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: parseInt(klasterTujuanId) });
+
+    if (errNoK || errNoA) {
+      msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi gagal generate nomor rujukan: ${(errNoK || errNoA).message}</div>`;
+      return;
+    }
+
+    const { data: kunjunganTujuan, error: errKunjunganBaru } = await supabaseClient.from("kunjungan").insert({
+      no_kunjungan: noKunjunganBaru,
+      pasien_id: kunjunganAktif.pasien_id,
+      klaster_id: parseInt(klasterTujuanId),
+      jenis_bayar: kunjunganAktif.jenis_bayar,
+      no_antrian: noAntrianBaru,
+      status: "menunggu",
+      keluhan_awal: `Rujukan internal: ${alasanRujukan}`,
+      created_by: profilSaya.id
+    }).select("id").single();
+
+    if (errKunjunganBaru) {
+      msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi gagal bikin antrian rujukan: ${errKunjunganBaru.message}</div>`;
+      return;
+    }
+
+    const { error: errRujukan } = await supabaseClient.from("rujukan_internal").insert({
+      kunjungan_asal_id: kunjunganAktif.id,
+      kunjungan_tujuan_id: kunjunganTujuan.id,
+      klaster_tujuan_id: parseInt(klasterTujuanId),
+      alasan: alasanRujukan,
+      status: "menunggu",
+      dibuat_oleh: profilSaya.id
+    });
+
+    if (errRujukan) {
+      msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, antrian rujukan dibuat, tapi catatan rujukan gagal tersimpan: ${errRujukan.message}</div>`;
+      return;
+    }
+
+    pesanRujukan = ` Pasien otomatis masuk antrian No. ${noAntrianBaru} di klaster tujuan.`;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Rekam medis tersimpan, tercatat atas nama ${profilSaya.nama}.${pesanRujukan}</div>`;
   document.getElementById("cardFormRM").style.display = "none";
   kunjunganAktif = null;
   daftarObatResep = [];
@@ -888,7 +992,50 @@ function pilihPasienRM(p) {
 
   document.getElementById("cardPasienRM").style.display = "block";
   document.getElementById("cardRiwayatRM").style.display = "block";
+  document.getElementById("cardRiwayatRujukanRM").style.display = "block";
   muatRiwayatRM(p.id);
+  muatRiwayatRujukan(p.id);
+}
+
+async function muatRiwayatRujukan(pasienId) {
+  const tbody = document.getElementById("tabelRiwayatRujukan");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  // Ambil dulu semua kunjungan pasien ini, biar bisa cari rujukan yg asal/tujuan-nya kunjungan pasien ini.
+  const { data: kunjunganPasien, error: errKunjungan } = await supabaseClient
+    .from("kunjungan")
+    .select("id")
+    .eq("pasien_id", pasienId);
+
+  if (errKunjungan || !kunjunganPasien?.length) {
+    tbody.innerHTML = `<tr><td colspan="5">Belum ada riwayat rujukan internal.</td></tr>`;
+    return;
+  }
+
+  const idKunjungan = kunjunganPasien.map(k => k.id);
+
+  const { data, error } = await supabaseClient
+    .from("rujukan_internal")
+    .select("created_at, alasan, status, kunjungan_asal:kunjungan_asal_id(klaster(nama, kode)), kunjungan_tujuan:kunjungan_tujuan_id(klaster(nama, kode))")
+    .or(`kunjungan_asal_id.in.(${idKunjungan.join(",")}),kunjungan_tujuan_id.in.(${idKunjungan.join(",")})`)
+    .order("created_at", { ascending: false });
+
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="5">Belum ada riwayat rujukan internal.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(r => {
+    const tgl = new Date(r.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    const badge = r.status === "selesai" ? "✅ Selesai" : r.status === "batal" ? "❌ Batal" : "⏳ Menunggu";
+    return `<tr>
+      <td>${tgl}</td>
+      <td>${r.kunjungan_asal?.klaster?.kode || "-"} — ${r.kunjungan_asal?.klaster?.nama || "-"}</td>
+      <td>${r.kunjungan_tujuan?.klaster?.kode || "-"} — ${r.kunjungan_tujuan?.klaster?.nama || "-"}</td>
+      <td>${r.alasan}</td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join("");
 }
 
 document.getElementById("formEditPasien").addEventListener("submit", async (e) => {

@@ -943,7 +943,26 @@ alter table log_akses_rm enable row level security;
 create policy "authenticated_all_log_akses_rm" on log_akses_rm for all to authenticated using (true) with check (true);
 
 -- ============================================================
--- 30. SURVEI KEPUASAN — Feedback pasien soal pelayanan pendaftaran
+-- 31. RUJUKAN INTERNAL — dokter/perawat rujuk pasien ke klaster lain
+-- di puskesmas yg sama (poli umum -> poli gigi/lab/dsb), otomatis
+-- bikin antrian baru di klaster tujuan.
+-- ============================================================
+create table if not exists rujukan_internal (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_asal_id uuid not null references kunjungan(id),
+  kunjungan_tujuan_id uuid not null references kunjungan(id),
+  klaster_tujuan_id int not null references klaster(id),
+  alasan text not null,
+  status text not null default 'menunggu' check (status in ('menunggu', 'selesai', 'batal')),
+  dibuat_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_rujukan_internal_asal on rujukan_internal(kunjungan_asal_id);
+create index if not exists idx_rujukan_internal_pasien on rujukan_internal(kunjungan_tujuan_id);
+
+alter table rujukan_internal enable row level security;
+create policy "authenticated_all_rujukan_internal" on rujukan_internal for all to authenticated using (true) with check (true);
 -- ============================================================
 create table if not exists survei_kepuasan (
   id uuid primary key default gen_random_uuid(),
