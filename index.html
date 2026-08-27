@@ -775,8 +775,54 @@
 
     <div id="panelLaporan" class="dash-content" style="display:none;">
       <div class="card">
-        <h2>Laporan</h2>
-        <p style="font-size:13px; color:var(--muted);">Laporan kunjungan, demografi pasien, dan kinerja loket. Belum dibangun.</p>
+        <h2>Laporan Rekap Kunjungan</h2>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Rekap jumlah kunjungan per klaster & jenis pembayaran dalam periode tertentu.</p>
+        <div class="grid-3" style="margin-bottom:14px;">
+          <div>
+            <label>Dari Tanggal</label>
+            <input type="date" id="lapDari">
+          </div>
+          <div>
+            <label>Sampai Tanggal</label>
+            <input type="date" id="lapSampai">
+          </div>
+          <div style="display:flex; align-items:flex-end; gap:8px;">
+            <button type="button" class="btn-primary" onclick="muatLaporanKunjungan()">Tampilkan</button>
+            <button type="button" class="btn-secondary" onclick="exportLaporanKunjunganCsv()">⬇️ Export CSV</button>
+          </div>
+        </div>
+
+        <div class="stat-grid" style="margin-bottom:18px;">
+          <div class="stat-card">
+            <div class="label">Total Kunjungan</div>
+            <div class="value" id="lapStatTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">BPJS</div>
+            <div class="value" id="lapStatBpjs">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Umum</div>
+            <div class="value" id="lapStatUmum">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Selesai</div>
+            <div class="value" id="lapStatSelesai">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Batal</div>
+            <div class="value" id="lapStatBatal">0</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Klaster</th><th>Total</th><th>BPJS</th><th>Umum</th><th>Selesai</th><th>Batal</th></tr>
+          </thead>
+          <tbody id="lapTabelKlaster">
+            <tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -867,6 +913,16 @@ function gantiSubtabPendaftaran(tab) {
   if (tab === "rujukan") muatRujukan();
   if (tab === "kerahasiaan") muatKerahasiaan();
   if (tab === "survei") muatSurvei();
+  if (tab === "laporan") {
+    if (!document.getElementById("lapDari").value) {
+      const now = new Date();
+      const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      const hariIni = now.toISOString().split("T")[0];
+      document.getElementById("lapDari").value = awalBulan;
+      document.getElementById("lapSampai").value = hariIni;
+    }
+    muatLaporanKunjungan();
+  }
 
   if (tab === "koordinasi") {
     muatKoordinasi();
@@ -964,7 +1020,90 @@ async function muatKontrolJatuhTempo(today) {
   }).join("");
 }
 
-let antrianDipanggil = null; // kunjungan yang lagi aktif dipanggil
+// ===== Laporan Pendaftaran: Rekap Kunjungan (step 1) =====
+let laporanKunjunganCache = [];
+
+async function muatLaporanKunjungan() {
+  const tbody = document.getElementById("lapTabelKlaster");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapDari").value;
+  const sampaiInput = document.getElementById("lapSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbody.innerHTML = `<tr><td colspan="6">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("id, tanggal, jenis_bayar, status, klaster(nama, kode)")
+    .gte("tanggal", dariInput)
+    .lte("tanggal", sampaiInput)
+    .order("tanggal");
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="6">Gagal muat laporan: ${error.message}</td></tr>`;
+    return;
+  }
+
+  laporanKunjunganCache = data || [];
+
+  const total = laporanKunjunganCache.length;
+  const bpjs = laporanKunjunganCache.filter(k => k.jenis_bayar === "BPJS").length;
+  const umum = laporanKunjunganCache.filter(k => k.jenis_bayar === "Umum").length;
+  const selesai = laporanKunjunganCache.filter(k => k.status === "selesai").length;
+  const batal = laporanKunjunganCache.filter(k => k.status === "batal").length;
+
+  document.getElementById("lapStatTotal").textContent = total;
+  document.getElementById("lapStatBpjs").textContent = bpjs;
+  document.getElementById("lapStatUmum").textContent = umum;
+  document.getElementById("lapStatSelesai").textContent = selesai;
+  document.getElementById("lapStatBatal").textContent = batal;
+
+  const grup = {};
+  laporanKunjunganCache.forEach(k => {
+    const key = k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "Tanpa Klaster";
+    if (!grup[key]) grup[key] = { total: 0, bpjs: 0, umum: 0, selesai: 0, batal: 0 };
+    grup[key].total++;
+    if (k.jenis_bayar === "BPJS") grup[key].bpjs++;
+    else if (k.jenis_bayar === "Umum") grup[key].umum++;
+    if (k.status === "selesai") grup[key].selesai++;
+    else if (k.status === "batal") grup[key].batal++;
+  });
+
+  const namaKlaster = Object.keys(grup).sort();
+  tbody.innerHTML = namaKlaster.length ? namaKlaster.map(k => `
+    <tr>
+      <td>${k}</td>
+      <td>${grup[k].total}</td>
+      <td>${grup[k].bpjs}</td>
+      <td>${grup[k].umum}</td>
+      <td>${grup[k].selesai}</td>
+      <td>${grup[k].batal}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Tidak ada kunjungan di rentang ini.</td></tr>`;
+}
+
+function exportLaporanKunjunganCsv() {
+  if (!laporanKunjunganCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Tanggal", "Klaster", "Jenis Bayar", "Status"];
+  const rows = laporanKunjunganCache.map(k => [
+    k.tanggal,
+    k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "Tanpa Klaster",
+    k.jenis_bayar,
+    k.status
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapDari").value;
+  const sampaiInput = document.getElementById("lapSampai").value;
+  a.href = url;
+  a.download = `Rekap_Kunjungan_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 let antrianDilewati = new Set(); // id kunjungan yang di-"Lewati" sesi ini (gak diulang otomatis)
 
 async function panggilAntrean() {
