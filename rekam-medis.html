@@ -1026,6 +1026,7 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
     msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan rekam medis: ${errRM.message}</div>`;
     return;
   }
+  catatLogAksesRm(kunjunganAktif.pasien_id, kunjunganAktif.id, "ubah", "Isi rekam medis (SOAP)");
 
   // 2. Kalau perlu resep dan sudah ada obat ditambahkan, simpan ke tabel resep
   if (document.getElementById("rmButuhObat").checked && daftarObatResep.length > 0) {
@@ -1355,6 +1356,24 @@ function pilihPasienRM(p) {
   document.getElementById("cardTimelineRM").style.display = "block";
   muatRiwayatRM(p.id);
   muatTimelineRiwayat(p.id);
+  catatLogAksesRm(p.id, null, "lihat", "Buka rekam medis pasien");
+}
+
+// Catat log akses RM (lihat/ubah) buat Laporan Akses & Kerahasiaan RM.
+// Gagal catat log gak boleh nge-block alur utama, jadi cuma log error ke console.
+async function catatLogAksesRm(pasienId, kunjunganId, aksi, keterangan) {
+  try {
+    const { error } = await supabaseClient.from("log_akses_rm").insert({
+      pasien_id: pasienId,
+      kunjungan_id: kunjunganId,
+      aksi,
+      keterangan,
+      petugas_id: profilSaya?.id || null
+    });
+    if (error) console.error("Gagal catat log akses RM:", error.message);
+  } catch (e) {
+    console.error("Gagal catat log akses RM:", e.message);
+  }
 }
 
 // Ambil semua sumber riwayat pelayanan pasien, GABUNG per kunjungan (episode):

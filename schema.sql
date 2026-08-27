@@ -1060,6 +1060,53 @@ alter table tindakan_medis enable row level security;
 create policy "authenticated_all_tindakan_medis" on tindakan_medis for all to authenticated using (true) with check (true);
 
 -- ============================================================
+-- 35. PEMINJAMAN RM FISIK — buat puskesmas yang masih hybrid (sebagian
+-- arsip fisik). Petugas catat siapa pinjam, tujuan, tanggal pinjam,
+-- rencana kembali, dan tanggal kembali aktual (null = belum kembali).
+-- ============================================================
+create table if not exists peminjaman_rm_fisik (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  peminjam text not null, -- nama/unit yang minjam, mis. "dr. Ani - Poli Umum"
+  tujuan text,
+  tanggal_pinjam date not null default current_date,
+  tanggal_rencana_kembali date,
+  tanggal_kembali_aktual date,
+  catatan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pinjam_rm_pasien on peminjaman_rm_fisik(pasien_id);
+create index if not exists idx_pinjam_rm_tanggal on peminjaman_rm_fisik(tanggal_pinjam);
+
+alter table peminjaman_rm_fisik enable row level security;
+create policy "authenticated_all_peminjaman_rm_fisik" on peminjaman_rm_fisik for all to authenticated using (true) with check (true);
+
+-- ============================================================
+-- 36. DISTRIBUSI BERKAS ANTAR UNIT — berkas RM fisik dikirim dari satu
+-- klaster/unit ke klaster/unit lain (mis. loket -> poli umum -> lab).
+-- ============================================================
+create table if not exists distribusi_berkas_rm (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  klaster_asal_id int references klaster(id),
+  klaster_tujuan_id int references klaster(id),
+  tanggal_kirim date not null default current_date,
+  tanggal_terima date,
+  status text not null default 'dikirim' check (status in ('dikirim', 'diterima', 'hilang')),
+  catatan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_distribusi_berkas_pasien on distribusi_berkas_rm(pasien_id);
+create index if not exists idx_distribusi_berkas_tanggal on distribusi_berkas_rm(tanggal_kirim);
+
+alter table distribusi_berkas_rm enable row level security;
+create policy "authenticated_all_distribusi_berkas_rm" on distribusi_berkas_rm for all to authenticated using (true) with check (true);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

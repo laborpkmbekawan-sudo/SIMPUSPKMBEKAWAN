@@ -1332,6 +1332,242 @@
           </table>
         </div>
 
+        <div id="lapDetailPinjamRmFisik" style="display:none;">
+          <h2>Peminjaman &amp; Pengembalian RM Fisik</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Buat arsip fisik yang masih dipakai bareng sistem digital (hybrid). Catat siapa pinjam, kapan, dan status kembalinya.</p>
+
+          <div class="grid-3" style="margin-bottom:10px;">
+            <div>
+              <label>Cari Pasien (nama/NIK/No.RM)</label>
+              <input type="text" id="pjCariPasien" placeholder="Ketik lalu Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienPinjamRm();}">
+            </div>
+            <div>
+              <label>Peminjam</label>
+              <input type="text" id="pjPeminjam" placeholder="Nama/unit peminjam">
+            </div>
+            <div>
+              <label>Tujuan</label>
+              <input type="text" id="pjTujuan" placeholder="Keperluan pinjam">
+            </div>
+          </div>
+          <div id="pjHasilCari" style="margin-bottom:10px; font-size:12px; color:var(--muted);"></div>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Tanggal Rencana Kembali</label>
+              <input type="date" id="pjRencanaKembali">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button type="button" class="btn-primary" onclick="simpanPeminjamanRmFisik()">Catat Peminjaman</button>
+            </div>
+          </div>
+          <div id="pjMsgBox"></div>
+
+          <h4 style="margin:18px 0 8px;">Filter Riwayat</h4>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapPjDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapPjSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanPinjamRmFisik()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanPinjamRmFisikCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Total Peminjaman</div>
+              <div class="value" id="lapPjStatTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Sudah Kembali</div>
+              <div class="value" id="lapPjStatKembali">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Belum Kembali</div>
+              <div class="value" id="lapPjStatBelum">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Terlambat (lewat rencana)</div>
+              <div class="value" id="lapPjStatTerlambat">0</div>
+            </div>
+          </div>
+
+          <table>
+            <thead><tr><th>Tgl Pinjam</th><th>Pasien</th><th>Peminjam</th><th>Tujuan</th><th>Rencana Kembali</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="lapPjTabel"><tr><td colspan="7">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div id="lapDetailAksesRm" style="display:none;">
+          <h2>Akses &amp; Kerahasiaan RM</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:6px;">Log siapa buka/ubah RM pasien — dicatat otomatis tiap kali RM dibuka atau diisi di modul Rekam Medis.</p>
+          <p style="font-size:11.5px; color:var(--muted); margin-bottom:14px; font-style:italic;">"Di luar jam kerja" = akses tercatat sebelum 07:00 atau setelah 17:00 waktu lokal — indikatif, bukan aturan baku, cek manual kalau perlu.</p>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapAkDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapAkSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanAksesRm()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanAksesRmCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Total Akses</div>
+              <div class="value" id="lapAkStatTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Lihat</div>
+              <div class="value" id="lapAkStatLihat">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Ubah</div>
+              <div class="value" id="lapAkStatUbah">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Di Luar Jam Kerja</div>
+              <div class="value" id="lapAkStatLuarJam">0</div>
+            </div>
+          </div>
+
+          <h4 style="margin-bottom:8px;">Akses di Luar Jam Kerja (perlu ditinjau)</h4>
+          <table style="margin-bottom:18px;">
+            <thead><tr><th>Waktu</th><th>Pasien</th><th>Aksi</th><th>Petugas</th></tr></thead>
+            <tbody id="lapAkTabelLuarJam"><tr><td colspan="4">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+
+          <h4 style="margin-bottom:8px;">Semua Log Akses</h4>
+          <table>
+            <thead><tr><th>Waktu</th><th>Pasien</th><th>Aksi</th><th>Petugas</th></tr></thead>
+            <tbody id="lapAkTabelSemua"><tr><td colspan="4">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div id="lapDetailKelengkapanRm" style="display:none;">
+          <h2>Kelengkapan Pengisian RM</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:6px;">RM dianggap "Lengkap" kalau Subjektif, Assessment, Kode ICD-10, dan Plan semua terisi (inti SOAP).</p>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapKlDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapKlSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanKelengkapanRm()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanKelengkapanRmCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Total RM</div>
+              <div class="value" id="lapKlStatTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Lengkap</div>
+              <div class="value" id="lapKlStatLengkap">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Tidak Lengkap</div>
+              <div class="value" id="lapKlStatTidakLengkap">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">% Kelengkapan</div>
+              <div class="value" id="lapKlStatPersen">0%</div>
+            </div>
+          </div>
+
+          <table style="margin-bottom:18px;">
+            <thead><tr><th>Klaster</th><th>Total RM</th><th>Lengkap</th><th>Tidak Lengkap</th><th>% Lengkap</th></tr></thead>
+            <tbody id="lapKlTabelKlaster"><tr><td colspan="5">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+
+          <h4 style="margin-bottom:8px;">RM Tidak Lengkap (perlu dilengkapi)</h4>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Pasien</th><th>Klaster</th><th>Field Kosong</th></tr></thead>
+            <tbody id="lapKlTabelTidakLengkap"><tr><td colspan="4">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div id="lapDetailDistribusiBerkas" style="display:none;">
+          <h2>Distribusi Berkas Antar Unit</h2>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Buat arsip fisik yang dikirim antar klaster/unit (mis. loket → poli umum → lab). Sistem hybrid, sistem digital tidak butuh ini.</p>
+
+          <div class="grid-3" style="margin-bottom:10px;">
+            <div>
+              <label>Cari Pasien (nama/NIK/No.RM)</label>
+              <input type="text" id="dbCariPasien" placeholder="Ketik lalu Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienDistribusiBerkas();}">
+            </div>
+            <div>
+              <label>Klaster Asal</label>
+              <select id="dbKlasterAsal"><option value="">-- Pilih --</option></select>
+            </div>
+            <div>
+              <label>Klaster Tujuan</label>
+              <select id="dbKlasterTujuan"><option value="">-- Pilih --</option></select>
+            </div>
+          </div>
+          <div id="dbHasilCari" style="margin-bottom:10px; font-size:12px; color:var(--muted);"></div>
+          <div style="margin-bottom:14px;">
+            <button type="button" class="btn-primary" onclick="simpanDistribusiBerkas()">Catat Pengiriman Berkas</button>
+          </div>
+          <div id="dbMsgBox"></div>
+
+          <h4 style="margin:18px 0 8px;">Filter Riwayat</h4>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Dari Tanggal</label>
+              <input type="date" id="lapDbDari">
+            </div>
+            <div>
+              <label>Sampai Tanggal</label>
+              <input type="date" id="lapDbSampai">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanDistribusiBerkas()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanDistribusiBerkasCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat-card">
+              <div class="label">Total Dikirim</div>
+              <div class="value" id="lapDbStatTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Diterima</div>
+              <div class="value" id="lapDbStatDiterima">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Masih Dikirim</div>
+              <div class="value" id="lapDbStatDikirim">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Hilang</div>
+              <div class="value" id="lapDbStatHilang">0</div>
+            </div>
+          </div>
+
+          <table>
+            <thead><tr><th>Tgl Kirim</th><th>Pasien</th><th>Dari</th><th>Ke</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="lapDbTabel"><tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+        </div>
+
         <div id="lapDetailBelumDibangun" style="display:none;">
           <h2 id="lapBelumJudul">Laporan</h2>
           <p style="font-size:13px; color:var(--muted);">Laporan ini belum dibangun — bakal nyusul bertahap.</p>
@@ -1570,6 +1806,10 @@ function bukaLaporan(kode) {
   document.getElementById("lapDetailRmBaruAktif").style.display = "none";
   document.getElementById("lapDetailDuplikasiRm").style.display = "none";
   document.getElementById("lapDetailFamilyFolder").style.display = "none";
+  document.getElementById("lapDetailPinjamRmFisik").style.display = "none";
+  document.getElementById("lapDetailAksesRm").style.display = "none";
+  document.getElementById("lapDetailKelengkapanRm").style.display = "none";
+  document.getElementById("lapDetailDistribusiBerkas").style.display = "none";
   document.getElementById("lapDetailBelumDibangun").style.display = "none";
 
   if (kode === "kunjungan") {
@@ -1634,6 +1874,39 @@ function bukaLaporan(kode) {
   } else if (kode === "family_folder") {
     document.getElementById("lapDetailFamilyFolder").style.display = "block";
     muatLaporanFamilyFolder();
+  } else if (kode === "pinjam_rm_fisik") {
+    document.getElementById("lapDetailPinjamRmFisik").style.display = "block";
+    if (!document.getElementById("lapPjDari").value) {
+      const now = new Date();
+      document.getElementById("lapPjDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      document.getElementById("lapPjSampai").value = now.toISOString().split("T")[0];
+    }
+    muatLaporanPinjamRmFisik();
+  } else if (kode === "akses_rm") {
+    document.getElementById("lapDetailAksesRm").style.display = "block";
+    if (!document.getElementById("lapAkDari").value) {
+      const now = new Date();
+      document.getElementById("lapAkDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      document.getElementById("lapAkSampai").value = now.toISOString().split("T")[0];
+    }
+    muatLaporanAksesRm();
+  } else if (kode === "kelengkapan_rm") {
+    document.getElementById("lapDetailKelengkapanRm").style.display = "block";
+    if (!document.getElementById("lapKlDari").value) {
+      const now = new Date();
+      document.getElementById("lapKlDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      document.getElementById("lapKlSampai").value = now.toISOString().split("T")[0];
+    }
+    muatLaporanKelengkapanRm();
+  } else if (kode === "distribusi_berkas") {
+    document.getElementById("lapDetailDistribusiBerkas").style.display = "block";
+    muatKlasterUntukDistribusiBerkas();
+    if (!document.getElementById("lapDbDari").value) {
+      const now = new Date();
+      document.getElementById("lapDbDari").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      document.getElementById("lapDbSampai").value = now.toISOString().split("T")[0];
+    }
+    muatLaporanDistribusiBerkas();
   } else {
     document.getElementById("lapDetailBelumDibangun").style.display = "block";
     document.getElementById("lapBelumJudul").textContent = LAPORAN_JUDUL[kode] || "Laporan";
@@ -2477,6 +2750,486 @@ function exportLaporanFamilyFolderCsv() {
   const a = document.createElement("a");
   a.href = url;
   a.download = `Family_Folder_${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== Laporan RM: Peminjaman & Pengembalian RM Fisik =====
+let pjPasienTerpilih = null;
+let laporanPinjamRmCache = [];
+
+async function cariPasienPinjamRm() {
+  const kunci = document.getElementById("pjCariPasien").value.trim();
+  const hasilDiv = document.getElementById("pjHasilCari");
+  hasilDiv.innerHTML = "";
+  pjPasienTerpilih = null;
+
+  if (!kunci) { hasilDiv.innerHTML = `<span style="color:var(--red)">Isi NIK, No. RM, atau nama dulu.</span>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("id, nama, nik, no_rm")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(10);
+
+  if (error) { hasilDiv.innerHTML = `<span style="color:var(--red)">Gagal cari: ${error.message}</span>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<span style="color:var(--red)">Pasien tidak ditemukan.</span>`; return; }
+
+  if (data.length === 1) {
+    pjPasienTerpilih = data[0];
+    hasilDiv.innerHTML = `<span style="color:var(--teal-2)">Terpilih: ${data[0].nama} (${data[0].no_rm || "-"})</span>`;
+    return;
+  }
+
+  window._pjHasilCari = data;
+  hasilDiv.innerHTML = data.map((p, i) => `<a href="#" onclick="event.preventDefault(); pilihPasienPinjamRmDariHasil(${i})" style="margin-right:10px;">${p.nama} (${p.no_rm || "-"})</a>`).join(" | ");
+}
+
+function pilihPasienPinjamRmDariHasil(i) {
+  pjPasienTerpilih = window._pjHasilCari[i];
+  document.getElementById("pjHasilCari").innerHTML = `<span style="color:var(--teal-2)">Terpilih: ${pjPasienTerpilih.nama} (${pjPasienTerpilih.no_rm || "-"})</span>`;
+}
+
+async function simpanPeminjamanRmFisik() {
+  const msgBox = document.getElementById("pjMsgBox");
+  const peminjam = document.getElementById("pjPeminjam").value.trim();
+  const tujuan = document.getElementById("pjTujuan").value.trim();
+  const rencanaKembali = document.getElementById("pjRencanaKembali").value || null;
+
+  if (!pjPasienTerpilih) { msgBox.innerHTML = `<div class="msg msg-error">Cari & pilih pasien dulu.</div>`; return; }
+  if (!peminjam) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama/unit peminjam dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { error } = await supabaseClient.from("peminjaman_rm_fisik").insert({
+    pasien_id: pjPasienTerpilih.id,
+    peminjam,
+    tujuan: tujuan || null,
+    tanggal_rencana_kembali: rencanaKembali,
+    petugas_id: user.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Peminjaman dicatat.</div>`;
+  document.getElementById("pjPeminjam").value = "";
+  document.getElementById("pjTujuan").value = "";
+  document.getElementById("pjRencanaKembali").value = "";
+  document.getElementById("pjCariPasien").value = "";
+  document.getElementById("pjHasilCari").innerHTML = "";
+  pjPasienTerpilih = null;
+  muatLaporanPinjamRmFisik();
+}
+
+async function tandaiKembaliRmFisik(id) {
+  const { error } = await supabaseClient.from("peminjaman_rm_fisik")
+    .update({ tanggal_kembali_aktual: new Date().toISOString().split("T")[0] })
+    .eq("id", id);
+  if (error) { alert(`Gagal update: ${error.message}`); return; }
+  muatLaporanPinjamRmFisik();
+}
+
+async function muatLaporanPinjamRmFisik() {
+  const tbody = document.getElementById("lapPjTabel");
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapPjDari").value;
+  const sampaiInput = document.getElementById("lapPjSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbody.innerHTML = `<tr><td colspan="7">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("peminjaman_rm_fisik")
+    .select("*, pasien(nama, no_rm)")
+    .gte("tanggal_pinjam", dariInput)
+    .lte("tanggal_pinjam", sampaiInput)
+    .order("tanggal_pinjam", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat laporan: ${error.message}</td></tr>`; return; }
+
+  laporanPinjamRmCache = data || [];
+  const today = new Date().toISOString().split("T")[0];
+  const total = laporanPinjamRmCache.length;
+  const sudahKembali = laporanPinjamRmCache.filter(p => p.tanggal_kembali_aktual).length;
+  const belumKembali = total - sudahKembali;
+  const terlambat = laporanPinjamRmCache.filter(p => !p.tanggal_kembali_aktual && p.tanggal_rencana_kembali && p.tanggal_rencana_kembali < today).length;
+
+  document.getElementById("lapPjStatTotal").textContent = total;
+  document.getElementById("lapPjStatKembali").textContent = sudahKembali;
+  document.getElementById("lapPjStatBelum").textContent = belumKembali;
+  document.getElementById("lapPjStatTerlambat").textContent = terlambat;
+
+  tbody.innerHTML = total ? laporanPinjamRmCache.map(p => {
+    const telat = !p.tanggal_kembali_aktual && p.tanggal_rencana_kembali && p.tanggal_rencana_kembali < today;
+    const statusLabel = p.tanggal_kembali_aktual ? "Sudah Kembali" : (telat ? "Terlambat" : "Dipinjam");
+    const statusKelas = p.tanggal_kembali_aktual ? "selesai" : (telat ? "batal" : "menunggu");
+    return `
+    <tr>
+      <td>${p.tanggal_pinjam}</td>
+      <td>${p.pasien?.nama || "-"}</td>
+      <td>${p.peminjam}</td>
+      <td>${p.tujuan || "-"}</td>
+      <td>${p.tanggal_rencana_kembali || "-"}</td>
+      <td><span class="badge badge-${statusKelas}">${statusLabel}</span></td>
+      <td>${p.tanggal_kembali_aktual ? "-" : `<button class="btn-secondary" onclick="tandaiKembaliRmFisik('${p.id}')">Tandai Kembali</button>`}</td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="7">Tidak ada peminjaman di rentang ini.</td></tr>`;
+}
+
+function exportLaporanPinjamRmFisikCsv() {
+  if (!laporanPinjamRmCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Tgl Pinjam", "Pasien", "Peminjam", "Tujuan", "Rencana Kembali", "Tgl Kembali Aktual"];
+  const rows = laporanPinjamRmCache.map(p => [p.tanggal_pinjam, p.pasien?.nama || "-", p.peminjam, p.tujuan || "-", p.tanggal_rencana_kembali || "-", p.tanggal_kembali_aktual || "-"]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapPjDari").value;
+  const sampaiInput = document.getElementById("lapPjSampai").value;
+  a.href = url;
+  a.download = `Peminjaman_RM_Fisik_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== Laporan RM: Akses & Kerahasiaan RM =====
+// Log dicatat otomatis dari rekam-medis.html (fungsi catatLogAksesRm) tiap
+// kali RM dibuka ("lihat") atau diisi ("ubah"). "Di luar jam kerja" = jam
+// lokal < 07:00 atau >= 17:00, indikatif buat ditinjau manual.
+let laporanAksesRmCache = [];
+
+function jamDiLuarKerja(tanggal) {
+  const jam = new Date(tanggal).getHours();
+  return jam < 7 || jam >= 17;
+}
+
+async function muatLaporanAksesRm() {
+  const tbodyLuarJam = document.getElementById("lapAkTabelLuarJam");
+  const tbodySemua = document.getElementById("lapAkTabelSemua");
+  tbodyLuarJam.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+  tbodySemua.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapAkDari").value;
+  const sampaiInput = document.getElementById("lapAkSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbodyLuarJam.innerHTML = `<tr><td colspan="4">Pilih rentang tanggal dulu.</td></tr>`;
+    tbodySemua.innerHTML = `<tr><td colspan="4">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const sampaiEksklusif = new Date(sampaiInput);
+  sampaiEksklusif.setDate(sampaiEksklusif.getDate() + 1);
+
+  const { data, error } = await supabaseClient
+    .from("log_akses_rm")
+    .select("*, pasien(nama), profil_pegawai(nama)")
+    .gte("created_at", dariInput)
+    .lt("created_at", sampaiEksklusif.toISOString().split("T")[0])
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (error) {
+    tbodyLuarJam.innerHTML = `<tr><td colspan="4">Gagal muat laporan: ${error.message}</td></tr>`;
+    tbodySemua.innerHTML = `<tr><td colspan="4">Gagal muat laporan: ${error.message}</td></tr>`;
+    return;
+  }
+
+  laporanAksesRmCache = data || [];
+  const total = laporanAksesRmCache.length;
+  const lihat = laporanAksesRmCache.filter(l => l.aksi === "lihat").length;
+  const ubah = laporanAksesRmCache.filter(l => l.aksi === "ubah").length;
+  const luarJamList = laporanAksesRmCache.filter(l => jamDiLuarKerja(l.created_at));
+
+  document.getElementById("lapAkStatTotal").textContent = total;
+  document.getElementById("lapAkStatLihat").textContent = lihat;
+  document.getElementById("lapAkStatUbah").textContent = ubah;
+  document.getElementById("lapAkStatLuarJam").textContent = luarJamList.length;
+
+  const baris = l => `
+    <tr>
+      <td>${new Date(l.created_at).toLocaleString("id-ID")}</td>
+      <td>${l.pasien?.nama || "-"}</td>
+      <td>${l.aksi === "lihat" ? "Lihat" : "Ubah"}</td>
+      <td>${l.profil_pegawai?.nama || "-"}</td>
+    </tr>`;
+
+  tbodyLuarJam.innerHTML = luarJamList.length ? luarJamList.map(baris).join("") : `<tr><td colspan="4">Tidak ada akses di luar jam kerja di rentang ini.</td></tr>`;
+  tbodySemua.innerHTML = total ? laporanAksesRmCache.map(baris).join("") : `<tr><td colspan="4">Tidak ada log akses di rentang ini.</td></tr>`;
+}
+
+function exportLaporanAksesRmCsv() {
+  if (!laporanAksesRmCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Waktu", "Pasien", "Aksi", "Petugas", "Di Luar Jam Kerja"];
+  const rows = laporanAksesRmCache.map(l => [
+    new Date(l.created_at).toISOString(),
+    l.pasien?.nama || "-",
+    l.aksi === "lihat" ? "Lihat" : "Ubah",
+    l.profil_pegawai?.nama || "-",
+    jamDiLuarKerja(l.created_at) ? "Ya" : "Tidak"
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapAkDari").value;
+  const sampaiInput = document.getElementById("lapAkSampai").value;
+  a.href = url;
+  a.download = `Akses_Kerahasiaan_RM_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== Laporan RM: Kelengkapan Pengisian RM =====
+// "Lengkap" = subjektif, assessment, kode_icd10, plan semua terisi (inti SOAP).
+let laporanKelengkapanRmCache = [];
+
+function fieldKosongRm(rm) {
+  const kosong = [];
+  if (!rm.subjektif || !rm.subjektif.trim()) kosong.push("Subjektif");
+  if (!rm.assessment || !rm.assessment.trim()) kosong.push("Assessment");
+  if (!rm.kode_icd10 || !rm.kode_icd10.trim()) kosong.push("Kode ICD-10");
+  if (!rm.plan || !rm.plan.trim()) kosong.push("Plan");
+  return kosong;
+}
+
+async function muatLaporanKelengkapanRm() {
+  const tbodyKlaster = document.getElementById("lapKlTabelKlaster");
+  const tbodyTl = document.getElementById("lapKlTabelTidakLengkap");
+  tbodyKlaster.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  tbodyTl.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapKlDari").value;
+  const sampaiInput = document.getElementById("lapKlSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbodyKlaster.innerHTML = `<tr><td colspan="5">Pilih rentang tanggal dulu.</td></tr>`;
+    tbodyTl.innerHTML = `<tr><td colspan="4">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("rekam_medis")
+    .select("subjektif, assessment, kode_icd10, plan, created_at, kunjungan!inner(tanggal, pasien(nama), klaster(nama, kode))")
+    .gte("kunjungan.tanggal", dariInput)
+    .lte("kunjungan.tanggal", sampaiInput);
+
+  if (error) {
+    tbodyKlaster.innerHTML = `<tr><td colspan="5">Gagal muat laporan: ${error.message}</td></tr>`;
+    tbodyTl.innerHTML = `<tr><td colspan="4">Gagal muat laporan: ${error.message}</td></tr>`;
+    return;
+  }
+
+  laporanKelengkapanRmCache = data || [];
+  const total = laporanKelengkapanRmCache.length;
+  const tidakLengkapList = laporanKelengkapanRmCache
+    .map(rm => ({ rm, kosong: fieldKosongRm(rm) }))
+    .filter(x => x.kosong.length);
+  const lengkap = total - tidakLengkapList.length;
+  const persen = total ? Math.round((lengkap / total) * 100) : 0;
+
+  document.getElementById("lapKlStatTotal").textContent = total;
+  document.getElementById("lapKlStatLengkap").textContent = lengkap;
+  document.getElementById("lapKlStatTidakLengkap").textContent = tidakLengkapList.length;
+  document.getElementById("lapKlStatPersen").textContent = `${persen}%`;
+
+  const grup = {};
+  laporanKelengkapanRmCache.forEach(rm => {
+    const key = rm.kunjungan?.klaster ? `${rm.kunjungan.klaster.kode} — ${rm.kunjungan.klaster.nama}` : "Tanpa Klaster";
+    if (!grup[key]) grup[key] = { total: 0, lengkap: 0 };
+    grup[key].total++;
+    if (!fieldKosongRm(rm).length) grup[key].lengkap++;
+  });
+
+  const namaKlaster = Object.keys(grup).sort();
+  tbodyKlaster.innerHTML = namaKlaster.length ? namaKlaster.map(k => {
+    const g = grup[k];
+    const p = g.total ? Math.round((g.lengkap / g.total) * 100) : 0;
+    return `<tr><td>${k}</td><td>${g.total}</td><td>${g.lengkap}</td><td>${g.total - g.lengkap}</td><td>${p}%</td></tr>`;
+  }).join("") : `<tr><td colspan="5">Tidak ada RM di rentang ini.</td></tr>`;
+
+  tbodyTl.innerHTML = tidakLengkapList.length ? tidakLengkapList.map(x => `
+    <tr>
+      <td>${x.rm.kunjungan?.tanggal || "-"}</td>
+      <td>${x.rm.kunjungan?.pasien?.nama || "-"}</td>
+      <td>${x.rm.kunjungan?.klaster ? `${x.rm.kunjungan.klaster.kode} — ${x.rm.kunjungan.klaster.nama}` : "-"}</td>
+      <td>${x.kosong.join(", ")}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">Semua RM di rentang ini sudah lengkap.</td></tr>`;
+}
+
+function exportLaporanKelengkapanRmCsv() {
+  if (!laporanKelengkapanRmCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Tanggal", "Pasien", "Klaster", "Status", "Field Kosong"];
+  const rows = laporanKelengkapanRmCache.map(rm => {
+    const kosong = fieldKosongRm(rm);
+    return [
+      rm.kunjungan?.tanggal || "-",
+      rm.kunjungan?.pasien?.nama || "-",
+      rm.kunjungan?.klaster ? `${rm.kunjungan.klaster.kode} — ${rm.kunjungan.klaster.nama}` : "-",
+      kosong.length ? "Tidak Lengkap" : "Lengkap",
+      kosong.join("; ") || "-"
+    ];
+  });
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapKlDari").value;
+  const sampaiInput = document.getElementById("lapKlSampai").value;
+  a.href = url;
+  a.download = `Kelengkapan_RM_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== Laporan RM: Distribusi Berkas Antar Unit =====
+let dbPasienTerpilih = null;
+let dbDaftarKlaster = [];
+let laporanDistribusiBerkasCache = [];
+
+async function muatKlasterUntukDistribusiBerkas() {
+  if (!dbDaftarKlaster.length) {
+    const { data } = await supabaseClient.from("klaster").select("*").order("id");
+    dbDaftarKlaster = data || [];
+  }
+  const opsi = dbDaftarKlaster.map(kl => `<option value="${kl.id}">${kl.kode} — ${kl.nama}</option>`).join("");
+  document.getElementById("dbKlasterAsal").innerHTML = `<option value="">-- Pilih --</option>` + opsi;
+  document.getElementById("dbKlasterTujuan").innerHTML = `<option value="">-- Pilih --</option>` + opsi;
+}
+
+async function cariPasienDistribusiBerkas() {
+  const kunci = document.getElementById("dbCariPasien").value.trim();
+  const hasilDiv = document.getElementById("dbHasilCari");
+  hasilDiv.innerHTML = "";
+  dbPasienTerpilih = null;
+
+  if (!kunci) { hasilDiv.innerHTML = `<span style="color:var(--red)">Isi NIK, No. RM, atau nama dulu.</span>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("id, nama, nik, no_rm")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(10);
+
+  if (error) { hasilDiv.innerHTML = `<span style="color:var(--red)">Gagal cari: ${error.message}</span>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<span style="color:var(--red)">Pasien tidak ditemukan.</span>`; return; }
+
+  if (data.length === 1) {
+    dbPasienTerpilih = data[0];
+    hasilDiv.innerHTML = `<span style="color:var(--teal-2)">Terpilih: ${data[0].nama} (${data[0].no_rm || "-"})</span>`;
+    return;
+  }
+
+  window._dbHasilCari = data;
+  hasilDiv.innerHTML = data.map((p, i) => `<a href="#" onclick="event.preventDefault(); pilihPasienDistribusiBerkasDariHasil(${i})" style="margin-right:10px;">${p.nama} (${p.no_rm || "-"})</a>`).join(" | ");
+}
+
+function pilihPasienDistribusiBerkasDariHasil(i) {
+  dbPasienTerpilih = window._dbHasilCari[i];
+  document.getElementById("dbHasilCari").innerHTML = `<span style="color:var(--teal-2)">Terpilih: ${dbPasienTerpilih.nama} (${dbPasienTerpilih.no_rm || "-"})</span>`;
+}
+
+async function simpanDistribusiBerkas() {
+  const msgBox = document.getElementById("dbMsgBox");
+  const klasterAsal = document.getElementById("dbKlasterAsal").value;
+  const klasterTujuan = document.getElementById("dbKlasterTujuan").value;
+
+  if (!dbPasienTerpilih) { msgBox.innerHTML = `<div class="msg msg-error">Cari & pilih pasien dulu.</div>`; return; }
+  if (!klasterAsal || !klasterTujuan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih klaster asal dan tujuan dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { error } = await supabaseClient.from("distribusi_berkas_rm").insert({
+    pasien_id: dbPasienTerpilih.id,
+    klaster_asal_id: parseInt(klasterAsal),
+    klaster_tujuan_id: parseInt(klasterTujuan),
+    petugas_id: user.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Pengiriman berkas dicatat.</div>`;
+  document.getElementById("dbCariPasien").value = "";
+  document.getElementById("dbHasilCari").innerHTML = "";
+  document.getElementById("dbKlasterAsal").value = "";
+  document.getElementById("dbKlasterTujuan").value = "";
+  dbPasienTerpilih = null;
+  muatLaporanDistribusiBerkas();
+}
+
+async function tandaiTerimaBerkas(id) {
+  const { error } = await supabaseClient.from("distribusi_berkas_rm")
+    .update({ status: "diterima", tanggal_terima: new Date().toISOString().split("T")[0] })
+    .eq("id", id);
+  if (error) { alert(`Gagal update: ${error.message}`); return; }
+  muatLaporanDistribusiBerkas();
+}
+
+async function muatLaporanDistribusiBerkas() {
+  const tbody = document.getElementById("lapDbTabel");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const dariInput = document.getElementById("lapDbDari").value;
+  const sampaiInput = document.getElementById("lapDbSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbody.innerHTML = `<tr><td colspan="6">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("distribusi_berkas_rm")
+    .select("*, pasien(nama), asal:klaster_asal_id(nama, kode), tujuan:klaster_tujuan_id(nama, kode)")
+    .gte("tanggal_kirim", dariInput)
+    .lte("tanggal_kirim", sampaiInput)
+    .order("tanggal_kirim", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat laporan: ${error.message}</td></tr>`; return; }
+
+  laporanDistribusiBerkasCache = data || [];
+  const total = laporanDistribusiBerkasCache.length;
+  const diterima = laporanDistribusiBerkasCache.filter(d => d.status === "diterima").length;
+  const dikirim = laporanDistribusiBerkasCache.filter(d => d.status === "dikirim").length;
+  const hilang = laporanDistribusiBerkasCache.filter(d => d.status === "hilang").length;
+
+  document.getElementById("lapDbStatTotal").textContent = total;
+  document.getElementById("lapDbStatDiterima").textContent = diterima;
+  document.getElementById("lapDbStatDikirim").textContent = dikirim;
+  document.getElementById("lapDbStatHilang").textContent = hilang;
+
+  tbody.innerHTML = total ? laporanDistribusiBerkasCache.map(d => `
+    <tr>
+      <td>${d.tanggal_kirim}</td>
+      <td>${d.pasien?.nama || "-"}</td>
+      <td>${d.asal ? `${d.asal.kode} — ${d.asal.nama}` : "-"}</td>
+      <td>${d.tujuan ? `${d.tujuan.kode} — ${d.tujuan.nama}` : "-"}</td>
+      <td><span class="badge badge-${d.status === 'diterima' ? 'selesai' : (d.status === 'hilang' ? 'batal' : 'menunggu')}">${d.status}</span></td>
+      <td>${d.status === "dikirim" ? `<button class="btn-secondary" onclick="tandaiTerimaBerkas('${d.id}')">Tandai Diterima</button>` : "-"}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Tidak ada pengiriman berkas di rentang ini.</td></tr>`;
+}
+
+function exportLaporanDistribusiBerkasCsv() {
+  if (!laporanDistribusiBerkasCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Tgl Kirim", "Pasien", "Dari", "Ke", "Status", "Tgl Terima"];
+  const rows = laporanDistribusiBerkasCache.map(d => [
+    d.tanggal_kirim,
+    d.pasien?.nama || "-",
+    d.asal ? `${d.asal.kode} — ${d.asal.nama}` : "-",
+    d.tujuan ? `${d.tujuan.kode} — ${d.tujuan.nama}` : "-",
+    d.status,
+    d.tanggal_terima || "-"
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("lapDbDari").value;
+  const sampaiInput = document.getElementById("lapDbSampai").value;
+  a.href = url;
+  a.download = `Distribusi_Berkas_${dariInput}_${sampaiInput}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
