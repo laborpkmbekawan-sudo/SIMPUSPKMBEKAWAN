@@ -51,6 +51,27 @@
 
 tr.ugd-row-clickable { cursor:pointer; }
 tr.ugd-row-clickable:hover td { background:#f7fafb; }
+
+/* Kartu pilih triase */
+.triase-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+.triase-card { border-radius:10px; padding:12px 14px; color:#fff; cursor:pointer; border:3px solid transparent; transition:transform .12s, border-color .12s; }
+.triase-card:hover { transform:translateY(-2px); }
+.triase-card.selected { border-color:#0f2942; box-shadow:0 4px 14px rgba(0,0,0,0.18); }
+.triase-card h5 { margin:0 0 4px 0; font-size:12px; }
+.triase-card p { margin:0; font-size:10.7px; opacity:.95; line-height:1.5; }
+.triase-card.merah { background:#c0503f; }
+.triase-card.kuning { background:#c98a1a; }
+.triase-card.hijau { background:#2f9e5c; }
+.triase-card.hitam { background:#333; }
+
+.triase-detail-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-bottom:14px; border-left:5px solid var(--accent,#999); }
+.td-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.td-swatch { width:26px; height:26px; border-radius:8px; background:var(--accent,#999); flex-shrink:0; }
+.td-head h3 { margin:0; font-size:14px; color:var(--navy); }
+.td-head span { font-size:11px; color:var(--muted); }
+.td-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 20px; font-size:12px; }
+.td-grid .label { display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:.3px; color:var(--muted); margin-bottom:3px; }
+.td-grid .val { color:#1c2b33; line-height:1.55; }
 </style>
 </head>
 <body>
@@ -207,9 +228,45 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
 
       </div>
 
-      <!-- ============ SUBTAB LAIN — SEGERA DIBANGUN ============ -->
+      <!-- ============ TRIASE ============ -->
       <div id="panelTriase" style="display:none;">
-        <div class="ugd-segera"><div class="ic">🚨</div><div class="t">Triase</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">🚨</span> Pasien Menunggu Triase</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pasien baru masuk yang belum ditentukan level prioritasnya. Klik salah satu buat mulai triase.</p>
+          <table>
+            <thead><tr><th>Nama</th><th>No. RM</th><th>Keluhan</th><th>Waktu Masuk</th><th></th></tr></thead>
+            <tbody id="tabelMenungguTriase"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" id="cardFormTriase" style="--accent:#173b5e; display:none;">
+          <h2>Triase: <span id="triaseNamaPasien"></span></h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Pilih level prioritas sesuai kondisi pasien saat ini. Mengacu pedoman triase nasional — bukan penilaian bebas.</p>
+
+          <div class="triase-grid">
+            <div class="triase-card merah" data-triase="merah" onclick="pilihWarnaTriase('merah')"><h5>🔴 Merah</h5><p>Ancaman jiwa mendesak — tindakan segera, tanpa menunggu.</p></div>
+            <div class="triase-card kuning" data-triase="kuning" onclick="pilihWarnaTriase('kuning')"><h5>🟡 Kuning</h5><p>Perlu tindakan cepat, tapi kondisi belum mengancam jiwa langsung.</p></div>
+            <div class="triase-card hijau" data-triase="hijau" onclick="pilihWarnaTriase('hijau')"><h5>🟢 Hijau</h5><p>Kondisi ringan, bisa menunggu antrian normal.</p></div>
+            <div class="triase-card hitam" data-triase="hitam" onclick="pilihWarnaTriase('hitam')"><h5>⚫ Hitam</h5><p>Kasus meninggal/tidak bisa diselamatkan lagi.</p></div>
+          </div>
+
+          <div id="triaseDetailInfo"></div>
+
+          <div id="msgTriase"></div>
+          <button class="btn-primary" onclick="simpanTriase()">Simpan Hasil Triase</button>
+          <button class="btn-secondary" onclick="batalkanFormTriase()">Batal</button>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2><span class="card-num" style="background:#26a3a0;">✓</span> Sudah Ditriase Hari Ini</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Kalau kondisi pasien berubah, triase bisa direvisi — klik baris buat ubah.</p>
+          <table>
+            <thead><tr><th>Triase</th><th>Nama</th><th>No. RM</th><th>Waktu Triase</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelSudahTriase"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
       <div id="panelTindakan" style="display:none;">
         <div class="ugd-segera"><div class="ic">✚</div><div class="t">Pemeriksaan &amp; Tindakan Gawat Darurat</div>Menu ini segera dibangun di sesi berikutnya.</div>
@@ -279,6 +336,153 @@ function gantiSubtabUgd(tab) {
   };
   document.querySelector(".topbar h1").textContent = judul[tab] || "UGD";
   if (tab === "dashboard") muatDashboardUgd();
+  if (tab === "triase") muatTriase();
+}
+
+// ---------- TRIASE ----------
+const triaseData = {
+  merah: { color:"#c0503f", title:"🔴 Triase Merah — Prioritas 1 (Emergency)", target:"Tindakan segera, tanpa menunggu",
+    kriteria:"Ancaman jiwa mendesak — kondisi bisa memburuk atau meninggal dalam hitungan menit kalau tidak segera ditangani.",
+    contoh:"Henti napas/jantung, syok berat, perdarahan masif, sesak napas berat.",
+    tindakan:"Ditangani lebih dulu dari kasus lain, tanpa menunggu antrian.",
+    penempatan:"Ruang resusitasi/tindakan utama UGD." },
+  kuning: { color:"#c98a1a", title:"🟡 Triase Kuning — Prioritas 2 (Urgent)", target:"Tindakan dalam ±30 menit",
+    kriteria:"Kondisi serius tapi belum mengancam jiwa dalam hitungan menit — masih ada waktu untuk observasi singkat sebelum tindakan.",
+    contoh:"Patah tulang tertutup, luka robek cukup dalam, demam tinggi dengan penurunan kesadaran ringan, nyeri perut hebat.",
+    tindakan:"Diperiksa dan ditangani setelah kasus Merah selesai ditangani, tapi tetap didahulukan dari kasus Hijau.",
+    penempatan:"Ruang tindakan UGD, dengan observasi berkala." },
+  hijau: { color:"#2f9e5c", title:"🟢 Triase Hijau — Prioritas 3 (Non-Urgent)", target:"Bisa menunggu, ditangani sesuai antrian",
+    kriteria:"Kondisi ringan, tidak mengancam jiwa, dan tidak akan memburuk signifikan walau menunggu.",
+    contoh:"Luka lecet ringan, demam biasa tanpa komplikasi, keluhan ringan lainnya.",
+    tindakan:"Ditangani setelah kasus Merah dan Kuning selesai — bisa diarahkan ke pelayanan poli biasa kalau UGD penuh.",
+    penempatan:"Ruang tunggu/periksa umum UGD." },
+  hitam: { color:"#333333", title:"⚫ Triase Hitam — Kasus Meninggal", target:"Bukan prioritas tindakan medis aktif",
+    kriteria:"Pasien sudah meninggal saat tiba atau tidak menunjukkan tanda kehidupan meski sudah dilakukan resusitasi awal.",
+    contoh:"Pasien datang dalam kondisi sudah tidak bernapas dan tidak ada respons setelah upaya resusitasi standar.",
+    tindakan:"Dilakukan prosedur sesuai SOP kematian di fasilitas kesehatan — dokumentasi, pemberitahuan keluarga, dan pelaporan sesuai ketentuan.",
+    penempatan:"Dipisahkan dari area tindakan aktif." }
+};
+
+let triaseCache = [];
+let kunjunganUgdTerpilihTriase = null;
+let warnaTerpilihTriase = null;
+
+async function muatTriase() {
+  const { data, error } = await supabaseClient
+    .from("kunjungan_ugd")
+    .select("id, status_ugd, triase_warna, waktu_triase, created_at, kunjungan(keluhan_awal), pasien(nama, no_rm), profil_pegawai:petugas_triase_id(nama)")
+    .in("status_ugd", ["baru", "ditangani", "observasi", "dirujuk"])
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    document.getElementById("tabelMenungguTriase").innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`;
+    document.getElementById("tabelSudahTriase").innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`;
+    return;
+  }
+
+  triaseCache = data || [];
+
+  const menunggu = triaseCache.filter(p => !p.triase_warna);
+  const tbodyMenunggu = document.getElementById("tabelMenungguTriase");
+  tbodyMenunggu.innerHTML = !menunggu.length
+    ? `<tr><td colspan="5">Tidak ada pasien menunggu triase.</td></tr>`
+    : menunggu.map(p => `
+        <tr class="ugd-row-clickable" onclick="pilihPasienTriase('${p.id}')">
+          <td>${p.pasien?.nama || "-"}</td>
+          <td>${p.pasien?.no_rm || "-"}</td>
+          <td>${p.kunjungan?.keluhan_awal || "-"}</td>
+          <td>${jamSingkat(p.created_at)}</td>
+          <td><button class="btn-secondary" onclick="event.stopPropagation(); pilihPasienTriase('${p.id}')">Triase</button></td>
+        </tr>
+      `).join("");
+
+  const sudah = triaseCache.filter(p => p.triase_warna).sort((a, b) => new Date(b.waktu_triase) - new Date(a.waktu_triase));
+  const tbodySudah = document.getElementById("tabelSudahTriase");
+  tbodySudah.innerHTML = !sudah.length
+    ? `<tr><td colspan="5">Belum ada pasien ditriase hari ini.</td></tr>`
+    : sudah.map(p => `
+        <tr class="ugd-row-clickable" onclick="pilihPasienTriase('${p.id}')" title="Klik untuk revisi triase">
+          <td>${badgeTriaseHtml(p.triase_warna)}</td>
+          <td>${p.pasien?.nama || "-"}</td>
+          <td>${p.pasien?.no_rm || "-"}</td>
+          <td>${p.waktu_triase ? jamSingkat(p.waktu_triase) : "-"}</td>
+          <td>${p.profil_pegawai?.nama || "-"}</td>
+        </tr>
+      `).join("");
+}
+
+function pilihPasienTriase(kunjunganUgdId) {
+  const p = triaseCache.find(x => x.id === kunjunganUgdId);
+  if (!p) return;
+  kunjunganUgdTerpilihTriase = p;
+  warnaTerpilihTriase = p.triase_warna || null;
+
+  document.getElementById("triaseNamaPasien").textContent = `${p.pasien?.nama || "-"} (No. RM ${p.pasien?.no_rm || "-"})`;
+  document.getElementById("cardFormTriase").style.display = "block";
+  document.getElementById("msgTriase").innerHTML = "";
+  document.querySelectorAll(".triase-card").forEach(c => c.classList.toggle("selected", c.dataset.triase === warnaTerpilihTriase));
+  document.getElementById("triaseDetailInfo").innerHTML = warnaTerpilihTriase ? renderDetailTriase(warnaTerpilihTriase) : "";
+  document.getElementById("cardFormTriase").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function pilihWarnaTriase(warna) {
+  warnaTerpilihTriase = warna;
+  document.querySelectorAll(".triase-card").forEach(c => c.classList.toggle("selected", c.dataset.triase === warna));
+  document.getElementById("triaseDetailInfo").innerHTML = renderDetailTriase(warna);
+}
+
+function renderDetailTriase(warna) {
+  const d = triaseData[warna];
+  return `
+    <div class="triase-detail-card" style="--accent:${d.color}">
+      <div class="td-head">
+        <div class="td-swatch"></div>
+        <div><h3>${d.title}</h3><span>Target waktu tanggap: ${d.target}</span></div>
+      </div>
+      <div class="td-grid">
+        <div><span class="label">Kriteria</span><span class="val">${d.kriteria}</span></div>
+        <div><span class="label">Contoh Kasus</span><span class="val">${d.contoh}</span></div>
+        <div><span class="label">Tindakan</span><span class="val">${d.tindakan}</span></div>
+        <div><span class="label">Penempatan</span><span class="val">${d.penempatan}</span></div>
+      </div>
+    </div>`;
+}
+
+function batalkanFormTriase() {
+  kunjunganUgdTerpilihTriase = null;
+  warnaTerpilihTriase = null;
+  document.getElementById("cardFormTriase").style.display = "none";
+}
+
+async function simpanTriase() {
+  const msgBox = document.getElementById("msgTriase");
+  if (!kunjunganUgdTerpilihTriase) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`;
+    return;
+  }
+  if (!warnaTerpilihTriase) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih salah satu level triase dulu.</div>`;
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const statusBaru = kunjunganUgdTerpilihTriase.status_ugd === "baru" ? "ditangani" : kunjunganUgdTerpilihTriase.status_ugd;
+
+  const { error } = await supabaseClient.from("kunjungan_ugd").update({
+    triase_warna: warnaTerpilihTriase,
+    waktu_triase: new Date().toISOString(),
+    petugas_triase_id: user.id,
+    status_ugd: statusBaru
+  }).eq("id", kunjunganUgdTerpilihTriase.id);
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan triase: ${error.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Triase tersimpan.</div>`;
+  batalkanFormTriase();
+  await muatTriase();
 }
 
 // ---------- DASHBOARD: muat statistik, alert, list pasien aktif ----------
