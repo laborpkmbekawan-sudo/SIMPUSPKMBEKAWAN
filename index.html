@@ -133,7 +133,15 @@
           </div>
 
   <div class="card">
-    <h2>Daftarkan Pasien</h2>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+      <h2>Daftarkan Pasien</h2>
+      <details class="menu-dropdown">
+        <summary class="btn-secondary">⋮ Menu Lainnya</summary>
+        <div class="menu-dropdown-list">
+          <div class="menu-dropdown-item" onclick="bukaMenuLain('cardGabungRM', this)">Gabung Rekam Medis (Data Duplikat)</div>
+        </div>
+      </details>
+    </div>
     <div id="msgBox"></div>
 
     <div class="grid-2">
@@ -272,6 +280,31 @@
 
       <button type="submit" class="btn-primary">Simpan Data Pasien</button>
     </form>
+  </div>
+
+  <div class="card" id="cardGabungRM" style="display:none;">
+    <h2>Gabung Rekam Medis (Data Duplikat)</h2>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Dipakai kalau ketemu 2 RM buat 1 pasien yang sama (misal NIK beda karena typo). Pilih pasien utama (dipertahankan) dan pasien duplikat (riwayatnya dipindah lalu disembunyikan). <strong>Aksi ini tidak bisa dibatalkan.</strong></p>
+    <div id="gbMsgBox"></div>
+
+    <div class="grid-2">
+      <div>
+        <label>Cari Pasien Utama (dipertahankan)</label>
+        <input type="text" id="gbCariUtama" placeholder="Ketik NIK/No.RM/nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariGabung('utama');}">
+        <button type="button" class="btn-secondary" onclick="cariGabung('utama')" style="margin-top:6px;">Cari</button>
+        <div id="gbHasilUtama" style="margin-top:8px;"></div>
+        <div id="gbTerpilihUtama" style="margin-top:8px; font-size:13px;"></div>
+      </div>
+      <div>
+        <label>Cari Pasien Duplikat (akan digabung)</label>
+        <input type="text" id="gbCariDuplikat" placeholder="Ketik NIK/No.RM/nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariGabung('duplikat');}">
+        <button type="button" class="btn-secondary" onclick="cariGabung('duplikat')" style="margin-top:6px;">Cari</button>
+        <div id="gbHasilDuplikat" style="margin-top:8px;"></div>
+        <div id="gbTerpilihDuplikat" style="margin-top:8px; font-size:13px;"></div>
+      </div>
+    </div>
+
+    <button type="button" class="btn-primary" style="margin-top:14px;" onclick="konfirmasiGabungRM()">Gabungkan Rekam Medis</button>
   </div>
 
   <div class="card" id="cardDaftarKunjungan" style="display:none;">
@@ -4484,6 +4517,102 @@ async function simpanSurvei() {
   document.getElementById("srvKejelasan").value = "3";
   document.getElementById("srvKebersihan").value = "3";
   await muatSurvei();
+}
+
+// ============================================================
+// GABUNG REKAM MEDIS (Data Duplikat) — sama persis dengan yang ada di
+// rekam-medis.html, ditaruh juga di sini karena Pendaftaran tempat kerja
+// utama petugas loket dan biasanya di sinilah duplikasi ketauan duluan.
+// Backend-nya sama (RPC gabung_rekam_medis), gak ada perubahan schema.
+// ============================================================
+let gbUtama = null;
+let gbDuplikat = null;
+
+// Toggle card yang disembunyikan (Gabung RM) dari dropdown "Menu Lainnya".
+function bukaMenuLain(idCard, itemEl) {
+  const el = document.getElementById(idCard);
+  const tampil = el.style.display === "none" || !el.style.display;
+  el.style.display = tampil ? "block" : "none";
+  itemEl.closest("details").removeAttribute("open");
+  if (tampil) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function cariGabung(sisi) {
+  const kunci = document.getElementById(sisi === "utama" ? "gbCariUtama" : "gbCariDuplikat").value.trim();
+  const hasilDiv = document.getElementById(sisi === "utama" ? "gbHasilUtama" : "gbHasilDuplikat");
+  hasilDiv.innerHTML = "";
+  if (!kunci) return;
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("id, nama, nik, no_rm, tanggal_lahir, alamat")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(10);
+
+  if (error || !data?.length) {
+    hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan.</div>`;
+    return;
+  }
+
+  hasilDiv.innerHTML = data.map(p => `
+    <div style="padding:6px 0; border-bottom:1px solid #e5e7eb; font-size:13px;">
+      ${p.nama} — NIK ${p.nik} — RM ${p.no_rm || "-"}
+      <button type="button" class="btn-secondary" style="margin-left:6px; padding:2px 8px; font-size:12px;" onclick='pilihGabung("${sisi}", ${JSON.stringify(p).replace(/'/g, "&#39;")})'>Pilih</button>
+    </div>`).join("");
+}
+
+function pilihGabung(sisi, p) {
+  if (sisi === "utama") {
+    gbUtama = p;
+    document.getElementById("gbTerpilihUtama").innerHTML = `<strong>Terpilih:</strong> ${p.nama} — NIK ${p.nik} — RM ${p.no_rm || "-"}`;
+    document.getElementById("gbHasilUtama").innerHTML = "";
+  } else {
+    gbDuplikat = p;
+    document.getElementById("gbTerpilihDuplikat").innerHTML = `<strong>Terpilih:</strong> ${p.nama} — NIK ${p.nik} — RM ${p.no_rm || "-"}`;
+    document.getElementById("gbHasilDuplikat").innerHTML = "";
+  }
+}
+
+async function konfirmasiGabungRM() {
+  const msgBox = document.getElementById("gbMsgBox");
+  msgBox.innerHTML = "";
+
+  if (!gbUtama || !gbDuplikat) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien utama dan pasien duplikat dulu.</div>`;
+    return;
+  }
+  if (gbUtama.id === gbDuplikat.id) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pasien utama dan duplikat tidak boleh sama.</div>`;
+    return;
+  }
+
+  const yakin = window.confirm(
+    `PERINGATAN — aksi ini permanen.\n\n` +
+    `Seluruh riwayat kunjungan, rekam medis, dan consent milik:\n"${gbDuplikat.nama}" (NIK ${gbDuplikat.nik})\n\n` +
+    `akan dipindah ke:\n"${gbUtama.nama}" (NIK ${gbUtama.nik}, No. RM ${gbUtama.no_rm || "-"}).\n\n` +
+    `Data "${gbDuplikat.nama}" akan disembunyikan dari pencarian setelah ini. Lanjutkan?`
+  );
+  if (!yakin) return;
+
+  const { error } = await supabaseClient.rpc("gabung_rekam_medis", {
+    p_utama: gbUtama.id,
+    p_duplikat: gbDuplikat.id
+  });
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal menggabung: ${error.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Berhasil digabung. Riwayat "${gbDuplikat.nama}" sekarang tercatat di bawah RM ${gbUtama.no_rm || gbUtama.nama}.</div>`;
+  gbUtama = null;
+  gbDuplikat = null;
+  document.getElementById("gbTerpilihUtama").innerHTML = "";
+  document.getElementById("gbTerpilihDuplikat").innerHTML = "";
+  document.getElementById("gbCariUtama").value = "";
+  document.getElementById("gbCariDuplikat").value = "";
 }
 
 // ============================================================
