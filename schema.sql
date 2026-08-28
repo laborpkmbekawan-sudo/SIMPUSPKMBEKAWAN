@@ -1107,6 +1107,102 @@ alter table distribusi_berkas_rm enable row level security;
 create policy "authenticated_all_distribusi_berkas_rm" on distribusi_berkas_rm for all to authenticated using (true) with check (true);
 
 -- ============================================================
+-- 37. AUDIT TRAIL — data sensitif (pasien, rekam_medis, resep).
+-- Dicatat OTOMATIS lewat trigger database (bukan kode aplikasi), jadi
+-- gak bisa kelewat/dilewatin walau perubahan dilakukan langsung dari
+-- Supabase SQL Editor atau lewat jalur lain di luar frontend.
+--
+-- audit_log cuma bisa DIISI lewat trigger (security definer) — role
+-- authenticated cuma dikasih izin SELECT, gak ada insert/update/delete.
+-- Jadi walau token pegawai bocor, jejak audit gak bisa dipalsu/dihapus.
+-- ============================================================
+create table if not exists audit_log (
+  id uuid primary key default gen_random_uuid(),
+  tabel text not null,
+  record_id uuid,
+  aksi text not null check (aksi in ('insert', 'update', 'delete')),
+  data_lama jsonb,
+  data_baru jsonb,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_audit_log_tabel on audit_log(tabel);
+create index if not exists idx_audit_log_record on audit_log(record_id);
+create index if not exists idx_audit_log_tanggal on audit_log(created_at);
+create index if not exists idx_audit_log_petugas on audit_log(petugas_id);
+
+alter table audit_log enable row level security;
+create policy "authenticated_read_audit_log" on audit_log for select to authenticated using (true);
+
+create or replace function fn_audit_log() returns trigger
+language plpgsql security definer as $$
+declare
+  v_petugas uuid;
+begin
+  -- auth.uid() baca dari JWT request yang lagi jalan (bukan dari session
+  -- fungsi ini), jadi tetap kebaca siapa pegawai yang beneran ngetrigger
+  -- perubahan walau fungsinya security definer.
+  v_petugas := auth.uid();
+
+  if (tg_op = 'DELETE') then
+    insert into audit_log(tabel, record_id, aksi, data_lama, petugas_id)
+    values (tg_table_name, old.id, 'delete', to_jsonb(old), v_petugas);
+    return old;
+  elsif (tg_op = 'UPDATE') then
+    insert into audit_log(tabel, record_id, aksi, data_lama, data_baru, petugas_id)
+    values (tg_table_name, new.id, 'update', to_jsonb(old), to_jsonb(new), v_petugas);
+    return new;
+  else
+    insert into audit_log(tabel, record_id, aksi, data_baru, petugas_id)
+    values (tg_table_name, new.id, 'insert', to_jsonb(new), v_petugas);
+    return new;
+  end if;
+end;
+$$;
+
+drop trigger if exists trg_audit_pasien on pasien;
+create trigger trg_audit_pasien after insert or update or delete on pasien
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_rekam_medis on rekam_medis;
+create trigger trg_audit_rekam_medis after insert or update or delete on rekam_medis
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_resep on resep;
+create trigger trg_audit_resep after insert or update or delete on resep
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- 38. MANAJEMEN SESI AKTIF — lacak sesi login tiap pegawai per
+-- perangkat/browser, biar admin bisa lihat siapa lagi login dari mana
+-- dan bisa paksa logout kalau perlu (perangkat hilang/dicuri, dsb).
+--
+-- CATATAN KETERBATASAN: Supabase Auth gak punya API buat cabut satu sesi
+-- pegawai lain secara instan dari server (butuh JWT sesi itu, yang gak
+-- kita punya). Jadi "Paksa Logout" kerjanya: tandai baris ini dicabut,
+-- lalu browser pegawai bersangkutan polling tabel ini tiap ~30 detik dan
+-- logout sendiri begitu kedeteksi — bukan instan, tapi otomatis dalam
+-- hitungan detik selama browsernya masih terbuka/online.
+-- ============================================================
+create table if not exists sesi_aktif (
+  id uuid primary key default gen_random_uuid(),
+  pegawai_id uuid not null references profil_pegawai(id) on delete cascade,
+  sesi_token text not null,
+  perangkat text,
+  login_at timestamptz not null default now(),
+  last_active timestamptz not null default now(),
+  dicabut boolean not null default false,
+  dicabut_at timestamptz
+);
+
+create unique index if not exists idx_sesi_aktif_token on sesi_aktif(sesi_token);
+create index if not exists idx_sesi_aktif_pegawai on sesi_aktif(pegawai_id);
+
+alter table sesi_aktif enable row level security;
+create policy "authenticated_all_sesi_aktif" on sesi_aktif for all to authenticated using (true) with check (true);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

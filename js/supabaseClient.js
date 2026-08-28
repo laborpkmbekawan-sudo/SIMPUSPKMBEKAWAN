@@ -17,7 +17,83 @@ async function wajibLogin() {
     window.location.href = "login.html";
     return null;
   }
+  mulaiPelacakanSesi(session);
   return session;
+}
+
+// ============================================================
+// MANAJEMEN SESI AKTIF
+// Tiap browser/perangkat dapat "sesi_token" acak sendiri, disimpan di
+// localStorage supaya tetap sama walau halaman di-refresh/pindah tab.
+// Token ini dicatat ke tabel sesi_aktif biar admin bisa lihat siapa lagi
+// login dari mana, dan bisa "paksa logout" (lihat catatan keterbatasan
+// di schema.sql bagian 38).
+// ============================================================
+function ambilSesiToken() {
+  let token = localStorage.getItem("simpus_sesi_token");
+  if (!token) {
+    token = crypto.randomUUID();
+    localStorage.setItem("simpus_sesi_token", token);
+  }
+  return token;
+}
+
+// Ringkasan perangkat/browser dari user agent, buat ditampilin ke admin
+// (gak perlu presisi, cukup cukup buat "oh ini dari HP/laptop mana").
+function ringkasPerangkat() {
+  const ua = navigator.userAgent;
+  let browser = "Browser lain";
+  if (ua.includes("Edg/")) browser = "Edge";
+  else if (ua.includes("Chrome/") && !ua.includes("Chromium")) browser = "Chrome";
+  else if (ua.includes("Firefox/")) browser = "Firefox";
+  else if (ua.includes("Safari/") && !ua.includes("Chrome")) browser = "Safari";
+
+  let os = "OS lain";
+  if (ua.includes("Windows")) os = "Windows";
+  else if (ua.includes("Android")) os = "Android";
+  else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS";
+  else if (ua.includes("Mac OS")) os = "Mac";
+  else if (ua.includes("Linux")) os = "Linux";
+
+  return `${browser} di ${os}`;
+}
+
+let pelacakanSesiInterval = null;
+
+async function mulaiPelacakanSesi(session) {
+  if (pelacakanSesiInterval) return; // sudah jalan, gak perlu dobel
+  const token = ambilSesiToken();
+
+  async function catatDenyut() {
+    const { data, error } = await supabaseClient
+      .from("sesi_aktif")
+      .upsert(
+        {
+          pegawai_id: session.user.id,
+          sesi_token: token,
+          perangkat: ringkasPerangkat(),
+          last_active: new Date().toISOString(),
+        },
+        { onConflict: "sesi_token" }
+      )
+      .select("dicabut")
+      .single();
+
+    if (error) {
+      console.error("Gagal catat sesi aktif:", error.message);
+      return;
+    }
+    // Kalau admin sudah "Paksa Logout" sesi ini, langsung keluar.
+    if (data && data.dicabut) {
+      clearInterval(pelacakanSesiInterval);
+      pelacakanSesiInterval = null;
+      alert("Sesi Anda dihentikan oleh admin. Silakan login ulang.");
+      await logout();
+    }
+  }
+
+  await catatDenyut();
+  pelacakanSesiInterval = setInterval(catatDenyut, 30000);
 }
 
 // Ambil data profil pegawai (nama, role, klaster) dari user yang login.
@@ -85,6 +161,13 @@ function punyaAksesModul(profil, modulKode) {
 }
 
 async function logout() {
+  if (pelacakanSesiInterval) {
+    clearInterval(pelacakanSesiInterval);
+    pelacakanSesiInterval = null;
+  }
+  // Hapus token sesi biar login berikutnya (walau di browser yang sama)
+  // dapat baris sesi_aktif baru yang bersih, gak kebawa status "dicabut".
+  localStorage.removeItem("simpus_sesi_token");
   await supabaseClient.auth.signOut();
   window.location.href = "login.html";
 }

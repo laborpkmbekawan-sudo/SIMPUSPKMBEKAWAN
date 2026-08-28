@@ -1578,8 +1578,89 @@
 
     <div id="panelAudit" class="dash-content" style="display:none;">
       <div class="card">
-        <h2>Audit / Keamanan</h2>
-        <p style="font-size:13px; color:var(--muted);">Jejak audit perubahan data pasien dan aktivitas login. Belum dibangun.</p>
+        <h2>Audit Trail — Data Sensitif</h2>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Jejak otomatis semua perubahan (tambah/ubah/hapus) pada data Pasien, Rekam Medis, dan Resep. Dicatat langsung oleh database lewat trigger, jadi gak bisa kelewat walau perubahan dilakukan di luar aplikasi ini.</p>
+
+        <div class="grid-3" style="margin-bottom:14px;">
+          <div>
+            <label>Dari Tanggal</label>
+            <input type="date" id="audDari">
+          </div>
+          <div>
+            <label>Sampai Tanggal</label>
+            <input type="date" id="audSampai">
+          </div>
+          <div>
+            <label>Tabel</label>
+            <select id="audFilterTabel">
+              <option value="">Semua Tabel</option>
+              <option value="pasien">Pasien</option>
+              <option value="rekam_medis">Rekam Medis</option>
+              <option value="resep">Resep</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-3" style="margin-bottom:14px;">
+          <div>
+            <label>Aksi</label>
+            <select id="audFilterAksi">
+              <option value="">Semua Aksi</option>
+              <option value="insert">Tambah (Insert)</option>
+              <option value="update">Ubah (Update)</option>
+              <option value="delete">Hapus (Delete)</option>
+            </select>
+          </div>
+          <div></div>
+          <div style="display:flex; align-items:flex-end; gap:8px;">
+            <button type="button" class="btn-primary" onclick="muatAuditLog()">Tampilkan</button>
+            <button type="button" class="btn-secondary" onclick="exportAuditLogCsv()">⬇️ Export CSV</button>
+          </div>
+        </div>
+
+        <div class="stat-grid" style="margin-bottom:18px;">
+          <div class="stat-card">
+            <div class="label">Total Perubahan</div>
+            <div class="value" id="audStatTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Tambah</div>
+            <div class="value" id="audStatInsert">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Ubah</div>
+            <div class="value" id="audStatUpdate">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Hapus</div>
+            <div class="value" id="audStatDelete">0</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Waktu</th><th>Tabel</th><th>Aksi</th><th>Petugas</th><th>Ringkasan</th><th></th></tr>
+          </thead>
+          <tbody id="audTabelLog">
+            <tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:11px; color:var(--muted); margin-top:8px;">Menampilkan maksimal 500 baris terbaru sesuai filter. Persempit rentang tanggal kalau butuh data lebih lama.</p>
+      </div>
+
+      <div class="card">
+        <h2>Manajemen Sesi Aktif</h2>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Daftar pegawai yang sedang login beserta perangkatnya. Catatan: karena keterbatasan Supabase Auth, "Paksa Logout" gak instan — pegawai bersangkutan otomatis ter-logout dalam ±30 detik selama browser-nya masih terbuka &amp; online.</p>
+        <div style="margin-bottom:10px;">
+          <button type="button" class="btn-secondary" onclick="muatSesiAktif()">🔄 Muat Ulang</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Pegawai</th><th>Role</th><th>Perangkat</th><th>Login Sejak</th><th>Terakhir Aktif</th><th>Aksi</th></tr>
+          </thead>
+          <tbody id="sesiTabelAktif">
+            <tr><td colspan="6">Memuat...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -1643,6 +1724,14 @@ let profilSaya = null;
     document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;
   }
 
+  // Subtab Audit/Keamanan cuma buat admin — sembunyikan link-nya, dan
+  // kalau ada yang coba nyelonong lewat gantiSubtabPendaftaran('audit')
+  // manual, blokir juga di dalam fungsi itu sendiri.
+  if (!profil || profil.role !== "admin") {
+    const navAudit = document.getElementById("navAudit");
+    if (navAudit) navAudit.style.display = "none";
+  }
+
   await muatKlaster();
   await muatAntrian();
   await muatDashboardRingkas();
@@ -1652,6 +1741,10 @@ const SUBTAB_PENDAFTARAN = ["dashboard", "identifikasi", "skrining", "koordinasi
 let koordinasiInterval = null;
 
 function gantiSubtabPendaftaran(tab) {
+  if (tab === "audit" && (!profilSaya || profilSaya.role !== "admin")) {
+    alert("Cuma admin yang boleh buka Audit / Keamanan.");
+    return;
+  }
   SUBTAB_PENDAFTARAN.forEach(t => {
     const panel = document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1));
     if (panel) panel.style.display = (t === tab) ? "block" : "none";
@@ -1663,6 +1756,17 @@ function gantiSubtabPendaftaran(tab) {
   if (tab === "rujukan") muatRujukan();
   if (tab === "kerahasiaan") muatKerahasiaan();
   if (tab === "survei") muatSurvei();
+  if (tab === "audit") {
+    const now = new Date();
+    const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+    const hariIni = now.toISOString().split("T")[0];
+    if (document.getElementById("audDari") && !document.getElementById("audDari").value) {
+      document.getElementById("audDari").value = awalBulan;
+      document.getElementById("audSampai").value = hariIni;
+    }
+    muatAuditLog();
+    muatSesiAktif();
+  }
   if (tab === "laporan") {
     const now = new Date();
     const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
@@ -4380,6 +4484,154 @@ async function simpanSurvei() {
   document.getElementById("srvKejelasan").value = "3";
   document.getElementById("srvKebersihan").value = "3";
   await muatSurvei();
+}
+
+// ============================================================
+// AUDIT / KEAMANAN (admin only)
+// ============================================================
+let auditLogCache = [];
+
+const LABEL_TABEL_AUDIT = { pasien: "Pasien", rekam_medis: "Rekam Medis", resep: "Resep" };
+const LABEL_AKSI_AUDIT = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
+const BADGE_AKSI_AUDIT = { insert: "badge-selesai", update: "badge-menunggu", delete: "badge-batal" };
+
+// Ambil satu baris teks ringkas dari jsonb data_lama/data_baru, biar
+// petugas gak perlu buka detail buat tau ini soal siapa/apa.
+function ringkasBarisAudit(row) {
+  const data = row.data_baru || row.data_lama || {};
+  if (row.tabel === "pasien") return data.nama || `Pasien #${(row.record_id || "").slice(0, 8)}`;
+  if (row.tabel === "resep") return data.nama_obat ? `Resep: ${data.nama_obat}` : `Resep #${(row.record_id || "").slice(0, 8)}`;
+  return `RM #${(row.record_id || "").slice(0, 8)}`;
+}
+
+async function muatAuditLog() {
+  const dari = document.getElementById("audDari").value;
+  const sampai = document.getElementById("audSampai").value;
+  const filterTabel = document.getElementById("audFilterTabel").value;
+  const filterAksi = document.getElementById("audFilterAksi").value;
+  const tbody = document.getElementById("audTabelLog");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  let q = supabaseClient
+    .from("audit_log")
+    .select("*, profil_pegawai(nama)")
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (dari) q = q.gte("created_at", `${dari}T00:00:00`);
+  if (sampai) q = q.lte("created_at", `${sampai}T23:59:59`);
+  if (filterTabel) q = q.eq("tabel", filterTabel);
+  if (filterAksi) q = q.eq("aksi", filterAksi);
+
+  const { data, error } = await q;
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`;
+    return;
+  }
+
+  auditLogCache = data || [];
+
+  document.getElementById("audStatTotal").textContent = auditLogCache.length;
+  document.getElementById("audStatInsert").textContent = auditLogCache.filter(r => r.aksi === "insert").length;
+  document.getElementById("audStatUpdate").textContent = auditLogCache.filter(r => r.aksi === "update").length;
+  document.getElementById("audStatDelete").textContent = auditLogCache.filter(r => r.aksi === "delete").length;
+
+  tbody.innerHTML = auditLogCache.length ? auditLogCache.map((r, i) => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${LABEL_TABEL_AUDIT[r.tabel] || r.tabel}</td>
+      <td><span class="badge ${BADGE_AKSI_AUDIT[r.aksi] || ""}">${LABEL_AKSI_AUDIT[r.aksi] || r.aksi}</span></td>
+      <td>${r.profil_pegawai ? r.profil_pegawai.nama : "-"}</td>
+      <td>${ringkasBarisAudit(r)}</td>
+      <td><button type="button" class="btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="toggleDetailAudit(${i})">Detail</button></td>
+    </tr>
+    <tr id="audDetail${i}" style="display:none;">
+      <td colspan="6">
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sebelum</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_lama ? JSON.stringify(r.data_lama, null, 2) : "(tidak ada — baris baru)"}</pre>
+          </div>
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sesudah</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_baru ? JSON.stringify(r.data_baru, null, 2) : "(tidak ada — baris dihapus)"}</pre>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Gak ada perubahan pada rentang & filter ini.</td></tr>`;
+}
+
+function toggleDetailAudit(i) {
+  const row = document.getElementById(`audDetail${i}`);
+  if (row) row.style.display = row.style.display === "none" ? "table-row" : "none";
+}
+
+function exportAuditLogCsv() {
+  if (!auditLogCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Waktu", "Tabel", "Aksi", "Petugas", "Ringkasan", "Record ID"];
+  const rows = auditLogCache.map(r => [
+    new Date(r.created_at).toLocaleString("id-ID"),
+    LABEL_TABEL_AUDIT[r.tabel] || r.tabel,
+    LABEL_AKSI_AUDIT[r.aksi] || r.aksi,
+    r.profil_pegawai ? r.profil_pegawai.nama : "-",
+    ringkasBarisAudit(r),
+    r.record_id || "-"
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("audDari").value;
+  const sampaiInput = document.getElementById("audSampai").value;
+  a.href = url;
+  a.download = `Audit_Log_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ---------- Manajemen Sesi Aktif ----------
+async function muatSesiAktif() {
+  const tbody = document.getElementById("sesiTabelAktif");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("sesi_aktif")
+    .select("*, profil_pegawai(nama, role)")
+    .eq("dicabut", false)
+    .order("last_active", { ascending: false });
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`;
+    return;
+  }
+
+  if (!data || !data.length) {
+    tbody.innerHTML = `<tr><td colspan="6">Gak ada sesi aktif tercatat.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(s => `
+    <tr>
+      <td>${s.profil_pegawai ? s.profil_pegawai.nama : "(pegawai dihapus)"}</td>
+      <td>${s.profil_pegawai ? s.profil_pegawai.role : "-"}</td>
+      <td>${s.perangkat || "-"}</td>
+      <td>${new Date(s.login_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${new Date(s.last_active).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
+      <td><button type="button" class="btn-danger" style="padding:4px 10px; font-size:12px;" onclick="paksaLogoutSesi('${s.pegawai_id}', '${(s.profil_pegawai ? s.profil_pegawai.nama : "pegawai ini").replace(/'/g, "\\'")}')">Paksa Logout</button></td>
+    </tr>
+  `).join("");
+}
+
+async function paksaLogoutSesi(pegawaiId, nama) {
+  if (pegawaiId === profilSaya?.id) { alert("Gak bisa paksa logout diri sendiri lewat sini. Pakai tombol Keluar biasa."); return; }
+  if (!confirm(`Paksa logout ${nama}? Pegawai ini akan otomatis ter-logout dalam ±30 detik.`)) return;
+
+  const { error } = await panggilAdmin("paksa_logout_pegawai", { pegawai_id: pegawaiId });
+  if (error) { alert(`Gagal: ${error}`); return; }
+
+  alert(`${nama} akan ter-logout otomatis dalam ±30 detik.`);
+  await muatSesiAktif();
 }
 </script>
 

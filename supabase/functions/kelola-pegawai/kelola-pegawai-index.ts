@@ -171,6 +171,24 @@ serve(async (req) => {
       }
 
       // ------------------------------------------------------
+      // Paksa logout satu pegawai. CATATAN: Supabase Auth admin API cuma
+      // bisa cabut sesi kalau kita punya JWT sesi itu (gak kita punya di
+      // server), jadi gak ada cara invalidasi token secara instan dari
+      // sini. Mekanismenya: tandai baris sesi_aktif pegawai ini "dicabut",
+      // browser pegawai itu polling tabel ini tiap ~30 detik lewat
+      // supabaseClient.js dan otomatis logout sendiri begitu kedeteksi.
+      case "paksa_logout_pegawai": {
+        const { pegawai_id } = payload ?? {};
+        if (!pegawai_id) return json({ error: "pegawai_id wajib." }, 400);
+        const { error } = await admin.from("sesi_aktif")
+          .update({ dicabut: true, dicabut_at: new Date().toISOString() })
+          .eq("pegawai_id", pegawai_id)
+          .eq("dicabut", false);
+        if (error) throw error;
+        return json({ data: { ok: true } });
+      }
+
+      // ------------------------------------------------------
       default:
         return json({ error: `Action gak dikenal: ${action}` }, 400);
     }
