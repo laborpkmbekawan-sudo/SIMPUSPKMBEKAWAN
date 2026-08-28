@@ -109,6 +109,7 @@ button.btn-primary {
 
 button.btn-primary:hover { background: var(--primary-dark); }
 
+.btn-secondary,
 button.btn-secondary {
   background: white;
   color: #374151;
@@ -121,6 +122,7 @@ button.btn-secondary {
   margin-left: 8px;
   transition: 0.15s;
 }
+.btn-secondary:hover,
 button.btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
 
 button.btn-danger {
