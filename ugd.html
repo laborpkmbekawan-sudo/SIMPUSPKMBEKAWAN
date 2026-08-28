@@ -269,7 +269,85 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
 
       </div>
       <div id="panelTindakan" style="display:none;">
-        <div class="ugd-segera"><div class="ic">✚</div><div class="t">Pemeriksaan &amp; Tindakan Gawat Darurat</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#1c7d7f;">
+          <h2><span class="card-num" style="background:#1c7d7f;">✚</span> Pilih Pasien</h2>
+          <select id="tindPilihPasien" onchange="pilihPasienTindakan(this.value)">
+            <option value="">-- Pilih pasien UGD aktif --</option>
+          </select>
+        </div>
+
+        <div id="tindWrap" style="display:none;">
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2>Pemeriksaan Awal &amp; Diagnosis Kerja — <span id="tindNamaPasien"></span></h2>
+            <div id="msgTindPeriksa"></div>
+            <div class="grid-3">
+              <div><label>Kesadaran</label>
+                <select id="tindKesadaran">
+                  <option value="">-- Pilih --</option>
+                  <option value="Compos Mentis">Compos Mentis</option>
+                  <option value="Apatis">Apatis</option>
+                  <option value="Somnolen">Somnolen</option>
+                  <option value="Sopor">Sopor</option>
+                  <option value="Koma">Koma</option>
+                </select>
+              </div>
+              <div><label>GCS</label><input type="text" id="tindGcs" placeholder="misal E4V5M6"></div>
+              <div><label>Saturasi O2 (%)</label><input type="text" id="tindSpo2" placeholder="misal 98"></div>
+              <div><label>Tekanan Darah</label><input type="text" id="tindTd" placeholder="120/80"></div>
+              <div><label>Nadi (x/menit)</label><input type="text" id="tindNadi"></div>
+              <div><label>Napas (x/menit)</label><input type="text" id="tindNapas"></div>
+              <div><label>Suhu (°C)</label><input type="text" id="tindSuhu"></div>
+            </div>
+            <label>Diagnosis Kerja (sementara)</label>
+            <textarea id="tindDiagnosis" placeholder="misal: Suspect Angina Pektoris"></textarea>
+            <button class="btn-primary" onclick="simpanPemeriksaanAwal()">Simpan Pemeriksaan &amp; Diagnosis</button>
+          </div>
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2>Tindakan Kegawatdaruratan</h2>
+            <div id="msgTindTindakan"></div>
+            <div class="grid-2">
+              <div><label>Nama Tindakan</label><input type="text" id="tindNamaTindakan" placeholder="misal: Pemasangan infus"></div>
+              <div><label>Catatan</label><input type="text" id="tindCatatanTindakan" placeholder="opsional"></div>
+            </div>
+            <button class="btn-secondary" onclick="tambahBarisTindakan()">+ Tambah ke Daftar</button>
+            <ul class="checklist-obat" id="listTindakanBaru" style="margin:12px 0;"></ul>
+            <button class="btn-primary" onclick="simpanTindakan()">Simpan Tindakan</button>
+
+            <h2 style="margin-top:18px;">Riwayat Tindakan Kunjungan Ini</h2>
+            <div id="riwayatTindakan"><p style="color:var(--muted); font-size:13px;">Belum ada tindakan.</p></div>
+          </div>
+
+          <div class="card" style="--accent:#6a4c93;">
+            <h2>Permintaan Pemeriksaan Cito</h2>
+            <div id="msgTindCito"></div>
+            <div class="grid-2">
+              <div><label>Jenis Pemeriksaan</label><input type="text" id="tindJenisCito" placeholder="misal: Darah lengkap, GDS, Rontgen thorax"></div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="ajukanCito()" style="margin-bottom:12px;">Ajukan Cito ke Laboratorium</button>
+              </div>
+            </div>
+            <div id="riwayatCito"></div>
+          </div>
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2>Resep Obat Emergency</h2>
+            <div id="msgTindResep"></div>
+            <div class="grid-2">
+              <div><label>Obat</label><select id="tindObatSelect"><option value="">-- Pilih obat --</option></select></div>
+              <div><label>Jumlah</label><input type="number" id="tindJumlahObat" min="1" value="1"></div>
+              <div><label>Satuan</label><input type="text" id="tindSatuanObat" placeholder="ampul/botol/tablet"></div>
+              <div><label>Aturan Pakai</label><input type="text" id="tindAturanObat" placeholder="misal: bolus IV sekali"></div>
+            </div>
+            <button class="btn-secondary" onclick="tambahBarisResep()">+ Tambah ke Resep</button>
+            <ul class="checklist-obat" id="listResepBaru" style="margin:12px 0;"></ul>
+            <button class="btn-primary" onclick="simpanResepEmergency()">Kirim Resep ke Farmasi</button>
+          </div>
+
+        </div>
+
       </div>
       <div id="panelObservasi" style="display:none;">
         <div class="ugd-segera"><div class="ic">📈</div><div class="t">Observasi</div>Menu ini segera dibangun di sesi berikutnya.</div>
@@ -337,6 +415,7 @@ function gantiSubtabUgd(tab) {
   document.querySelector(".topbar h1").textContent = judul[tab] || "UGD";
   if (tab === "dashboard") muatDashboardUgd();
   if (tab === "triase") muatTriase();
+  if (tab === "tindakan") muatTindakan();
 }
 
 // ---------- TRIASE ----------
@@ -485,7 +564,263 @@ async function simpanTriase() {
   await muatTriase();
 }
 
-// ---------- DASHBOARD: muat statistik, alert, list pasien aktif ----------
+// ---------- PEMERIKSAAN & TINDAKAN ----------
+let pasienAktifCacheTindakan = [];
+let kunjunganTerpilihTindakan = null; // { id: kunjungan_ugd.id, kunjungan_id, pasien_id, nama, no_rm }
+let obatMasterCacheUgd = [];
+let daftarTindakanBaru = [];
+let daftarResepBaru = [];
+
+async function muatTindakan() {
+  const { data, error } = await supabaseClient
+    .from("kunjungan_ugd")
+    .select("id, kunjungan_id, pasien_id, triase_warna, status_ugd, kunjungan(no_kunjungan), pasien(nama, no_rm)")
+    .in("status_ugd", ["baru", "ditangani", "observasi"])
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    document.getElementById("tindPilihPasien").innerHTML = `<option value="">Gagal muat: ${error.message}</option>`;
+    return;
+  }
+
+  pasienAktifCacheTindakan = data || [];
+  const sel = document.getElementById("tindPilihPasien");
+  sel.innerHTML = `<option value="">-- Pilih pasien UGD aktif --</option>` +
+    pasienAktifCacheTindakan.map(p => `<option value="${p.id}">${p.pasien?.nama || "-"} (No. RM ${p.pasien?.no_rm || "-"}) ${p.triase_warna ? "— " + p.triase_warna.toUpperCase() : ""}</option>`).join("");
+
+  if (!obatMasterCacheUgd.length) {
+    const { data: obatData } = await supabaseClient.from("obat").select("nama_obat, dosis").order("nama_obat");
+    if (obatData) {
+      const seen = new Set();
+      obatMasterCacheUgd = obatData.filter(o => {
+        const key = `${o.nama_obat}|${o.dosis || ""}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      document.getElementById("tindObatSelect").innerHTML = `<option value="">-- Pilih obat --</option>` +
+        obatMasterCacheUgd.map(o => `<option value="${o.nama_obat}|||${o.dosis || ""}">${o.nama_obat}${o.dosis ? " — " + o.dosis : ""}</option>`).join("");
+    }
+  }
+}
+
+async function pilihPasienTindakan(kunjunganUgdId) {
+  if (!kunjunganUgdId) {
+    document.getElementById("tindWrap").style.display = "none";
+    kunjunganTerpilihTindakan = null;
+    return;
+  }
+  const p = pasienAktifCacheTindakan.find(x => x.id === kunjunganUgdId);
+  if (!p) return;
+  kunjunganTerpilihTindakan = p;
+  document.getElementById("tindNamaPasien").textContent = `${p.pasien?.nama || "-"} (No. RM ${p.pasien?.no_rm || "-"})`;
+  document.getElementById("tindWrap").style.display = "block";
+  daftarTindakanBaru = [];
+  daftarResepBaru = [];
+  renderListTindakanBaru();
+  renderListResepBaru();
+
+  // Ambil data pemeriksaan/diagnosis + riwayat tindakan + riwayat cito terkini
+  const [{ data: kData }, { data: tindData }, { data: citoData }] = await Promise.all([
+    supabaseClient.from("kunjungan").select("kesadaran, gcs, saturasi_o2, tekanan_darah, nadi, respirasi, suhu").eq("id", p.kunjungan_id).single(),
+    supabaseClient.from("tindakan_medis").select("daftar_tindakan, created_at, profil_pegawai:petugas_id(nama)").eq("kunjungan_id", p.kunjungan_id).order("created_at", { ascending: false }),
+    supabaseClient.from("rujukan_lab").select("jenis_pemeriksaan, status, is_cito, created_at").eq("kunjungan_asal_id", p.kunjungan_id).order("created_at", { ascending: false })
+  ]);
+
+  const { data: ugdData } = await supabaseClient.from("kunjungan_ugd").select("diagnosis_kerja").eq("id", p.id).single();
+
+  document.getElementById("tindKesadaran").value = kData?.kesadaran || "";
+  document.getElementById("tindGcs").value = kData?.gcs || "";
+  document.getElementById("tindSpo2").value = kData?.saturasi_o2 || "";
+  document.getElementById("tindTd").value = kData?.tekanan_darah || "";
+  document.getElementById("tindNadi").value = kData?.nadi || "";
+  document.getElementById("tindNapas").value = kData?.respirasi || "";
+  document.getElementById("tindSuhu").value = kData?.suhu || "";
+  document.getElementById("tindDiagnosis").value = ugdData?.diagnosis_kerja || "";
+
+  const riwayatDiv = document.getElementById("riwayatTindakan");
+  if (!tindData || !tindData.length) {
+    riwayatDiv.innerHTML = `<p style="color:var(--muted); font-size:13px;">Belum ada tindakan.</p>`;
+  } else {
+    riwayatDiv.innerHTML = tindData.map(t => `
+      <div style="font-size:12.5px; padding:8px 0; border-bottom:1px dashed var(--border);">
+        <strong>${jamSingkat(t.created_at)}</strong> — ${t.profil_pegawai?.nama || "-"}<br>
+        ${(t.daftar_tindakan || []).map(x => `${x.nama_tindakan}${x.catatan ? " (" + x.catatan + ")" : ""}`).join(", ")}
+      </div>
+    `).join("");
+  }
+
+  const citoDiv = document.getElementById("riwayatCito");
+  if (!citoData || !citoData.length) {
+    citoDiv.innerHTML = "";
+  } else {
+    citoDiv.innerHTML = `<h2 style="margin-top:14px; font-size:13px;">Riwayat Permintaan Cito</h2>` + citoData.map(c => `
+      <div style="font-size:12.5px; padding:8px 0; border-bottom:1px dashed var(--border);">
+        ${jamSingkat(c.created_at)} — ${c.jenis_pemeriksaan} — <span class="badge-status-ugd ${c.status === "selesai" ? "pulang" : "baru"}">${c.status === "selesai" ? "Selesai" : "Menunggu"}</span>
+      </div>
+    `).join("");
+  }
+}
+
+async function simpanPemeriksaanAwal() {
+  const msgBox = document.getElementById("msgTindPeriksa");
+  if (!kunjunganTerpilihTindakan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const { error: errK } = await supabaseClient.from("kunjungan").update({
+    kesadaran: document.getElementById("tindKesadaran").value || null,
+    gcs: document.getElementById("tindGcs").value.trim() || null,
+    saturasi_o2: document.getElementById("tindSpo2").value.trim() || null,
+    tekanan_darah: document.getElementById("tindTd").value.trim() || null,
+    nadi: document.getElementById("tindNadi").value.trim() || null,
+    respirasi: document.getElementById("tindNapas").value.trim() || null,
+    suhu: document.getElementById("tindSuhu").value.trim() || null
+  }).eq("id", kunjunganTerpilihTindakan.kunjungan_id);
+
+  const { error: errU } = await supabaseClient.from("kunjungan_ugd").update({
+    diagnosis_kerja: document.getElementById("tindDiagnosis").value.trim() || null,
+    status_ugd: kunjunganTerpilihTindakan.status_ugd === "baru" ? "ditangani" : kunjunganTerpilihTindakan.status_ugd
+  }).eq("id", kunjunganTerpilihTindakan.id);
+
+  if (errK || errU) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${(errK || errU).message}</div>`;
+    return;
+  }
+  msgBox.innerHTML = `<div class="msg msg-success">Pemeriksaan &amp; diagnosis kerja tersimpan.</div>`;
+}
+
+function tambahBarisTindakan() {
+  const nama = document.getElementById("tindNamaTindakan").value.trim();
+  const catatan = document.getElementById("tindCatatanTindakan").value.trim();
+  if (!nama) return;
+  daftarTindakanBaru.push({ nama_tindakan: nama, catatan: catatan || null });
+  document.getElementById("tindNamaTindakan").value = "";
+  document.getElementById("tindCatatanTindakan").value = "";
+  renderListTindakanBaru();
+}
+
+function renderListTindakanBaru() {
+  const ul = document.getElementById("listTindakanBaru");
+  if (!daftarTindakanBaru.length) { ul.innerHTML = ""; return; }
+  ul.innerHTML = daftarTindakanBaru.map((t, i) => `
+    <li><label>${t.nama_tindakan}${t.catatan ? " — " + t.catatan : ""}</label>
+      <button type="button" class="btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="daftarTindakanBaru.splice(${i},1); renderListTindakanBaru();">Hapus</button>
+    </li>`).join("");
+}
+
+async function simpanTindakan() {
+  const msgBox = document.getElementById("msgTindTindakan");
+  if (!kunjunganTerpilihTindakan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!daftarTindakanBaru.length) { msgBox.innerHTML = `<div class="msg msg-error">Tambah minimal 1 tindakan dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { error } = await supabaseClient.from("tindakan_medis").insert({
+    kunjungan_id: kunjunganTerpilihTindakan.kunjungan_id,
+    daftar_tindakan: daftarTindakanBaru,
+    petugas_id: user.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan tindakan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Tindakan tersimpan.</div>`;
+  daftarTindakanBaru = [];
+  renderListTindakanBaru();
+  await pilihPasienTindakan(kunjunganTerpilihTindakan.id);
+}
+
+async function ajukanCito() {
+  const msgBox = document.getElementById("msgTindCito");
+  if (!kunjunganTerpilihTindakan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  const jenis = document.getElementById("tindJenisCito").value.trim();
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Isi jenis pemeriksaan dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { data: klasterLk, error: errKlaster } = await supabaseClient.from("klaster").select("id").eq("kode", "LK").single();
+  if (errKlaster || !klasterLk) { msgBox.innerHTML = `<div class="msg msg-error">Klaster LK tidak ditemukan.</div>`; return; }
+
+  const { data: noKunjunganLab, error: errNoK } = await supabaseClient.rpc("generate_no_kunjungan");
+  const { data: noAntrianLab, error: errNoA } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: klasterLk.id });
+  if (errNoK || errNoA) { msgBox.innerHTML = `<div class="msg msg-error">Gagal generate nomor: ${(errNoK || errNoA).message}</div>`; return; }
+
+  const p = pasienAktifCacheTindakan.find(x => x.id === kunjunganTerpilihTindakan.id);
+
+  const { data: kunjunganLab, error: errKLab } = await supabaseClient.from("kunjungan").insert({
+    no_kunjungan: noKunjunganLab,
+    pasien_id: kunjunganTerpilihTindakan.pasien_id,
+    klaster_id: klasterLk.id,
+    tipe_layanan: "lab",
+    jenis_bayar: "Umum",
+    no_antrian: noAntrianLab,
+    status: "menunggu",
+    is_prioritas: true,
+    keterangan_prioritas: "Cito dari UGD",
+    keluhan_awal: `Cito UGD: ${jenis}`,
+    created_by: user.id
+  }).select("id").single();
+
+  if (errKLab) { msgBox.innerHTML = `<div class="msg msg-error">Gagal buat antrian lab: ${errKLab.message}</div>`; return; }
+
+  const { error: errRl } = await supabaseClient.from("rujukan_lab").insert({
+    kunjungan_asal_id: kunjunganTerpilihTindakan.kunjungan_id,
+    kunjungan_tujuan_id: kunjunganLab.id,
+    jenis_pemeriksaan: jenis,
+    is_cito: true,
+    status: "menunggu",
+    dibuat_oleh: user.id
+  });
+
+  if (errRl) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan permintaan cito: ${errRl.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Permintaan cito diajukan — antrian No. ${noAntrianLab} di Laboratorium.</div>`;
+  document.getElementById("tindJenisCito").value = "";
+  await pilihPasienTindakan(kunjunganTerpilihTindakan.id);
+}
+
+function tambahBarisResep() {
+  const namaDosis = document.getElementById("tindObatSelect").value;
+  const jumlah = parseInt(document.getElementById("tindJumlahObat").value, 10);
+  const satuan = document.getElementById("tindSatuanObat").value.trim();
+  const aturan = document.getElementById("tindAturanObat").value.trim();
+  if (!namaDosis || !jumlah || jumlah <= 0) return;
+  const [nama_obat, dosis] = namaDosis.split("|||");
+  daftarResepBaru.push({ nama_obat, dosis: dosis || null, jumlah, satuan: satuan || null, aturan_pakai: aturan || null });
+  document.getElementById("tindObatSelect").value = "";
+  document.getElementById("tindJumlahObat").value = "1";
+  document.getElementById("tindSatuanObat").value = "";
+  document.getElementById("tindAturanObat").value = "";
+  renderListResepBaru();
+}
+
+function renderListResepBaru() {
+  const ul = document.getElementById("listResepBaru");
+  if (!daftarResepBaru.length) { ul.innerHTML = ""; return; }
+  ul.innerHTML = daftarResepBaru.map((o, i) => `
+    <li><label>${o.nama_obat}${o.dosis ? " " + o.dosis : ""} — ${o.jumlah}${o.satuan ? " " + o.satuan : ""}${o.aturan_pakai ? " (" + o.aturan_pakai + ")" : ""}</label>
+      <button type="button" class="btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="daftarResepBaru.splice(${i},1); renderListResepBaru();">Hapus</button>
+    </li>`).join("");
+}
+
+async function simpanResepEmergency() {
+  const msgBox = document.getElementById("msgTindResep");
+  if (!kunjunganTerpilihTindakan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!daftarResepBaru.length) { msgBox.innerHTML = `<div class="msg msg-error">Tambah minimal 1 obat dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { error } = await supabaseClient.from("resep").insert({
+    kunjungan_id: kunjunganTerpilihTindakan.kunjungan_id,
+    dokter_id: user.id,
+    daftar_obat: daftarResepBaru,
+    is_cito: true,
+    status: "menunggu"
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal kirim resep: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Resep emergency terkirim ke Farmasi.</div>`;
+  daftarResepBaru = [];
+  renderListResepBaru();
+}
+
+
 async function muatDashboardUgd() {
   const { data, error } = await supabaseClient
     .from("kunjungan_ugd")

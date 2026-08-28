@@ -1234,6 +1234,25 @@ create trigger trg_audit_kunjungan_ugd after insert or update or delete on kunju
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 40. MODUL UGD — FASE 2: Pemeriksaan & Tindakan Gawat Darurat
+--     Reuse tabel yang sudah ada (kunjungan, tindakan_medis, resep,
+--     rujukan_lab) — cuma nambah kolom yang belum ada, gak bikin
+--     tabel baru. Kolom vital tambahan & is_cito berguna juga buat
+--     modul lain di luar UGD (RM umum, Farmasi, Lab).
+-- ============================================================
+alter table kunjungan add column if not exists kesadaran text;
+alter table kunjungan add column if not exists gcs text;
+alter table kunjungan add column if not exists saturasi_o2 text;
+
+alter table kunjungan_ugd add column if not exists diagnosis_kerja text;
+
+alter table rujukan_lab add column if not exists is_cito boolean not null default false;
+alter table resep add column if not exists is_cito boolean not null default false;
+
+create index if not exists idx_rujukan_lab_cito on rujukan_lab(is_cito) where is_cito = true;
+create index if not exists idx_resep_cito on resep(is_cito) where is_cito = true;
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
