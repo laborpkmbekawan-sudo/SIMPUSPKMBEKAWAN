@@ -1203,6 +1203,37 @@ alter table sesi_aktif enable row level security;
 create policy "authenticated_all_sesi_aktif" on sesi_aktif for all to authenticated using (true) with check (true);
 
 -- ============================================================
+-- 39. MODUL UGD — FASE 1: Kunjungan UGD (dasar Dashboard & Triase)
+--     kunjungan_ugd adalah EKSTENSI dari kunjungan, bukan tabel
+--     terpisah — 1 kunjungan (klaster LK) bisa punya maks 1 baris
+--     kunjungan_ugd. Field klinis (SOAP, tindakan, rujukan) tetap
+--     pakai tabel rekam_medis/tindakan_medis/rujukan yang sudah ada,
+--     supaya gak dobel-bikin.
+-- ============================================================
+create table if not exists kunjungan_ugd (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_id uuid not null unique references kunjungan(id),
+  pasien_id uuid not null references pasien(id),
+  status_ugd text not null default 'baru' check (status_ugd in ('baru', 'ditangani', 'observasi', 'dirujuk', 'pulang', 'meninggal')),
+  triase_warna text check (triase_warna in ('merah', 'kuning', 'hijau', 'hitam')),
+  waktu_triase timestamptz,
+  petugas_triase_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  created_by uuid references profil_pegawai(id)
+);
+
+create index if not exists idx_kunjungan_ugd_status on kunjungan_ugd(status_ugd);
+create index if not exists idx_kunjungan_ugd_triase on kunjungan_ugd(triase_warna);
+create index if not exists idx_kunjungan_ugd_pasien on kunjungan_ugd(pasien_id);
+
+alter table kunjungan_ugd enable row level security;
+create policy "authenticated_all_kunjungan_ugd" on kunjungan_ugd for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kunjungan_ugd on kunjungan_ugd;
+create trigger trg_audit_kunjungan_ugd after insert or update or delete on kunjungan_ugd
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

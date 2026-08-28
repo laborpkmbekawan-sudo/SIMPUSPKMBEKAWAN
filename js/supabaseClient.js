@@ -198,7 +198,7 @@ async function panggilAdmin(action, payload) {
 // admin       -> semua halaman
 // petugas     -> index.html (Pendaftaran) saja
 // staff       -> index.html (Pendaftaran) saja
-// dokter/perawat/bidan -> rekam-medis.html saja (dibatasi ke klaster tempat ditugaskan)
+// dokter/perawat/bidan -> rekam-medis.html + ugd.html (dibatasi ke klaster tempat ditugaskan)
 // farmasi     -> apotek.html saja
 //
 // Di luar ini, siapapun yang punya baris di tabel hak_akses buat modul
@@ -206,12 +206,12 @@ async function panggilAdmin(action, payload) {
 // akses ke rekam-medis.html, walau role dasarnya bukan dokter/perawat/bidan.
 // ============================================================
 const AKSES_HALAMAN = {
-  admin: ["index.html", "rekam-medis.html", "apotek.html", "pengaturan.html"],
+  admin: ["index.html", "rekam-medis.html", "apotek.html", "ugd.html", "pengaturan.html"],
   petugas: ["index.html", "rekam-medis.html", "pengaturan.html"],
   staff: ["index.html", "rekam-medis.html", "pengaturan.html"],
-  dokter: ["rekam-medis.html", "pengaturan.html"],
-  perawat: ["rekam-medis.html", "pengaturan.html"],
-  bidan: ["rekam-medis.html", "pengaturan.html"],
+  dokter: ["rekam-medis.html", "ugd.html", "pengaturan.html"],
+  perawat: ["rekam-medis.html", "ugd.html", "pengaturan.html"],
+  bidan: ["rekam-medis.html", "ugd.html", "pengaturan.html"],
   farmasi: ["apotek.html", "pengaturan.html"]
 };
 

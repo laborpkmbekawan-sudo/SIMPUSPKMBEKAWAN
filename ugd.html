@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UGD - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ================= UGD (skema Navy/Orange, konsisten sama Apotek) ================= */
+.dash-content, .topbar { --navy:#0f2942; --navy-2:#173b5e; --teal-a:#1c7d7f; --teal-2:#26a3a0; --orange:#e0793c; --plum:#6a4c93; }
+
+.sidebar { background: linear-gradient(180deg, #0f2942 0%, #173b5e 100%) !important; }
+.sidebar nav a.active { border-left: 3px solid #e0793c !important; background: rgba(255,255,255,.09) !important; }
+.sidebar nav a:hover { background: rgba(255,255,255,.06) !important; }
+.topbar h1 { color: var(--navy); }
+.ph-group-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.45); text-transform: uppercase; padding: 14px 18px 4px; }
+
+.dash-content .card { border-left: 4px solid var(--accent, var(--teal-2)); }
+.dash-content .card h2 { display: flex; align-items: center; gap: 8px; }
+
+.ugd-segera { text-align: center; padding: 50px 20px; color: var(--muted); }
+.ugd-segera .ic { font-size: 32px; margin-bottom: 10px; }
+.ugd-segera .t { font-size: 14px; font-weight: 700; color: var(--navy-2); margin-bottom: 6px; }
+
+/* Badge triase */
+.badge-triase { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700; color:#fff; }
+.badge-triase.merah { background:#c0503f; }
+.badge-triase.kuning { background:#c98a1a; }
+.badge-triase.hijau { background:#2f9e5c; }
+.badge-triase.hitam { background:#333; }
+.badge-triase.belum { background:#9ca3af; }
+
+.badge-status-ugd { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600; }
+.badge-status-ugd.baru { background:#fff4d6; color:#b77900; }
+.badge-status-ugd.ditangani { background:#e8f1ff; color:#216ac5; }
+.badge-status-ugd.observasi { background:#ede9fe; color:#5b21b6; }
+.badge-status-ugd.dirujuk { background:#fdf1e8; color:#e0793c; }
+.badge-status-ugd.pulang { background:#e5f7ef; color:#16865c; }
+.badge-status-ugd.meninggal { background:#333; color:#fff; }
+
+.ugd-alert-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid rgba(0,0,0,0.06); font-size:13px; }
+.ugd-alert-row:last-child { border-bottom:none; }
+.ugd-alert-row strong { display:block; font-size:13px; }
+.ugd-alert-row .sub { font-size:11.5px; color:var(--muted); }
+
+.ugd-stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+.ugd-stat-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; border-left:4px solid var(--accent,#999); }
+.ugd-stat-card .label { font-size:11.5px; color:var(--muted); margin-bottom:6px; }
+.ugd-stat-card .value { font-size:24px; font-weight:700; color:#111827; }
+
+tr.ugd-row-clickable { cursor:pointer; }
+tr.ugd-row-clickable:hover td { background:#f7fafb; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+    </div>
+
+    <nav>
+    <div class="ph-group-title">UGD</div>
+    <a class="active" id="navDashboard" onclick="gantiSubtabUgd('dashboard')">Dashboard</a>
+    <a id="navTriase" onclick="gantiSubtabUgd('triase')">Triase</a>
+    <a id="navTindakan" onclick="gantiSubtabUgd('tindakan')">Pemeriksaan &amp; Tindakan</a>
+    <a id="navObservasi" onclick="gantiSubtabUgd('observasi')">Observasi</a>
+    <a id="navRujukan" onclick="gantiSubtabUgd('rujukan')">Rujukan Gawat Darurat</a>
+
+    <div class="ph-group-title">Dokumentasi &amp; Koordinasi</div>
+    <a id="navRm" onclick="gantiSubtabUgd('rm')">Rekam Medis Kegawatdaruratan</a>
+    <a id="navKoordinasi" onclick="gantiSubtabUgd('koordinasi')">Koordinasi Lintas Klaster</a>
+
+    <div class="ph-group-title">Laporan &amp; Audit</div>
+    <a id="navLaporanInternal" onclick="gantiSubtabUgd('laporan-internal')">Laporan Internal</a>
+    <a id="navLaporanDinas" onclick="gantiSubtabUgd('laporan-dinas')">Laporan ke Dinas Kesehatan</a>
+    <a id="navAudit" onclick="gantiSubtabUgd('audit')">Audit / Keamanan</a>
+
+    <div class="ph-group-title">Modul Lain</div>
+    <a href="index.html">Pendaftaran</a>
+    <a href="rekam-medis.html">Rekam Medis</a>
+    <a href="apotek.html">Apotek</a>
+    <a href="pengaturan.html">Pengaturan</a>
+    </nav>
+  </aside>
+
+  <div class="main-wrap">
+
+    <div class="topbar">
+      <h1>Dashboard UGD</h1>
+      <div class="user-info">
+        <span id="namaUser">Memuat...</span>
+        <button onclick="logout()">Keluar</button>
+      </div>
+    </div>
+
+    <div class="dash-content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <div id="panelDashboard">
+
+        <div class="ugd-stat-grid">
+          <div class="ugd-stat-card" style="--accent:#173b5e;">
+            <div class="label">Pasien UGD Aktif</div>
+            <div class="value" id="statAktif">0</div>
+          </div>
+          <div class="ugd-stat-card" style="--accent:#c0503f;">
+            <div class="label">Triase Merah</div>
+            <div class="value" id="statMerah">0</div>
+          </div>
+          <div class="ugd-stat-card" style="--accent:#c98a1a;">
+            <div class="label">Triase Kuning</div>
+            <div class="value" id="statKuning">0</div>
+          </div>
+          <div class="ugd-stat-card" style="--accent:#2f9e5c;">
+            <div class="label">Triase Hijau</div>
+            <div class="value" id="statHijau">0</div>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;" id="cardAlertPrioritas">
+          <h2><span class="card-num" style="background:#c0503f;">!</span> Alert Prioritas Tinggi</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pasien hasil triase Merah/Kuning yang belum selesai ditangani — supaya gak lengah walau UGD lagi ramai.</p>
+          <div id="listAlertPrioritas"><p style="color:var(--muted); font-size:13px;">Memuat...</p></div>
+        </div>
+
+        <div class="card" style="--accent:#1c7d7f;">
+          <h2><span class="card-num" style="background:#1c7d7f;">＋</span> Daftarkan Pasien UGD</h2>
+          <div id="msgUgdDaftar"></div>
+
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / Nama)</label>
+              <input type="text" id="ugdCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienUgd();}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienUgd()" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+
+          <div id="ugdHasilCari"></div>
+          <div id="ugdDaftarHasilCari"></div>
+
+          <form id="formUgdPasienBaru" style="display:none; margin-top:16px; border-top:1px solid #e5e7eb; padding-top:16px;">
+            <h2>Data Pasien Baru</h2>
+            <div class="grid-2">
+              <div>
+                <label>NIK *</label>
+                <input type="text" id="ugdNik" maxlength="16" required>
+              </div>
+              <div>
+                <label>Nama Lengkap *</label>
+                <input type="text" id="ugdNama" required>
+              </div>
+              <div>
+                <label>Tanggal Lahir *</label>
+                <input type="date" id="ugdTglLahir" required>
+              </div>
+              <div>
+                <label>Jenis Kelamin *</label>
+                <select id="ugdJk" required>
+                  <option value="">-- Pilih --</option>
+                  <option value="L">Laki-laki</option>
+                  <option value="P">Perempuan</option>
+                </select>
+              </div>
+              <div>
+                <label>No. HP</label>
+                <input type="text" id="ugdHp">
+              </div>
+              <div>
+                <label>Alamat</label>
+                <input type="text" id="ugdAlamat">
+              </div>
+            </div>
+            <button type="submit" class="btn-primary">Simpan &amp; Daftarkan ke UGD</button>
+            <button type="button" class="btn-secondary" onclick="document.getElementById('formUgdPasienBaru').style.display='none';">Batal</button>
+          </form>
+
+          <div id="ugdCardKonfirmasi" style="display:none; margin-top:16px; border-top:1px solid #e5e7eb; padding-top:16px;">
+            <div class="info-block">
+              <div class="info-row"><label>Nama</label><span id="ugdKNama"></span></div>
+              <div class="info-row"><label>No. RM</label><span id="ugdKNoRm"></span></div>
+              <div class="info-row"><label>NIK</label><span id="ugdKNik"></span></div>
+            </div>
+            <div style="margin-top:12px;">
+              <label>Keluhan Utama Saat Datang</label>
+              <textarea id="ugdKeluhan" placeholder="Keluhan singkat saat pasien tiba di UGD"></textarea>
+            </div>
+            <button class="btn-primary" onclick="daftarkanKeUgd()">Daftarkan ke UGD</button>
+            <button class="btn-secondary" onclick="batalkanPilihanUgd()">Batal</button>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▣</span> Pasien UGD Aktif</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Diurutkan berdasar prioritas triase (Merah &gt; Kuning &gt; Hijau &gt; belum triase), bukan urutan datang.</p>
+          <table>
+            <thead><tr><th>Triase</th><th>Nama</th><th>No. RM</th><th>Keluhan</th><th>Status</th><th>Waktu Masuk</th></tr></thead>
+            <tbody id="tabelPasienAktifUgd"><tr><td colspan="6">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- ============ SUBTAB LAIN — SEGERA DIBANGUN ============ -->
+      <div id="panelTriase" style="display:none;">
+        <div class="ugd-segera"><div class="ic">🚨</div><div class="t">Triase</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelTindakan" style="display:none;">
+        <div class="ugd-segera"><div class="ic">✚</div><div class="t">Pemeriksaan &amp; Tindakan Gawat Darurat</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelObservasi" style="display:none;">
+        <div class="ugd-segera"><div class="ic">📈</div><div class="t">Observasi</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelRujukan" style="display:none;">
+        <div class="ugd-segera"><div class="ic">↦</div><div class="t">Rujukan Gawat Darurat</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelRm" style="display:none;">
+        <div class="ugd-segera"><div class="ic">▤</div><div class="t">Rekam Medis Kegawatdaruratan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelKoordinasi" style="display:none;">
+        <div class="ugd-segera"><div class="ic">🔗</div><div class="t">Koordinasi Lintas Klaster</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelLaporanInternal" style="display:none;">
+        <div class="ugd-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelLaporanDinas" style="display:none;">
+        <div class="ugd-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelAudit" style="display:none;">
+        <div class="ugd-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+let profilSaya = null;
+let pasienTerpilihUgd = null;
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  profilSaya = await getProfilSaya();
+  cekAksesHalaman(profilSaya, "ugd.html");
+  if (profilSaya) {
+    document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+  }
+
+  await muatDashboardUgd();
+})();
+
+// ---------- Sub-tab nav ----------
+const SUBTAB_UGD = ["dashboard", "triase", "tindakan", "observasi", "rujukan", "rm", "koordinasi", "laporan-internal", "laporan-dinas", "audit"];
+function idPartUgd(tab) {
+  return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
+}
+function gantiSubtabUgd(tab) {
+  SUBTAB_UGD.forEach(t => {
+    const idPart = idPartUgd(t);
+    const panel = document.getElementById("panel" + idPart);
+    if (panel) panel.style.display = (t === tab) ? "block" : "none";
+    const nav = document.getElementById("nav" + idPart);
+    if (nav) nav.classList.toggle("active", t === tab);
+  });
+  const judul = {
+    "dashboard": "Dashboard UGD", "triase": "Triase", "tindakan": "Pemeriksaan & Tindakan Gawat Darurat",
+    "observasi": "Observasi", "rujukan": "Rujukan Gawat Darurat", "rm": "Rekam Medis Kegawatdaruratan",
+    "koordinasi": "Koordinasi Lintas Klaster", "laporan-internal": "Laporan Internal",
+    "laporan-dinas": "Laporan ke Dinas Kesehatan", "audit": "Audit / Keamanan"
+  };
+  document.querySelector(".topbar h1").textContent = judul[tab] || "UGD";
+  if (tab === "dashboard") muatDashboardUgd();
+}
+
+// ---------- DASHBOARD: muat statistik, alert, list pasien aktif ----------
+async function muatDashboardUgd() {
+  const { data, error } = await supabaseClient
+    .from("kunjungan_ugd")
+    .select("id, status_ugd, triase_warna, waktu_triase, petugas_triase_id, created_at, kunjungan(id, no_kunjungan, keluhan_awal), pasien(nama, no_rm, nik)")
+    .in("status_ugd", ["baru", "ditangani", "observasi", "dirujuk"])
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    document.getElementById("tabelPasienAktifUgd").innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`;
+    document.getElementById("listAlertPrioritas").innerHTML = `<p style="color:var(--muted); font-size:13px;">Gagal muat data.</p>`;
+    return;
+  }
+
+  const list = data || [];
+  const urutanTriase = { merah: 0, kuning: 1, hijau: 2, hitam: 3 };
+  list.sort((a, b) => {
+    const pa = a.triase_warna ? urutanTriase[a.triase_warna] : 9;
+    const pb = b.triase_warna ? urutanTriase[b.triase_warna] : 9;
+    if (pa !== pb) return pa - pb;
+    return new Date(a.created_at) - new Date(b.created_at);
+  });
+
+  // Stat cards
+  document.getElementById("statAktif").textContent = list.length;
+  document.getElementById("statMerah").textContent = list.filter(p => p.triase_warna === "merah").length;
+  document.getElementById("statKuning").textContent = list.filter(p => p.triase_warna === "kuning").length;
+  document.getElementById("statHijau").textContent = list.filter(p => p.triase_warna === "hijau").length;
+
+  // Alert prioritas tinggi: Merah/Kuning yang belum "dirujuk"/"pulang"
+  const prioritas = list.filter(p => p.triase_warna === "merah" || p.triase_warna === "kuning");
+  const alertDiv = document.getElementById("listAlertPrioritas");
+  if (!prioritas.length) {
+    alertDiv.innerHTML = `<p style="color:var(--muted); font-size:13px;">Tidak ada pasien prioritas tinggi saat ini.</p>`;
+  } else {
+    alertDiv.innerHTML = prioritas.map(p => `
+      <div class="ugd-alert-row">
+        <span class="badge-triase ${p.triase_warna}">${p.triase_warna === "merah" ? "🔴 Merah" : "🟡 Kuning"}</span>
+        <div>
+          <strong>${p.pasien?.nama || "-"}</strong>
+          <span class="sub">No. RM ${p.pasien?.no_rm || "-"} — ${labelStatusUgd(p.status_ugd)} — masuk ${jamSingkat(p.created_at)}</span>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  // Tabel pasien aktif
+  const tbody = document.getElementById("tabelPasienAktifUgd");
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="6">Belum ada pasien UGD aktif.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(p => `
+    <tr class="ugd-row-clickable" title="Klik untuk lanjut ke Triase (menyusul)">
+      <td>${badgeTriaseHtml(p.triase_warna)}</td>
+      <td>${p.pasien?.nama || "-"}</td>
+      <td>${p.pasien?.no_rm || "-"}</td>
+      <td>${p.kunjungan?.keluhan_awal || "-"}</td>
+      <td><span class="badge-status-ugd ${p.status_ugd}">${labelStatusUgd(p.status_ugd)}</span></td>
+      <td>${jamSingkat(p.created_at)}</td>
+    </tr>
+  `).join("");
+}
+
+function badgeTriaseHtml(warna) {
+  const map = { merah: "🔴 Merah", kuning: "🟡 Kuning", hijau: "🟢 Hijau", hitam: "⚫ Hitam" };
+  if (!warna) return `<span class="badge-triase belum">Belum Triase</span>`;
+  return `<span class="badge-triase ${warna}">${map[warna]}</span>`;
+}
+
+function labelStatusUgd(s) {
+  const map = { baru: "Baru Datang", ditangani: "Sedang Ditangani", observasi: "Observasi", dirujuk: "Sudah Dirujuk", pulang: "Pulang", meninggal: "Meninggal" };
+  return map[s] || s;
+}
+
+function jamSingkat(iso) {
+  return new Date(iso).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+// ---------- Cari / Daftarkan Pasien UGD ----------
+async function cariPasienUgd() {
+  const kunci = document.getElementById("ugdCari").value.trim();
+  const msgBox = document.getElementById("msgUgdDaftar");
+  const hasilDiv = document.getElementById("ugdHasilCari");
+  const daftarDiv = document.getElementById("ugdDaftarHasilCari");
+  msgBox.innerHTML = "";
+  hasilDiv.innerHTML = "";
+  daftarDiv.innerHTML = "";
+  document.getElementById("formUgdPasienBaru").style.display = "none";
+  document.getElementById("ugdCardKonfirmasi").style.display = "none";
+  pasienTerpilihUgd = null;
+
+  if (!kunci) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`;
+    return;
+  }
+
+  if (data.length === 1) {
+    pilihPasienUgd(data[0]);
+  } else if (data.length > 1) {
+    daftarDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>NIK</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${p.nik}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienUgdDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienUgd = data;
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-error">Pasien belum terdaftar. Isi form di bawah untuk mendaftarkan pasien baru (No. RM baru otomatis dibuat).</div>`;
+    if (/^\d{16}$/.test(kunci)) {
+      document.getElementById("ugdNik").value = kunci;
+    } else {
+      document.getElementById("ugdNama").value = kunci;
+    }
+    document.getElementById("formUgdPasienBaru").style.display = "block";
+  }
+}
+
+function pilihPasienUgdDariHasil(i) {
+  pilihPasienUgd(window._hasilCariPasienUgd[i]);
+}
+
+function pilihPasienUgd(data) {
+  pasienTerpilihUgd = data;
+  document.getElementById("ugdDaftarHasilCari").innerHTML = "";
+  document.getElementById("ugdHasilCari").innerHTML = `<div class="msg msg-success">Pasien dipilih: <strong>${data.nama}</strong> — No. RM ${data.no_rm || "-"}</div>`;
+  document.getElementById("ugdKNama").textContent = data.nama;
+  document.getElementById("ugdKNoRm").textContent = data.no_rm || "-";
+  document.getElementById("ugdKNik").textContent = data.nik;
+  document.getElementById("ugdKeluhan").value = "";
+  document.getElementById("ugdCardKonfirmasi").style.display = "block";
+}
+
+function batalkanPilihanUgd() {
+  pasienTerpilihUgd = null;
+  document.getElementById("ugdCardKonfirmasi").style.display = "none";
+  document.getElementById("ugdHasilCari").innerHTML = "";
+}
+
+document.getElementById("formUgdPasienBaru").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msgBox = document.getElementById("msgUgdDaftar");
+  const nik = document.getElementById("ugdNik").value.trim();
+
+  if (!/^\d{16}$/.test(nik)) {
+    msgBox.innerHTML = `<div class="msg msg-error">NIK harus 16 digit angka.</div>`;
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  const payload = {
+    nik: nik,
+    nama: document.getElementById("ugdNama").value.trim(),
+    tanggal_lahir: document.getElementById("ugdTglLahir").value,
+    jenis_kelamin: document.getElementById("ugdJk").value,
+    no_hp: document.getElementById("ugdHp").value.trim() || null,
+    alamat: document.getElementById("ugdAlamat").value.trim() || null,
+    created_by: user.id
+  };
+
+  const { data: pasienBaru, error } = await supabaseClient.from("pasien").insert(payload).select("*").single();
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan pasien baru: ${error.message}</div>`;
+    return;
+  }
+
+  document.getElementById("formUgdPasienBaru").reset();
+  document.getElementById("formUgdPasienBaru").style.display = "none";
+  msgBox.innerHTML = "";
+  pilihPasienUgd(pasienBaru);
+});
+
+async function daftarkanKeUgd() {
+  const msgBox = document.getElementById("msgUgdDaftar");
+  if (!pasienTerpilihUgd) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih atau daftarkan pasien dulu.</div>`;
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  // Klaster LK (Lintas Klaster) dipakai buat kunjungan gawat darurat.
+  const { data: klasterLk, error: errKlaster } = await supabaseClient
+    .from("klaster").select("id").eq("kode", "LK").single();
+
+  if (errKlaster || !klasterLk) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal ambil data klaster LK: ${errKlaster ? errKlaster.message : "tidak ditemukan"}</div>`;
+    return;
+  }
+
+  const { data: noKunjunganData, error: errNo } = await supabaseClient.rpc("generate_no_kunjungan");
+  const { data: noAntrianData, error: errAntrian } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: klasterLk.id });
+
+  if (errNo || errAntrian) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal generate nomor: ${(errNo || errAntrian).message}</div>`;
+    return;
+  }
+
+  const keluhan = document.getElementById("ugdKeluhan").value.trim();
+
+  const { data: kunjunganBaru, error: errKunjungan } = await supabaseClient.from("kunjungan").insert({
+    no_kunjungan: noKunjunganData,
+    pasien_id: pasienTerpilihUgd.id,
+    klaster_id: klasterLk.id,
+    jenis_bayar: pasienTerpilihUgd.status_bpjs === "aktif" ? "BPJS" : "Umum",
+    no_antrian: noAntrianData,
+    keluhan_awal: keluhan,
+    is_prioritas: true,
+    keterangan_prioritas: "Pasien UGD",
+    status: "diperiksa",
+    created_by: user.id
+  }).select("id").single();
+
+  if (errKunjungan) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal buat kunjungan: ${errKunjungan.message}</div>`;
+    return;
+  }
+
+  const { error: errUgd } = await supabaseClient.from("kunjungan_ugd").insert({
+    kunjungan_id: kunjunganBaru.id,
+    pasien_id: pasienTerpilihUgd.id,
+    status_ugd: "baru",
+    created_by: user.id
+  });
+
+  if (errUgd) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal catat kunjungan UGD: ${errUgd.message}</div>`;
+    return;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Pasien ${pasienTerpilihUgd.nama} berhasil didaftarkan ke UGD. Lanjut ke menu Triase.</div>`;
+  document.getElementById("ugdCardKonfirmasi").style.display = "none";
+  document.getElementById("ugdCari").value = "";
+  document.getElementById("ugdHasilCari").innerHTML = "";
+  pasienTerpilihUgd = null;
+
+  await muatDashboardUgd();
+}
+</script>
+</body>
+</html>
