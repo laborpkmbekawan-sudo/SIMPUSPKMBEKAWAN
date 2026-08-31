@@ -560,10 +560,75 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
 
       </div>
       <div id="panelLaporanInternal" style="display:none;">
-        <div class="ugd-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▦</span> Laporan Internal UGD</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">Rekap kinerja pelayanan UGD per periode — buat evaluasi internal manajemen Puskesmas.</p>
+
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div><label>Dari Tanggal</label><input type="date" id="lapIntUgdDari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="lapIntUgdSampai"></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanInternalUgd()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanInternalUgdCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="ugd-stat-grid">
+            <div class="ugd-stat-card" style="--accent:#173b5e;"><div class="label">Total Kunjungan UGD</div><div class="value" id="lapIntStatTotal">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#c0503f;"><div class="label">Triase Merah</div><div class="value" id="lapIntStatMerah">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#c98a1a;"><div class="label">Triase Kuning</div><div class="value" id="lapIntStatKuning">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#2f9e5c;"><div class="label">Triase Hijau</div><div class="value" id="lapIntStatHijau">0</div></div>
+          </div>
+          <div class="ugd-stat-grid">
+            <div class="ugd-stat-card" style="--accent:#333;"><div class="label">Triase Hitam</div><div class="value" id="lapIntStatHitam">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#e0793c;"><div class="label">Dirujuk</div><div class="value" id="lapIntStatDirujuk">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#26a3a0;"><div class="label">Pulang</div><div class="value" id="lapIntStatPulang">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#333;"><div class="label">Meninggal</div><div class="value" id="lapIntStatMeninggal">0</div></div>
+          </div>
+
+          <table style="margin-top:6px;">
+            <thead><tr><th>No. RM</th><th>Nama</th><th>Waktu Masuk</th><th>Triase</th><th>Diagnosis Kerja</th><th>Status Akhir</th><th>Petugas Triase</th></tr></thead>
+            <tbody id="lapIntTabelDetail"><tr><td colspan="7">Pilih rentang tanggal dulu, lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
       <div id="panelLaporanDinas" style="display:none;">
-        <div class="ugd-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#6a4c93;">
+          <h2><span class="card-num" style="background:#6a4c93;">📤</span> Laporan ke Dinas Kesehatan</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">Rekap kegawatdaruratan siap kirim ke Dinas Kesehatan — default periode bulan berjalan.</p>
+
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div><label>Dari Tanggal</label><input type="date" id="lapDinasUgdDari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="lapDinasUgdSampai"></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanDinasUgd()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportLaporanDinasUgdCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="ugd-stat-grid">
+            <div class="ugd-stat-card" style="--accent:#173b5e;"><div class="label">Total Kunjungan UGD</div><div class="value" id="lapDinasStatTotal">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#c0503f;"><div class="label">Kasus Merah/Kuning</div><div class="value" id="lapDinasStatPrioritas">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#e0793c;"><div class="label">Rujukan ke FKRTL</div><div class="value" id="lapDinasStatFkrtl">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#333;"><div class="label">Kematian di UGD</div><div class="value" id="lapDinasStatMeninggal">0</div></div>
+          </div>
+
+          <h2 style="margin-top:18px;">10 Diagnosis Kerja Terbanyak</h2>
+          <table>
+            <thead><tr><th>Diagnosis Kerja</th><th>Jumlah Kasus</th></tr></thead>
+            <tbody id="lapDinasTabelDiagnosis"><tr><td colspan="2">Pilih rentang tanggal dulu.</td></tr></tbody>
+          </table>
+
+          <h2 style="margin-top:18px;">Rincian Rujukan ke FKRTL (Rumah Sakit/Faskes Lanjutan)</h2>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Nama Pasien</th><th>No. RM</th><th>Faskes Tujuan</th><th>Diagnosa</th><th>Status</th></tr></thead>
+            <tbody id="lapDinasTabelRujukan"><tr><td colspan="6">Pilih rentang tanggal dulu.</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
       <div id="panelAudit" style="display:none;">
         <div class="ugd-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div>Menu ini segera dibangun di sesi berikutnya.</div>
@@ -663,6 +728,23 @@ function gantiSubtabUgd(tab) {
   } else if (koordinasiIntervalUgd) {
     clearInterval(koordinasiIntervalUgd);
     koordinasiIntervalUgd = null;
+  }
+  if (tab === "laporan-internal") {
+    const dariEl = document.getElementById("lapIntUgdDari");
+    const sampaiEl = document.getElementById("lapIntUgdSampai");
+    if (!dariEl.value) dariEl.value = new Date().toISOString().split("T")[0];
+    if (!sampaiEl.value) sampaiEl.value = new Date().toISOString().split("T")[0];
+    muatLaporanInternalUgd();
+  }
+  if (tab === "laporan-dinas") {
+    const dariEl = document.getElementById("lapDinasUgdDari");
+    const sampaiEl = document.getElementById("lapDinasUgdSampai");
+    if (!dariEl.value) {
+      const now = new Date();
+      dariEl.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      sampaiEl.value = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
+    }
+    muatLaporanDinasUgd();
   }
 }
 
@@ -1909,6 +1991,186 @@ async function muatKoordinasiUgd() {
   tbodyBeban.innerHTML = namaKlaster.length ? namaKlaster.map(k => `
     <tr><td>${k}</td><td>${grup[k].menunggu}</td><td>${grup[k].diperiksa}</td><td>${grup[k].selesai}</td></tr>
   `).join("") : `<tr><td colspan="4">Belum ada kunjungan hari ini.</td></tr>`;
+}
+
+// ---------- LAPORAN INTERNAL UGD ----------
+let laporanInternalUgdCache = [];
+
+async function muatLaporanInternalUgd() {
+  const tbody = document.getElementById("lapIntTabelDetail");
+  const dariInput = document.getElementById("lapIntUgdDari").value;
+  const sampaiInput = document.getElementById("lapIntUgdSampai").value;
+  if (!dariInput || !sampaiInput) { tbody.innerHTML = `<tr><td colspan="7">Pilih rentang tanggal dulu.</td></tr>`; return; }
+
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+  const sampaiEksklusif = new Date(sampaiInput);
+  sampaiEksklusif.setDate(sampaiEksklusif.getDate() + 1);
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan_ugd")
+    .select("*, kunjungan(no_kunjungan, keluhan_awal), pasien(nama, no_rm), profil_pegawai:petugas_triase_id(nama)")
+    .gte("created_at", dariInput)
+    .lt("created_at", sampaiEksklusif.toISOString().split("T")[0])
+    .order("created_at", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  laporanInternalUgdCache = data || [];
+
+  document.getElementById("lapIntStatTotal").textContent = laporanInternalUgdCache.length;
+  document.getElementById("lapIntStatMerah").textContent = laporanInternalUgdCache.filter(k => k.triase_warna === "merah").length;
+  document.getElementById("lapIntStatKuning").textContent = laporanInternalUgdCache.filter(k => k.triase_warna === "kuning").length;
+  document.getElementById("lapIntStatHijau").textContent = laporanInternalUgdCache.filter(k => k.triase_warna === "hijau").length;
+  document.getElementById("lapIntStatHitam").textContent = laporanInternalUgdCache.filter(k => k.triase_warna === "hitam").length;
+  document.getElementById("lapIntStatDirujuk").textContent = laporanInternalUgdCache.filter(k => k.status_ugd === "dirujuk").length;
+  document.getElementById("lapIntStatPulang").textContent = laporanInternalUgdCache.filter(k => k.status_ugd === "pulang").length;
+  document.getElementById("lapIntStatMeninggal").textContent = laporanInternalUgdCache.filter(k => k.status_ugd === "meninggal").length;
+
+  tbody.innerHTML = laporanInternalUgdCache.length ? laporanInternalUgdCache.map(k => `
+    <tr>
+      <td>${k.pasien?.no_rm || "-"}</td>
+      <td>${k.pasien?.nama || "-"}</td>
+      <td>${jamSingkat(k.created_at)}</td>
+      <td>${badgeTriaseHtml(k.triase_warna)}</td>
+      <td>${k.diagnosis_kerja || "-"}</td>
+      <td><span class="badge-status-ugd ${k.status_ugd}">${labelStatusUgd(k.status_ugd)}</span></td>
+      <td>${k.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="7">Tidak ada kunjungan UGD di rentang ini.</td></tr>`;
+}
+
+function exportLaporanInternalUgdCsv() {
+  if (!laporanInternalUgdCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const dariInput = document.getElementById("lapIntUgdDari").value;
+  const sampaiInput = document.getElementById("lapIntUgdSampai").value;
+
+  const rows = laporanInternalUgdCache.map(k => [
+    k.pasien?.no_rm || "-",
+    k.pasien?.nama || "-",
+    new Date(k.created_at).toLocaleString("id-ID"),
+    k.triase_warna || "belum triase",
+    k.diagnosis_kerja || "-",
+    labelStatusUgd(k.status_ugd),
+    k.profil_pegawai?.nama || "-"
+  ]);
+
+  let csv = "No. RM,Nama,Waktu Masuk,Triase,Diagnosis Kerja,Status Akhir,Petugas Triase\n";
+  csv += rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `Laporan_Internal_UGD_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+}
+
+// ---------- LAPORAN KE DINAS KESEHATAN ----------
+let laporanDinasUgdCache = { kunjungan: [], rujukanFkrtl: [] };
+
+async function muatLaporanDinasUgd() {
+  const tbodyDiag = document.getElementById("lapDinasTabelDiagnosis");
+  const tbodyRjk = document.getElementById("lapDinasTabelRujukan");
+  const dariInput = document.getElementById("lapDinasUgdDari").value;
+  const sampaiInput = document.getElementById("lapDinasUgdSampai").value;
+  if (!dariInput || !sampaiInput) {
+    tbodyDiag.innerHTML = `<tr><td colspan="2">Pilih rentang tanggal dulu.</td></tr>`;
+    tbodyRjk.innerHTML = `<tr><td colspan="6">Pilih rentang tanggal dulu.</td></tr>`;
+    return;
+  }
+
+  tbodyDiag.innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+  tbodyRjk.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const sampaiEksklusif = new Date(sampaiInput);
+  sampaiEksklusif.setDate(sampaiEksklusif.getDate() + 1);
+  const sampaiStr = sampaiEksklusif.toISOString().split("T")[0];
+
+  const { data: kunjunganData, error: errK } = await supabaseClient
+    .from("kunjungan_ugd")
+    .select("*")
+    .gte("created_at", dariInput)
+    .lt("created_at", sampaiStr);
+
+  if (errK) {
+    tbodyDiag.innerHTML = `<tr><td colspan="2">Gagal muat: ${errK.message}</td></tr>`;
+    tbodyRjk.innerHTML = `<tr><td colspan="6">Gagal muat: ${errK.message}</td></tr>`;
+    return;
+  }
+
+  const kunjunganList = kunjunganData || [];
+  const kunjunganIds = kunjunganList.map(k => k.kunjungan_id);
+
+  const { data: rujukanData, error: errR } = await supabaseClient
+    .from("rujukan")
+    .select("*, kunjungan_asal:kunjungan_asal_id(pasien(nama, no_rm))")
+    .in("kunjungan_asal_id", kunjunganIds.length ? kunjunganIds : ["00000000-0000-0000-0000-000000000000"])
+    .eq("jenis", "fkrtl")
+    .order("created_at", { ascending: false });
+
+  if (errR) {
+    tbodyRjk.innerHTML = `<tr><td colspan="6">Gagal muat: ${errR.message}</td></tr>`;
+  }
+
+  laporanDinasUgdCache.kunjungan = kunjunganList;
+  laporanDinasUgdCache.rujukanFkrtl = rujukanData || [];
+
+  document.getElementById("lapDinasStatTotal").textContent = kunjunganList.length;
+  document.getElementById("lapDinasStatPrioritas").textContent = kunjunganList.filter(k => k.triase_warna === "merah" || k.triase_warna === "kuning").length;
+  document.getElementById("lapDinasStatFkrtl").textContent = laporanDinasUgdCache.rujukanFkrtl.length;
+  document.getElementById("lapDinasStatMeninggal").textContent = kunjunganList.filter(k => k.status_ugd === "meninggal").length;
+
+  // 10 diagnosis kerja terbanyak
+  const hitung = {};
+  kunjunganList.forEach(k => {
+    const dx = (k.diagnosis_kerja || "").trim();
+    if (!dx) return;
+    hitung[dx] = (hitung[dx] || 0) + 1;
+  });
+  const top10 = Object.entries(hitung).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+  tbodyDiag.innerHTML = top10.length ? top10.map(([dx, jml]) => `<tr><td>${dx}</td><td>${jml}</td></tr>`).join("") : `<tr><td colspan="2">Belum ada diagnosis kerja tercatat di rentang ini.</td></tr>`;
+
+  tbodyRjk.innerHTML = laporanDinasUgdCache.rujukanFkrtl.length ? laporanDinasUgdCache.rujukanFkrtl.map(r => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleDateString("id-ID")}</td>
+      <td>${r.kunjungan_asal?.pasien?.nama || "-"}</td>
+      <td>${r.kunjungan_asal?.pasien?.no_rm || "-"}</td>
+      <td>${r.faskes_tujuan || "-"}</td>
+      <td>${r.diagnosa_rujukan || "-"}</td>
+      <td><span class="badge badge-${r.status === 'diterima' ? 'selesai' : (r.status === 'batal' ? 'batal' : 'menunggu')}">${r.status}</span></td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Tidak ada rujukan ke FKRTL di rentang ini.</td></tr>`;
+}
+
+function exportLaporanDinasUgdCsv() {
+  if (!laporanDinasUgdCache.kunjungan.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const dariInput = document.getElementById("lapDinasUgdDari").value;
+  const sampaiInput = document.getElementById("lapDinasUgdSampai").value;
+
+  let csv = "LAPORAN KEGAWATDARURATAN KE DINAS KESEHATAN\n";
+  csv += `Periode: ${dariInput} s.d. ${sampaiInput}\n\n`;
+  csv += "RINGKASAN\n";
+  csv += `Total Kunjungan UGD,${laporanDinasUgdCache.kunjungan.length}\n`;
+  csv += `Kasus Triase Merah/Kuning,${laporanDinasUgdCache.kunjungan.filter(k => k.triase_warna === "merah" || k.triase_warna === "kuning").length}\n`;
+  csv += `Rujukan ke FKRTL,${laporanDinasUgdCache.rujukanFkrtl.length}\n`;
+  csv += `Kematian di UGD,${laporanDinasUgdCache.kunjungan.filter(k => k.status_ugd === "meninggal").length}\n\n`;
+
+  csv += "RINCIAN RUJUKAN KE FKRTL\n";
+  csv += "Tanggal,Nama Pasien,No. RM,Faskes Tujuan,Diagnosa,Status\n";
+  csv += laporanDinasUgdCache.rujukanFkrtl.map(r => [
+    new Date(r.created_at).toLocaleDateString("id-ID"),
+    r.kunjungan_asal?.pasien?.nama || "-",
+    r.kunjungan_asal?.pasien?.no_rm || "-",
+    r.faskes_tujuan || "-",
+    r.diagnosa_rujukan || "-",
+    r.status
+  ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `Laporan_Dinas_UGD_${dariInput}_${sampaiInput}.csv`;
+  a.click();
 }
 </script>
 </body>
