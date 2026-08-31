@@ -528,7 +528,36 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
         </div>
       </div>
       <div id="panelKoordinasi" style="display:none;">
-        <div class="ugd-segera"><div class="ic">🔗</div><div class="t">Koordinasi Lintas Klaster</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#6a4c93;">
+          <h2><span class="card-num" style="background:#6a4c93;">🔗</span> Status Cito Lab &amp; Resep Emergency dari UGD</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pantau progres permintaan cito ke Laboratorium dan resep emergency ke Farmasi, tanpa perlu telepon langsung.</p>
+          <table>
+            <thead><tr><th>Waktu</th><th>Pasien</th><th>Jenis</th><th>Detail</th><th>Status</th></tr></thead>
+            <tbody id="koorUgdTabelCito"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">↧</span> Rujukan Masuk ke UGD dari Klaster Lain</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pasien yang dirujuk internal dari unit lain ke UGD hari ini.</p>
+          <table>
+            <thead><tr><th>Waktu</th><th>Pasien</th><th>Dari Klaster</th><th>Alasan</th><th>Status</th></tr></thead>
+            <tbody id="koorUgdTabelMasuk"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+            <h2 style="margin-bottom:0;">Ringkasan Beban Semua Klaster (Saat Ini)</h2>
+            <div style="font-size:12px; color:var(--muted);">Update otomatis tiap 15 detik — terakhir: <span id="koorUgdUpdateTerakhir">-</span></div>
+          </div>
+          <table>
+            <thead><tr><th>Klaster</th><th>Menunggu</th><th>Diperiksa</th><th>Selesai</th></tr></thead>
+            <tbody id="koorUgdTabelBeban"><tr><td colspan="4">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
       <div id="panelLaporanInternal" style="display:none;">
         <div class="ugd-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div>Menu ini segera dibangun di sesi berikutnya.</div>
@@ -586,6 +615,7 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
 <script>
 let profilSaya = null;
 let pasienTerpilihUgd = null;
+let koordinasiIntervalUgd = null;
 
 (async () => {
   const session = await wajibLogin();
@@ -626,6 +656,14 @@ function gantiSubtabUgd(tab) {
   if (tab === "observasi") muatObservasi();
   if (tab === "rujukan") muatRujukanUgd();
   if (tab === "rm") muatRmUgd();
+  if (tab === "koordinasi") {
+    muatKoordinasiUgd();
+    if (koordinasiIntervalUgd) clearInterval(koordinasiIntervalUgd);
+    koordinasiIntervalUgd = setInterval(muatKoordinasiUgd, 15000);
+  } else if (koordinasiIntervalUgd) {
+    clearInterval(koordinasiIntervalUgd);
+    koordinasiIntervalUgd = null;
+  }
 }
 
 // ---------- TRIASE ----------
@@ -1772,6 +1810,105 @@ function cetakRingkasanRmUgd() {
   document.getElementById("areaCetakRmUgd").classList.add("aktif-cetak");
   document.getElementById("areaCetakRujukanUgd").classList.remove("aktif-cetak");
   window.print();
+}
+
+// ---------- KOORDINASI LINTAS KLASTER ----------
+let klasterLkIdCacheKoor = null;
+
+async function muatKoordinasiUgd() {
+  const today = new Date().toISOString().split("T")[0];
+  const besok = new Date(); besok.setDate(besok.getDate() + 1);
+  const besokStr = besok.toISOString().split("T")[0];
+
+  // ---- Status Cito Lab & Resep Emergency dari UGD ----
+  const { data: ugdHariIni } = await supabaseClient
+    .from("kunjungan_ugd")
+    .select("kunjungan_id, pasien(nama, no_rm)")
+    .gte("created_at", today).lt("created_at", besokStr);
+
+  const kunjunganIds = (ugdHariIni || []).map(u => u.kunjungan_id);
+  const petaPasien = {};
+  (ugdHariIni || []).forEach(u => petaPasien[u.kunjungan_id] = u.pasien);
+
+  const tbodyCito = document.getElementById("koorUgdTabelCito");
+  if (!kunjunganIds.length) {
+    tbodyCito.innerHTML = `<tr><td colspan="5">Belum ada pasien UGD hari ini.</td></tr>`;
+  } else {
+    const [{ data: labCito }, { data: resepCito }] = await Promise.all([
+      supabaseClient.from("rujukan_lab").select("*").in("kunjungan_asal_id", kunjunganIds).eq("is_cito", true).order("created_at", { ascending: false }),
+      supabaseClient.from("resep").select("*").in("kunjungan_id", kunjunganIds).eq("is_cito", true).order("created_at", { ascending: false })
+    ]);
+
+    const gabungan = [
+      ...(labCito || []).map(l => ({ waktu: l.created_at, pasien: petaPasien[l.kunjungan_asal_id], jenis: "Lab Cito", detail: l.jenis_pemeriksaan, status: l.status })),
+      ...(resepCito || []).map(r => ({ waktu: r.created_at, pasien: petaPasien[r.kunjungan_id], jenis: "Resep Cito", detail: (r.daftar_obat || []).map(o => o.nama_obat).join(", "), status: r.status }))
+    ].sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+
+    tbodyCito.innerHTML = gabungan.length ? gabungan.map(g => `
+      <tr>
+        <td>${jamSingkat(g.waktu)}</td>
+        <td>${g.pasien?.nama || "-"}</td>
+        <td>${g.jenis}</td>
+        <td>${g.detail || "-"}</td>
+        <td><span class="badge badge-${g.status === 'selesai' ? 'selesai' : 'menunggu'}">${g.status}</span></td>
+      </tr>
+    `).join("") : `<tr><td colspan="5">Belum ada permintaan cito hari ini.</td></tr>`;
+  }
+
+  // ---- Rujukan Masuk ke UGD dari Klaster Lain ----
+  if (!klasterLkIdCacheKoor) {
+    const { data: klasterLk } = await supabaseClient.from("klaster").select("id").eq("kode", "LK").single();
+    klasterLkIdCacheKoor = klasterLk?.id;
+  }
+
+  const tbodyMasuk = document.getElementById("koorUgdTabelMasuk");
+  const { data: masuk, error: errMasuk } = await supabaseClient
+    .from("rujukan")
+    .select("*, kunjungan_asal:kunjungan_asal_id(pasien(nama, no_rm), klaster:klaster_id(kode, nama))")
+    .eq("klaster_tujuan_id", klasterLkIdCacheKoor)
+    .eq("jenis", "internal")
+    .gte("created_at", today).lt("created_at", besokStr)
+    .order("created_at", { ascending: false });
+
+  if (errMasuk) {
+    tbodyMasuk.innerHTML = `<tr><td colspan="5">Gagal muat: ${errMasuk.message}</td></tr>`;
+  } else {
+    tbodyMasuk.innerHTML = masuk.length ? masuk.map(r => `
+      <tr>
+        <td>${jamSingkat(r.created_at)}</td>
+        <td>${r.kunjungan_asal?.pasien?.nama || "-"}</td>
+        <td>${r.kunjungan_asal?.klaster ? `${r.kunjungan_asal.klaster.kode} — ${r.kunjungan_asal.klaster.nama}` : "-"}</td>
+        <td>${r.alasan_rujukan}</td>
+        <td><span class="badge badge-${r.status === 'diterima' ? 'selesai' : (r.status === 'batal' ? 'batal' : 'menunggu')}">${r.status}</span></td>
+      </tr>
+    `).join("") : `<tr><td colspan="5">Tidak ada rujukan masuk ke UGD hari ini.</td></tr>`;
+  }
+
+  // ---- Ringkasan Beban Semua Klaster ----
+  document.getElementById("koorUgdUpdateTerakhir").textContent = new Date().toLocaleTimeString("id-ID");
+
+  const tbodyBeban = document.getElementById("koorUgdTabelBeban");
+  const { data: bebanData, error: errBeban } = await supabaseClient
+    .from("kunjungan")
+    .select("status, klaster(nama, kode)")
+    .eq("tanggal", today)
+    .neq("status", "batal");
+
+  if (errBeban) { tbodyBeban.innerHTML = `<tr><td colspan="4">Gagal muat: ${errBeban.message}</td></tr>`; return; }
+
+  const grup = {};
+  (bebanData || []).forEach(k => {
+    const key = k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "Tanpa Klaster";
+    if (!grup[key]) grup[key] = { menunggu: 0, diperiksa: 0, selesai: 0 };
+    if (k.status === "menunggu" || k.status === "dipanggil") grup[key].menunggu++;
+    else if (k.status === "diperiksa") grup[key].diperiksa++;
+    else if (k.status === "selesai") grup[key].selesai++;
+  });
+
+  const namaKlaster = Object.keys(grup);
+  tbodyBeban.innerHTML = namaKlaster.length ? namaKlaster.map(k => `
+    <tr><td>${k}</td><td>${grup[k].menunggu}</td><td>${grup[k].diperiksa}</td><td>${grup[k].selesai}</td></tr>
+  `).join("") : `<tr><td colspan="4">Belum ada kunjungan hari ini.</td></tr>`;
 }
 </script>
 </body>
