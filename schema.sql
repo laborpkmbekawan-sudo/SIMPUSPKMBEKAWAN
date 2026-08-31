@@ -1253,6 +1253,39 @@ create index if not exists idx_rujukan_lab_cito on rujukan_lab(is_cito) where is
 create index if not exists idx_resep_cito on resep(is_cito) where is_cito = true;
 
 -- ============================================================
+-- 41. MODUL UGD — FASE 3: Observasi & Rujukan Gawat Darurat
+--     Observasi: tabel baru observasi_ugd, khusus buat catatan
+--     tanda vital BERKALA (kunjungan cuma nyimpen 1 set vital
+--     terakhir, gak cukup buat pasien yang dipantau berulang).
+--     Rujukan Gawat Darurat: reuse tabel rujukan yang sudah ada
+--     (dipakai bareng modul Pendaftaran) — tidak ada tabel baru.
+-- ============================================================
+create table if not exists observasi_ugd (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_ugd_id uuid not null references kunjungan_ugd(id),
+  waktu timestamptz not null default now(),
+  kesadaran text,
+  tekanan_darah text,
+  nadi text,
+  respirasi text,
+  suhu text,
+  saturasi_o2 text,
+  keterangan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_observasi_ugd_kunjungan on observasi_ugd(kunjungan_ugd_id);
+create index if not exists idx_observasi_ugd_waktu on observasi_ugd(waktu);
+
+alter table observasi_ugd enable row level security;
+create policy "authenticated_all_observasi_ugd" on observasi_ugd for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_observasi_ugd on observasi_ugd;
+create trigger trg_audit_observasi_ugd after insert or update or delete on observasi_ugd
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
