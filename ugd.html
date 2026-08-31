@@ -464,7 +464,68 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
 
       </div>
       <div id="panelRm" style="display:none;">
-        <div class="ugd-segera"><div class="ic">▤</div><div class="t">Rekam Medis Kegawatdaruratan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▤</span> Pilih Pasien</h2>
+          <select id="rmUgdPilihPasien" onchange="pilihPasienRmUgd(this.value)">
+            <option value="">-- Pilih pasien UGD hari ini --</option>
+          </select>
+        </div>
+
+        <div id="rmUgdWrap" style="display:none;">
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Ringkasan Kegawatdaruratan — <span id="rmUgdNamaPasien"></span></h2>
+            <div class="info-block" id="rmUgdRingkasan"></div>
+
+            <h2 style="margin-top:16px;">Tindakan yang Sudah Dilakukan</h2>
+            <div id="rmUgdTindakan"><p style="color:var(--muted); font-size:13px;">Belum ada tindakan.</p></div>
+
+            <h2 style="margin-top:16px;">Riwayat Observasi</h2>
+            <div id="rmUgdObservasi"><p style="color:var(--muted); font-size:13px;">Belum ada catatan observasi.</p></div>
+
+            <h2 style="margin-top:16px;">Resep / Terapi</h2>
+            <div id="rmUgdResep"><p style="color:var(--muted); font-size:13px;">Belum ada resep.</p></div>
+
+            <h2 style="margin-top:16px;">Rujukan</h2>
+            <div id="rmUgdRujukan"><p style="color:var(--muted); font-size:13px;">Belum dirujuk.</p></div>
+
+            <button class="btn-secondary" onclick="cetakRingkasanRmUgd()" style="margin-top:14px;">🖨️ Cetak Ringkasan RM Kegawatdaruratan</button>
+          </div>
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2>Riwayat SOAP Rekam Medis</h2>
+            <div id="rmUgdRiwayatSoap"><p style="color:var(--muted); font-size:13px;">Belum ada catatan SOAP.</p></div>
+          </div>
+
+          <div class="card" style="--accent:#6a4c93;">
+            <h2>Isi SOAP Rekam Medis Kegawatdaruratan</h2>
+            <div id="msgRmUgdSoap"></div>
+            <form id="formSoapRmUgd">
+              <label>Subjektif (keluhan pasien)</label>
+              <textarea id="rmUgdSubjektif" required></textarea>
+
+              <label>Objektif (hasil pemeriksaan)</label>
+              <textarea id="rmUgdObjektif"></textarea>
+
+              <div class="grid-2">
+                <div><label>Assessment (Diagnosa)</label><input type="text" id="rmUgdAssessment" placeholder="Diagnosa akhir"></div>
+                <div><label>Kode ICD-10</label><input type="text" id="rmUgdIcd10" placeholder="Contoh: S06.0"></div>
+              </div>
+
+              <label>Plan (Rencana Tindak Lanjut)</label>
+              <textarea id="rmUgdPlan" required></textarea>
+
+              <div class="grid-2">
+                <div><label><input type="checkbox" id="rmUgdButuhLab" style="width:auto; display:inline-block;"> Perlu pemeriksaan Laboratorium lanjutan</label></div>
+                <div><label><input type="checkbox" id="rmUgdButuhObat" style="width:auto; display:inline-block;"> Perlu terapi obat lanjutan</label></div>
+              </div>
+
+              <button type="submit" class="btn-primary">Simpan Rekam Medis Kegawatdaruratan</button>
+            </form>
+          </div>
+
+        </div>
       </div>
       <div id="panelKoordinasi" style="display:none;">
         <div class="ugd-segera"><div class="ic">🔗</div><div class="t">Koordinasi Lintas Klaster</div>Menu ini segera dibangun di sesi berikutnya.</div>
@@ -499,6 +560,26 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
   <p style="font-size:13px; margin-top:8px;"><strong>Catatan:</strong></p>
   <p style="font-size:13px;" id="rjkUgdCetakCatatan"></p>
   <p class="catatan" style="margin-top:20px;">Dibuat oleh petugas UGD UPTD Puskesmas Bekawan.</p>
+</div>
+
+<div id="areaCetakRmUgd" class="kartu-cetak" style="width:520px;">
+  <h2>UPTD PUSKESMAS BEKAWAN</h2>
+  <p class="sub">Ringkasan Rekam Medis Kegawatdaruratan</p>
+  <div class="garis"></div>
+  <div class="baris"><span>Tanggal</span><span id="rmUgdCetakTanggal"></span></div>
+  <div class="baris"><span>Nama Pasien</span><span id="rmUgdCetakNama"></span></div>
+  <div class="baris"><span>No. RM</span><span id="rmUgdCetakNoRm"></span></div>
+  <div class="baris"><span>Triase</span><span id="rmUgdCetakTriase"></span></div>
+  <div class="baris"><span>Vital Sign</span><span id="rmUgdCetakVital"></span></div>
+  <div class="baris"><span>Diagnosis Kerja</span><span id="rmUgdCetakDiagnosisKerja"></span></div>
+  <div class="garis"></div>
+  <p style="font-size:13px; margin-top:8px;"><strong>Tindakan:</strong></p>
+  <p style="font-size:13px;" id="rmUgdCetakTindakan">-</p>
+  <p style="font-size:13px; margin-top:8px;"><strong>Assessment (SOAP terakhir):</strong></p>
+  <p style="font-size:13px;" id="rmUgdCetakAssessment">-</p>
+  <p style="font-size:13px; margin-top:8px;"><strong>Plan (SOAP terakhir):</strong></p>
+  <p style="font-size:13px;" id="rmUgdCetakPlan">-</p>
+  <p class="catatan" style="margin-top:20px;">Dicetak dari UGD UPTD Puskesmas Bekawan.</p>
 </div>
 
 <script src="js/supabaseClient.js"></script>
@@ -544,6 +625,7 @@ function gantiSubtabUgd(tab) {
   if (tab === "tindakan") muatTindakan();
   if (tab === "observasi") muatObservasi();
   if (tab === "rujukan") muatRujukanUgd();
+  if (tab === "rm") muatRmUgd();
 }
 
 // ---------- TRIASE ----------
@@ -1503,6 +1585,192 @@ function cetakSuratRujukanUgd(index) {
   document.getElementById("rjkUgdCetakCatatan").textContent = r.catatan || "-";
 
   document.getElementById("areaCetakRujukanUgd").classList.add("aktif-cetak");
+  document.getElementById("areaCetakRmUgd").classList.remove("aktif-cetak");
+  window.print();
+}
+
+// ---------- LOG AKSES RM (reuse pola dari rekam-medis.html) ----------
+async function catatLogAksesRm(pasienId, kunjunganId, aksi, keterangan) {
+  try {
+    const { error } = await supabaseClient.from("log_akses_rm").insert({
+      pasien_id: pasienId,
+      kunjungan_id: kunjunganId,
+      aksi,
+      keterangan,
+      petugas_id: profilSaya?.id || null
+    });
+    if (error) console.error("Gagal catat log akses RM:", error.message);
+  } catch (e) {
+    console.error("Gagal catat log akses RM:", e.message);
+  }
+}
+
+// ---------- RM KEGAWATDARURATAN ----------
+let pasienCacheRmUgd = [];
+let kunjunganTerpilihRmUgd = null;
+let rmUgdDataCache = null; // data lengkap buat cetak
+
+async function muatRmUgd() {
+  const today = new Date().toISOString().split("T")[0];
+  const besok = new Date(); besok.setDate(besok.getDate() + 1);
+  const besokStr = besok.toISOString().split("T")[0];
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan_ugd")
+    .select("id, kunjungan_id, pasien_id, status_ugd, triase_warna, created_at, kunjungan(no_kunjungan), pasien(nama, no_rm)")
+    .gte("created_at", today)
+    .lt("created_at", besokStr)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    document.getElementById("rmUgdPilihPasien").innerHTML = `<option value="">Gagal muat: ${error.message}</option>`;
+    return;
+  }
+
+  pasienCacheRmUgd = data || [];
+  const sel = document.getElementById("rmUgdPilihPasien");
+  sel.innerHTML = `<option value="">-- Pilih pasien UGD hari ini --</option>` +
+    pasienCacheRmUgd.map(p => `<option value="${p.id}">${p.pasien?.nama || "-"} (No. RM ${p.pasien?.no_rm || "-"}) — ${labelStatusUgd(p.status_ugd)}</option>`).join("");
+}
+
+async function pilihPasienRmUgd(kunjunganUgdId) {
+  if (!kunjunganUgdId) {
+    document.getElementById("rmUgdWrap").style.display = "none";
+    kunjunganTerpilihRmUgd = null;
+    return;
+  }
+  const p = pasienCacheRmUgd.find(x => x.id === kunjunganUgdId);
+  if (!p) return;
+  kunjunganTerpilihRmUgd = p;
+
+  document.getElementById("rmUgdNamaPasien").textContent = `${p.pasien?.nama || "-"} (No. RM ${p.pasien?.no_rm || "-"})`;
+  document.getElementById("rmUgdWrap").style.display = "block";
+  document.getElementById("msgRmUgdSoap").innerHTML = "";
+  document.getElementById("formSoapRmUgd").reset();
+
+  const [{ data: kData }, { data: ugdData }, { data: tindData }, { data: obsData }, { data: resepData }, { data: rujukanData }, { data: soapData }] = await Promise.all([
+    supabaseClient.from("kunjungan").select("keluhan_awal, kesadaran, gcs, saturasi_o2, tekanan_darah, nadi, respirasi, suhu").eq("id", p.kunjungan_id).single(),
+    supabaseClient.from("kunjungan_ugd").select("diagnosis_kerja, waktu_triase").eq("id", p.id).single(),
+    supabaseClient.from("tindakan_medis").select("daftar_tindakan, created_at, profil_pegawai:petugas_id(nama)").eq("kunjungan_id", p.kunjungan_id).order("created_at", { ascending: false }),
+    supabaseClient.from("observasi_ugd").select("*").eq("kunjungan_ugd_id", p.id).order("waktu", { ascending: false }),
+    supabaseClient.from("resep").select("daftar_obat, status, created_at").eq("kunjungan_id", p.kunjungan_id).order("created_at", { ascending: false }),
+    supabaseClient.from("rujukan").select("jenis, faskes_tujuan, alasan_rujukan, status, klaster_tujuan:klaster_tujuan_id(nama, kode)").eq("kunjungan_asal_id", p.kunjungan_id).order("created_at", { ascending: false }),
+    supabaseClient.from("rekam_medis").select("*, profil_pegawai:petugas_id(nama)").eq("kunjungan_id", p.kunjungan_id).order("created_at", { ascending: false })
+  ]);
+
+  rmUgdDataCache = { p, kData, ugdData, tindData: tindData || [], soapData: soapData || [] };
+
+  // Ringkasan
+  document.getElementById("rmUgdRingkasan").innerHTML = `
+    <div class="info-row"><label>Triase</label><span>${badgeTriaseHtml(p.triase_warna)}</span></div>
+    <div class="info-row"><label>Keluhan Awal</label><span>${kData?.keluhan_awal || "-"}</span></div>
+    <div class="info-row"><label>Kesadaran / GCS</label><span>${kData?.kesadaran || "-"} ${kData?.gcs ? "/ " + kData.gcs : ""}</span></div>
+    <div class="info-row"><label>Vital Sign</label><span>TD ${kData?.tekanan_darah || "-"}, Nadi ${kData?.nadi || "-"}, Napas ${kData?.respirasi || "-"}, Suhu ${kData?.suhu || "-"}, SpO2 ${kData?.saturasi_o2 || "-"}</span></div>
+    <div class="info-row"><label>Diagnosis Kerja</label><span>${ugdData?.diagnosis_kerja || "-"}</span></div>
+    <div class="info-row"><label>Status UGD</label><span>${labelStatusUgd(p.status_ugd)}</span></div>
+  `;
+
+  // Tindakan
+  const tindDiv = document.getElementById("rmUgdTindakan");
+  tindDiv.innerHTML = !tindData?.length ? `<p style="color:var(--muted); font-size:13px;">Belum ada tindakan.</p>` :
+    tindData.map(t => `
+      <div style="font-size:12.5px; padding:8px 0; border-bottom:1px dashed var(--border);">
+        <strong>${jamSingkat(t.created_at)}</strong> — ${t.profil_pegawai?.nama || "-"}<br>
+        ${(t.daftar_tindakan || []).map(x => `${x.nama_tindakan}${x.catatan ? " (" + x.catatan + ")" : ""}`).join(", ")}
+      </div>`).join("");
+
+  // Observasi
+  const obsDiv = document.getElementById("rmUgdObservasi");
+  obsDiv.innerHTML = !obsData?.length ? `<p style="color:var(--muted); font-size:13px;">Belum ada catatan observasi.</p>` :
+    `<table><thead><tr><th>Waktu</th><th>Kesadaran</th><th>TD</th><th>Nadi</th><th>Napas</th><th>Suhu</th><th>SpO2</th></tr></thead><tbody>` +
+    obsData.map(o => `<tr><td>${jamSingkat(o.waktu)}</td><td>${o.kesadaran || "-"}</td><td>${o.tekanan_darah || "-"}</td><td>${o.nadi || "-"}</td><td>${o.respirasi || "-"}</td><td>${o.suhu || "-"}</td><td>${o.saturasi_o2 || "-"}</td></tr>`).join("") +
+    `</tbody></table>`;
+
+  // Resep
+  const resepDiv = document.getElementById("rmUgdResep");
+  resepDiv.innerHTML = !resepData?.length ? `<p style="color:var(--muted); font-size:13px;">Belum ada resep.</p>` :
+    resepData.map(r => `
+      <div style="font-size:12.5px; padding:8px 0; border-bottom:1px dashed var(--border);">
+        <strong>${jamSingkat(r.created_at)}</strong> — <span class="badge-status-ugd ${r.status === 'selesai' ? 'pulang' : 'baru'}">${r.status}</span><br>
+        ${(r.daftar_obat || []).map(o => `${o.nama_obat}${o.dosis ? " " + o.dosis : ""} — ${o.jumlah}${o.satuan ? " " + o.satuan : ""}`).join(", ")}
+      </div>`).join("");
+
+  // Rujukan
+  const rjkDiv = document.getElementById("rmUgdRujukan");
+  rjkDiv.innerHTML = !rujukanData?.length ? `<p style="color:var(--muted); font-size:13px;">Belum dirujuk.</p>` :
+    rujukanData.map(r => `
+      <div style="font-size:12.5px; padding:8px 0; border-bottom:1px dashed var(--border);">
+        ${r.jenis === "internal" ? "Internal — " + (r.klaster_tujuan ? `${r.klaster_tujuan.kode} — ${r.klaster_tujuan.nama}` : "-") : "FKRTL — " + (r.faskes_tujuan || "-")}<br>
+        Alasan: ${r.alasan_rujukan} — <span class="badge badge-${r.status === 'diterima' ? 'selesai' : (r.status === 'batal' ? 'batal' : 'menunggu')}">${r.status}</span>
+      </div>`).join("");
+
+  // Riwayat SOAP
+  const soapDiv = document.getElementById("rmUgdRiwayatSoap");
+  soapDiv.innerHTML = !soapData?.length ? `<p style="color:var(--muted); font-size:13px;">Belum ada catatan SOAP.</p>` :
+    soapData.map(s => `
+      <div style="font-size:12.5px; padding:8px 0; border-bottom:1px dashed var(--border);">
+        <strong>${jamSingkat(s.created_at)}</strong> — ${s.profil_pegawai?.nama || "-"}<br>
+        <em>Assessment:</em> ${s.assessment || "-"} ${s.kode_icd10 ? "(" + s.kode_icd10 + ")" : ""}<br>
+        <em>Plan:</em> ${s.plan || "-"}
+      </div>`).join("");
+
+  // Prefill Subjektif kalau belum pernah diisi
+  if (!soapData?.length) {
+    document.getElementById("rmUgdSubjektif").value = kData?.keluhan_awal || "";
+  }
+
+  catatLogAksesRm(p.pasien_id, p.kunjungan_id, "lihat", "Buka RM Kegawatdaruratan UGD");
+}
+
+document.getElementById("formSoapRmUgd").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msgBox = document.getElementById("msgRmUgdSoap");
+  if (!kunjunganTerpilihRmUgd) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const payload = {
+    kunjungan_id: kunjunganTerpilihRmUgd.kunjungan_id,
+    subjektif: document.getElementById("rmUgdSubjektif").value.trim(),
+    objektif: document.getElementById("rmUgdObjektif").value.trim(),
+    tekanan_darah: rmUgdDataCache?.kData?.tekanan_darah || "",
+    suhu: rmUgdDataCache?.kData?.suhu || "",
+    nadi: rmUgdDataCache?.kData?.nadi || "",
+    respirasi: rmUgdDataCache?.kData?.respirasi || "",
+    assessment: document.getElementById("rmUgdAssessment").value.trim(),
+    kode_icd10: document.getElementById("rmUgdIcd10").value.trim(),
+    plan: document.getElementById("rmUgdPlan").value.trim(),
+    butuh_lab: document.getElementById("rmUgdButuhLab").checked,
+    butuh_obat: document.getElementById("rmUgdButuhObat").checked,
+    petugas_id: profilSaya.id
+  };
+
+  const { error } = await supabaseClient.from("rekam_medis").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan rekam medis: ${error.message}</div>`; return; }
+
+  catatLogAksesRm(kunjunganTerpilihRmUgd.pasien_id, kunjunganTerpilihRmUgd.kunjungan_id, "ubah", "Isi SOAP rekam medis kegawatdaruratan");
+
+  msgBox.innerHTML = `<div class="msg msg-success">Rekam medis kegawatdaruratan tersimpan.</div>`;
+  document.getElementById("formSoapRmUgd").reset();
+  await pilihPasienRmUgd(kunjunganTerpilihRmUgd.id);
+});
+
+function cetakRingkasanRmUgd() {
+  if (!rmUgdDataCache) return;
+  const { p, kData, ugdData, tindData, soapData } = rmUgdDataCache;
+
+  document.getElementById("rmUgdCetakTanggal").textContent = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  document.getElementById("rmUgdCetakNama").textContent = p.pasien?.nama || "-";
+  document.getElementById("rmUgdCetakNoRm").textContent = p.pasien?.no_rm || "-";
+  document.getElementById("rmUgdCetakTriase").textContent = p.triase_warna ? p.triase_warna.toUpperCase() : "Belum Triase";
+  document.getElementById("rmUgdCetakVital").textContent = `TD ${kData?.tekanan_darah || "-"}, Nadi ${kData?.nadi || "-"}, Napas ${kData?.respirasi || "-"}, Suhu ${kData?.suhu || "-"}, SpO2 ${kData?.saturasi_o2 || "-"}`;
+  document.getElementById("rmUgdCetakDiagnosisKerja").textContent = ugdData?.diagnosis_kerja || "-";
+  document.getElementById("rmUgdCetakTindakan").textContent = tindData.length
+    ? tindData.map(t => (t.daftar_tindakan || []).map(x => x.nama_tindakan).join(", ")).join("; ")
+    : "-";
+  document.getElementById("rmUgdCetakAssessment").textContent = soapData.length ? (soapData[0].assessment || "-") + (soapData[0].kode_icd10 ? " (" + soapData[0].kode_icd10 + ")" : "") : "-";
+  document.getElementById("rmUgdCetakPlan").textContent = soapData.length ? (soapData[0].plan || "-") : "-";
+
+  document.getElementById("areaCetakRmUgd").classList.add("aktif-cetak");
+  document.getElementById("areaCetakRujukanUgd").classList.remove("aktif-cetak");
   window.print();
 }
 </script>
