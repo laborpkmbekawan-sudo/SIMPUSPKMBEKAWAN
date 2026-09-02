@@ -1402,7 +1402,51 @@
 
       </div>
       <div id="panelRm" style="display:none;">
-        <div class="k2-segera"><div class="ic">▤</div><div class="t">Rekam Medis &amp; Resep</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▤</span> Antrian Klaster 2 Hari Ini</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pengisian SOAP &amp; resep tetap dilakukan lewat menu <a href="rekam-medis.html" style="color:var(--teal);">Rekam Medis</a> (mendukung semua klaster). Daftar di bawah cuma pengingat siapa yang masih menunggu diperiksa hari ini.</p>
+          <table>
+            <thead><tr><th>No. Antrian</th><th>Nama</th><th>No. RM</th><th>Keluhan Awal</th><th>Status</th></tr></thead>
+            <tbody id="tabelAntrianRmK2"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">▤</span> Cari Riwayat RM &amp; Resep Pasien</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Lihat riwayat SOAP dan resep pasien yang tercatat lewat kunjungan Klaster 2 (read-only).</p>
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / Nama)</label>
+              <input type="text" id="rmK2Cari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienRmK2();}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienRmK2()" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+          <div id="rmK2HasilCari"></div>
+        </div>
+
+        <div id="rmK2Wrap" style="display:none;">
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat SOAP — <span id="rmK2NamaPasien"></span></h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Subjektif</th><th>Assessment</th><th>Plan</th><th>Petugas</th></tr></thead>
+              <tbody id="tabelRiwayatSoapK2"><tr><td colspan="5">Belum ada catatan RM di Klaster 2.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2>Riwayat Resep</h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Daftar Obat</th><th>Status</th><th>Dokter</th></tr></thead>
+              <tbody id="tabelRiwayatResepK2"><tr><td colspan="4">Belum ada resep di Klaster 2.</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
+
       </div>
       <div id="panelLaporanInternal" style="display:none;">
         <div class="k2-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div>Menu ini segera dibangun di sesi berikutnya.</div>
@@ -1411,7 +1455,49 @@
         <div class="k2-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div>Menu ini segera dibangun di sesi berikutnya.</div>
       </div>
       <div id="panelAudit" style="display:none;">
-        <div class="k2-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#7a4fc4;">
+          <h2><span class="card-num" style="background:#7a4fc4;">🛡</span> Filter Jejak Audit Klaster 2</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Jejak perubahan data (tambah/ubah/hapus) tercatat otomatis lewat trigger database, tidak bisa dilewati atau dipalsukan.</p>
+          <div class="grid-3">
+            <div><label>Dari</label><input type="date" id="auditDari"></div>
+            <div><label>Sampai</label><input type="date" id="auditSampai"></div>
+            <div>
+              <label>Tabel</label>
+              <select id="auditTabel">
+                <option value="">Semua Tabel Klaster 2</option>
+                <option value="kehamilan">Kehamilan</option>
+                <option value="kunjungan_anc">ANC</option>
+                <option value="imunisasi_tt">Imunisasi TT/Td Ibu</option>
+                <option value="persalinan">Persalinan</option>
+                <option value="kunjungan_nifas">Nifas</option>
+                <option value="kunjungan_kn">KN (Neonatal)</option>
+                <option value="tumbuh_kembang">Tumbuh Kembang</option>
+                <option value="imunisasi_dasar">Imunisasi Dasar</option>
+                <option value="vitamin_a">Vitamin A</option>
+                <option value="mtbs_mtbm">MTBS/MTBM</option>
+                <option value="penjaringan_sekolah">Penjaringan Sekolah</option>
+                <option value="imunisasi_bias">Imunisasi BIAS</option>
+                <option value="pemeriksaan_berkala_sekolah">Pemeriksaan Berkala</option>
+                <option value="skrining_remaja">Skrining PKPR Remaja</option>
+                <option value="ttd_remaja">TTD Remaja</option>
+                <option value="rujukan">Rujukan</option>
+                <option value="rujukan_lab">Permintaan Lab</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="muatAuditK2()">Tampilkan</button>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2>Jejak Audit</h2>
+          <table>
+            <thead><tr><th>Tanggal &amp; Jam</th><th>Tabel</th><th>Aksi</th><th>Petugas</th><th>Ringkasan</th></tr></thead>
+            <tbody id="tabelAuditK2"><tr><td colspan="5">Klik Tampilkan buat muat data.</td></tr></tbody>
+          </table>
+          <p style="font-size:11.5px; color:var(--muted); margin-top:8px;">Menampilkan maksimal 200 baris terbaru sesuai filter.</p>
+        </div>
+
       </div>
 
     </div>
@@ -1461,6 +1547,8 @@ function gantiSubtabK2(tab) {
   if (tab === "ibu") muatAnc();
   if (tab === "kohort") muatKohortIbu();
   if (tab === "rujukan") muatRiwayatRjkLabUmum();
+  if (tab === "rm") muatAntrianRmK2();
+  if (tab === "audit") muatAuditK2();
 }
 
 // ---------- BAYI & BALITA — inner sub-tabs ----------
@@ -3976,6 +4064,189 @@ function exportKohortRemajaCsv() {
     r.status_gizi, r.hasil_anemia, r.hasil_jiwa, r.jml_ttd
   ]);
   unduhCsv(`Register_Remaja_${document.getElementById("kohortRemajaDari").value}_${document.getElementById("kohortRemajaSampai").value}.csv`, header, rows);
+}
+
+// ---------- REKAM MEDIS & RESEP (Klaster 2, read-only + antrian) ----------
+async function muatAntrianRmK2() {
+  const k2Id = await ambilKlasterK2Id();
+  const tbody = document.getElementById("tabelAntrianRmK2");
+  if (!k2Id) { tbody.innerHTML = `<tr><td colspan="5">Klaster K2 tidak ditemukan di master data.</td></tr>`; return; }
+
+  const today = new Date().toISOString().split("T")[0];
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("*, pasien(nama, no_rm)")
+    .eq("klaster_id", k2Id)
+    .eq("tanggal", today)
+    .in("status", ["menunggu", "diperiksa"])
+    .order("no_antrian");
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Tidak ada pasien yang masih menunggu diperiksa hari ini.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${k.no_antrian || "-"}</td>
+      <td>${k.pasien?.nama || "-"}</td>
+      <td>${k.pasien?.no_rm || "-"}</td>
+      <td>${k.keluhan_awal || "-"}</td>
+      <td><span class="badge badge-${k.status === "diperiksa" ? "selesai" : "menunggu"}">${k.status}</span></td>
+    </tr>
+  `).join("");
+}
+
+let pasienTerpilihRmK2 = null;
+
+async function cariPasienRmK2() {
+  const kunci = document.getElementById("rmK2Cari").value.trim();
+  const hasilDiv = document.getElementById("rmK2HasilCari");
+  document.getElementById("rmK2Wrap").style.display = "none";
+  pasienTerpilihRmK2 = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienRmK2(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienRmK2DariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienRmK2 = data;
+  }
+}
+
+function pilihPasienRmK2DariHasil(i) {
+  pilihPasienRmK2(window._hasilCariPasienRmK2[i]);
+}
+
+async function pilihPasienRmK2(pasien) {
+  pasienTerpilihRmK2 = pasien;
+  document.getElementById("rmK2HasilCari").innerHTML = "";
+  document.getElementById("rmK2NamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("rmK2Wrap").style.display = "block";
+
+  const tSoap = document.getElementById("tabelRiwayatSoapK2");
+  const tResep = document.getElementById("tabelRiwayatResepK2");
+  tSoap.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  tResep.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const k2Id = await ambilKlasterK2Id();
+
+  const { data: kunjunganK2, error: errK } = await supabaseClient
+    .from("kunjungan")
+    .select("id, tanggal")
+    .eq("pasien_id", pasien.id)
+    .eq("klaster_id", k2Id);
+
+  if (errK) { tSoap.innerHTML = `<tr><td colspan="5">Gagal muat: ${errK.message}</td></tr>`; tResep.innerHTML = `<tr><td colspan="4">Gagal muat: ${errK.message}</td></tr>`; return; }
+
+  const kunjunganIds = (kunjunganK2 || []).map(k => k.id);
+  if (!kunjunganIds.length) {
+    tSoap.innerHTML = `<tr><td colspan="5">Belum ada catatan RM di Klaster 2.</td></tr>`;
+    tResep.innerHTML = `<tr><td colspan="4">Belum ada resep di Klaster 2.</td></tr>`;
+    return;
+  }
+
+  const { data: rmData, error: errRm } = await supabaseClient
+    .from("rekam_medis")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .in("kunjungan_id", kunjunganIds)
+    .order("created_at", { ascending: false });
+
+  tSoap.innerHTML = (!errRm && rmData?.length) ? rmData.map(r => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleDateString("id-ID")}</td>
+      <td>${r.subjektif || "-"}</td>
+      <td>${r.assessment || "-"}</td>
+      <td>${r.plan || "-"}</td>
+      <td>${r.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="5">${errRm ? "Gagal muat: " + errRm.message : "Belum ada catatan RM di Klaster 2."}</td></tr>`;
+
+  const { data: resepData, error: errResep } = await supabaseClient
+    .from("resep")
+    .select("*, profil_pegawai:dokter_id(nama)")
+    .in("kunjungan_id", kunjunganIds)
+    .order("created_at", { ascending: false });
+
+  tResep.innerHTML = (!errResep && resepData?.length) ? resepData.map(r => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleDateString("id-ID")}</td>
+      <td>${(r.daftar_obat || []).map(o => o.nama_obat).join(", ") || "-"}</td>
+      <td>${r.status}</td>
+      <td>${r.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">${errResep ? "Gagal muat: " + errResep.message : "Belum ada resep di Klaster 2."}</td></tr>`;
+}
+
+// ---------- AUDIT / KEAMANAN (Klaster 2, read-only) ----------
+const TABEL_K2_AUDIT = [
+  "kehamilan", "kunjungan_anc", "imunisasi_tt", "persalinan", "kunjungan_nifas",
+  "kunjungan_kn", "tumbuh_kembang", "imunisasi_dasar", "vitamin_a", "mtbs_mtbm",
+  "penjaringan_sekolah", "imunisasi_bias", "pemeriksaan_berkala_sekolah",
+  "skrining_remaja", "ttd_remaja", "rujukan", "rujukan_lab"
+];
+
+function ringkasanAudit(a) {
+  const src = a.data_baru || a.data_lama || {};
+  const bagian = [];
+  if (src.status) bagian.push(`status: ${src.status}`);
+  if (src.tanggal) bagian.push(`tanggal: ${src.tanggal}`);
+  if (src.catatan) bagian.push(`catatan: ${String(src.catatan).slice(0, 40)}`);
+  return bagian.length ? bagian.join(" · ") : "-";
+}
+
+async function muatAuditK2() {
+  isiDefaultTanggalKohort("auditDari", "auditSampai");
+  const dari = document.getElementById("auditDari").value;
+  const sampai = document.getElementById("auditSampai").value;
+  const tabelPilih = document.getElementById("auditTabel").value;
+  const tbody = document.getElementById("tabelAuditK2");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  let q = supabaseClient
+    .from("audit_log")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .in("tabel", tabelPilih ? [tabelPilih] : TABEL_K2_AUDIT)
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (dari) q = q.gte("created_at", dari + "T00:00:00");
+  if (sampai) q = q.lte("created_at", sampai + "T23:59:59");
+
+  const { data, error } = await q;
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Tidak ada jejak audit di rentang/filter ini.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(a => `
+    <tr>
+      <td>${new Date(a.created_at).toLocaleString("id-ID")}</td>
+      <td>${a.tabel}</td>
+      <td><span class="badge badge-${a.aksi === "delete" ? "batal" : (a.aksi === "insert" ? "selesai" : "menunggu")}">${a.aksi}</span></td>
+      <td>${a.profil_pegawai?.nama || "-"}</td>
+      <td>${ringkasanAudit(a)}</td>
+    </tr>
+  `).join("");
 }
 </script>
 
