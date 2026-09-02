@@ -527,7 +527,163 @@
 
       </div>
       <div id="panelBayiBalita" style="display:none;">
-        <div class="k2-segera"><div class="ic">👶</div><div class="t">Bayi &amp; Balita</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="padding:10px 14px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="bayiSub-kn" onclick="gantiSubBayi('kn')">KN (Kunjungan Neonatal)</button>
+            <button type="button" class="lap-tab" id="bayiSub-tumbuh" onclick="gantiSubBayi('tumbuh')">Tumbuh Kembang &amp; Gizi</button>
+            <button type="button" class="lap-tab" id="bayiSub-imunisasi" onclick="gantiSubBayi('imunisasi')">Imunisasi Dasar &amp; Lanjutan</button>
+            <button type="button" class="lap-tab" id="bayiSub-vitamin-a" onclick="gantiSubBayi('vitamin-a')">Vitamin A</button>
+            <button type="button" class="lap-tab" id="bayiSub-mtbs" onclick="gantiSubBayi('mtbs')">MTBS/MTBM</button>
+          </div>
+          <p style="font-size:11.5px; color:var(--muted); margin:8px 2px 0;">Deteksi stunting/gizi buruk digabung ke tab Tumbuh Kembang &amp; Gizi (hasil ukurnya emang dari situ juga).</p>
+        </div>
+
+        <!-- ===== KN ===== -->
+        <div id="bayiPanel-kn">
+
+          <div class="card" style="--accent:#216ac5;">
+            <h2><span class="card-num" style="background:#216ac5;">👶</span> Cari Pasien Bayi</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">KN1 (6–48 jam), KN2 (hari 3–7), KN3 (hari 8–28) sejak lahir.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="knCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienKn();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienKn()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="knHasilCari"></div>
+          </div>
+
+          <div id="knWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Kunjungan Neonatal — <span id="knNamaPasien"></span></h2>
+              <div id="msgKn"></div>
+              <div class="grid-3">
+                <div>
+                  <label>Tahap *</label>
+                  <select id="knTahap" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="KN1">KN1 (6–48 jam)</option>
+                    <option value="KN2">KN2 (hari 3–7)</option>
+                    <option value="KN3">KN3 (hari 8–28)</option>
+                  </select>
+                </div>
+                <div><label>Tanggal *</label><input type="date" id="knTanggal" required></div>
+                <div><label>Berat Badan (gram)</label><input type="text" id="knBb"></div>
+                <div><label>Suhu (°C)</label><input type="text" id="knSuhu"></div>
+                <div><label>Kondisi Umum</label><input type="text" id="knKondisiUmum" placeholder="Contoh: Aktif, menyusu baik"></div>
+                <div style="display:flex; align-items:flex-end;">
+                  <label style="font-weight:400;"><input type="checkbox" id="knAsiEksklusif" style="width:auto; display:inline-block;"> Mendapat ASI Eksklusif</label>
+                </div>
+              </div>
+
+              <label>Tanda Bahaya</label>
+              <div class="grid-2" style="font-size:12.5px;">
+                <label style="font-weight:400;"><input type="checkbox" class="knBahaya" value="Tidak Mau Menyusu" style="width:auto; display:inline-block;"> Tidak Mau Menyusu</label>
+                <label style="font-weight:400;"><input type="checkbox" class="knBahaya" value="Kejang" style="width:auto; display:inline-block;"> Kejang</label>
+                <label style="font-weight:400;"><input type="checkbox" class="knBahaya" value="Sesak Napas" style="width:auto; display:inline-block;"> Sesak Napas</label>
+                <label style="font-weight:400;"><input type="checkbox" class="knBahaya" value="Demam Tinggi/Hipotermi" style="width:auto; display:inline-block;"> Demam Tinggi / Hipotermi</label>
+                <label style="font-weight:400;"><input type="checkbox" class="knBahaya" value="Kulit Kuning" style="width:auto; display:inline-block;"> Kulit Kuning (Ikterus)</label>
+                <label style="font-weight:400;"><input type="checkbox" class="knBahaya" value="Tali Pusat Kemerahan/Bernanah" style="width:auto; display:inline-block;"> Tali Pusat Kemerahan / Bernanah</label>
+              </div>
+
+              <label style="margin-top:10px;">Catatan</label>
+              <textarea id="knCatatan"></textarea>
+
+              <button class="btn-primary" onclick="simpanKn()">Simpan Kunjungan Neonatal</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Kunjungan Neonatal</h2>
+              <table>
+                <thead><tr><th>Tahap</th><th>Tanggal</th><th>BB</th><th>Suhu</th><th>ASI Eksklusif</th><th>Tanda Bahaya</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatKn"><tr><td colspan="7">Belum ada catatan KN.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===== Tumbuh Kembang & Gizi ===== -->
+        <div id="bayiPanel-tumbuh" style="display:none;">
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2><span class="card-num" style="background:#2f9e5c;">📏</span> Cari Pasien Balita</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">SDIDTK — pemantauan BB, tinggi/panjang badan, lingkar kepala, status gizi, deteksi stunting, dan perkembangan.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="tumbuhCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienTumbuh();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienTumbuh()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="tumbuhHasilCari"></div>
+          </div>
+
+          <div id="tumbuhWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Tumbuh Kembang — <span id="tumbuhNamaPasien"></span></h2>
+              <div id="msgTumbuh"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="tumbuhTanggal" required></div>
+                <div><label>Berat Badan (kg)</label><input type="text" id="tumbuhBb"></div>
+                <div><label>Tinggi/Panjang Badan (cm)</label><input type="text" id="tumbuhTb"></div>
+                <div><label>Lingkar Kepala (cm)</label><input type="text" id="tumbuhLk"></div>
+                <div>
+                  <label>Status Gizi</label>
+                  <select id="tumbuhStatusGizi">
+                    <option value="">-- Pilih --</option>
+                    <option value="Gizi Baik">Gizi Baik</option>
+                    <option value="Gizi Kurang">Gizi Kurang</option>
+                    <option value="Gizi Buruk">Gizi Buruk</option>
+                    <option value="Gizi Lebih">Gizi Lebih</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Status Stunting</label>
+                  <select id="tumbuhStatusStunting">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Stunting">Tidak Stunting (Normal)</option>
+                    <option value="Pendek">Pendek (Stunted)</option>
+                    <option value="Sangat Pendek">Sangat Pendek (Severely Stunted)</option>
+                  </select>
+                </div>
+              </div>
+              <label>Status Perkembangan</label>
+              <select id="tumbuhStatusPerkembangan">
+                <option value="">-- Pilih --</option>
+                <option value="Sesuai Usia">Sesuai Usia</option>
+                <option value="Meragukan">Meragukan</option>
+                <option value="Kemungkinan Penyimpangan">Kemungkinan Penyimpangan</option>
+              </select>
+              <label>Catatan</label>
+              <textarea id="tumbuhCatatan" placeholder="Catatan tambahan hasil pemantauan"></textarea>
+              <button class="btn-primary" onclick="simpanTumbuhKembang()">Simpan Hasil Pemantauan</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Tumbuh Kembang</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>BB</th><th>TB/PB</th><th>Lingkar Kepala</th><th>Status Gizi</th><th>Stunting</th><th>Perkembangan</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatTumbuh"><tr><td colspan="8">Belum ada catatan tumbuh kembang.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===== Sub-menu lain — segera ===== -->
+        <div id="bayiPanel-imunisasi" style="display:none;"><div class="k2-segera"><div class="ic">💉</div><div class="t">Imunisasi Dasar &amp; Lanjutan</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
+        <div id="bayiPanel-vitamin-a" style="display:none;"><div class="k2-segera"><div class="ic">💊</div><div class="t">Pemberian Vitamin A</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
+        <div id="bayiPanel-mtbs" style="display:none;"><div class="k2-segera"><div class="ic">🩺</div><div class="t">MTBS/MTBM</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
+
       </div>
       <div id="panelAnakSekolah" style="display:none;">
         <div class="k2-segera"><div class="ic">🎒</div><div class="t">Anak Prasekolah &amp; Usia Sekolah</div>Menu ini segera dibangun di sesi berikutnya.</div>
@@ -599,6 +755,17 @@ function gantiSubtabK2(tab) {
   document.querySelector(".topbar h1").textContent = judul[tab] || "Klaster 2";
   if (tab === "dashboard") muatDashboardK2();
   if (tab === "ibu") muatAnc();
+}
+
+// ---------- BAYI & BALITA — inner sub-tabs ----------
+const SUBBAYI = ["kn", "tumbuh", "imunisasi", "vitamin-a", "mtbs"];
+function gantiSubBayi(sub) {
+  SUBBAYI.forEach(s => {
+    const panel = document.getElementById("bayiPanel-" + s);
+    if (panel) panel.style.display = (s === sub) ? "block" : "none";
+    const btn = document.getElementById("bayiSub-" + s);
+    if (btn) btn.classList.toggle("active", s === sub);
+  });
 }
 
 // ---------- IBU HAMIL — inner sub-tabs ----------
@@ -1439,6 +1606,253 @@ async function muatRiwayatRujukanK2() {
       <td><span class="badge badge-${r.status === "diterima" ? "selesai" : (r.status === "batal" ? "batal" : "menunggu")}">${r.status}</span></td>
     </tr>
   `).join("") : `<tr><td colspan="6">Belum ada rujukan komplikasi tercatat.</td></tr>`;
+}
+
+// ---------- KN (KUNJUNGAN NEONATAL) ----------
+let pasienTerpilihKn = null;
+
+async function cariPasienKn() {
+  const kunci = document.getElementById("knCari").value.trim();
+  const hasilDiv = document.getElementById("knHasilCari");
+  document.getElementById("knWrap").style.display = "none";
+  pasienTerpilihKn = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienKn(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienKnDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienKn = data;
+  }
+}
+
+function pilihPasienKnDariHasil(i) {
+  pilihPasienKn(window._hasilCariPasienKn[i]);
+}
+
+function pilihPasienKn(pasien) {
+  pasienTerpilihKn = pasien;
+  document.getElementById("knHasilCari").innerHTML = "";
+  document.getElementById("knNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"}, lahir ${new Date(pasien.tanggal_lahir).toLocaleDateString("id-ID")})`;
+  document.getElementById("knWrap").style.display = "block";
+  document.getElementById("msgKn").innerHTML = "";
+  document.getElementById("knTahap").value = "";
+  document.getElementById("knTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("knBb").value = "";
+  document.getElementById("knSuhu").value = "";
+  document.getElementById("knKondisiUmum").value = "";
+  document.getElementById("knAsiEksklusif").checked = false;
+  document.querySelectorAll(".knBahaya").forEach(c => c.checked = false);
+  document.getElementById("knCatatan").value = "";
+
+  muatRiwayatKn();
+}
+
+async function muatRiwayatKn() {
+  const tbody = document.getElementById("tabelRiwayatKn");
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan_kn")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihKn.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada catatan KN.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(n => `
+    <tr>
+      <td>${n.tahap}</td>
+      <td>${new Date(n.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${n.berat_badan || "-"}</td>
+      <td>${n.suhu || "-"}</td>
+      <td>${n.asi_eksklusif ? "Ya" : "Tidak"}</td>
+      <td>${(n.tanda_bahaya && n.tanda_bahaya.length) ? n.tanda_bahaya.join(", ") : "-"}</td>
+      <td>${n.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanKn() {
+  const msgBox = document.getElementById("msgKn");
+  if (!pasienTerpilihKn) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tahap = document.getElementById("knTahap").value;
+  const tanggal = document.getElementById("knTanggal").value;
+  if (!tahap) { msgBox.innerHTML = `<div class="msg msg-error">Pilih tahap KN dulu.</div>`; return; }
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const bahaya = Array.from(document.querySelectorAll(".knBahaya:checked")).map(c => c.value);
+
+  const { error } = await supabaseClient.from("kunjungan_kn").insert({
+    pasien_id: pasienTerpilihKn.id,
+    tahap,
+    tanggal,
+    berat_badan: document.getElementById("knBb").value.trim() || null,
+    suhu: document.getElementById("knSuhu").value.trim() || null,
+    kondisi_umum: document.getElementById("knKondisiUmum").value.trim() || null,
+    asi_eksklusif: document.getElementById("knAsiEksklusif").checked,
+    tanda_bahaya: bahaya,
+    catatan: document.getElementById("knCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">${tahap} tersimpan.</div>`;
+  document.getElementById("knTahap").value = "";
+  document.getElementById("knBb").value = "";
+  document.getElementById("knSuhu").value = "";
+  document.getElementById("knKondisiUmum").value = "";
+  document.getElementById("knAsiEksklusif").checked = false;
+  document.querySelectorAll(".knBahaya").forEach(c => c.checked = false);
+  document.getElementById("knCatatan").value = "";
+  await muatRiwayatKn();
+}
+
+// ---------- TUMBUH KEMBANG & GIZI ----------
+let pasienTerpilihTumbuh = null;
+
+async function cariPasienTumbuh() {
+  const kunci = document.getElementById("tumbuhCari").value.trim();
+  const hasilDiv = document.getElementById("tumbuhHasilCari");
+  document.getElementById("tumbuhWrap").style.display = "none";
+  pasienTerpilihTumbuh = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienTumbuh(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienTumbuhDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienTumbuh = data;
+  }
+}
+
+function pilihPasienTumbuhDariHasil(i) {
+  pilihPasienTumbuh(window._hasilCariPasienTumbuh[i]);
+}
+
+function pilihPasienTumbuh(pasien) {
+  pasienTerpilihTumbuh = pasien;
+  document.getElementById("tumbuhHasilCari").innerHTML = "";
+  document.getElementById("tumbuhNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"}, lahir ${new Date(pasien.tanggal_lahir).toLocaleDateString("id-ID")})`;
+  document.getElementById("tumbuhWrap").style.display = "block";
+  document.getElementById("msgTumbuh").innerHTML = "";
+  document.getElementById("tumbuhTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("tumbuhBb").value = "";
+  document.getElementById("tumbuhTb").value = "";
+  document.getElementById("tumbuhLk").value = "";
+  document.getElementById("tumbuhStatusGizi").value = "";
+  document.getElementById("tumbuhStatusStunting").value = "";
+  document.getElementById("tumbuhStatusPerkembangan").value = "";
+  document.getElementById("tumbuhCatatan").value = "";
+
+  muatRiwayatTumbuh();
+}
+
+async function muatRiwayatTumbuh() {
+  const tbody = document.getElementById("tabelRiwayatTumbuh");
+  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("tumbuh_kembang")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihTumbuh.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="8">Belum ada catatan tumbuh kembang.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(t => `
+    <tr>
+      <td>${new Date(t.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${t.berat_badan || "-"}</td>
+      <td>${t.tinggi_panjang_badan || "-"}</td>
+      <td>${t.lingkar_kepala || "-"}</td>
+      <td>${t.status_gizi || "-"}</td>
+      <td>${t.status_stunting || "-"}</td>
+      <td>${t.status_perkembangan || "-"}</td>
+      <td>${t.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanTumbuhKembang() {
+  const msgBox = document.getElementById("msgTumbuh");
+  if (!pasienTerpilihTumbuh) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("tumbuhTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("tumbuh_kembang").insert({
+    pasien_id: pasienTerpilihTumbuh.id,
+    tanggal,
+    berat_badan: document.getElementById("tumbuhBb").value.trim() || null,
+    tinggi_panjang_badan: document.getElementById("tumbuhTb").value.trim() || null,
+    lingkar_kepala: document.getElementById("tumbuhLk").value.trim() || null,
+    status_gizi: document.getElementById("tumbuhStatusGizi").value || null,
+    status_stunting: document.getElementById("tumbuhStatusStunting").value || null,
+    status_perkembangan: document.getElementById("tumbuhStatusPerkembangan").value || null,
+    catatan: document.getElementById("tumbuhCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Hasil pemantauan tumbuh kembang tersimpan.</div>`;
+  document.getElementById("tumbuhBb").value = "";
+  document.getElementById("tumbuhTb").value = "";
+  document.getElementById("tumbuhLk").value = "";
+  document.getElementById("tumbuhStatusGizi").value = "";
+  document.getElementById("tumbuhStatusStunting").value = "";
+  document.getElementById("tumbuhStatusPerkembangan").value = "";
+  document.getElementById("tumbuhCatatan").value = "";
+  await muatRiwayatTumbuh();
 }
 </script>
 

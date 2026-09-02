@@ -1437,6 +1437,61 @@ create trigger trg_audit_kunjungan_nifas after insert or update or delete on kun
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 47. KLASTER 2 — FASE 6: Bayi & Balita — KN (Kunjungan Neonatal)
+--     & Tumbuh Kembang (SDIDTK, termasuk deteksi stunting/gizi).
+--     Pasien bayi/balita REUSE tabel pasien yang sudah ada,
+--     dicari langsung (bukan dari daftar kehamilan), karena gak
+--     semua bayi tercatat lewat modul Persalinan ini.
+-- ============================================================
+create table if not exists kunjungan_kn (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tahap text not null check (tahap in ('KN1', 'KN2', 'KN3')),
+  tanggal date not null default current_date,
+  berat_badan text,
+  suhu text,
+  kondisi_umum text,
+  asi_eksklusif boolean not null default false,
+  tanda_bahaya jsonb not null default '[]'::jsonb,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kunjungan_kn_pasien on kunjungan_kn(pasien_id);
+
+alter table kunjungan_kn enable row level security;
+create policy "authenticated_all_kunjungan_kn" on kunjungan_kn for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kunjungan_kn on kunjungan_kn;
+create trigger trg_audit_kunjungan_kn after insert or update or delete on kunjungan_kn
+  for each row execute function fn_audit_log();
+
+create table if not exists tumbuh_kembang (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  berat_badan text,
+  tinggi_panjang_badan text,
+  lingkar_kepala text,
+  status_gizi text,
+  status_stunting text,
+  status_perkembangan text,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_tumbuh_kembang_pasien on tumbuh_kembang(pasien_id);
+
+alter table tumbuh_kembang enable row level security;
+create policy "authenticated_all_tumbuh_kembang" on tumbuh_kembang for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_tumbuh_kembang on tumbuh_kembang;
+create trigger trg_audit_tumbuh_kembang after insert or update or delete on tumbuh_kembang
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
