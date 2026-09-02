@@ -235,7 +235,50 @@
         </div>
 
         <!-- ===== Sub-menu lain — segera ===== -->
-        <div id="ibuPanel-imunisasi" style="display:none;"><div class="k2-segera"><div class="ic">💉</div><div class="t">Imunisasi TT/Td Ibu Hamil</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
+        <div id="ibuPanel-imunisasi" style="display:none;">
+
+          <div class="card" style="--accent:#216ac5;">
+            <h2><span class="card-num" style="background:#216ac5;">💉</span> Pilih Ibu Hamil</h2>
+            <select id="imunPilihHamil" onchange="pilihKehamilanImunisasi(this.value)">
+              <option value="">-- Pilih ibu hamil aktif --</option>
+            </select>
+          </div>
+
+          <div id="imunWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Imunisasi TT/Td — <span id="imunNamaPasien"></span></h2>
+              <div id="msgImun"></div>
+              <div class="grid-3">
+                <div>
+                  <label>Jenis *</label>
+                  <select id="imunJenis" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="TT1">TT1</option>
+                    <option value="TT2">TT2</option>
+                    <option value="TT3">TT3</option>
+                    <option value="TT4">TT4</option>
+                    <option value="TT5">TT5</option>
+                    <option value="Td (Booster)">Td (Booster)</option>
+                  </select>
+                </div>
+                <div><label>Tanggal *</label><input type="date" id="imunTanggal" required></div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="imunCatatan" placeholder="Catatan tambahan, kalau ada"></textarea>
+              <button class="btn-primary" onclick="simpanImunisasi()">Simpan Imunisasi</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Imunisasi TT/Td</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Jenis</th><th>Catatan</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatImunisasi"><tr><td colspan="4">Belum ada catatan imunisasi.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
         <div id="ibuPanel-persalinan" style="display:none;"><div class="k2-segera"><div class="ic">👶</div><div class="t">Pencatatan Persalinan</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
         <div id="ibuPanel-nifas" style="display:none;"><div class="k2-segera"><div class="ic">🩺</div><div class="t">Pemeriksaan Nifas (KF1–KF4)</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
         <div id="ibuPanel-rujukan" style="display:none;"><div class="k2-segera"><div class="ic">↦</div><div class="t">Rujukan Komplikasi Kehamilan/Persalinan</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
@@ -542,8 +585,11 @@ async function muatAnc() {
   if (error) { sel.innerHTML = `<option value="">Gagal muat: ${error.message}</option>`; return; }
 
   kehamilanAktifCache = data || [];
-  sel.innerHTML = `<option value="">-- Pilih ibu hamil aktif --</option>` +
+  const opsiHtml = `<option value="">-- Pilih ibu hamil aktif --</option>` +
     kehamilanAktifCache.map(k => `<option value="${k.id}">${k.pasien?.nama || "-"} (No. RM ${k.pasien?.no_rm || "-"})</option>`).join("");
+  sel.innerHTML = opsiHtml;
+  const selImun = document.getElementById("imunPilihHamil");
+  if (selImun) selImun.innerHTML = opsiHtml;
 }
 
 function usiaKehamilanMinggu(hpht) {
@@ -638,6 +684,77 @@ async function simpanAnc() {
   ["ancTd", "ancBb", "ancTfu", "ancLila", "ancHb", "ancStatusGizi", "ancCatatan"].forEach(id => document.getElementById(id).value = "");
   document.querySelectorAll(".ancRisiko").forEach(c => c.checked = false);
   await muatRiwayatAnc();
+}
+
+// ---------- IMUNISASI TT/Td ----------
+let kehamilanTerpilihImun = null;
+
+function pilihKehamilanImunisasi(kehamilanId) {
+  if (!kehamilanId) {
+    document.getElementById("imunWrap").style.display = "none";
+    kehamilanTerpilihImun = null;
+    return;
+  }
+  const k = kehamilanAktifCache.find(x => x.id === kehamilanId);
+  if (!k) return;
+  kehamilanTerpilihImun = k;
+
+  document.getElementById("imunNamaPasien").textContent = `${k.pasien?.nama || "-"} (No. RM ${k.pasien?.no_rm || "-"})`;
+  document.getElementById("imunWrap").style.display = "block";
+  document.getElementById("msgImun").innerHTML = "";
+  document.getElementById("imunJenis").value = "";
+  document.getElementById("imunTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("imunCatatan").value = "";
+
+  muatRiwayatImunisasi();
+}
+
+async function muatRiwayatImunisasi() {
+  const tbody = document.getElementById("tabelRiwayatImunisasi");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("imunisasi_tt")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("kehamilan_id", kehamilanTerpilihImun.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada catatan imunisasi.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(i => `
+    <tr>
+      <td>${new Date(i.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${i.jenis}</td>
+      <td>${i.catatan || "-"}</td>
+      <td>${i.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanImunisasi() {
+  const msgBox = document.getElementById("msgImun");
+  if (!kehamilanTerpilihImun) { msgBox.innerHTML = `<div class="msg msg-error">Pilih ibu hamil dulu.</div>`; return; }
+
+  const jenis = document.getElementById("imunJenis").value;
+  const tanggal = document.getElementById("imunTanggal").value;
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jenis imunisasi dulu.</div>`; return; }
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("imunisasi_tt").insert({
+    kehamilan_id: kehamilanTerpilihImun.id,
+    jenis,
+    tanggal,
+    catatan: document.getElementById("imunCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Imunisasi ${jenis} tersimpan.</div>`;
+  document.getElementById("imunJenis").value = "";
+  document.getElementById("imunCatatan").value = "";
+  await muatRiwayatImunisasi();
 }
 </script>
 

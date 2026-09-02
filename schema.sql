@@ -1348,6 +1348,29 @@ create trigger trg_audit_kunjungan_anc after insert or update or delete on kunju
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 44. KLASTER 2 — FASE 3: Imunisasi TT/Td Ibu Hamil.
+--     Reuse tabel kehamilan yang sudah ada.
+-- ============================================================
+create table if not exists imunisasi_tt (
+  id uuid primary key default gen_random_uuid(),
+  kehamilan_id uuid not null references kehamilan(id),
+  jenis text not null check (jenis in ('TT1', 'TT2', 'TT3', 'TT4', 'TT5', 'Td (Booster)')),
+  tanggal date not null default current_date,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_imunisasi_tt_kehamilan on imunisasi_tt(kehamilan_id);
+
+alter table imunisasi_tt enable row level security;
+create policy "authenticated_all_imunisasi_tt" on imunisasi_tt for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_imunisasi_tt on imunisasi_tt;
+create trigger trg_audit_imunisasi_tt after insert or update or delete on imunisasi_tt
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
