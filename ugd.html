@@ -631,7 +631,72 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
 
       </div>
       <div id="panelAudit" style="display:none;">
-        <div class="ugd-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">🛡</span> Audit Trail — Data UGD</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">Jejak otomatis semua perubahan (tambah/ubah/hapus) pada data Kunjungan UGD, Observasi, Resep, dan Rekam Medis. Dicatat langsung oleh database lewat trigger — gak bisa kelewat walau perubahan dilakukan di luar aplikasi ini.</p>
+
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div><label>Dari Tanggal</label><input type="date" id="audUgdDari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="audUgdSampai"></div>
+            <div>
+              <label>Tabel</label>
+              <select id="audUgdFilterTabel">
+                <option value="">Semua Tabel UGD</option>
+                <option value="kunjungan_ugd">Kunjungan UGD</option>
+                <option value="observasi_ugd">Observasi</option>
+                <option value="resep">Resep</option>
+                <option value="rekam_medis">Rekam Medis</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Aksi</label>
+              <select id="audUgdFilterAksi">
+                <option value="">Semua Aksi</option>
+                <option value="insert">Tambah (Insert)</option>
+                <option value="update">Ubah (Update)</option>
+                <option value="delete">Hapus (Delete)</option>
+              </select>
+            </div>
+            <div></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatAuditUgd()">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportAuditUgdCsv()">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="ugd-stat-grid">
+            <div class="ugd-stat-card" style="--accent:#173b5e;"><div class="label">Total Perubahan</div><div class="value" id="audUgdStatTotal">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#2f9e5c;"><div class="label">Tambah</div><div class="value" id="audUgdStatInsert">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#c98a1a;"><div class="label">Ubah</div><div class="value" id="audUgdStatUpdate">0</div></div>
+            <div class="ugd-stat-card" style="--accent:#c0503f;"><div class="label">Hapus</div><div class="value" id="audUgdStatDelete">0</div></div>
+          </div>
+
+          <table>
+            <thead><tr><th>Waktu</th><th>Tabel</th><th>Aksi</th><th>Petugas</th><th>Ringkasan</th><th></th></tr></thead>
+            <tbody id="audUgdTabelLog"><tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+          <p style="font-size:11px; color:var(--muted); margin-top:8px;">Menampilkan maksimal 500 baris terbaru sesuai filter. Persempit rentang tanggal kalau butuh data lebih lama.</p>
+        </div>
+
+        <div class="card" style="--accent:#6a4c93;">
+          <h2>Log Akses Rekam Medis Kegawatdaruratan</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">Siapa saja yang membuka atau mengubah RM Kegawatdaruratan pasien UGD, dan kapan.</p>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div><label>Dari Tanggal</label><input type="date" id="aksesRmUgdDari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="aksesRmUgdSampai"></div>
+            <div style="display:flex; align-items:flex-end;">
+              <button type="button" class="btn-primary" onclick="muatAksesRmUgd()">Tampilkan</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Waktu</th><th>Pasien</th><th>Aksi</th><th>Keterangan</th><th>Petugas</th></tr></thead>
+            <tbody id="aksesRmUgdTabel"><tr><td colspan="5">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
 
     </div>
@@ -745,6 +810,21 @@ function gantiSubtabUgd(tab) {
       sampaiEl.value = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
     }
     muatLaporanDinasUgd();
+  }
+  if (tab === "audit") {
+    const dariEl = document.getElementById("audUgdDari");
+    const sampaiEl = document.getElementById("audUgdSampai");
+    const aksesDariEl = document.getElementById("aksesRmUgdDari");
+    const aksesSampaiEl = document.getElementById("aksesRmUgdSampai");
+    if (!dariEl.value) {
+      const seminggu = new Date(); seminggu.setDate(seminggu.getDate() - 7);
+      dariEl.value = seminggu.toISOString().split("T")[0];
+      sampaiEl.value = new Date().toISOString().split("T")[0];
+      aksesDariEl.value = dariEl.value;
+      aksesSampaiEl.value = sampaiEl.value;
+    }
+    muatAuditUgd();
+    muatAksesRmUgd();
   }
 }
 
@@ -2171,6 +2251,146 @@ function exportLaporanDinasUgdCsv() {
   a.href = URL.createObjectURL(blob);
   a.download = `Laporan_Dinas_UGD_${dariInput}_${sampaiInput}.csv`;
   a.click();
+}
+
+// ---------- AUDIT / KEAMANAN UGD ----------
+let auditUgdCache = [];
+
+const LABEL_TABEL_AUDIT_UGD = { kunjungan_ugd: "Kunjungan UGD", observasi_ugd: "Observasi", resep: "Resep", rekam_medis: "Rekam Medis" };
+const LABEL_AKSI_AUDIT_UGD = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
+const BADGE_AKSI_AUDIT_UGD = { insert: "badge-selesai", update: "badge-menunggu", delete: "badge-batal" };
+
+function ringkasBarisAuditUgd(row) {
+  const data = row.data_baru || row.data_lama || {};
+  if (row.tabel === "kunjungan_ugd") return `Triase ${data.triase_warna || "-"} — Status ${labelStatusUgd(data.status_ugd)}`;
+  if (row.tabel === "observasi_ugd") return `Observasi: ${data.kesadaran || "-"} ${data.keterangan ? "— " + data.keterangan : ""}`;
+  if (row.tabel === "resep") return (data.daftar_obat && data.daftar_obat.length) ? `Resep: ${data.daftar_obat.map(o => o.nama_obat).join(", ")}` : `Resep #${(row.record_id || "").slice(0, 8)}`;
+  if (row.tabel === "rekam_medis") return data.assessment ? `RM: ${data.assessment}` : `RM #${(row.record_id || "").slice(0, 8)}`;
+  return `${row.tabel} #${(row.record_id || "").slice(0, 8)}`;
+}
+
+async function muatAuditUgd() {
+  const dari = document.getElementById("audUgdDari").value;
+  const sampai = document.getElementById("audUgdSampai").value;
+  const filterTabel = document.getElementById("audUgdFilterTabel").value;
+  const filterAksi = document.getElementById("audUgdFilterAksi").value;
+  const tbody = document.getElementById("audUgdTabelLog");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  let q = supabaseClient
+    .from("audit_log")
+    .select("*, profil_pegawai(nama)")
+    .in("tabel", filterTabel ? [filterTabel] : ["kunjungan_ugd", "observasi_ugd", "resep", "rekam_medis"])
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (dari) q = q.gte("created_at", `${dari}T00:00:00`);
+  if (sampai) q = q.lte("created_at", `${sampai}T23:59:59`);
+  if (filterAksi) q = q.eq("aksi", filterAksi);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  auditUgdCache = data || [];
+
+  document.getElementById("audUgdStatTotal").textContent = auditUgdCache.length;
+  document.getElementById("audUgdStatInsert").textContent = auditUgdCache.filter(r => r.aksi === "insert").length;
+  document.getElementById("audUgdStatUpdate").textContent = auditUgdCache.filter(r => r.aksi === "update").length;
+  document.getElementById("audUgdStatDelete").textContent = auditUgdCache.filter(r => r.aksi === "delete").length;
+
+  tbody.innerHTML = auditUgdCache.length ? auditUgdCache.map((r, i) => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${LABEL_TABEL_AUDIT_UGD[r.tabel] || r.tabel}</td>
+      <td><span class="badge ${BADGE_AKSI_AUDIT_UGD[r.aksi] || ""}">${LABEL_AKSI_AUDIT_UGD[r.aksi] || r.aksi}</span></td>
+      <td>${r.profil_pegawai ? r.profil_pegawai.nama : "-"}</td>
+      <td>${ringkasBarisAuditUgd(r)}</td>
+      <td><button type="button" class="btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="toggleDetailAuditUgd(${i})">Detail</button></td>
+    </tr>
+    <tr id="audUgdDetail${i}" style="display:none;">
+      <td colspan="6">
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sebelum</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_lama ? JSON.stringify(r.data_lama, null, 2) : "(tidak ada — baris baru)"}</pre>
+          </div>
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sesudah</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_baru ? JSON.stringify(r.data_baru, null, 2) : "(tidak ada — baris dihapus)"}</pre>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Gak ada perubahan pada rentang & filter ini.</td></tr>`;
+}
+
+function toggleDetailAuditUgd(i) {
+  const row = document.getElementById(`audUgdDetail${i}`);
+  if (row) row.style.display = row.style.display === "none" ? "table-row" : "none";
+}
+
+function exportAuditUgdCsv() {
+  if (!auditUgdCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Waktu", "Tabel", "Aksi", "Petugas", "Ringkasan", "Record ID"];
+  const rows = auditUgdCache.map(r => [
+    new Date(r.created_at).toLocaleString("id-ID"),
+    LABEL_TABEL_AUDIT_UGD[r.tabel] || r.tabel,
+    LABEL_AKSI_AUDIT_UGD[r.aksi] || r.aksi,
+    r.profil_pegawai ? r.profil_pegawai.nama : "-",
+    ringkasBarisAuditUgd(r),
+    r.record_id || "-"
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("audUgdDari").value;
+  const sampaiInput = document.getElementById("audUgdSampai").value;
+  a.href = url;
+  a.download = `Audit_UGD_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ---------- LOG AKSES RM (khusus UGD) ----------
+async function muatAksesRmUgd() {
+  const dari = document.getElementById("aksesRmUgdDari").value;
+  const sampai = document.getElementById("aksesRmUgdSampai").value;
+  const tbody = document.getElementById("aksesRmUgdTabel");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const sampaiEksklusif = new Date(sampai || new Date());
+  sampaiEksklusif.setDate(sampaiEksklusif.getDate() + 1);
+
+  const { data: ugdIds } = await supabaseClient
+    .from("kunjungan_ugd")
+    .select("kunjungan_id");
+  const kunjunganIdSet = (ugdIds || []).map(u => u.kunjungan_id);
+
+  if (!kunjunganIdSet.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada kunjungan UGD tercatat.</td></tr>`; return; }
+
+  let q = supabaseClient
+    .from("log_akses_rm")
+    .select("*, pasien(nama, no_rm), profil_pegawai:petugas_id(nama)")
+    .in("kunjungan_id", kunjunganIdSet)
+    .order("created_at", { ascending: false })
+    .limit(300);
+
+  if (dari) q = q.gte("created_at", `${dari}T00:00:00`);
+  if (sampai) q = q.lte("created_at", `${sampai}T23:59:59`);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  tbody.innerHTML = data.length ? data.map(r => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${r.pasien?.nama || "-"} (No. RM ${r.pasien?.no_rm || "-"})</td>
+      <td>${r.aksi === "lihat" ? "Lihat" : "Ubah"}</td>
+      <td>${r.keterangan || "-"}</td>
+      <td>${r.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="5">Tidak ada akses RM UGD tercatat pada rentang ini.</td></tr>`;
 }
 </script>
 </body>
