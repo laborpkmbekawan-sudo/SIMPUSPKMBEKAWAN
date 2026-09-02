@@ -279,7 +279,100 @@
 
           </div>
         </div>
-        <div id="ibuPanel-persalinan" style="display:none;"><div class="k2-segera"><div class="ic">👶</div><div class="t">Pencatatan Persalinan</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
+        <div id="ibuPanel-persalinan" style="display:none;">
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">👶</span> Pilih Ibu Hamil</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Setelah persalinan disimpan, status ibu otomatis pindah ke masa Nifas — gak akan muncul lagi di daftar hamil aktif.</p>
+            <select id="persalinanPilihHamil" onchange="pilihKehamilanPersalinan(this.value)">
+              <option value="">-- Pilih ibu hamil aktif --</option>
+            </select>
+          </div>
+
+          <div id="persalinanWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Persalinan — <span id="persalinanNamaPasien"></span></h2>
+              <div id="msgPersalinan"></div>
+
+              <div class="grid-3">
+                <div><label>Tanggal &amp; Waktu Persalinan *</label><input type="datetime-local" id="persalinanTanggal" required></div>
+                <div>
+                  <label>Jenis Persalinan *</label>
+                  <select id="persalinanJenis" required onchange="toggleJenisPersalinan()">
+                    <option value="">-- Pilih --</option>
+                    <option value="normal">Normal</option>
+                    <option value="penyulit">Dengan Penyulit</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Penolong Persalinan *</label>
+                  <select id="persalinanPenolong" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="Dokter">Dokter</option>
+                    <option value="Bidan">Bidan</option>
+                    <option value="Perawat">Perawat</option>
+                    <option value="Dukun Terlatih">Dukun Terlatih</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Tempat Persalinan *</label>
+                  <select id="persalinanTempat" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="Puskesmas">Puskesmas</option>
+                    <option value="Rumah Sakit">Rumah Sakit</option>
+                    <option value="Rumah Pasien">Rumah Pasien</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+                <div><label>Kondisi Ibu Pasca Bersalin</label><input type="text" id="persalinanKondisiIbu" placeholder="Contoh: Baik, stabil"></div>
+              </div>
+
+              <div id="wrapPenyulitCatatan" style="display:none;">
+                <label>Catatan Penyulit</label>
+                <textarea id="persalinanPenyulitCatatan" placeholder="Jelaskan jenis penyulit yang terjadi"></textarea>
+              </div>
+
+              <h2 style="margin-top:14px;">Kondisi Bayi</h2>
+              <div class="grid-3">
+                <div>
+                  <label>Kondisi Bayi *</label>
+                  <select id="persalinanBayiHidup" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="hidup">Lahir Hidup</option>
+                    <option value="meninggal">Lahir Mati / Meninggal</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Jenis Kelamin Bayi</label>
+                  <select id="persalinanJkBayi">
+                    <option value="">-- Pilih --</option>
+                    <option value="L">Laki-laki</option>
+                    <option value="P">Perempuan</option>
+                  </select>
+                </div>
+                <div><label>Berat Badan Lahir (gram)</label><input type="text" id="persalinanBbLahir"></div>
+                <div><label>Panjang Badan Lahir (cm)</label><input type="text" id="persalinanPbLahir"></div>
+              </div>
+
+              <label>Catatan Tambahan</label>
+              <textarea id="persalinanCatatan"></textarea>
+
+              <button class="btn-primary" onclick="simpanPersalinan()">Simpan Persalinan</button>
+              <p style="font-size:11.5px; color:var(--muted); margin-top:8px;">Pencatatan bayi sebagai pasien baru dilakukan lewat menu Pendaftaran, lalu dihubungkan di menu Bayi &amp; Balita (segera dibangun).</p>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Persalinan Terbaru</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Ibu</th><th>Jenis</th><th>Penolong</th><th>Tempat</th><th>Kondisi Bayi</th></tr></thead>
+                <tbody id="tabelRiwayatPersalinan"><tr><td colspan="6">Memuat...</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
         <div id="ibuPanel-nifas" style="display:none;"><div class="k2-segera"><div class="ic">🩺</div><div class="t">Pemeriksaan Nifas (KF1–KF4)</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
         <div id="ibuPanel-rujukan" style="display:none;"><div class="k2-segera"><div class="ic">↦</div><div class="t">Rujukan Komplikasi Kehamilan/Persalinan</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
 
@@ -368,6 +461,7 @@ function gantiSubIbu(sub) {
     const btn = document.getElementById("ibuSub-" + s);
     if (btn) btn.classList.toggle("active", s === sub);
   });
+  if (sub === "persalinan") muatRiwayatPersalinanTerbaru();
 }
 
 // ---------- Helper ----------
@@ -590,6 +684,8 @@ async function muatAnc() {
   sel.innerHTML = opsiHtml;
   const selImun = document.getElementById("imunPilihHamil");
   if (selImun) selImun.innerHTML = opsiHtml;
+  const selPersalinan = document.getElementById("persalinanPilihHamil");
+  if (selPersalinan) selPersalinan.innerHTML = opsiHtml;
 }
 
 function usiaKehamilanMinggu(hpht) {
@@ -755,6 +851,110 @@ async function simpanImunisasi() {
   document.getElementById("imunJenis").value = "";
   document.getElementById("imunCatatan").value = "";
   await muatRiwayatImunisasi();
+}
+
+// ---------- PERSALINAN ----------
+let kehamilanTerpilihPersalinan = null;
+
+function pilihKehamilanPersalinan(kehamilanId) {
+  if (!kehamilanId) {
+    document.getElementById("persalinanWrap").style.display = "none";
+    kehamilanTerpilihPersalinan = null;
+    return;
+  }
+  const k = kehamilanAktifCache.find(x => x.id === kehamilanId);
+  if (!k) return;
+  kehamilanTerpilihPersalinan = k;
+
+  document.getElementById("persalinanNamaPasien").textContent = `${k.pasien?.nama || "-"} (No. RM ${k.pasien?.no_rm || "-"})`;
+  document.getElementById("persalinanWrap").style.display = "block";
+  document.getElementById("msgPersalinan").innerHTML = "";
+  document.getElementById("persalinanTanggal").value = new Date().toISOString().slice(0, 16);
+  document.getElementById("persalinanJenis").value = "";
+  document.getElementById("persalinanPenolong").value = "";
+  document.getElementById("persalinanTempat").value = "";
+  document.getElementById("persalinanKondisiIbu").value = "";
+  document.getElementById("persalinanPenyulitCatatan").value = "";
+  document.getElementById("persalinanBayiHidup").value = "";
+  document.getElementById("persalinanJkBayi").value = "";
+  document.getElementById("persalinanBbLahir").value = "";
+  document.getElementById("persalinanPbLahir").value = "";
+  document.getElementById("persalinanCatatan").value = "";
+  toggleJenisPersalinan();
+}
+
+function toggleJenisPersalinan() {
+  document.getElementById("wrapPenyulitCatatan").style.display = document.getElementById("persalinanJenis").value === "penyulit" ? "block" : "none";
+}
+
+async function simpanPersalinan() {
+  const msgBox = document.getElementById("msgPersalinan");
+  if (!kehamilanTerpilihPersalinan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih ibu hamil dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("persalinanTanggal").value;
+  const jenis = document.getElementById("persalinanJenis").value;
+  const penolong = document.getElementById("persalinanPenolong").value;
+  const tempat = document.getElementById("persalinanTempat").value;
+  const bayiHidupVal = document.getElementById("persalinanBayiHidup").value;
+
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal &amp; waktu persalinan dulu.</div>`; return; }
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jenis persalinan dulu.</div>`; return; }
+  if (!penolong) { msgBox.innerHTML = `<div class="msg msg-error">Pilih penolong persalinan dulu.</div>`; return; }
+  if (!tempat) { msgBox.innerHTML = `<div class="msg msg-error">Pilih tempat persalinan dulu.</div>`; return; }
+  if (!bayiHidupVal) { msgBox.innerHTML = `<div class="msg msg-error">Pilih kondisi bayi dulu.</div>`; return; }
+
+  const { error: errInsert } = await supabaseClient.from("persalinan").insert({
+    kehamilan_id: kehamilanTerpilihPersalinan.id,
+    tanggal: new Date(tanggal).toISOString(),
+    jenis,
+    penyulit_catatan: jenis === "penyulit" ? (document.getElementById("persalinanPenyulitCatatan").value.trim() || null) : null,
+    penolong,
+    tempat,
+    kondisi_ibu: document.getElementById("persalinanKondisiIbu").value.trim() || null,
+    bayi_hidup: bayiHidupVal === "hidup",
+    jenis_kelamin_bayi: document.getElementById("persalinanJkBayi").value || null,
+    bb_lahir: document.getElementById("persalinanBbLahir").value.trim() || null,
+    pb_lahir: document.getElementById("persalinanPbLahir").value.trim() || null,
+    catatan: document.getElementById("persalinanCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (errInsert) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan persalinan: ${errInsert.message}</div>`; return; }
+
+  const { error: errUpdate } = await supabaseClient.from("kehamilan").update({ status: "nifas" }).eq("id", kehamilanTerpilihPersalinan.id);
+  if (errUpdate) { msgBox.innerHTML = `<div class="msg msg-error">Persalinan tersimpan, tapi gagal update status kehamilan: ${errUpdate.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Persalinan tersimpan. Status ibu otomatis pindah ke masa Nifas.</div>`;
+  document.getElementById("persalinanWrap").style.display = "none";
+  kehamilanTerpilihPersalinan = null;
+  await muatAnc();
+  await muatRiwayatPersalinanTerbaru();
+  await muatDashboardK2();
+}
+
+async function muatRiwayatPersalinanTerbaru() {
+  const tbody = document.getElementById("tabelRiwayatPersalinan");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("persalinan")
+    .select("*, kehamilan(pasien(nama, no_rm))")
+    .order("tanggal", { ascending: false })
+    .limit(20);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan persalinan.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td>${new Date(p.tanggal).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${p.kehamilan?.pasien?.nama || "-"} (${p.kehamilan?.pasien?.no_rm || "-"})</td>
+      <td>${p.jenis === "normal" ? "Normal" : "Penyulit"}</td>
+      <td>${p.penolong || "-"}</td>
+      <td>${p.tempat || "-"}</td>
+      <td>${p.bayi_hidup ? "Lahir Hidup" : "Meninggal"}${p.jenis_kelamin_bayi ? " — " + (p.jenis_kelamin_bayi === "L" ? "Laki-laki" : "Perempuan") : ""}</td>
+    </tr>
+  `).join("");
 }
 </script>
 

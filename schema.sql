@@ -1371,6 +1371,38 @@ create trigger trg_audit_imunisasi_tt after insert or update or delete on imunis
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 45. KLASTER 2 — FASE 4: Pencatatan Persalinan.
+--     Reuse tabel kehamilan. Setelah persalinan disimpan, status
+--     kehamilan otomatis pindah ke 'nifas'.
+-- ============================================================
+create table if not exists persalinan (
+  id uuid primary key default gen_random_uuid(),
+  kehamilan_id uuid not null references kehamilan(id),
+  tanggal timestamptz not null default now(),
+  jenis text not null check (jenis in ('normal', 'penyulit')),
+  penyulit_catatan text,
+  penolong text,
+  tempat text,
+  kondisi_ibu text,
+  bayi_hidup boolean,
+  jenis_kelamin_bayi text check (jenis_kelamin_bayi in ('L', 'P')),
+  bb_lahir text,
+  pb_lahir text,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_persalinan_kehamilan on persalinan(kehamilan_id);
+
+alter table persalinan enable row level security;
+create policy "authenticated_all_persalinan" on persalinan for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_persalinan on persalinan;
+create trigger trg_audit_persalinan after insert or update or delete on persalinan
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
