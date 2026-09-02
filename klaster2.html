@@ -1029,7 +1029,67 @@
           <div class="k2-segera"><div class="ic">📏</div><div class="t">Tumbuh Kembang Prasekolah</div>Pakai form Tumbuh Kembang &amp; Gizi yang sama di menu Bayi &amp; Balita — formnya sudah berlaku untuk segala usia anak, jadi tidak dibangun ulang di sini.</div>
         </div>
         <div id="sekolahPanel-berkala" style="display:none;">
-          <div class="k2-segera"><div class="ic">🩺</div><div class="t">Pemeriksaan Berkala</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#7a4fc4;">
+            <h2><span class="card-num" style="background:#7a4fc4;">🩺</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pemeriksaan berkala tahunan siswa — tumbuh kembang, tensi, penglihatan &amp; pendengaran.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="berkalaCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienBerkala();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienBerkala()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="berkalaHasilCari"></div>
+          </div>
+
+          <div id="berkalaWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Pemeriksaan Berkala — <span id="berkalaNamaPasien"></span></h2>
+              <div id="msgBerkala"></div>
+              <div class="grid-3">
+                <div><label>Nama Sekolah</label><input type="text" id="berkalaSekolah" placeholder="Contoh: SDN 01 Bekawan"></div>
+                <div><label>Kelas</label><input type="text" id="berkalaKelas" placeholder="Contoh: 3"></div>
+                <div><label>Tanggal *</label><input type="date" id="berkalaTanggal" required></div>
+                <div><label>Tinggi Badan (cm)</label><input type="text" id="berkalaTinggi" placeholder="Contoh: 128"></div>
+                <div><label>Berat Badan (kg)</label><input type="text" id="berkalaBerat" placeholder="Contoh: 26"></div>
+                <div><label>Tekanan Darah</label><input type="text" id="berkalaTensi" placeholder="Contoh: 100/70"></div>
+                <div>
+                  <label>Penglihatan</label>
+                  <select id="berkalaPenglihatan">
+                    <option value="">-- Pilih --</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Gangguan Penglihatan">Gangguan Penglihatan</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Pendengaran</label>
+                  <select id="berkalaPendengaran">
+                    <option value="">-- Pilih --</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Gangguan Pendengaran">Gangguan Pendengaran</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="berkalaCatatan" placeholder="Temuan lain / tindak lanjut"></textarea>
+              <button class="btn-primary" onclick="simpanBerkala()">Simpan Pemeriksaan Berkala</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Pemeriksaan Berkala</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Sekolah/Kelas</th><th>TB/BB</th><th>Tensi</th><th>Penglihatan</th><th>Pendengaran</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatBerkala"><tr><td colspan="7">Belum ada catatan pemeriksaan berkala.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
 
       </div>
@@ -1116,14 +1176,149 @@
           </div>
         </div>
 
-        <!-- ===== Sub-menu lain — segera ===== -->
+        <!-- ===== TTD Remaja Putri ===== -->
         <div id="remajaPanel-ttd" style="display:none;">
-          <div class="k2-segera"><div class="ic">💊</div><div class="t">TTD Remaja Putri</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">💊</span> Cari Pasien Remaja Putri</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pencatatan pemberian/konsumsi Tablet Tambah Darah (TTD) mingguan untuk remaja putri.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="ttdCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienTtd();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienTtd()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="ttdHasilCari"></div>
+          </div>
+
+          <div id="ttdWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Pemberian TTD — <span id="ttdNamaPasien"></span></h2>
+              <div id="msgTtd"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="ttdTanggal" required></div>
+                <div><label>Jumlah Tablet Diberikan/Diminum</label><input type="number" id="ttdJumlah" min="0" placeholder="Contoh: 1"></div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="ttdCatatan" placeholder="Kepatuhan minum, keluhan (mual dll), dsb."></textarea>
+              <button class="btn-primary" onclick="simpanTtd()">Simpan Catatan TTD</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Pemberian TTD</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Jumlah Tablet</th><th>Catatan</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatTtd"><tr><td colspan="4">Belum ada catatan TTD.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
 
       </div>
       <div id="panelKohort" style="display:none;">
-        <div class="k2-segera"><div class="ic">📋</div><div class="t">Kohort &amp; Register</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="padding:10px 14px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="kohortSub-ibu" onclick="gantiSubKohort('ibu')">Kohort Ibu Hamil</button>
+            <button type="button" class="lap-tab" id="kohortSub-bayi" onclick="gantiSubKohort('bayi')">Kohort Bayi &amp; Balita</button>
+            <button type="button" class="lap-tab" id="kohortSub-sekolah" onclick="gantiSubKohort('sekolah')">Register Anak Sekolah</button>
+            <button type="button" class="lap-tab" id="kohortSub-remaja" onclick="gantiSubKohort('remaja')">Register Remaja</button>
+          </div>
+        </div>
+
+        <!-- ===== Kohort Ibu Hamil ===== -->
+        <div id="kohortPanel-ibu">
+          <div class="card" style="--accent:#c0503f;">
+            <h2>Filter Rentang Tanggal (berdasar HPHT tercatat)</h2>
+            <div class="grid-3">
+              <div><label>Dari</label><input type="date" id="kohortIbuDari"></div>
+              <div><label>Sampai</label><input type="date" id="kohortIbuSampai"></div>
+              <div style="display:flex; align-items:flex-end; gap:8px;">
+                <button class="btn-primary" onclick="muatKohortIbu()" style="margin-bottom:12px;">Tampilkan</button>
+                <button class="btn-secondary" onclick="exportKohortIbuCsv()" style="margin-bottom:12px;">Export CSV</button>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Register Kohort Ibu Hamil</h2>
+            <table>
+              <thead><tr><th>Nama</th><th>No. RM</th><th>HPHT</th><th>HPL</th><th>Gravida/Paritas</th><th>Status</th><th>Jml ANC</th></tr></thead>
+              <tbody id="tabelKohortIbu"><tr><td colspan="7">Klik Tampilkan buat muat data.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== Kohort Bayi & Balita ===== -->
+        <div id="kohortPanel-bayi" style="display:none;">
+          <div class="card" style="--accent:#216ac5;">
+            <h2>Filter Rentang Tanggal (berdasar catatan Tumbuh Kembang terakhir)</h2>
+            <div class="grid-3">
+              <div><label>Dari</label><input type="date" id="kohortBayiDari"></div>
+              <div><label>Sampai</label><input type="date" id="kohortBayiSampai"></div>
+              <div style="display:flex; align-items:flex-end; gap:8px;">
+                <button class="btn-primary" onclick="muatKohortBayi()" style="margin-bottom:12px;">Tampilkan</button>
+                <button class="btn-secondary" onclick="exportKohortBayiCsv()" style="margin-bottom:12px;">Export CSV</button>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Register Kohort Bayi &amp; Balita</h2>
+            <table>
+              <thead><tr><th>Nama</th><th>No. RM</th><th>Umur</th><th>Tgl Terakhir</th><th>BB/TB</th><th>Status Gizi</th><th>Status Stunting</th><th>Jml KN</th></tr></thead>
+              <tbody id="tabelKohortBayi"><tr><td colspan="8">Klik Tampilkan buat muat data.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== Register Anak Sekolah ===== -->
+        <div id="kohortPanel-sekolah" style="display:none;">
+          <div class="card" style="--accent:#1c7d7f;">
+            <h2>Filter Rentang Tanggal (berdasar Penjaringan terakhir)</h2>
+            <div class="grid-3">
+              <div><label>Dari</label><input type="date" id="kohortSekolahDari"></div>
+              <div><label>Sampai</label><input type="date" id="kohortSekolahSampai"></div>
+              <div style="display:flex; align-items:flex-end; gap:8px;">
+                <button class="btn-primary" onclick="muatKohortSekolah()" style="margin-bottom:12px;">Tampilkan</button>
+                <button class="btn-secondary" onclick="exportKohortSekolahCsv()" style="margin-bottom:12px;">Export CSV</button>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Register Anak Prasekolah &amp; Usia Sekolah</h2>
+            <table>
+              <thead><tr><th>Nama</th><th>No. RM</th><th>Sekolah/Kelas</th><th>Tgl Penjaringan</th><th>Status Gizi</th><th>Gigi</th><th>Mata</th><th>Jml Imunisasi BIAS</th></tr></thead>
+              <tbody id="tabelKohortSekolah"><tr><td colspan="8">Klik Tampilkan buat muat data.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== Register Remaja ===== -->
+        <div id="kohortPanel-remaja" style="display:none;">
+          <div class="card" style="--accent:#7a4fc4;">
+            <h2>Filter Rentang Tanggal (berdasar Skrining PKPR terakhir)</h2>
+            <div class="grid-3">
+              <div><label>Dari</label><input type="date" id="kohortRemajaDari"></div>
+              <div><label>Sampai</label><input type="date" id="kohortRemajaSampai"></div>
+              <div style="display:flex; align-items:flex-end; gap:8px;">
+                <button class="btn-primary" onclick="muatKohortRemaja()" style="margin-bottom:12px;">Tampilkan</button>
+                <button class="btn-secondary" onclick="exportKohortRemajaCsv()" style="margin-bottom:12px;">Export CSV</button>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Register Remaja</h2>
+            <table>
+              <thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Skrining</th><th>Status Gizi</th><th>Anemia</th><th>Jiwa</th><th>Jml Catatan TTD</th></tr></thead>
+              <tbody id="tabelKohortRemaja"><tr><td colspan="7">Klik Tampilkan buat muat data.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
       <div id="panelRujukan" style="display:none;">
 
@@ -1264,6 +1459,7 @@ function gantiSubtabK2(tab) {
   document.querySelector(".topbar h1").textContent = judul[tab] || "Klaster 2";
   if (tab === "dashboard") muatDashboardK2();
   if (tab === "ibu") muatAnc();
+  if (tab === "kohort") muatKohortIbu();
   if (tab === "rujukan") muatRiwayatRjkLabUmum();
 }
 
@@ -1298,6 +1494,21 @@ function gantiSubRemaja(sub) {
     const btn = document.getElementById("remajaSub-" + s);
     if (btn) btn.classList.toggle("active", s === sub);
   });
+}
+
+// ---------- KOHORT & REGISTER — inner sub-tabs ----------
+const SUBKOHORT = ["ibu", "bayi", "sekolah", "remaja"];
+function gantiSubKohort(sub) {
+  SUBKOHORT.forEach(s => {
+    const panel = document.getElementById("kohortPanel-" + s);
+    if (panel) panel.style.display = (s === sub) ? "block" : "none";
+    const btn = document.getElementById("kohortSub-" + s);
+    if (btn) btn.classList.toggle("active", s === sub);
+  });
+  if (sub === "ibu") muatKohortIbu();
+  if (sub === "bayi") muatKohortBayi();
+  if (sub === "sekolah") muatKohortSekolah();
+  if (sub === "remaja") muatKohortRemaja();
 }
 
 const SUBIBU = ["anc", "imunisasi", "persalinan", "nifas", "rujukan"];
@@ -3311,6 +3522,460 @@ async function simpanPkpr() {
   document.getElementById("pkprKonseling").value = "";
   document.getElementById("pkprCatatan").value = "";
   await muatRiwayatPkpr();
+}
+
+// ---------- PEMERIKSAAN BERKALA (Anak Sekolah) ----------
+let pasienTerpilihBerkala = null;
+
+async function cariPasienBerkala() {
+  const kunci = document.getElementById("berkalaCari").value.trim();
+  const hasilDiv = document.getElementById("berkalaHasilCari");
+  document.getElementById("berkalaWrap").style.display = "none";
+  pasienTerpilihBerkala = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienBerkala(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienBerkalaDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienBerkala = data;
+  }
+}
+
+function pilihPasienBerkalaDariHasil(i) {
+  pilihPasienBerkala(window._hasilCariPasienBerkala[i]);
+}
+
+function pilihPasienBerkala(pasien) {
+  pasienTerpilihBerkala = pasien;
+  document.getElementById("berkalaHasilCari").innerHTML = "";
+  document.getElementById("berkalaNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("berkalaWrap").style.display = "block";
+  document.getElementById("msgBerkala").innerHTML = "";
+  document.getElementById("berkalaSekolah").value = "";
+  document.getElementById("berkalaKelas").value = "";
+  document.getElementById("berkalaTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("berkalaTinggi").value = "";
+  document.getElementById("berkalaBerat").value = "";
+  document.getElementById("berkalaTensi").value = "";
+  document.getElementById("berkalaPenglihatan").value = "";
+  document.getElementById("berkalaPendengaran").value = "";
+  document.getElementById("berkalaCatatan").value = "";
+
+  muatRiwayatBerkala();
+}
+
+async function muatRiwayatBerkala() {
+  const tbody = document.getElementById("tabelRiwayatBerkala");
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pemeriksaan_berkala_sekolah")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihBerkala.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada catatan pemeriksaan berkala.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(b => `
+    <tr>
+      <td>${new Date(b.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${b.nama_sekolah || "-"}${b.kelas ? " / Kls " + b.kelas : ""}</td>
+      <td>${b.tinggi_badan || "-"} / ${b.berat_badan || "-"}</td>
+      <td>${b.tekanan_darah || "-"}</td>
+      <td>${b.penglihatan || "-"}</td>
+      <td>${b.pendengaran || "-"}</td>
+      <td>${b.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanBerkala() {
+  const msgBox = document.getElementById("msgBerkala");
+  if (!pasienTerpilihBerkala) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("berkalaTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pemeriksaan_berkala_sekolah").insert({
+    pasien_id: pasienTerpilihBerkala.id,
+    nama_sekolah: document.getElementById("berkalaSekolah").value.trim() || null,
+    kelas: document.getElementById("berkalaKelas").value.trim() || null,
+    tanggal,
+    tinggi_badan: document.getElementById("berkalaTinggi").value.trim() || null,
+    berat_badan: document.getElementById("berkalaBerat").value.trim() || null,
+    tekanan_darah: document.getElementById("berkalaTensi").value.trim() || null,
+    penglihatan: document.getElementById("berkalaPenglihatan").value || null,
+    pendengaran: document.getElementById("berkalaPendengaran").value || null,
+    catatan: document.getElementById("berkalaCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Hasil pemeriksaan berkala tersimpan.</div>`;
+  document.getElementById("berkalaTinggi").value = "";
+  document.getElementById("berkalaBerat").value = "";
+  document.getElementById("berkalaTensi").value = "";
+  document.getElementById("berkalaPenglihatan").value = "";
+  document.getElementById("berkalaPendengaran").value = "";
+  document.getElementById("berkalaCatatan").value = "";
+  await muatRiwayatBerkala();
+}
+
+// ---------- TTD REMAJA PUTRI ----------
+let pasienTerpilihTtd = null;
+
+async function cariPasienTtd() {
+  const kunci = document.getElementById("ttdCari").value.trim();
+  const hasilDiv = document.getElementById("ttdHasilCari");
+  document.getElementById("ttdWrap").style.display = "none";
+  pasienTerpilihTtd = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienTtd(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienTtdDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienTtd = data;
+  }
+}
+
+function pilihPasienTtdDariHasil(i) {
+  pilihPasienTtd(window._hasilCariPasienTtd[i]);
+}
+
+function pilihPasienTtd(pasien) {
+  pasienTerpilihTtd = pasien;
+  document.getElementById("ttdHasilCari").innerHTML = "";
+  document.getElementById("ttdNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("ttdWrap").style.display = "block";
+  document.getElementById("msgTtd").innerHTML = "";
+  document.getElementById("ttdTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("ttdJumlah").value = "1";
+  document.getElementById("ttdCatatan").value = "";
+
+  muatRiwayatTtd();
+}
+
+async function muatRiwayatTtd() {
+  const tbody = document.getElementById("tabelRiwayatTtd");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("ttd_remaja")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihTtd.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada catatan TTD.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(t => `
+    <tr>
+      <td>${new Date(t.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${t.jumlah_tablet ?? "-"}</td>
+      <td>${t.catatan || "-"}</td>
+      <td>${t.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanTtd() {
+  const msgBox = document.getElementById("msgTtd");
+  if (!pasienTerpilihTtd) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("ttdTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const jumlahRaw = document.getElementById("ttdJumlah").value;
+
+  const { error } = await supabaseClient.from("ttd_remaja").insert({
+    pasien_id: pasienTerpilihTtd.id,
+    tanggal,
+    jumlah_tablet: jumlahRaw === "" ? null : parseInt(jumlahRaw, 10),
+    catatan: document.getElementById("ttdCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan TTD tersimpan.</div>`;
+  document.getElementById("ttdJumlah").value = "1";
+  document.getElementById("ttdCatatan").value = "";
+  await muatRiwayatTtd();
+}
+
+// ---------- KOHORT & REGISTER (read-only) ----------
+let kohortIbuCache = [];
+let kohortBayiCache = [];
+let kohortSekolahCache = [];
+let kohortRemajaCache = [];
+
+function isiDefaultTanggalKohort(idDari, idSampai) {
+  const dariEl = document.getElementById(idDari);
+  const sampaiEl = document.getElementById(idSampai);
+  if (dariEl.value || sampaiEl.value) return;
+  const now = new Date();
+  dariEl.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+  sampaiEl.value = now.toISOString().split("T")[0];
+}
+
+function unduhCsv(namaFile, header, rows) {
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v ?? "-").replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = namaFile;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ----- Kohort Ibu Hamil -----
+async function muatKohortIbu() {
+  isiDefaultTanggalKohort("kohortIbuDari", "kohortIbuSampai");
+  const dari = document.getElementById("kohortIbuDari").value;
+  const sampai = document.getElementById("kohortIbuSampai").value;
+  const tbody = document.getElementById("tabelKohortIbu");
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+
+  let q = supabaseClient.from("kehamilan").select("*, pasien:pasien_id(nama, no_rm)").order("hpht", { ascending: false });
+  if (dari) q = q.gte("hpht", dari);
+  if (sampai) q = q.lte("hpht", sampai);
+  const { data, error } = await q;
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="7">Tidak ada data di rentang ini.</td></tr>`; kohortIbuCache = []; return; }
+
+  const jmlAnc = await Promise.all(data.map(k =>
+    supabaseClient.from("kunjungan_anc").select("id", { count: "exact", head: true }).eq("kehamilan_id", k.id)
+  ));
+
+  kohortIbuCache = data.map((k, i) => ({ ...k, jml_anc: jmlAnc[i].count ?? 0 }));
+
+  tbody.innerHTML = kohortIbuCache.map(k => `
+    <tr>
+      <td>${k.pasien?.nama || "-"}</td>
+      <td>${k.pasien?.no_rm || "-"}</td>
+      <td>${k.hpht ? new Date(k.hpht).toLocaleDateString("id-ID") : "-"}</td>
+      <td>${k.hpl ? new Date(k.hpl).toLocaleDateString("id-ID") : "-"}</td>
+      <td>${k.gravida ?? "-"} / ${k.paritas ?? "-"}</td>
+      <td>${k.status}</td>
+      <td>${k.jml_anc}</td>
+    </tr>
+  `).join("");
+}
+
+function exportKohortIbuCsv() {
+  if (!kohortIbuCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Nama", "No. RM", "HPHT", "HPL", "Gravida", "Paritas", "Status", "Jml ANC"];
+  const rows = kohortIbuCache.map(k => [
+    k.pasien?.nama, k.pasien?.no_rm,
+    k.hpht ? new Date(k.hpht).toLocaleDateString("id-ID") : "-",
+    k.hpl ? new Date(k.hpl).toLocaleDateString("id-ID") : "-",
+    k.gravida, k.paritas, k.status, k.jml_anc
+  ]);
+  unduhCsv(`Kohort_Ibu_Hamil_${document.getElementById("kohortIbuDari").value}_${document.getElementById("kohortIbuSampai").value}.csv`, header, rows);
+}
+
+// ----- Kohort Bayi & Balita -----
+async function muatKohortBayi() {
+  isiDefaultTanggalKohort("kohortBayiDari", "kohortBayiSampai");
+  const dari = document.getElementById("kohortBayiDari").value;
+  const sampai = document.getElementById("kohortBayiSampai").value;
+  const tbody = document.getElementById("tabelKohortBayi");
+  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
+
+  let q = supabaseClient.from("tumbuh_kembang").select("*, pasien:pasien_id(nama, no_rm, tanggal_lahir)").order("tanggal", { ascending: false });
+  if (dari) q = q.gte("tanggal", dari);
+  if (sampai) q = q.lte("tanggal", sampai);
+  const { data, error } = await q;
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="8">Tidak ada data di rentang ini.</td></tr>`; kohortBayiCache = []; return; }
+
+  // Ambil catatan terbaru per pasien (data sudah terurut desc)
+  const terbaruPerPasien = new Map();
+  data.forEach(r => { if (!terbaruPerPasien.has(r.pasien_id)) terbaruPerPasien.set(r.pasien_id, r); });
+  const daftar = Array.from(terbaruPerPasien.values());
+
+  const jmlKn = await Promise.all(daftar.map(r =>
+    supabaseClient.from("kunjungan_kn").select("id", { count: "exact", head: true }).eq("pasien_id", r.pasien_id)
+  ));
+
+  kohortBayiCache = daftar.map((r, i) => ({ ...r, jml_kn: jmlKn[i].count ?? 0 }));
+
+  tbody.innerHTML = kohortBayiCache.map(r => `
+    <tr>
+      <td>${r.pasien?.nama || "-"}</td>
+      <td>${r.pasien?.no_rm || "-"}</td>
+      <td>${r.pasien?.tanggal_lahir ? hitungUmurTahun(r.pasien.tanggal_lahir) + " th" : "-"}</td>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.berat_badan || "-"} / ${r.tinggi_panjang_badan || "-"}</td>
+      <td>${r.status_gizi || "-"}</td>
+      <td>${r.status_stunting || "-"}</td>
+      <td>${r.jml_kn}</td>
+    </tr>
+  `).join("");
+}
+
+function exportKohortBayiCsv() {
+  if (!kohortBayiCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Nama", "No. RM", "Tgl Terakhir", "BB", "TB/PB", "Status Gizi", "Status Stunting", "Jml KN"];
+  const rows = kohortBayiCache.map(r => [
+    r.pasien?.nama, r.pasien?.no_rm,
+    new Date(r.tanggal).toLocaleDateString("id-ID"),
+    r.berat_badan, r.tinggi_panjang_badan, r.status_gizi, r.status_stunting, r.jml_kn
+  ]);
+  unduhCsv(`Kohort_Bayi_Balita_${document.getElementById("kohortBayiDari").value}_${document.getElementById("kohortBayiSampai").value}.csv`, header, rows);
+}
+
+// ----- Register Anak Sekolah -----
+async function muatKohortSekolah() {
+  isiDefaultTanggalKohort("kohortSekolahDari", "kohortSekolahSampai");
+  const dari = document.getElementById("kohortSekolahDari").value;
+  const sampai = document.getElementById("kohortSekolahSampai").value;
+  const tbody = document.getElementById("tabelKohortSekolah");
+  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
+
+  let q = supabaseClient.from("penjaringan_sekolah").select("*, pasien:pasien_id(nama, no_rm)").order("tanggal", { ascending: false });
+  if (dari) q = q.gte("tanggal", dari);
+  if (sampai) q = q.lte("tanggal", sampai);
+  const { data, error } = await q;
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="8">Tidak ada data di rentang ini.</td></tr>`; kohortSekolahCache = []; return; }
+
+  const terbaruPerPasien = new Map();
+  data.forEach(r => { if (!terbaruPerPasien.has(r.pasien_id)) terbaruPerPasien.set(r.pasien_id, r); });
+  const daftar = Array.from(terbaruPerPasien.values());
+
+  const jmlBias = await Promise.all(daftar.map(r =>
+    supabaseClient.from("imunisasi_bias").select("id", { count: "exact", head: true }).eq("pasien_id", r.pasien_id)
+  ));
+
+  kohortSekolahCache = daftar.map((r, i) => ({ ...r, jml_bias: jmlBias[i].count ?? 0 }));
+
+  tbody.innerHTML = kohortSekolahCache.map(r => `
+    <tr>
+      <td>${r.pasien?.nama || "-"}</td>
+      <td>${r.pasien?.no_rm || "-"}</td>
+      <td>${r.nama_sekolah || "-"}${r.kelas ? " / Kls " + r.kelas : ""}</td>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.status_gizi || "-"}</td>
+      <td>${r.kesehatan_gigi || "-"}</td>
+      <td>${r.kesehatan_mata || "-"}</td>
+      <td>${r.jml_bias}</td>
+    </tr>
+  `).join("");
+}
+
+function exportKohortSekolahCsv() {
+  if (!kohortSekolahCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Nama", "No. RM", "Sekolah/Kelas", "Tgl Penjaringan", "Status Gizi", "Gigi", "Mata", "Jml Imunisasi BIAS"];
+  const rows = kohortSekolahCache.map(r => [
+    r.pasien?.nama, r.pasien?.no_rm,
+    `${r.nama_sekolah || "-"}${r.kelas ? " / Kls " + r.kelas : ""}`,
+    new Date(r.tanggal).toLocaleDateString("id-ID"),
+    r.status_gizi, r.kesehatan_gigi, r.kesehatan_mata, r.jml_bias
+  ]);
+  unduhCsv(`Register_Anak_Sekolah_${document.getElementById("kohortSekolahDari").value}_${document.getElementById("kohortSekolahSampai").value}.csv`, header, rows);
+}
+
+// ----- Register Remaja -----
+async function muatKohortRemaja() {
+  isiDefaultTanggalKohort("kohortRemajaDari", "kohortRemajaSampai");
+  const dari = document.getElementById("kohortRemajaDari").value;
+  const sampai = document.getElementById("kohortRemajaSampai").value;
+  const tbody = document.getElementById("tabelKohortRemaja");
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+
+  let q = supabaseClient.from("skrining_remaja").select("*, pasien:pasien_id(nama, no_rm)").order("tanggal", { ascending: false });
+  if (dari) q = q.gte("tanggal", dari);
+  if (sampai) q = q.lte("tanggal", sampai);
+  const { data, error } = await q;
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="7">Tidak ada data di rentang ini.</td></tr>`; kohortRemajaCache = []; return; }
+
+  const terbaruPerPasien = new Map();
+  data.forEach(r => { if (!terbaruPerPasien.has(r.pasien_id)) terbaruPerPasien.set(r.pasien_id, r); });
+  const daftar = Array.from(terbaruPerPasien.values());
+
+  const jmlTtd = await Promise.all(daftar.map(r =>
+    supabaseClient.from("ttd_remaja").select("id", { count: "exact", head: true }).eq("pasien_id", r.pasien_id)
+  ));
+
+  kohortRemajaCache = daftar.map((r, i) => ({ ...r, jml_ttd: jmlTtd[i].count ?? 0 }));
+
+  tbody.innerHTML = kohortRemajaCache.map(r => `
+    <tr>
+      <td>${r.pasien?.nama || "-"}</td>
+      <td>${r.pasien?.no_rm || "-"}</td>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.status_gizi || "-"}</td>
+      <td>${r.hasil_anemia || "-"}</td>
+      <td>${r.hasil_jiwa || "-"}</td>
+      <td>${r.jml_ttd}</td>
+    </tr>
+  `).join("");
+}
+
+function exportKohortRemajaCsv() {
+  if (!kohortRemajaCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Nama", "No. RM", "Tgl Skrining", "Status Gizi", "Anemia", "Jiwa", "Jml Catatan TTD"];
+  const rows = kohortRemajaCache.map(r => [
+    r.pasien?.nama, r.pasien?.no_rm,
+    new Date(r.tanggal).toLocaleDateString("id-ID"),
+    r.status_gizi, r.hasil_anemia, r.hasil_jiwa, r.jml_ttd
+  ]);
+  unduhCsv(`Register_Remaja_${document.getElementById("kohortRemajaDari").value}_${document.getElementById("kohortRemajaSampai").value}.csv`, header, rows);
 }
 </script>
 

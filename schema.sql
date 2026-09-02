@@ -1644,6 +1644,59 @@ create trigger trg_audit_skrining_remaja after insert or update or delete on skr
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 51. KLASTER 2 — FASE 10: Anak Prasekolah & Usia Sekolah —
+--     Pemeriksaan Berkala, dan Remaja — TTD (Tablet Tambah
+--     Darah). Reuse tabel pasien, tabel baru 2. Kohort & Register
+--     TIDAK bikin tabel baru — read-only, agregasi dari tabel yang
+--     sudah ada (kehamilan, tumbuh_kembang, kunjungan_kn,
+--     penjaringan_sekolah, imunisasi_bias, skrining_remaja,
+--     ttd_remaja).
+-- ============================================================
+create table if not exists pemeriksaan_berkala_sekolah (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  nama_sekolah text,
+  kelas text,
+  tanggal date not null default current_date,
+  tinggi_badan text,
+  berat_badan text,
+  tekanan_darah text,
+  penglihatan text,
+  pendengaran text,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_berkala_sekolah_pasien on pemeriksaan_berkala_sekolah(pasien_id);
+
+alter table pemeriksaan_berkala_sekolah enable row level security;
+create policy "authenticated_all_pemeriksaan_berkala_sekolah" on pemeriksaan_berkala_sekolah for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_berkala_sekolah on pemeriksaan_berkala_sekolah;
+create trigger trg_audit_pemeriksaan_berkala_sekolah after insert or update or delete on pemeriksaan_berkala_sekolah
+  for each row execute function fn_audit_log();
+
+create table if not exists ttd_remaja (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jumlah_tablet int,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_ttd_remaja_pasien on ttd_remaja(pasien_id);
+
+alter table ttd_remaja enable row level security;
+create policy "authenticated_all_ttd_remaja" on ttd_remaja for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_ttd_remaja on ttd_remaja;
+create trigger trg_audit_ttd_remaja after insert or update or delete on ttd_remaja
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
