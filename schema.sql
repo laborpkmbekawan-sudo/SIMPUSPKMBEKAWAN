@@ -1540,6 +1540,110 @@ create trigger trg_audit_vitamin_a after insert or update or delete on vitamin_a
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 49. KLASTER 2 — FASE 8: MTBS/MTBM (Bayi & Balita) & Rujukan
+--     Umum + Permintaan Lab Klaster 2. MTBS/MTBM tabel baru,
+--     reuse pasien. Rujukan umum & lab REUSE tabel rujukan dan
+--     rujukan_lab yang sudah ada, tidak ada tabel baru buat itu.
+-- ============================================================
+create table if not exists mtbs_mtbm (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  jenis text not null check (jenis in ('MTBM', 'MTBS')),
+  tanggal date not null default current_date,
+  gejala jsonb not null default '[]'::jsonb,
+  klasifikasi text not null check (klasifikasi in ('Hijau', 'Kuning', 'Merah')),
+  tindakan text,
+  dirujuk boolean not null default false,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_mtbs_mtbm_pasien on mtbs_mtbm(pasien_id);
+
+alter table mtbs_mtbm enable row level security;
+create policy "authenticated_all_mtbs_mtbm" on mtbs_mtbm for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_mtbs_mtbm on mtbs_mtbm;
+create trigger trg_audit_mtbs_mtbm after insert or update or delete on mtbs_mtbm
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- 50. KLASTER 2 — FASE 9: Anak Prasekolah & Usia Sekolah
+--     (Penjaringan Kesehatan, Imunisasi BIAS) & Remaja (PKPR &
+--     Skrining). Semua reuse tabel pasien, tabel baru 3.
+--     Tumbuh Kembang Prasekolah sengaja TIDAK bikin tabel baru —
+--     reuse tumbuh_kembang yang sudah ada (form sama, semua usia).
+-- ============================================================
+create table if not exists penjaringan_sekolah (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  nama_sekolah text,
+  kelas text,
+  tanggal date not null default current_date,
+  status_gizi text,
+  kesehatan_gigi text,
+  kesehatan_mata text,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_penjaringan_sekolah_pasien on penjaringan_sekolah(pasien_id);
+
+alter table penjaringan_sekolah enable row level security;
+create policy "authenticated_all_penjaringan_sekolah" on penjaringan_sekolah for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_penjaringan_sekolah on penjaringan_sekolah;
+create trigger trg_audit_penjaringan_sekolah after insert or update or delete on penjaringan_sekolah
+  for each row execute function fn_audit_log();
+
+create table if not exists imunisasi_bias (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  antigen text not null check (antigen in (
+    'Campak-Rubella/MR (Kelas 1)', 'DT (Kelas 1)', 'Td (Kelas 2)', 'Td (Kelas 5)'
+  )),
+  nama_sekolah text,
+  tanggal date not null default current_date,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_imunisasi_bias_pasien on imunisasi_bias(pasien_id);
+
+alter table imunisasi_bias enable row level security;
+create policy "authenticated_all_imunisasi_bias" on imunisasi_bias for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_imunisasi_bias on imunisasi_bias;
+create trigger trg_audit_imunisasi_bias after insert or update or delete on imunisasi_bias
+  for each row execute function fn_audit_log();
+
+create table if not exists skrining_remaja (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  status_gizi text,
+  hasil_anemia text,
+  hasil_jiwa text,
+  hasil_kespro text,
+  keluhan_konseling text,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_skrining_remaja_pasien on skrining_remaja(pasien_id);
+
+alter table skrining_remaja enable row level security;
+create policy "authenticated_all_skrining_remaja" on skrining_remaja for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_skrining_remaja on skrining_remaja;
+create trigger trg_audit_skrining_remaja after insert or update or delete on skrining_remaja
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

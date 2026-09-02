@@ -798,21 +798,413 @@
           </div>
         </div>
 
-        <!-- ===== Sub-menu lain — segera ===== -->
-        <div id="bayiPanel-mtbs" style="display:none;"><div class="k2-segera"><div class="ic">🩺</div><div class="t">MTBS/MTBM</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
+        <!-- ===== MTBS / MTBM ===== -->
+        <div id="bayiPanel-mtbs" style="display:none;">
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">🩺</span> Cari Pasien Bayi/Balita</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">MTBM untuk bayi muda usia 0–2 bulan, MTBS untuk balita usia 2 bulan–5 tahun.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="mtbsCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienMtbs();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienMtbs()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="mtbsHasilCari"></div>
+          </div>
+
+          <div id="mtbsWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Penilaian MTBS/MTBM — <span id="mtbsNamaPasien"></span></h2>
+              <div id="msgMtbs"></div>
+
+              <div class="grid-2">
+                <div>
+                  <label>Jenis Pemeriksaan *</label>
+                  <select id="mtbsJenis" required onchange="toggleJenisMtbs()">
+                    <option value="">-- Pilih --</option>
+                    <option value="MTBM">MTBM (Bayi Muda 0–2 bulan)</option>
+                    <option value="MTBS">MTBS (Balita 2 bulan–5 tahun)</option>
+                  </select>
+                </div>
+                <div><label>Tanggal *</label><input type="date" id="mtbsTanggal" required></div>
+              </div>
+
+              <div id="mtbsWrapGejalaMtbm" style="display:none;">
+                <label>Gejala / Keluhan (MTBM)</label>
+                <div class="grid-2" style="font-size:12.5px;">
+                  <label style="font-weight:400;"><input type="checkbox" class="mtbsGejala" value="Kemungkinan Infeksi Bakteri Berat" style="width:auto; display:inline-block;"> Kemungkinan Infeksi Bakteri Berat</label>
+                  <label style="font-weight:400;"><input type="checkbox" class="mtbsGejala" value="Ikterus" style="width:auto; display:inline-block;"> Ikterus</label>
+                  <label style="font-weight:400;"><input type="checkbox" class="mtbsGejala" value="Diare" style="width:auto; display:inline-block;"> Diare</label>
+                  <label style="font-weight:400;"><input type="checkbox" class="mtbsGejala" value="Masalah Pemberian ASI/BB Rendah" style="width:auto; display:inline-block;"> Masalah Pemberian ASI / BB Rendah</label>
+                  <label style="font-weight:400;"><input type="checkbox" class="mtbsGejala" value="Masalah/Infeksi Bakteri Lokal" style="width:auto; display:inline-block;"> Masalah / Infeksi Bakteri Lokal</label>
+                </div>
+              </div>
+
+              <div id="mtbsWrapGejalaMtbs" style="display:none;">
+                <label>Gejala / Keluhan (MTBS)</label>
+                <div class="grid-2" style="font-size:12.5px;">
+                  <label style="font-weight:400;"><input type="checkbox" class="mtbsGejala" value="Batuk/Sukar Bernapas" style="width:auto; display:inline-block;"> Batuk / Sukar Bernapas</label>
+                  <label style="font-weight:400;"><input type="checkbox" class="mtbsGejala" value="Diare" style="width:auto; display:inline-block;"> Diare</label>
+                  <label style="font-weight:400;"><input type="checkbox" class="mtbsGejala" value="Demam" style="width:auto; display:inline-block;"> Demam</label>
+                  <label style="font-weight:400;"><input type="checkbox" class="mtbsGejala" value="Masalah Telinga" style="width:auto; display:inline-block;"> Masalah Telinga</label>
+                  <label style="font-weight:400;"><input type="checkbox" class="mtbsGejala" value="Status Gizi/Anemia" style="width:auto; display:inline-block;"> Status Gizi / Anemia</label>
+                  <label style="font-weight:400;"><input type="checkbox" class="mtbsGejala" value="Status Imunisasi Belum Lengkap" style="width:auto; display:inline-block;"> Status Imunisasi Belum Lengkap</label>
+                </div>
+              </div>
+
+              <label style="margin-top:10px;">Klasifikasi *</label>
+              <select id="mtbsKlasifikasi" required>
+                <option value="">-- Pilih --</option>
+                <option value="Hijau">🟩 Hijau — Perawatan di Rumah</option>
+                <option value="Kuning">🟨 Kuning — Perlu Tindakan &amp; Konseling</option>
+                <option value="Merah">🟥 Merah — Rujuk Segera</option>
+              </select>
+
+              <label>Tindakan / Terapi</label>
+              <textarea id="mtbsTindakan" placeholder="Terapi, konseling, atau tindakan yang diberikan"></textarea>
+
+              <label style="font-weight:400;"><input type="checkbox" id="mtbsDirujuk" style="width:auto; display:inline-block;"> Dirujuk ke fasilitas lanjutan</label>
+
+              <label>Catatan</label>
+              <textarea id="mtbsCatatan"></textarea>
+
+              <button class="btn-primary" onclick="simpanMtbs()">Simpan Penilaian MTBS/MTBM</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat MTBS/MTBM</h2>
+              <table>
+                <thead><tr><th>Jenis</th><th>Tanggal</th><th>Gejala</th><th>Klasifikasi</th><th>Dirujuk</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatMtbs"><tr><td colspan="6">Belum ada catatan MTBS/MTBM.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
 
       </div>
       <div id="panelAnakSekolah" style="display:none;">
-        <div class="k2-segera"><div class="ic">🎒</div><div class="t">Anak Prasekolah &amp; Usia Sekolah</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="padding:10px 14px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="sekolahSub-jaring" onclick="gantiSubSekolah('jaring')">Penjaringan Kesehatan</button>
+            <button type="button" class="lap-tab" id="sekolahSub-bias" onclick="gantiSubSekolah('bias')">Imunisasi BIAS</button>
+            <button type="button" class="lap-tab" id="sekolahSub-tumbuh" onclick="gantiSubSekolah('tumbuh')">Tumbuh Kembang Prasekolah</button>
+            <button type="button" class="lap-tab" id="sekolahSub-berkala" onclick="gantiSubSekolah('berkala')">Pemeriksaan Berkala</button>
+          </div>
+        </div>
+
+        <!-- ===== Penjaringan Kesehatan ===== -->
+        <div id="sekolahPanel-jaring">
+
+          <div class="card" style="--accent:#1c7d7f;">
+            <h2><span class="card-num" style="background:#1c7d7f;">🎒</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Skrining awal tahun ajaran — status gizi, gigi, mata, dan riwayat kesehatan dasar siswa.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="jaringCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienJaring();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienJaring()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="jaringHasilCari"></div>
+          </div>
+
+          <div id="jaringWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Penjaringan — <span id="jaringNamaPasien"></span></h2>
+              <div id="msgJaring"></div>
+              <div class="grid-3">
+                <div><label>Nama Sekolah</label><input type="text" id="jaringSekolah" placeholder="Contoh: SDN 01 Bekawan"></div>
+                <div><label>Kelas</label><input type="text" id="jaringKelas" placeholder="Contoh: 1"></div>
+                <div><label>Tanggal *</label><input type="date" id="jaringTanggal" required></div>
+                <div>
+                  <label>Status Gizi</label>
+                  <select id="jaringStatusGizi">
+                    <option value="">-- Pilih --</option>
+                    <option value="Gizi Baik">Gizi Baik</option>
+                    <option value="Gizi Kurang">Gizi Kurang</option>
+                    <option value="Gizi Buruk">Gizi Buruk</option>
+                    <option value="Gizi Lebih">Gizi Lebih</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Kesehatan Gigi</label>
+                  <select id="jaringGigi">
+                    <option value="">-- Pilih --</option>
+                    <option value="Baik">Baik</option>
+                    <option value="Karies/Berlubang">Karies / Berlubang</option>
+                    <option value="Perlu Rujuk Dokter Gigi">Perlu Rujuk Dokter Gigi</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Kesehatan Mata</label>
+                  <select id="jaringMata">
+                    <option value="">-- Pilih --</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Gangguan Penglihatan">Gangguan Penglihatan</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="jaringCatatan" placeholder="Riwayat kesehatan dasar/tindak lanjut"></textarea>
+              <button class="btn-primary" onclick="simpanJaring()">Simpan Hasil Penjaringan</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Penjaringan Kesehatan</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Sekolah/Kelas</th><th>Gizi</th><th>Gigi</th><th>Mata</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatJaring"><tr><td colspan="6">Belum ada catatan penjaringan.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===== Imunisasi BIAS ===== -->
+        <div id="sekolahPanel-bias" style="display:none;">
+
+          <div class="card" style="--accent:#216ac5;">
+            <h2><span class="card-num" style="background:#216ac5;">💉</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Bulan Imunisasi Anak Sekolah — dilakukan terjadwal ke sekolah tiap tahun untuk siswa kelas 1, 2, dan 5.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="biasCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienBias();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienBias()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="biasHasilCari"></div>
+          </div>
+
+          <div id="biasWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Imunisasi BIAS — <span id="biasNamaPasien"></span></h2>
+              <div id="msgBias"></div>
+              <div class="grid-3">
+                <div>
+                  <label>Antigen *</label>
+                  <select id="biasAntigen" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="Campak-Rubella/MR (Kelas 1)">Campak-Rubella/MR (Kelas 1)</option>
+                    <option value="DT (Kelas 1)">DT (Kelas 1)</option>
+                    <option value="Td (Kelas 2)">Td (Kelas 2)</option>
+                    <option value="Td (Kelas 5)">Td (Kelas 5)</option>
+                  </select>
+                </div>
+                <div><label>Nama Sekolah</label><input type="text" id="biasSekolah" placeholder="Contoh: SDN 01 Bekawan"></div>
+                <div><label>Tanggal *</label><input type="date" id="biasTanggal" required></div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="biasCatatan" placeholder="KIPI, kondisi saat pemberian, dsb."></textarea>
+              <button class="btn-primary" onclick="simpanBias()">Simpan Imunisasi BIAS</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Imunisasi BIAS</h2>
+              <table>
+                <thead><tr><th>Antigen</th><th>Sekolah</th><th>Tanggal</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatBias"><tr><td colspan="4">Belum ada catatan imunisasi BIAS.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===== Sub-menu lain — segera ===== -->
+        <div id="sekolahPanel-tumbuh" style="display:none;">
+          <div class="k2-segera"><div class="ic">📏</div><div class="t">Tumbuh Kembang Prasekolah</div>Pakai form Tumbuh Kembang &amp; Gizi yang sama di menu Bayi &amp; Balita — formnya sudah berlaku untuk segala usia anak, jadi tidak dibangun ulang di sini.</div>
+        </div>
+        <div id="sekolahPanel-berkala" style="display:none;">
+          <div class="k2-segera"><div class="ic">🩺</div><div class="t">Pemeriksaan Berkala</div>Menu ini segera dibangun di sesi berikutnya.</div>
+        </div>
+
       </div>
       <div id="panelRemaja" style="display:none;">
-        <div class="k2-segera"><div class="ic">🧑</div><div class="t">Remaja</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="padding:10px 14px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="remajaSub-pkpr" onclick="gantiSubRemaja('pkpr')">PKPR &amp; Skrining Remaja</button>
+            <button type="button" class="lap-tab" id="remajaSub-ttd" onclick="gantiSubRemaja('ttd')">TTD Remaja Putri</button>
+          </div>
+        </div>
+
+        <!-- ===== PKPR & Skrining Remaja ===== -->
+        <div id="remajaPanel-pkpr">
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">🧑</span> Cari Pasien Remaja</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pelayanan Kesehatan Peduli Remaja — skrining gizi, anemia, kesehatan reproduksi &amp; jiwa, plus ruang konseling.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="pkprCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienPkpr();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienPkpr()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="pkprHasilCari"></div>
+          </div>
+
+          <div id="pkprWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Skrining &amp; Konseling PKPR — <span id="pkprNamaPasien"></span></h2>
+              <div id="msgPkpr"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="pkprTanggal" required></div>
+                <div>
+                  <label>Status Gizi</label>
+                  <select id="pkprStatusGizi">
+                    <option value="">-- Pilih --</option>
+                    <option value="Gizi Baik">Gizi Baik</option>
+                    <option value="Gizi Kurang">Gizi Kurang</option>
+                    <option value="Gizi Buruk">Gizi Buruk</option>
+                    <option value="Gizi Lebih">Gizi Lebih</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil Skrining Anemia</label>
+                  <select id="pkprAnemia">
+                    <option value="">-- Pilih --</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Anemia Ringan">Anemia Ringan</option>
+                    <option value="Anemia Sedang">Anemia Sedang</option>
+                    <option value="Anemia Berat">Anemia Berat</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Skrining Kesehatan Jiwa</label>
+                  <select id="pkprJiwa">
+                    <option value="">-- Pilih --</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Perlu Tindak Lanjut">Perlu Tindak Lanjut</option>
+                  </select>
+                </div>
+              </div>
+              <label>Skrining Kesehatan Reproduksi</label>
+              <input type="text" id="pkprKespro" placeholder="Temuan/keluhan kesehatan reproduksi">
+              <label>Keluhan &amp; Hasil Konseling</label>
+              <textarea id="pkprKonseling" placeholder="Ringkasan keluhan remaja dan hasil konseling (bersifat privat)"></textarea>
+              <label>Catatan</label>
+              <textarea id="pkprCatatan"></textarea>
+              <button class="btn-primary" onclick="simpanPkpr()">Simpan Skrining PKPR</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Skrining PKPR</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Gizi</th><th>Anemia</th><th>Jiwa</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatPkpr"><tr><td colspan="5">Belum ada catatan skrining.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===== Sub-menu lain — segera ===== -->
+        <div id="remajaPanel-ttd" style="display:none;">
+          <div class="k2-segera"><div class="ic">💊</div><div class="t">TTD Remaja Putri</div>Menu ini segera dibangun di sesi berikutnya.</div>
+        </div>
+
       </div>
       <div id="panelKohort" style="display:none;">
         <div class="k2-segera"><div class="ic">📋</div><div class="t">Kohort &amp; Register</div>Menu ini segera dibangun di sesi berikutnya.</div>
       </div>
       <div id="panelRujukan" style="display:none;">
-        <div class="k2-segera"><div class="ic">↦</div><div class="t">Rujukan &amp; Permintaan Lab</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">↦</span> Cari Pasien</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Rujukan umum (internal/FKRTL) &amp; permintaan pemeriksaan laboratorium untuk pasien Klaster 2.</p>
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / Nama)</label>
+              <input type="text" id="rjkUmumCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienRjkUmum();}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienRjkUmum()" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+          <div id="rjkUmumHasilCari"></div>
+        </div>
+
+        <div id="rjkUmumWrap" style="display:none;">
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2>Buat Rujukan — <span id="rjkUmumNamaPasien"></span></h2>
+            <div id="msgRjkUmum"></div>
+
+            <div class="grid-2">
+              <div>
+                <label>Jenis Rujukan *</label>
+                <select id="rjkUmumJenis" required onchange="toggleJenisRjkUmum()">
+                  <option value="">Pilih</option>
+                  <option value="internal">Rujuk Internal (Antar Klaster)</option>
+                  <option value="fkrtl">Rujuk FKRTL (Rumah Sakit/Faskes Lanjutan)</option>
+                </select>
+              </div>
+              <div id="rjkUmumWrapKlasterTujuan" style="display:none;">
+                <label>Klaster Tujuan *</label>
+                <select id="rjkUmumKlasterTujuan"></select>
+              </div>
+              <div id="rjkUmumWrapFaskesTujuan" style="display:none;">
+                <label>Faskes Tujuan *</label>
+                <input type="text" id="rjkUmumFaskesTujuan" placeholder="Contoh: RSUD Dumai">
+              </div>
+            </div>
+
+            <label>Diagnosa Rujukan</label>
+            <input type="text" id="rjkUmumDiagnosa" placeholder="Diagnosa kerja / kondisi saat dirujuk">
+
+            <label>Alasan Rujukan *</label>
+            <textarea id="rjkUmumAlasan" placeholder="Alasan/indikasi rujukan"></textarea>
+
+            <label>Catatan Tambahan</label>
+            <textarea id="rjkUmumCatatan"></textarea>
+
+            <button class="btn-primary" onclick="simpanRjkUmum()">Simpan Rujukan</button>
+          </div>
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2>Ajukan Permintaan Pemeriksaan Lab — <span id="labUmumNamaPasien"></span></h2>
+            <div id="msgLabUmum"></div>
+            <label>Jenis Pemeriksaan *</label>
+            <input type="text" id="labUmumJenis" placeholder="Contoh: Hb, Golongan Darah, HIV/Sifilis, Gula Darah">
+            <button class="btn-primary" onclick="ajukanLabUmum()">Ajukan Permintaan Lab</button>
+          </div>
+
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2>Riwayat Rujukan Klaster 2 Terbaru</h2>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Pasien</th><th>Jenis</th><th>Tujuan</th><th>Alasan</th><th>Status</th></tr></thead>
+            <tbody id="tabelRiwayatRjkUmum"><tr><td colspan="6">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2>Riwayat Permintaan Lab Klaster 2 Terbaru</h2>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Pasien</th><th>Jenis Pemeriksaan</th><th>Status</th></tr></thead>
+            <tbody id="tabelRiwayatLabUmum"><tr><td colspan="4">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
       <div id="panelRm" style="display:none;">
         <div class="k2-segera"><div class="ic">▤</div><div class="t">Rekam Medis &amp; Resep</div>Menu ini segera dibangun di sesi berikutnya.</div>
@@ -872,6 +1264,7 @@ function gantiSubtabK2(tab) {
   document.querySelector(".topbar h1").textContent = judul[tab] || "Klaster 2";
   if (tab === "dashboard") muatDashboardK2();
   if (tab === "ibu") muatAnc();
+  if (tab === "rujukan") muatRiwayatRjkLabUmum();
 }
 
 // ---------- BAYI & BALITA — inner sub-tabs ----------
@@ -885,7 +1278,28 @@ function gantiSubBayi(sub) {
   });
 }
 
-// ---------- IBU HAMIL — inner sub-tabs ----------
+// ---------- ANAK SEKOLAH — inner sub-tabs ----------
+const SUBSEKOLAH = ["jaring", "bias", "tumbuh", "berkala"];
+function gantiSubSekolah(sub) {
+  SUBSEKOLAH.forEach(s => {
+    const panel = document.getElementById("sekolahPanel-" + s);
+    if (panel) panel.style.display = (s === sub) ? "block" : "none";
+    const btn = document.getElementById("sekolahSub-" + s);
+    if (btn) btn.classList.toggle("active", s === sub);
+  });
+}
+
+// ---------- REMAJA — inner sub-tabs ----------
+const SUBREMAJA = ["pkpr", "ttd"];
+function gantiSubRemaja(sub) {
+  SUBREMAJA.forEach(s => {
+    const panel = document.getElementById("remajaPanel-" + s);
+    if (panel) panel.style.display = (s === sub) ? "block" : "none";
+    const btn = document.getElementById("remajaSub-" + s);
+    if (btn) btn.classList.toggle("active", s === sub);
+  });
+}
+
 const SUBIBU = ["anc", "imunisasi", "persalinan", "nifas", "rujukan"];
 function gantiSubIbu(sub) {
   SUBIBU.forEach(s => {
@@ -2185,6 +2599,718 @@ async function simpanVitA() {
   document.getElementById("vitAPeriode").value = "";
   document.getElementById("vitACatatan").value = "";
   await muatRiwayatVitA();
+}
+
+// ---------- MTBS / MTBM ----------
+let pasienTerpilihMtbs = null;
+
+async function cariPasienMtbs() {
+  const kunci = document.getElementById("mtbsCari").value.trim();
+  const hasilDiv = document.getElementById("mtbsHasilCari");
+  document.getElementById("mtbsWrap").style.display = "none";
+  pasienTerpilihMtbs = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienMtbs(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienMtbsDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienMtbs = data;
+  }
+}
+
+function pilihPasienMtbsDariHasil(i) {
+  pilihPasienMtbs(window._hasilCariPasienMtbs[i]);
+}
+
+function pilihPasienMtbs(pasien) {
+  pasienTerpilihMtbs = pasien;
+  document.getElementById("mtbsHasilCari").innerHTML = "";
+  document.getElementById("mtbsNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"}, lahir ${new Date(pasien.tanggal_lahir).toLocaleDateString("id-ID")})`;
+  document.getElementById("mtbsWrap").style.display = "block";
+  document.getElementById("msgMtbs").innerHTML = "";
+  document.getElementById("mtbsJenis").value = "";
+  document.getElementById("mtbsTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("mtbsKlasifikasi").value = "";
+  document.getElementById("mtbsTindakan").value = "";
+  document.getElementById("mtbsDirujuk").checked = false;
+  document.getElementById("mtbsCatatan").value = "";
+  document.querySelectorAll(".mtbsGejala").forEach(c => c.checked = false);
+  toggleJenisMtbs();
+
+  muatRiwayatMtbs();
+}
+
+function toggleJenisMtbs() {
+  const jenis = document.getElementById("mtbsJenis").value;
+  document.getElementById("mtbsWrapGejalaMtbm").style.display = jenis === "MTBM" ? "block" : "none";
+  document.getElementById("mtbsWrapGejalaMtbs").style.display = jenis === "MTBS" ? "block" : "none";
+}
+
+async function muatRiwayatMtbs() {
+  const tbody = document.getElementById("tabelRiwayatMtbs");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("mtbs_mtbm")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihMtbs.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan MTBS/MTBM.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(m => `
+    <tr>
+      <td>${m.jenis}</td>
+      <td>${new Date(m.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${(m.gejala && m.gejala.length) ? m.gejala.join(", ") : "-"}</td>
+      <td><span class="badge badge-${m.klasifikasi === "Merah" ? "batal" : (m.klasifikasi === "Kuning" ? "menunggu" : "selesai")}">${m.klasifikasi}</span></td>
+      <td>${m.dirujuk ? "Ya" : "Tidak"}</td>
+      <td>${m.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanMtbs() {
+  const msgBox = document.getElementById("msgMtbs");
+  if (!pasienTerpilihMtbs) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const jenis = document.getElementById("mtbsJenis").value;
+  const tanggal = document.getElementById("mtbsTanggal").value;
+  const klasifikasi = document.getElementById("mtbsKlasifikasi").value;
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jenis pemeriksaan dulu.</div>`; return; }
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+  if (!klasifikasi) { msgBox.innerHTML = `<div class="msg msg-error">Pilih klasifikasi dulu.</div>`; return; }
+
+  const gejala = Array.from(document.querySelectorAll(".mtbsGejala:checked")).map(c => c.value);
+
+  const { error } = await supabaseClient.from("mtbs_mtbm").insert({
+    pasien_id: pasienTerpilihMtbs.id,
+    jenis,
+    tanggal,
+    gejala,
+    klasifikasi,
+    tindakan: document.getElementById("mtbsTindakan").value.trim() || null,
+    dirujuk: document.getElementById("mtbsDirujuk").checked,
+    catatan: document.getElementById("mtbsCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Penilaian ${jenis} tersimpan — klasifikasi ${klasifikasi}.</div>`;
+  document.getElementById("mtbsTindakan").value = "";
+  document.getElementById("mtbsDirujuk").checked = false;
+  document.getElementById("mtbsCatatan").value = "";
+  await muatRiwayatMtbs();
+}
+
+// ---------- RUJUKAN & PERMINTAAN LAB (UMUM) ----------
+let pasienTerpilihRjkUmum = null;
+let kunjunganAsalRjkUmumId = null;
+let rjkUmumDaftarKlaster = [];
+
+async function cariPasienRjkUmum() {
+  const kunci = document.getElementById("rjkUmumCari").value.trim();
+  const hasilDiv = document.getElementById("rjkUmumHasilCari");
+  document.getElementById("rjkUmumWrap").style.display = "none";
+  pasienTerpilihRjkUmum = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    await pilihPasienRjkUmum(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienRjkUmumDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienRjkUmum = data;
+  }
+}
+
+async function pilihPasienRjkUmumDariHasil(i) {
+  await pilihPasienRjkUmum(window._hasilCariPasienRjkUmum[i]);
+}
+
+async function pilihPasienRjkUmum(pasien) {
+  pasienTerpilihRjkUmum = pasien;
+  kunjunganAsalRjkUmumId = null;
+  document.getElementById("rjkUmumHasilCari").innerHTML = "";
+  document.getElementById("rjkUmumNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("labUmumNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("msgRjkUmum").innerHTML = "";
+  document.getElementById("msgLabUmum").innerHTML = "";
+  document.getElementById("rjkUmumJenis").value = "";
+  document.getElementById("rjkUmumDiagnosa").value = "";
+  document.getElementById("rjkUmumAlasan").value = "";
+  document.getElementById("rjkUmumCatatan").value = "";
+  document.getElementById("rjkUmumFaskesTujuan").value = "";
+  document.getElementById("labUmumJenis").value = "";
+  toggleJenisRjkUmum();
+
+  if (!rjkUmumDaftarKlaster.length) {
+    const { data } = await supabaseClient.from("klaster").select("*").order("id");
+    rjkUmumDaftarKlaster = data || [];
+  }
+  const k2Id = await ambilKlasterK2Id();
+  const select = document.getElementById("rjkUmumKlasterTujuan");
+  select.innerHTML = rjkUmumDaftarKlaster
+    .filter(kl => kl.id !== k2Id)
+    .map(kl => `<option value="${kl.id}">${kl.kode} — ${kl.nama}</option>`).join("");
+
+  document.getElementById("rjkUmumWrap").style.display = "block";
+
+  try {
+    kunjunganAsalRjkUmumId = await ambilAtauBuatKunjunganK2HariIni(pasien);
+  } catch (e) {
+    document.getElementById("msgRjkUmum").innerHTML = `<div class="msg msg-error">Gagal siapkan data kunjungan: ${e.message}</div>`;
+  }
+}
+
+function toggleJenisRjkUmum() {
+  const jenis = document.getElementById("rjkUmumJenis").value;
+  document.getElementById("rjkUmumWrapKlasterTujuan").style.display = jenis === "internal" ? "block" : "none";
+  document.getElementById("rjkUmumWrapFaskesTujuan").style.display = jenis === "fkrtl" ? "block" : "none";
+}
+
+async function simpanRjkUmum() {
+  const msgBox = document.getElementById("msgRjkUmum");
+  if (!pasienTerpilihRjkUmum) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!kunjunganAsalRjkUmumId) { msgBox.innerHTML = `<div class="msg msg-error">Data kunjungan belum siap, coba pilih ulang pasien.</div>`; return; }
+
+  const jenis = document.getElementById("rjkUmumJenis").value;
+  const alasan = document.getElementById("rjkUmumAlasan").value.trim();
+  const diagnosa = document.getElementById("rjkUmumDiagnosa").value.trim();
+  const catatan = document.getElementById("rjkUmumCatatan").value.trim();
+
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jenis rujukan dulu.</div>`; return; }
+  if (!alasan) { msgBox.innerHTML = `<div class="msg msg-error">Isi alasan rujukan dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  let klasterTujuanId = null;
+  let faskesTujuan = null;
+  let kunjunganTujuanId = null;
+
+  if (jenis === "internal") {
+    klasterTujuanId = parseInt(document.getElementById("rjkUmumKlasterTujuan").value);
+    if (!klasterTujuanId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih klaster tujuan dulu.</div>`; return; }
+
+    const { data: noKunjunganData, error: errNo } = await supabaseClient.rpc("generate_no_kunjungan");
+    const { data: noAntrianData, error: errAntrian } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: klasterTujuanId });
+    if (errNo || errAntrian) { msgBox.innerHTML = `<div class="msg msg-error">Gagal generate nomor: ${(errNo || errAntrian).message}</div>`; return; }
+
+    const { data: kunjunganBaru, error: errKunjungan } = await supabaseClient.from("kunjungan").insert({
+      no_kunjungan: noKunjunganData,
+      pasien_id: pasienTerpilihRjkUmum.id,
+      klaster_id: klasterTujuanId,
+      jenis_bayar: pasienTerpilihRjkUmum.status_bpjs === "aktif" ? "BPJS" : "Umum",
+      no_antrian: noAntrianData,
+      keluhan_awal: alasan,
+      is_prioritas: true,
+      keterangan_prioritas: "Rujukan dari Klaster 2",
+      status: "menunggu",
+      created_by: user.id
+    }).select("id").single();
+
+    if (errKunjungan) { msgBox.innerHTML = `<div class="msg msg-error">Gagal buat kunjungan tujuan: ${errKunjungan.message}</div>`; return; }
+    kunjunganTujuanId = kunjunganBaru.id;
+  } else {
+    faskesTujuan = document.getElementById("rjkUmumFaskesTujuan").value.trim();
+    if (!faskesTujuan) { msgBox.innerHTML = `<div class="msg msg-error">Isi faskes tujuan dulu.</div>`; return; }
+  }
+
+  const { error: errRj } = await supabaseClient.from("rujukan").insert({
+    kunjungan_asal_id: kunjunganAsalRjkUmumId,
+    kunjungan_tujuan_id: kunjunganTujuanId,
+    jenis,
+    klaster_tujuan_id: klasterTujuanId,
+    faskes_tujuan: faskesTujuan,
+    diagnosa_rujukan: diagnosa || null,
+    alasan_rujukan: alasan,
+    catatan: catatan || null,
+    status: jenis === "internal" ? "diterima" : "diajukan",
+    petugas_id: user.id
+  });
+
+  if (errRj) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan rujukan: ${errRj.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Rujukan berhasil disimpan${jenis === "internal" ? " — antrian baru sudah dibuat di klaster tujuan." : "."}</div>`;
+  document.getElementById("rjkUmumJenis").value = "";
+  document.getElementById("rjkUmumDiagnosa").value = "";
+  document.getElementById("rjkUmumAlasan").value = "";
+  document.getElementById("rjkUmumCatatan").value = "";
+  document.getElementById("rjkUmumFaskesTujuan").value = "";
+  toggleJenisRjkUmum();
+  await muatRiwayatRjkLabUmum();
+}
+
+async function ajukanLabUmum() {
+  const msgBox = document.getElementById("msgLabUmum");
+  if (!pasienTerpilihRjkUmum) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!kunjunganAsalRjkUmumId) { msgBox.innerHTML = `<div class="msg msg-error">Data kunjungan belum siap, coba pilih ulang pasien.</div>`; return; }
+
+  const jenis = document.getElementById("labUmumJenis").value.trim();
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Isi jenis pemeriksaan dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { data: klasterLk, error: errKlaster } = await supabaseClient.from("klaster").select("id").eq("kode", "LK").single();
+  if (errKlaster || !klasterLk) { msgBox.innerHTML = `<div class="msg msg-error">Klaster LK tidak ditemukan.</div>`; return; }
+
+  const { data: noKunjunganLab, error: errNoK } = await supabaseClient.rpc("generate_no_kunjungan");
+  const { data: noAntrianLab, error: errNoA } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: klasterLk.id });
+  if (errNoK || errNoA) { msgBox.innerHTML = `<div class="msg msg-error">Gagal generate nomor: ${(errNoK || errNoA).message}</div>`; return; }
+
+  const { data: kunjunganLab, error: errKLab } = await supabaseClient.from("kunjungan").insert({
+    no_kunjungan: noKunjunganLab,
+    pasien_id: pasienTerpilihRjkUmum.id,
+    klaster_id: klasterLk.id,
+    tipe_layanan: "lab",
+    jenis_bayar: pasienTerpilihRjkUmum.status_bpjs === "aktif" ? "BPJS" : "Umum",
+    no_antrian: noAntrianLab,
+    status: "menunggu",
+    keluhan_awal: `Permintaan Lab Klaster 2: ${jenis}`,
+    created_by: user.id
+  }).select("id").single();
+
+  if (errKLab) { msgBox.innerHTML = `<div class="msg msg-error">Gagal buat antrian lab: ${errKLab.message}</div>`; return; }
+
+  const { error: errRl } = await supabaseClient.from("rujukan_lab").insert({
+    kunjungan_asal_id: kunjunganAsalRjkUmumId,
+    kunjungan_tujuan_id: kunjunganLab.id,
+    jenis_pemeriksaan: jenis,
+    status: "menunggu",
+    dibuat_oleh: user.id
+  });
+
+  if (errRl) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan permintaan lab: ${errRl.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Permintaan lab diajukan — antrian No. ${noAntrianLab} di Laboratorium.</div>`;
+  document.getElementById("labUmumJenis").value = "";
+  await muatRiwayatRjkLabUmum();
+}
+
+async function muatRiwayatRjkLabUmum() {
+  const k2Id = await ambilKlasterK2Id();
+
+  const tbodyRjk = document.getElementById("tabelRiwayatRjkUmum");
+  const { data: dataRjk, error: errRjk } = await supabaseClient
+    .from("rujukan")
+    .select("*, kunjungan_asal:kunjungan_asal_id(pasien(nama, no_rm), klaster_id), klaster_tujuan:klaster_tujuan_id(nama, kode)")
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (errRjk) { tbodyRjk.innerHTML = `<tr><td colspan="6">Gagal muat: ${errRjk.message}</td></tr>`; }
+  else {
+    const filtered = (dataRjk || []).filter(r => r.kunjungan_asal?.klaster_id === k2Id);
+    tbodyRjk.innerHTML = filtered.length ? filtered.map(r => `
+      <tr>
+        <td>${new Date(r.created_at).toLocaleDateString("id-ID")}</td>
+        <td>${r.kunjungan_asal?.pasien?.nama || "-"}</td>
+        <td>${r.jenis === "internal" ? "Internal" : "FKRTL"}</td>
+        <td>${r.jenis === "internal" ? (r.klaster_tujuan ? `${r.klaster_tujuan.kode} — ${r.klaster_tujuan.nama}` : "-") : (r.faskes_tujuan || "-")}</td>
+        <td>${r.alasan_rujukan}</td>
+        <td><span class="badge badge-${r.status === "diterima" ? "selesai" : (r.status === "batal" ? "batal" : "menunggu")}">${r.status}</span></td>
+      </tr>
+    `).join("") : `<tr><td colspan="6">Belum ada rujukan tercatat.</td></tr>`;
+  }
+
+  const tbodyLab = document.getElementById("tabelRiwayatLabUmum");
+  const { data: dataLab, error: errLab } = await supabaseClient
+    .from("rujukan_lab")
+    .select("*, kunjungan_asal:kunjungan_asal_id(pasien(nama, no_rm), klaster_id)")
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (errLab) { tbodyLab.innerHTML = `<tr><td colspan="4">Gagal muat: ${errLab.message}</td></tr>`; return; }
+  const filteredLab = (dataLab || []).filter(r => r.kunjungan_asal?.klaster_id === k2Id);
+  tbodyLab.innerHTML = filteredLab.length ? filteredLab.map(r => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleDateString("id-ID")}</td>
+      <td>${r.kunjungan_asal?.pasien?.nama || "-"}</td>
+      <td>${r.jenis_pemeriksaan}</td>
+      <td><span class="badge badge-${r.status === "selesai" ? "selesai" : "menunggu"}">${r.status}</span></td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">Belum ada permintaan lab tercatat.</td></tr>`;
+}
+
+// ---------- PENJARINGAN KESEHATAN ANAK SEKOLAH ----------
+let pasienTerpilihJaring = null;
+
+async function cariPasienJaring() {
+  const kunci = document.getElementById("jaringCari").value.trim();
+  const hasilDiv = document.getElementById("jaringHasilCari");
+  document.getElementById("jaringWrap").style.display = "none";
+  pasienTerpilihJaring = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienJaring(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienJaringDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienJaring = data;
+  }
+}
+
+function pilihPasienJaringDariHasil(i) {
+  pilihPasienJaring(window._hasilCariPasienJaring[i]);
+}
+
+function pilihPasienJaring(pasien) {
+  pasienTerpilihJaring = pasien;
+  document.getElementById("jaringHasilCari").innerHTML = "";
+  document.getElementById("jaringNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("jaringWrap").style.display = "block";
+  document.getElementById("msgJaring").innerHTML = "";
+  document.getElementById("jaringSekolah").value = "";
+  document.getElementById("jaringKelas").value = "";
+  document.getElementById("jaringTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("jaringStatusGizi").value = "";
+  document.getElementById("jaringGigi").value = "";
+  document.getElementById("jaringMata").value = "";
+  document.getElementById("jaringCatatan").value = "";
+
+  muatRiwayatJaring();
+}
+
+async function muatRiwayatJaring() {
+  const tbody = document.getElementById("tabelRiwayatJaring");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("penjaringan_sekolah")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihJaring.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan penjaringan.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(j => `
+    <tr>
+      <td>${new Date(j.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${j.nama_sekolah || "-"}${j.kelas ? " / Kls " + j.kelas : ""}</td>
+      <td>${j.status_gizi || "-"}</td>
+      <td>${j.kesehatan_gigi || "-"}</td>
+      <td>${j.kesehatan_mata || "-"}</td>
+      <td>${j.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanJaring() {
+  const msgBox = document.getElementById("msgJaring");
+  if (!pasienTerpilihJaring) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("jaringTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("penjaringan_sekolah").insert({
+    pasien_id: pasienTerpilihJaring.id,
+    nama_sekolah: document.getElementById("jaringSekolah").value.trim() || null,
+    kelas: document.getElementById("jaringKelas").value.trim() || null,
+    tanggal,
+    status_gizi: document.getElementById("jaringStatusGizi").value || null,
+    kesehatan_gigi: document.getElementById("jaringGigi").value || null,
+    kesehatan_mata: document.getElementById("jaringMata").value || null,
+    catatan: document.getElementById("jaringCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Hasil penjaringan tersimpan.</div>`;
+  document.getElementById("jaringStatusGizi").value = "";
+  document.getElementById("jaringGigi").value = "";
+  document.getElementById("jaringMata").value = "";
+  document.getElementById("jaringCatatan").value = "";
+  await muatRiwayatJaring();
+}
+
+// ---------- IMUNISASI BIAS ----------
+let pasienTerpilihBias = null;
+
+async function cariPasienBias() {
+  const kunci = document.getElementById("biasCari").value.trim();
+  const hasilDiv = document.getElementById("biasHasilCari");
+  document.getElementById("biasWrap").style.display = "none";
+  pasienTerpilihBias = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienBias(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienBiasDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienBias = data;
+  }
+}
+
+function pilihPasienBiasDariHasil(i) {
+  pilihPasienBias(window._hasilCariPasienBias[i]);
+}
+
+function pilihPasienBias(pasien) {
+  pasienTerpilihBias = pasien;
+  document.getElementById("biasHasilCari").innerHTML = "";
+  document.getElementById("biasNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("biasWrap").style.display = "block";
+  document.getElementById("msgBias").innerHTML = "";
+  document.getElementById("biasAntigen").value = "";
+  document.getElementById("biasSekolah").value = "";
+  document.getElementById("biasTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("biasCatatan").value = "";
+
+  muatRiwayatBias();
+}
+
+async function muatRiwayatBias() {
+  const tbody = document.getElementById("tabelRiwayatBias");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("imunisasi_bias")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihBias.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada catatan imunisasi BIAS.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(b => `
+    <tr>
+      <td>${b.antigen}</td>
+      <td>${b.nama_sekolah || "-"}</td>
+      <td>${new Date(b.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${b.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanBias() {
+  const msgBox = document.getElementById("msgBias");
+  if (!pasienTerpilihBias) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const antigen = document.getElementById("biasAntigen").value;
+  const tanggal = document.getElementById("biasTanggal").value;
+  if (!antigen) { msgBox.innerHTML = `<div class="msg msg-error">Pilih antigen dulu.</div>`; return; }
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("imunisasi_bias").insert({
+    pasien_id: pasienTerpilihBias.id,
+    antigen,
+    nama_sekolah: document.getElementById("biasSekolah").value.trim() || null,
+    tanggal,
+    catatan: document.getElementById("biasCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">${antigen} tersimpan.</div>`;
+  document.getElementById("biasAntigen").value = "";
+  document.getElementById("biasCatatan").value = "";
+  await muatRiwayatBias();
+}
+
+// ---------- PKPR & SKRINING REMAJA ----------
+let pasienTerpilihPkpr = null;
+
+async function cariPasienPkpr() {
+  const kunci = document.getElementById("pkprCari").value.trim();
+  const hasilDiv = document.getElementById("pkprHasilCari");
+  document.getElementById("pkprWrap").style.display = "none";
+  pasienTerpilihPkpr = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienPkpr(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienPkprDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienPkpr = data;
+  }
+}
+
+function pilihPasienPkprDariHasil(i) {
+  pilihPasienPkpr(window._hasilCariPasienPkpr[i]);
+}
+
+function pilihPasienPkpr(pasien) {
+  pasienTerpilihPkpr = pasien;
+  document.getElementById("pkprHasilCari").innerHTML = "";
+  document.getElementById("pkprNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("pkprWrap").style.display = "block";
+  document.getElementById("msgPkpr").innerHTML = "";
+  document.getElementById("pkprTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("pkprStatusGizi").value = "";
+  document.getElementById("pkprAnemia").value = "";
+  document.getElementById("pkprJiwa").value = "";
+  document.getElementById("pkprKespro").value = "";
+  document.getElementById("pkprKonseling").value = "";
+  document.getElementById("pkprCatatan").value = "";
+
+  muatRiwayatPkpr();
+}
+
+async function muatRiwayatPkpr() {
+  const tbody = document.getElementById("tabelRiwayatPkpr");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("skrining_remaja")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihPkpr.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan skrining.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(s => `
+    <tr>
+      <td>${new Date(s.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${s.status_gizi || "-"}</td>
+      <td>${s.hasil_anemia || "-"}</td>
+      <td>${s.hasil_jiwa || "-"}</td>
+      <td>${s.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanPkpr() {
+  const msgBox = document.getElementById("msgPkpr");
+  if (!pasienTerpilihPkpr) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("pkprTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("skrining_remaja").insert({
+    pasien_id: pasienTerpilihPkpr.id,
+    tanggal,
+    status_gizi: document.getElementById("pkprStatusGizi").value || null,
+    hasil_anemia: document.getElementById("pkprAnemia").value || null,
+    hasil_jiwa: document.getElementById("pkprJiwa").value || null,
+    hasil_kespro: document.getElementById("pkprKespro").value.trim() || null,
+    keluhan_konseling: document.getElementById("pkprKonseling").value.trim() || null,
+    catatan: document.getElementById("pkprCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Skrining PKPR tersimpan.</div>`;
+  document.getElementById("pkprStatusGizi").value = "";
+  document.getElementById("pkprAnemia").value = "";
+  document.getElementById("pkprJiwa").value = "";
+  document.getElementById("pkprKespro").value = "";
+  document.getElementById("pkprKonseling").value = "";
+  document.getElementById("pkprCatatan").value = "";
+  await muatRiwayatPkpr();
 }
 </script>
 
