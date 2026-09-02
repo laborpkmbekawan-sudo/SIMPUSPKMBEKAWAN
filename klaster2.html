@@ -679,9 +679,126 @@
           </div>
         </div>
 
+        <!-- ===== Imunisasi Dasar & Lanjutan ===== -->
+        <div id="bayiPanel-imunisasi" style="display:none;">
+
+          <div class="card" style="--accent:#216ac5;">
+            <h2><span class="card-num" style="background:#216ac5;">💉</span> Cari Pasien Bayi/Balita</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Imunisasi dasar (HB0–Campak-Rubella) usia 0–11 bulan, dan lanjutan usia 18–24 bulan.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="imunDasarCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienImunDasar();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienImunDasar()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="imunDasarHasilCari"></div>
+          </div>
+
+          <div id="imunDasarWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Imunisasi — <span id="imunDasarNamaPasien"></span></h2>
+              <div id="msgImunDasar"></div>
+              <div class="grid-3">
+                <div>
+                  <label>Antigen *</label>
+                  <select id="imunDasarAntigen" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="HB0">HB0 (0–24 jam)</option>
+                    <option value="BCG">BCG</option>
+                    <option value="Polio 1 (OPV1)">Polio 1 (OPV1)</option>
+                    <option value="DPT-HB-Hib 1">DPT-HB-Hib 1</option>
+                    <option value="Polio 2 (OPV2)">Polio 2 (OPV2)</option>
+                    <option value="DPT-HB-Hib 2">DPT-HB-Hib 2</option>
+                    <option value="Polio 3 (OPV3)">Polio 3 (OPV3)</option>
+                    <option value="DPT-HB-Hib 3">DPT-HB-Hib 3</option>
+                    <option value="Polio 4 (OPV4)/IPV">Polio 4 (OPV4)/IPV</option>
+                    <option value="Campak-Rubella (MR)">Campak-Rubella (MR)</option>
+                    <option value="DPT-HB-Hib Lanjutan">DPT-HB-Hib Lanjutan (18–24 bln)</option>
+                    <option value="Campak-Rubella Lanjutan">Campak-Rubella Lanjutan (18–24 bln)</option>
+                  </select>
+                </div>
+                <div><label>Tanggal *</label><input type="date" id="imunDasarTanggal" required></div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="imunDasarCatatan" placeholder="KIPI, kondisi saat pemberian, dsb."></textarea>
+              <button class="btn-primary" onclick="simpanImunDasar()">Simpan Imunisasi</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Imunisasi Dasar &amp; Lanjutan</h2>
+              <table>
+                <thead><tr><th>Antigen</th><th>Tanggal</th><th>Catatan</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatImunDasar"><tr><td colspan="4">Belum ada catatan imunisasi.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===== Pemberian Vitamin A ===== -->
+        <div id="bayiPanel-vitamin-a" style="display:none;">
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2><span class="card-num" style="background:#2f9e5c;">💊</span> Cari Pasien Bayi/Balita</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Program rutin nasional bulan Februari &amp; Agustus. Sasaran usia 6–59 bulan.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="vitACari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienVitA();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienVitA()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="vitAHasilCari"></div>
+          </div>
+
+          <div id="vitAWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Pemberian Vitamin A — <span id="vitANamaPasien"></span></h2>
+              <div id="msgVitA"></div>
+              <div class="grid-3">
+                <div>
+                  <label>Dosis *</label>
+                  <select id="vitADosis" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="100.000 IU (6-11 bulan)">100.000 IU (6–11 bulan)</option>
+                    <option value="200.000 IU (12-59 bulan)">200.000 IU (12–59 bulan)</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Periode *</label>
+                  <select id="vitAPeriode" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="Februari">Februari</option>
+                    <option value="Agustus">Agustus</option>
+                    <option value="Luar Jadwal">Luar Jadwal</option>
+                  </select>
+                </div>
+                <div><label>Tanggal *</label><input type="date" id="vitATanggal" required></div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="vitACatatan"></textarea>
+              <button class="btn-primary" onclick="simpanVitA()">Simpan Pemberian Vitamin A</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Pemberian Vitamin A</h2>
+              <table>
+                <thead><tr><th>Dosis</th><th>Periode</th><th>Tanggal</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatVitA"><tr><td colspan="4">Belum ada catatan vitamin A.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
         <!-- ===== Sub-menu lain — segera ===== -->
-        <div id="bayiPanel-imunisasi" style="display:none;"><div class="k2-segera"><div class="ic">💉</div><div class="t">Imunisasi Dasar &amp; Lanjutan</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
-        <div id="bayiPanel-vitamin-a" style="display:none;"><div class="k2-segera"><div class="ic">💊</div><div class="t">Pemberian Vitamin A</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
         <div id="bayiPanel-mtbs" style="display:none;"><div class="k2-segera"><div class="ic">🩺</div><div class="t">MTBS/MTBM</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
 
       </div>
@@ -1853,6 +1970,221 @@ async function simpanTumbuhKembang() {
   document.getElementById("tumbuhStatusPerkembangan").value = "";
   document.getElementById("tumbuhCatatan").value = "";
   await muatRiwayatTumbuh();
+}
+
+// ---------- IMUNISASI DASAR & LANJUTAN ----------
+let pasienTerpilihImunDasar = null;
+
+async function cariPasienImunDasar() {
+  const kunci = document.getElementById("imunDasarCari").value.trim();
+  const hasilDiv = document.getElementById("imunDasarHasilCari");
+  document.getElementById("imunDasarWrap").style.display = "none";
+  pasienTerpilihImunDasar = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienImunDasar(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienImunDasarDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienImunDasar = data;
+  }
+}
+
+function pilihPasienImunDasarDariHasil(i) {
+  pilihPasienImunDasar(window._hasilCariPasienImunDasar[i]);
+}
+
+function pilihPasienImunDasar(pasien) {
+  pasienTerpilihImunDasar = pasien;
+  document.getElementById("imunDasarHasilCari").innerHTML = "";
+  document.getElementById("imunDasarNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"}, lahir ${new Date(pasien.tanggal_lahir).toLocaleDateString("id-ID")})`;
+  document.getElementById("imunDasarWrap").style.display = "block";
+  document.getElementById("msgImunDasar").innerHTML = "";
+  document.getElementById("imunDasarAntigen").value = "";
+  document.getElementById("imunDasarTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("imunDasarCatatan").value = "";
+
+  muatRiwayatImunDasar();
+}
+
+async function muatRiwayatImunDasar() {
+  const tbody = document.getElementById("tabelRiwayatImunDasar");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("imunisasi_dasar")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihImunDasar.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada catatan imunisasi.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(n => `
+    <tr>
+      <td>${n.antigen}</td>
+      <td>${new Date(n.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${n.catatan || "-"}</td>
+      <td>${n.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanImunDasar() {
+  const msgBox = document.getElementById("msgImunDasar");
+  if (!pasienTerpilihImunDasar) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const antigen = document.getElementById("imunDasarAntigen").value;
+  const tanggal = document.getElementById("imunDasarTanggal").value;
+  if (!antigen) { msgBox.innerHTML = `<div class="msg msg-error">Pilih antigen dulu.</div>`; return; }
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("imunisasi_dasar").insert({
+    pasien_id: pasienTerpilihImunDasar.id,
+    antigen,
+    tanggal,
+    catatan: document.getElementById("imunDasarCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">${antigen} tersimpan.</div>`;
+  document.getElementById("imunDasarAntigen").value = "";
+  document.getElementById("imunDasarCatatan").value = "";
+  await muatRiwayatImunDasar();
+}
+
+// ---------- PEMBERIAN VITAMIN A ----------
+let pasienTerpilihVitA = null;
+
+async function cariPasienVitA() {
+  const kunci = document.getElementById("vitACari").value.trim();
+  const hasilDiv = document.getElementById("vitAHasilCari");
+  document.getElementById("vitAWrap").style.display = "none";
+  pasienTerpilihVitA = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienVitA(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienVitADariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienVitA = data;
+  }
+}
+
+function pilihPasienVitADariHasil(i) {
+  pilihPasienVitA(window._hasilCariPasienVitA[i]);
+}
+
+function pilihPasienVitA(pasien) {
+  pasienTerpilihVitA = pasien;
+  document.getElementById("vitAHasilCari").innerHTML = "";
+  document.getElementById("vitANamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"}, lahir ${new Date(pasien.tanggal_lahir).toLocaleDateString("id-ID")})`;
+  document.getElementById("vitAWrap").style.display = "block";
+  document.getElementById("msgVitA").innerHTML = "";
+  document.getElementById("vitADosis").value = "";
+  document.getElementById("vitAPeriode").value = "";
+  document.getElementById("vitATanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("vitACatatan").value = "";
+
+  muatRiwayatVitA();
+}
+
+async function muatRiwayatVitA() {
+  const tbody = document.getElementById("tabelRiwayatVitA");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("vitamin_a")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihVitA.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada catatan vitamin A.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(v => `
+    <tr>
+      <td>${v.dosis}</td>
+      <td>${v.periode}</td>
+      <td>${new Date(v.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${v.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanVitA() {
+  const msgBox = document.getElementById("msgVitA");
+  if (!pasienTerpilihVitA) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const dosis = document.getElementById("vitADosis").value;
+  const periode = document.getElementById("vitAPeriode").value;
+  const tanggal = document.getElementById("vitATanggal").value;
+  if (!dosis) { msgBox.innerHTML = `<div class="msg msg-error">Pilih dosis dulu.</div>`; return; }
+  if (!periode) { msgBox.innerHTML = `<div class="msg msg-error">Pilih periode dulu.</div>`; return; }
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("vitamin_a").insert({
+    pasien_id: pasienTerpilihVitA.id,
+    dosis,
+    periode,
+    tanggal,
+    catatan: document.getElementById("vitACatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Pemberian vitamin A tersimpan.</div>`;
+  document.getElementById("vitADosis").value = "";
+  document.getElementById("vitAPeriode").value = "";
+  document.getElementById("vitACatatan").value = "";
+  await muatRiwayatVitA();
 }
 </script>
 

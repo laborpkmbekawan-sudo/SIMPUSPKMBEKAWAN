@@ -1492,6 +1492,54 @@ create trigger trg_audit_tumbuh_kembang after insert or update or delete on tumb
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 48. KLASTER 2 — FASE 7: Bayi & Balita — Imunisasi Dasar &
+--     Lanjutan, dan Pemberian Vitamin A. Reuse tabel pasien
+--     yang sudah ada, cari langsung sama seperti KN/Tumbuh Kembang.
+-- ============================================================
+create table if not exists imunisasi_dasar (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  antigen text not null check (antigen in (
+    'HB0', 'BCG', 'Polio 1 (OPV1)', 'DPT-HB-Hib 1', 'Polio 2 (OPV2)',
+    'DPT-HB-Hib 2', 'Polio 3 (OPV3)', 'DPT-HB-Hib 3', 'Polio 4 (OPV4)/IPV',
+    'Campak-Rubella (MR)', 'DPT-HB-Hib Lanjutan', 'Campak-Rubella Lanjutan'
+  )),
+  tanggal date not null default current_date,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_imunisasi_dasar_pasien on imunisasi_dasar(pasien_id);
+
+alter table imunisasi_dasar enable row level security;
+create policy "authenticated_all_imunisasi_dasar" on imunisasi_dasar for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_imunisasi_dasar on imunisasi_dasar;
+create trigger trg_audit_imunisasi_dasar after insert or update or delete on imunisasi_dasar
+  for each row execute function fn_audit_log();
+
+create table if not exists vitamin_a (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  dosis text not null check (dosis in ('100.000 IU (6-11 bulan)', '200.000 IU (12-59 bulan)')),
+  periode text not null check (periode in ('Februari', 'Agustus', 'Luar Jadwal')),
+  tanggal date not null default current_date,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_vitamin_a_pasien on vitamin_a(pasien_id);
+
+alter table vitamin_a enable row level security;
+create policy "authenticated_all_vitamin_a" on vitamin_a for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_vitamin_a on vitamin_a;
+create trigger trg_audit_vitamin_a after insert or update or delete on vitamin_a
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
