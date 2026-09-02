@@ -1317,6 +1317,37 @@ create trigger trg_audit_kehamilan after insert or update or delete on kehamilan
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 43. KLASTER 2 — FASE 2: ANC (Antenatal Care).
+--     Reuse tabel kehamilan (section 42) yang sudah ada — ANC
+--     adalah catatan pemeriksaan BERKALA selama kehamilan itu.
+-- ============================================================
+create table if not exists kunjungan_anc (
+  id uuid primary key default gen_random_uuid(),
+  kehamilan_id uuid not null references kehamilan(id),
+  kunjungan_id uuid references kunjungan(id),
+  usia_kehamilan_minggu int,
+  tekanan_darah text,
+  berat_badan text,
+  tinggi_fundus text,
+  lila text,
+  hb text,
+  status_gizi text,
+  skrining_risiko jsonb not null default '[]'::jsonb,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kunjungan_anc_kehamilan on kunjungan_anc(kehamilan_id);
+
+alter table kunjungan_anc enable row level security;
+create policy "authenticated_all_kunjungan_anc" on kunjungan_anc for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kunjungan_anc on kunjungan_anc;
+create trigger trg_audit_kunjungan_anc after insert or update or delete on kunjungan_anc
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

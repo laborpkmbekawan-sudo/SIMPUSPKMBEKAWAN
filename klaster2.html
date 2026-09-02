@@ -164,7 +164,82 @@
 
       <!-- ============ PANEL LAIN — SEGERA DIBANGUN ============ -->
       <div id="panelIbu" style="display:none;">
-        <div class="k2-segera"><div class="ic">🤰</div><div class="t">Ibu Hamil, Bersalin &amp; Nifas</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="padding:10px 14px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="ibuSub-anc" onclick="gantiSubIbu('anc')">ANC</button>
+            <button type="button" class="lap-tab" id="ibuSub-imunisasi" onclick="gantiSubIbu('imunisasi')">Imunisasi TT/Td</button>
+            <button type="button" class="lap-tab" id="ibuSub-persalinan" onclick="gantiSubIbu('persalinan')">Persalinan</button>
+            <button type="button" class="lap-tab" id="ibuSub-nifas" onclick="gantiSubIbu('nifas')">Nifas (KF1–KF4)</button>
+            <button type="button" class="lap-tab" id="ibuSub-rujukan" onclick="gantiSubIbu('rujukan')">Rujukan Komplikasi</button>
+          </div>
+        </div>
+
+        <!-- ===== ANC ===== -->
+        <div id="ibuPanel-anc">
+
+          <div class="card" style="--accent:#b3175a;">
+            <h2><span class="card-num" style="background:#b3175a;">🤰</span> Pilih Ibu Hamil</h2>
+            <select id="ancPilihHamil" onchange="pilihKehamilanAnc(this.value)">
+              <option value="">-- Pilih ibu hamil aktif --</option>
+            </select>
+          </div>
+
+          <div id="ancWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat ANC — <span id="ancNamaPasien"></span></h2>
+              <div id="msgAnc"></div>
+              <div class="info-block" style="margin-bottom:12px;">
+                <div class="info-row"><label>HPHT</label><span id="ancHphtInfo">-</span></div>
+                <div class="info-row"><label>HPL (Taksiran Persalinan)</label><span id="ancHplInfo">-</span></div>
+                <div class="info-row"><label>Usia Kehamilan Saat Ini</label><span id="ancUsiaKehamilanInfo">-</span></div>
+              </div>
+
+              <div class="grid-3">
+                <div><label>Tekanan Darah</label><input type="text" id="ancTd" placeholder="120/80"></div>
+                <div><label>Berat Badan (kg)</label><input type="text" id="ancBb"></div>
+                <div><label>Tinggi Fundus Uteri (cm)</label><input type="text" id="ancTfu"></div>
+                <div><label>LILA (cm)</label><input type="text" id="ancLila" oninput="hitungStatusGiziAnc()"></div>
+                <div><label>HB (g/dL)</label><input type="text" id="ancHb"></div>
+                <div><label>Status Gizi</label><input type="text" id="ancStatusGizi" readonly style="background:#f7f8fa;"></div>
+              </div>
+
+              <label>Skrining Risiko Kehamilan</label>
+              <div class="grid-2" style="font-size:12.5px;">
+                <label style="font-weight:400;"><input type="checkbox" class="ancRisiko" value="Hipertensi/Preeklamsia" style="width:auto; display:inline-block;"> Hipertensi / Preeklamsia</label>
+                <label style="font-weight:400;"><input type="checkbox" class="ancRisiko" value="Anemia Berat" style="width:auto; display:inline-block;"> Anemia Berat</label>
+                <label style="font-weight:400;"><input type="checkbox" class="ancRisiko" value="KEK (Kurang Energi Kronis)" style="width:auto; display:inline-block;"> KEK (Kurang Energi Kronis)</label>
+                <label style="font-weight:400;"><input type="checkbox" class="ancRisiko" value="Riwayat SC/Operasi Kandungan" style="width:auto; display:inline-block;"> Riwayat SC / Operasi Kandungan</label>
+                <label style="font-weight:400;"><input type="checkbox" class="ancRisiko" value="Kehamilan Kembar" style="width:auto; display:inline-block;"> Kehamilan Kembar</label>
+                <label style="font-weight:400;"><input type="checkbox" class="ancRisiko" value="Letak Sungsang/Lintang" style="width:auto; display:inline-block;"> Letak Sungsang / Lintang</label>
+                <label style="font-weight:400;"><input type="checkbox" class="ancRisiko" value="Perdarahan" style="width:auto; display:inline-block;"> Perdarahan</label>
+                <label style="font-weight:400;"><input type="checkbox" class="ancRisiko" value="Usia <20 atau >35 Tahun" style="width:auto; display:inline-block;"> Usia &lt;20 atau &gt;35 Tahun</label>
+              </div>
+
+              <label style="margin-top:10px;">Catatan</label>
+              <textarea id="ancCatatan" placeholder="Catatan tambahan hasil pemeriksaan"></textarea>
+
+              <button class="btn-primary" onclick="simpanAnc()">Simpan Hasil ANC</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat ANC</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Usia Kehamilan</th><th>TD</th><th>BB</th><th>TFU</th><th>LILA</th><th>HB</th><th>Status Gizi</th><th>Risiko</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatAnc"><tr><td colspan="10">Belum ada catatan ANC.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===== Sub-menu lain — segera ===== -->
+        <div id="ibuPanel-imunisasi" style="display:none;"><div class="k2-segera"><div class="ic">💉</div><div class="t">Imunisasi TT/Td Ibu Hamil</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
+        <div id="ibuPanel-persalinan" style="display:none;"><div class="k2-segera"><div class="ic">👶</div><div class="t">Pencatatan Persalinan</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
+        <div id="ibuPanel-nifas" style="display:none;"><div class="k2-segera"><div class="ic">🩺</div><div class="t">Pemeriksaan Nifas (KF1–KF4)</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
+        <div id="ibuPanel-rujukan" style="display:none;"><div class="k2-segera"><div class="ic">↦</div><div class="t">Rujukan Komplikasi Kehamilan/Persalinan</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
+
       </div>
       <div id="panelBayiBalita" style="display:none;">
         <div class="k2-segera"><div class="ic">👶</div><div class="t">Bayi &amp; Balita</div>Menu ini segera dibangun di sesi berikutnya.</div>
@@ -238,6 +313,18 @@ function gantiSubtabK2(tab) {
   };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Klaster 2";
   if (tab === "dashboard") muatDashboardK2();
+  if (tab === "ibu") muatAnc();
+}
+
+// ---------- IBU HAMIL — inner sub-tabs ----------
+const SUBIBU = ["anc", "imunisasi", "persalinan", "nifas", "rujukan"];
+function gantiSubIbu(sub) {
+  SUBIBU.forEach(s => {
+    const panel = document.getElementById("ibuPanel-" + s);
+    if (panel) panel.style.display = (s === sub) ? "block" : "none";
+    const btn = document.getElementById("ibuSub-" + s);
+    if (btn) btn.classList.toggle("active", s === sub);
+  });
 }
 
 // ---------- Helper ----------
@@ -438,6 +525,119 @@ async function simpanKehamilan() {
   document.getElementById("hamilCari").value = "";
   pasienTerpilihHamil = null;
   await muatDashboardK2();
+}
+
+// ---------- ANC ----------
+let kehamilanAktifCache = [];
+let kehamilanTerpilihAnc = null;
+
+async function muatAnc() {
+  const sel = document.getElementById("ancPilihHamil");
+  const { data, error } = await supabaseClient
+    .from("kehamilan")
+    .select("*, pasien(nama, no_rm)")
+    .eq("status", "hamil")
+    .order("created_at", { ascending: true });
+
+  if (error) { sel.innerHTML = `<option value="">Gagal muat: ${error.message}</option>`; return; }
+
+  kehamilanAktifCache = data || [];
+  sel.innerHTML = `<option value="">-- Pilih ibu hamil aktif --</option>` +
+    kehamilanAktifCache.map(k => `<option value="${k.id}">${k.pasien?.nama || "-"} (No. RM ${k.pasien?.no_rm || "-"})</option>`).join("");
+}
+
+function usiaKehamilanMinggu(hpht) {
+  if (!hpht) return null;
+  const hari = Math.floor((new Date() - new Date(hpht)) / (1000 * 60 * 60 * 24));
+  return Math.floor(hari / 7);
+}
+
+async function pilihKehamilanAnc(kehamilanId) {
+  if (!kehamilanId) {
+    document.getElementById("ancWrap").style.display = "none";
+    kehamilanTerpilihAnc = null;
+    return;
+  }
+  const k = kehamilanAktifCache.find(x => x.id === kehamilanId);
+  if (!k) return;
+  kehamilanTerpilihAnc = k;
+
+  document.getElementById("ancNamaPasien").textContent = `${k.pasien?.nama || "-"} (No. RM ${k.pasien?.no_rm || "-"})`;
+  document.getElementById("ancHphtInfo").textContent = k.hpht ? new Date(k.hpht).toLocaleDateString("id-ID") : "-";
+  document.getElementById("ancHplInfo").textContent = k.hpl ? new Date(k.hpl).toLocaleDateString("id-ID") : "-";
+  const minggu = usiaKehamilanMinggu(k.hpht);
+  document.getElementById("ancUsiaKehamilanInfo").textContent = minggu !== null ? `${minggu} minggu` : "HPHT belum diisi";
+
+  document.getElementById("ancWrap").style.display = "block";
+  document.getElementById("msgAnc").innerHTML = "";
+  ["ancTd", "ancBb", "ancTfu", "ancLila", "ancHb", "ancStatusGizi", "ancCatatan"].forEach(id => document.getElementById(id).value = "");
+  document.querySelectorAll(".ancRisiko").forEach(c => c.checked = false);
+
+  await muatRiwayatAnc();
+}
+
+function hitungStatusGiziAnc() {
+  const lila = parseFloat(document.getElementById("ancLila").value.replace(",", "."));
+  const el = document.getElementById("ancStatusGizi");
+  if (isNaN(lila)) { el.value = ""; return; }
+  el.value = lila < 23.5 ? "KEK (Kurang Energi Kronis)" : "Normal";
+}
+
+async function muatRiwayatAnc() {
+  const tbody = document.getElementById("tabelRiwayatAnc");
+  tbody.innerHTML = `<tr><td colspan="10">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan_anc")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("kehamilan_id", kehamilanTerpilihAnc.id)
+    .order("created_at", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="10">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="10">Belum ada catatan ANC.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(a => `
+    <tr>
+      <td>${new Date(a.created_at).toLocaleDateString("id-ID")}</td>
+      <td>${a.usia_kehamilan_minggu !== null ? a.usia_kehamilan_minggu + " mgg" : "-"}</td>
+      <td>${a.tekanan_darah || "-"}</td>
+      <td>${a.berat_badan || "-"}</td>
+      <td>${a.tinggi_fundus || "-"}</td>
+      <td>${a.lila || "-"}</td>
+      <td>${a.hb || "-"}</td>
+      <td>${a.status_gizi || "-"}</td>
+      <td>${(a.skrining_risiko && a.skrining_risiko.length) ? a.skrining_risiko.join(", ") : "-"}</td>
+      <td>${a.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanAnc() {
+  const msgBox = document.getElementById("msgAnc");
+  if (!kehamilanTerpilihAnc) { msgBox.innerHTML = `<div class="msg msg-error">Pilih ibu hamil dulu.</div>`; return; }
+
+  const risiko = Array.from(document.querySelectorAll(".ancRisiko:checked")).map(c => c.value);
+
+  const { error } = await supabaseClient.from("kunjungan_anc").insert({
+    kehamilan_id: kehamilanTerpilihAnc.id,
+    usia_kehamilan_minggu: usiaKehamilanMinggu(kehamilanTerpilihAnc.hpht),
+    tekanan_darah: document.getElementById("ancTd").value.trim() || null,
+    berat_badan: document.getElementById("ancBb").value.trim() || null,
+    tinggi_fundus: document.getElementById("ancTfu").value.trim() || null,
+    lila: document.getElementById("ancLila").value.trim() || null,
+    hb: document.getElementById("ancHb").value.trim() || null,
+    status_gizi: document.getElementById("ancStatusGizi").value || null,
+    skrining_risiko: risiko,
+    catatan: document.getElementById("ancCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan ANC: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Hasil ANC tersimpan.</div>`;
+  ["ancTd", "ancBb", "ancTfu", "ancLila", "ancHb", "ancStatusGizi", "ancCatatan"].forEach(id => document.getElementById(id).value = "");
+  document.querySelectorAll(".ancRisiko").forEach(c => c.checked = false);
+  await muatRiwayatAnc();
 }
 </script>
 
