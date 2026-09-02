@@ -373,8 +373,157 @@
 
           </div>
         </div>
-        <div id="ibuPanel-nifas" style="display:none;"><div class="k2-segera"><div class="ic">🩺</div><div class="t">Pemeriksaan Nifas (KF1–KF4)</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
-        <div id="ibuPanel-rujukan" style="display:none;"><div class="k2-segera"><div class="ic">↦</div><div class="t">Rujukan Komplikasi Kehamilan/Persalinan</div>Menu ini segera dibangun di sesi berikutnya.</div></div>
+        <div id="ibuPanel-nifas" style="display:none;">
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2><span class="card-num" style="background:#26a3a0;">🩺</span> Pilih Ibu Nifas</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">KF1 (6–48 jam), KF2 (3–7 hari), KF3 (8–28 hari), KF4 (29–42 hari) pasca bersalin. Setelah KF4 disimpan, masa nifas otomatis dianggap selesai.</p>
+            <select id="nifasPilihHamil" onchange="pilihKehamilanNifas(this.value)">
+              <option value="">-- Pilih ibu nifas aktif --</option>
+            </select>
+          </div>
+
+          <div id="nifasWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Kunjungan Nifas — <span id="nifasNamaPasien"></span></h2>
+              <div id="msgNifas"></div>
+
+              <div class="grid-3">
+                <div>
+                  <label>Tahap *</label>
+                  <select id="nifasTahap" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="KF1">KF1 (6–48 jam)</option>
+                    <option value="KF2">KF2 (3–7 hari)</option>
+                    <option value="KF3">KF3 (8–28 hari)</option>
+                    <option value="KF4">KF4 (29–42 hari)</option>
+                  </select>
+                </div>
+                <div><label>Tanggal *</label><input type="date" id="nifasTanggal" required></div>
+                <div><label>Tekanan Darah</label><input type="text" id="nifasTd" placeholder="120/80"></div>
+                <div><label>Suhu (°C)</label><input type="text" id="nifasSuhu"></div>
+                <div>
+                  <label>Involusi Uterus</label>
+                  <select id="nifasInvolusi">
+                    <option value="">-- Pilih --</option>
+                    <option value="Baik">Baik (sesuai usia nifas)</option>
+                    <option value="Tidak Baik">Tidak Baik / Subinvolusi</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Lochea</label>
+                  <select id="nifasLochea">
+                    <option value="">-- Pilih --</option>
+                    <option value="Rubra">Rubra (merah, hari 1–3)</option>
+                    <option value="Sanguinolenta">Sanguinolenta (merah kecoklatan, hari 4–7)</option>
+                    <option value="Serosa">Serosa (kekuningan, hari 8–14)</option>
+                    <option value="Alba">Alba (putih, &gt;14 hari)</option>
+                  </select>
+                </div>
+              </div>
+
+              <label>Tanda Bahaya</label>
+              <div class="grid-2" style="font-size:12.5px;">
+                <label style="font-weight:400;"><input type="checkbox" class="nifasBahaya" value="Perdarahan Berlebih" style="width:auto; display:inline-block;"> Perdarahan Berlebih</label>
+                <label style="font-weight:400;"><input type="checkbox" class="nifasBahaya" value="Demam Tinggi" style="width:auto; display:inline-block;"> Demam Tinggi</label>
+                <label style="font-weight:400;"><input type="checkbox" class="nifasBahaya" value="Nyeri Perut Hebat" style="width:auto; display:inline-block;"> Nyeri Perut Hebat</label>
+                <label style="font-weight:400;"><input type="checkbox" class="nifasBahaya" value="Sakit Kepala Berat/Pandangan Kabur" style="width:auto; display:inline-block;"> Sakit Kepala Berat / Pandangan Kabur</label>
+                <label style="font-weight:400;"><input type="checkbox" class="nifasBahaya" value="Bengkak Wajah/Tangan/Kaki" style="width:auto; display:inline-block;"> Bengkak Wajah / Tangan / Kaki</label>
+                <label style="font-weight:400;"><input type="checkbox" class="nifasBahaya" value="Payudara Bengkak Merah" style="width:auto; display:inline-block;"> Payudara Bengkak &amp; Merah</label>
+              </div>
+
+              <div class="grid-2" style="margin-top:12px;">
+                <div>
+                  <label>KB Pasca Salin</label>
+                  <select id="nifasKb">
+                    <option value="">-- Pilih --</option>
+                    <option value="Belum KB">Belum KB</option>
+                    <option value="IUD">IUD</option>
+                    <option value="Implan">Implan</option>
+                    <option value="Suntik">Suntik</option>
+                    <option value="Pil">Pil</option>
+                    <option value="Kondom">Kondom</option>
+                    <option value="MOW">MOW (Steril)</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+                <div style="display:flex; align-items:flex-end;">
+                  <label style="font-weight:400;"><input type="checkbox" id="nifasKonselingGizi" style="width:auto; display:inline-block;"> Sudah diberikan konseling gizi</label>
+                </div>
+              </div>
+
+              <label>Catatan</label>
+              <textarea id="nifasCatatan"></textarea>
+
+              <button class="btn-primary" onclick="simpanNifas()">Simpan Kunjungan Nifas</button>
+            </div>
+
+            <div class="card" style="--accent:#e0793c;">
+              <h2>Riwayat Kunjungan Nifas</h2>
+              <table>
+                <thead><tr><th>Tahap</th><th>Tanggal</th><th>TD</th><th>Involusi</th><th>Lochea</th><th>Tanda Bahaya</th><th>KB</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatNifas"><tr><td colspan="8">Belum ada catatan nifas.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+        <div id="ibuPanel-rujukan" style="display:none;">
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">↦</span> Pilih Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Mencakup ibu hamil aktif maupun ibu dalam masa nifas — komplikasi bisa muncul di kedua masa itu.</p>
+            <select id="rjkK2PilihHamil" onchange="pilihKehamilanRujukan(this.value)">
+              <option value="">-- Pilih pasien --</option>
+            </select>
+          </div>
+
+          <div class="card" id="cardFormRujukanK2" style="--accent:#173b5e; display:none;">
+            <h2>Buat Rujukan — <span id="rjkK2NamaPasien"></span></h2>
+            <div id="rjkK2MsgBox"></div>
+
+            <div class="grid-2">
+              <div>
+                <label>Jenis Rujukan *</label>
+                <select id="rjkK2Jenis" required onchange="toggleJenisRujukanK2()">
+                  <option value="">Pilih</option>
+                  <option value="internal">Rujuk Internal (Antar Klaster)</option>
+                  <option value="fkrtl">Rujuk FKRTL (Rumah Sakit/Faskes Lanjutan)</option>
+                </select>
+              </div>
+              <div id="rjkK2WrapKlasterTujuan" style="display:none;">
+                <label>Klaster Tujuan *</label>
+                <select id="rjkK2KlasterTujuan"></select>
+              </div>
+              <div id="rjkK2WrapFaskesTujuan" style="display:none;">
+                <label>Faskes Tujuan *</label>
+                <input type="text" id="rjkK2FaskesTujuan" placeholder="Contoh: RSUD Dumai">
+              </div>
+            </div>
+
+            <label>Diagnosa Rujukan</label>
+            <input type="text" id="rjkK2Diagnosa" placeholder="Diagnosa kerja / kondisi saat dirujuk">
+
+            <label>Alasan Rujukan *</label>
+            <textarea id="rjkK2Alasan" placeholder="Kondisi komplikasi yang mendasari rujukan"></textarea>
+
+            <label>Catatan Tambahan</label>
+            <textarea id="rjkK2Catatan"></textarea>
+
+            <button class="btn-primary" onclick="simpanRujukanK2()">Simpan Rujukan</button>
+            <button class="btn-secondary" onclick="batalRujukanK2()">Batal</button>
+          </div>
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat Rujukan Komplikasi Terbaru</h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Pasien</th><th>Jenis</th><th>Tujuan</th><th>Alasan</th><th>Status</th></tr></thead>
+              <tbody id="tabelRiwayatRujukanK2"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
 
       </div>
       <div id="panelBayiBalita" style="display:none;">
@@ -462,6 +611,8 @@ function gantiSubIbu(sub) {
     if (btn) btn.classList.toggle("active", s === sub);
   });
   if (sub === "persalinan") muatRiwayatPersalinanTerbaru();
+  if (sub === "nifas") muatNifas();
+  if (sub === "rujukan") muatRujukanK2();
 }
 
 // ---------- Helper ----------
@@ -955,6 +1106,339 @@ async function muatRiwayatPersalinanTerbaru() {
       <td>${p.bayi_hidup ? "Lahir Hidup" : "Meninggal"}${p.jenis_kelamin_bayi ? " — " + (p.jenis_kelamin_bayi === "L" ? "Laki-laki" : "Perempuan") : ""}</td>
     </tr>
   `).join("");
+}
+
+// ---------- NIFAS (KF1–KF4) ----------
+let kehamilanNifasCache = [];
+let kehamilanTerpilihNifas = null;
+
+async function muatNifas() {
+  const sel = document.getElementById("nifasPilihHamil");
+  const { data, error } = await supabaseClient
+    .from("kehamilan")
+    .select("*, pasien(nama, no_rm)")
+    .eq("status", "nifas")
+    .order("created_at", { ascending: true });
+
+  if (error) { sel.innerHTML = `<option value="">Gagal muat: ${error.message}</option>`; return; }
+
+  kehamilanNifasCache = data || [];
+  sel.innerHTML = `<option value="">-- Pilih ibu nifas aktif --</option>` +
+    kehamilanNifasCache.map(k => `<option value="${k.id}">${k.pasien?.nama || "-"} (No. RM ${k.pasien?.no_rm || "-"})</option>`).join("");
+}
+
+function pilihKehamilanNifas(kehamilanId) {
+  if (!kehamilanId) {
+    document.getElementById("nifasWrap").style.display = "none";
+    kehamilanTerpilihNifas = null;
+    return;
+  }
+  const k = kehamilanNifasCache.find(x => x.id === kehamilanId);
+  if (!k) return;
+  kehamilanTerpilihNifas = k;
+
+  document.getElementById("nifasNamaPasien").textContent = `${k.pasien?.nama || "-"} (No. RM ${k.pasien?.no_rm || "-"})`;
+  document.getElementById("nifasWrap").style.display = "block";
+  document.getElementById("msgNifas").innerHTML = "";
+  document.getElementById("nifasTahap").value = "";
+  document.getElementById("nifasTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("nifasTd").value = "";
+  document.getElementById("nifasSuhu").value = "";
+  document.getElementById("nifasInvolusi").value = "";
+  document.getElementById("nifasLochea").value = "";
+  document.querySelectorAll(".nifasBahaya").forEach(c => c.checked = false);
+  document.getElementById("nifasKb").value = "";
+  document.getElementById("nifasKonselingGizi").checked = false;
+  document.getElementById("nifasCatatan").value = "";
+
+  muatRiwayatNifas();
+}
+
+async function muatRiwayatNifas() {
+  const tbody = document.getElementById("tabelRiwayatNifas");
+  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan_nifas")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("kehamilan_id", kehamilanTerpilihNifas.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="8">Belum ada catatan nifas.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(n => `
+    <tr>
+      <td>${n.tahap}</td>
+      <td>${new Date(n.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${n.tekanan_darah || "-"}</td>
+      <td>${n.involusi_uterus || "-"}</td>
+      <td>${n.lochea || "-"}</td>
+      <td>${(n.tanda_bahaya && n.tanda_bahaya.length) ? n.tanda_bahaya.join(", ") : "-"}</td>
+      <td>${n.kb_pasca_salin || "-"}</td>
+      <td>${n.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanNifas() {
+  const msgBox = document.getElementById("msgNifas");
+  if (!kehamilanTerpilihNifas) { msgBox.innerHTML = `<div class="msg msg-error">Pilih ibu nifas dulu.</div>`; return; }
+
+  const tahap = document.getElementById("nifasTahap").value;
+  const tanggal = document.getElementById("nifasTanggal").value;
+  if (!tahap) { msgBox.innerHTML = `<div class="msg msg-error">Pilih tahap KF dulu.</div>`; return; }
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const bahaya = Array.from(document.querySelectorAll(".nifasBahaya:checked")).map(c => c.value);
+
+  const { error: errInsert } = await supabaseClient.from("kunjungan_nifas").insert({
+    kehamilan_id: kehamilanTerpilihNifas.id,
+    tahap,
+    tanggal,
+    tekanan_darah: document.getElementById("nifasTd").value.trim() || null,
+    suhu: document.getElementById("nifasSuhu").value.trim() || null,
+    involusi_uterus: document.getElementById("nifasInvolusi").value || null,
+    lochea: document.getElementById("nifasLochea").value || null,
+    tanda_bahaya: bahaya,
+    kb_pasca_salin: document.getElementById("nifasKb").value || null,
+    konseling_gizi: document.getElementById("nifasKonselingGizi").checked,
+    catatan: document.getElementById("nifasCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (errInsert) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${errInsert.message}</div>`; return; }
+
+  if (tahap === "KF4") {
+    const { error: errUpdate } = await supabaseClient.from("kehamilan").update({ status: "selesai" }).eq("id", kehamilanTerpilihNifas.id);
+    if (errUpdate) { msgBox.innerHTML = `<div class="msg msg-error">Nifas tersimpan, tapi gagal update status: ${errUpdate.message}</div>`; return; }
+
+    msgBox.innerHTML = `<div class="msg msg-success">KF4 tersimpan. Masa nifas dianggap selesai — pasien gak akan muncul lagi di daftar nifas aktif.</div>`;
+    document.getElementById("nifasWrap").style.display = "none";
+    kehamilanTerpilihNifas = null;
+    await muatNifas();
+    await muatDashboardK2();
+    return;
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">${tahap} tersimpan.</div>`;
+  document.getElementById("nifasTahap").value = "";
+  document.getElementById("nifasTd").value = "";
+  document.getElementById("nifasSuhu").value = "";
+  document.getElementById("nifasInvolusi").value = "";
+  document.getElementById("nifasLochea").value = "";
+  document.querySelectorAll(".nifasBahaya").forEach(c => c.checked = false);
+  document.getElementById("nifasKb").value = "";
+  document.getElementById("nifasKonselingGizi").checked = false;
+  document.getElementById("nifasCatatan").value = "";
+  await muatRiwayatNifas();
+}
+
+// ---------- RUJUKAN KOMPLIKASI ----------
+let kehamilanRujukanCache = [];
+let kehamilanTerpilihRujukanK2 = null;
+let rjkK2DaftarKlaster = [];
+
+async function muatRujukanK2() {
+  const sel = document.getElementById("rjkK2PilihHamil");
+  const { data, error } = await supabaseClient
+    .from("kehamilan")
+    .select("*, pasien(nama, no_rm, status_bpjs)")
+    .in("status", ["hamil", "nifas"])
+    .order("created_at", { ascending: true });
+
+  if (error) { sel.innerHTML = `<option value="">Gagal muat: ${error.message}</option>`; return; }
+
+  kehamilanRujukanCache = data || [];
+  sel.innerHTML = `<option value="">-- Pilih pasien --</option>` +
+    kehamilanRujukanCache.map(k => `<option value="${k.id}">${k.pasien?.nama || "-"} (No. RM ${k.pasien?.no_rm || "-"}) — ${k.status === "hamil" ? "Hamil" : "Nifas"}</option>`).join("");
+
+  await muatRiwayatRujukanK2();
+}
+
+async function pilihKehamilanRujukan(kehamilanId) {
+  if (!kehamilanId) {
+    document.getElementById("cardFormRujukanK2").style.display = "none";
+    kehamilanTerpilihRujukanK2 = null;
+    return;
+  }
+  const k = kehamilanRujukanCache.find(x => x.id === kehamilanId);
+  if (!k) return;
+  kehamilanTerpilihRujukanK2 = k;
+
+  document.getElementById("rjkK2MsgBox").innerHTML = "";
+  document.getElementById("rjkK2NamaPasien").textContent = `${k.pasien?.nama || "-"} (No. RM ${k.pasien?.no_rm || "-"})`;
+  document.getElementById("rjkK2Jenis").value = "";
+  document.getElementById("rjkK2Diagnosa").value = "";
+  document.getElementById("rjkK2Alasan").value = "";
+  document.getElementById("rjkK2Catatan").value = "";
+  document.getElementById("rjkK2FaskesTujuan").value = "";
+  toggleJenisRujukanK2();
+
+  if (!rjkK2DaftarKlaster.length) {
+    const { data } = await supabaseClient.from("klaster").select("*").order("id");
+    rjkK2DaftarKlaster = data || [];
+  }
+  const k2Id = await ambilKlasterK2Id();
+  const select = document.getElementById("rjkK2KlasterTujuan");
+  select.innerHTML = rjkK2DaftarKlaster
+    .filter(kl => kl.id !== k2Id)
+    .map(kl => `<option value="${kl.id}">${kl.kode} — ${kl.nama}</option>`).join("");
+
+  document.getElementById("cardFormRujukanK2").style.display = "block";
+}
+
+function toggleJenisRujukanK2() {
+  const jenis = document.getElementById("rjkK2Jenis").value;
+  document.getElementById("rjkK2WrapKlasterTujuan").style.display = jenis === "internal" ? "block" : "none";
+  document.getElementById("rjkK2WrapFaskesTujuan").style.display = jenis === "fkrtl" ? "block" : "none";
+}
+
+function batalRujukanK2() {
+  kehamilanTerpilihRujukanK2 = null;
+  document.getElementById("cardFormRujukanK2").style.display = "none";
+  document.getElementById("rjkK2PilihHamil").value = "";
+}
+
+// Cari kunjungan K2 pasien hari ini; kalau belum ada, buat baru (dasar wajib buat rujukan.kunjungan_asal_id).
+async function ambilAtauBuatKunjunganK2HariIni(pasien) {
+  const k2Id = await ambilKlasterK2Id();
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data: existing } = await supabaseClient
+    .from("kunjungan")
+    .select("id")
+    .eq("pasien_id", pasien.id)
+    .eq("klaster_id", k2Id)
+    .eq("tanggal", today)
+    .neq("status", "batal")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) return existing.id;
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { data: noKunjunganData, error: errNo } = await supabaseClient.rpc("generate_no_kunjungan");
+  const { data: noAntrianData, error: errAntrian } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: k2Id });
+  if (errNo || errAntrian) throw new Error((errNo || errAntrian).message);
+
+  const { data: kunjunganBaru, error: errKunjungan } = await supabaseClient.from("kunjungan").insert({
+    no_kunjungan: noKunjunganData,
+    pasien_id: pasien.id,
+    klaster_id: k2Id,
+    jenis_bayar: pasien.status_bpjs === "aktif" ? "BPJS" : "Umum",
+    no_antrian: noAntrianData,
+    keluhan_awal: "Rujukan komplikasi kehamilan/persalinan",
+    status: "diperiksa",
+    created_by: user.id
+  }).select("id").single();
+
+  if (errKunjungan) throw new Error(errKunjungan.message);
+  return kunjunganBaru.id;
+}
+
+async function simpanRujukanK2() {
+  const msgBox = document.getElementById("rjkK2MsgBox");
+  if (!kehamilanTerpilihRujukanK2) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const jenis = document.getElementById("rjkK2Jenis").value;
+  const alasan = document.getElementById("rjkK2Alasan").value.trim();
+  const diagnosa = document.getElementById("rjkK2Diagnosa").value.trim();
+  const catatan = document.getElementById("rjkK2Catatan").value.trim();
+
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jenis rujukan dulu.</div>`; return; }
+  if (!alasan) { msgBox.innerHTML = `<div class="msg msg-error">Isi alasan rujukan dulu.</div>`; return; }
+
+  let kunjunganAsalId;
+  try {
+    kunjunganAsalId = await ambilAtauBuatKunjunganK2HariIni(kehamilanTerpilihRujukanK2.pasien);
+  } catch (e) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal siapkan data kunjungan: ${e.message}</div>`;
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  let klasterTujuanId = null;
+  let faskesTujuan = null;
+  let kunjunganTujuanId = null;
+
+  if (jenis === "internal") {
+    klasterTujuanId = parseInt(document.getElementById("rjkK2KlasterTujuan").value);
+    if (!klasterTujuanId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih klaster tujuan dulu.</div>`; return; }
+
+    const { data: noKunjunganData, error: errNo } = await supabaseClient.rpc("generate_no_kunjungan");
+    const { data: noAntrianData, error: errAntrian } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: klasterTujuanId });
+    if (errNo || errAntrian) { msgBox.innerHTML = `<div class="msg msg-error">Gagal generate nomor: ${(errNo || errAntrian).message}</div>`; return; }
+
+    const { data: kunjunganBaru, error: errKunjungan } = await supabaseClient.from("kunjungan").insert({
+      no_kunjungan: noKunjunganData,
+      pasien_id: kehamilanTerpilihRujukanK2.pasien_id,
+      klaster_id: klasterTujuanId,
+      jenis_bayar: kehamilanTerpilihRujukanK2.pasien?.status_bpjs === "aktif" ? "BPJS" : "Umum",
+      no_antrian: noAntrianData,
+      keluhan_awal: alasan,
+      is_prioritas: true,
+      keterangan_prioritas: "Rujukan Komplikasi Kehamilan/Persalinan",
+      status: "menunggu",
+      created_by: user.id
+    }).select("id").single();
+
+    if (errKunjungan) { msgBox.innerHTML = `<div class="msg msg-error">Gagal buat kunjungan tujuan: ${errKunjungan.message}</div>`; return; }
+    kunjunganTujuanId = kunjunganBaru.id;
+  } else {
+    faskesTujuan = document.getElementById("rjkK2FaskesTujuan").value.trim();
+    if (!faskesTujuan) { msgBox.innerHTML = `<div class="msg msg-error">Isi faskes tujuan dulu.</div>`; return; }
+  }
+
+  const { error: errRj } = await supabaseClient.from("rujukan").insert({
+    kunjungan_asal_id: kunjunganAsalId,
+    kunjungan_tujuan_id: kunjunganTujuanId,
+    jenis,
+    klaster_tujuan_id: klasterTujuanId,
+    faskes_tujuan: faskesTujuan,
+    diagnosa_rujukan: diagnosa || null,
+    alasan_rujukan: alasan,
+    catatan: catatan || null,
+    status: jenis === "internal" ? "diterima" : "diajukan",
+    petugas_id: user.id
+  });
+
+  if (errRj) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan rujukan: ${errRj.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Rujukan berhasil disimpan${jenis === "internal" ? " — antrian baru sudah dibuat di klaster tujuan." : "."}</div>`;
+  batalRujukanK2();
+  await muatRujukanK2();
+}
+
+async function muatRiwayatRujukanK2() {
+  const kehamilanIdList = kehamilanRujukanCache.map(k => k.id);
+  const kunjunganIdMap = {};
+  kehamilanRujukanCache.forEach(k => kunjunganIdMap[k.id] = k.pasien);
+
+  const tbody = document.getElementById("tabelRiwayatRujukanK2");
+
+  const k2Id = await ambilKlasterK2Id();
+  const { data, error } = await supabaseClient
+    .from("rujukan")
+    .select("*, kunjungan_asal:kunjungan_asal_id(pasien(nama, no_rm), klaster_id), klaster_tujuan:klaster_tujuan_id(nama, kode)")
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  const filtered = (data || []).filter(r => r.kunjungan_asal?.klaster_id === k2Id);
+
+  tbody.innerHTML = filtered.length ? filtered.map(r => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleDateString("id-ID")}</td>
+      <td>${r.kunjungan_asal?.pasien?.nama || "-"}</td>
+      <td>${r.jenis === "internal" ? "Internal" : "FKRTL"}</td>
+      <td>${r.jenis === "internal" ? (r.klaster_tujuan ? `${r.klaster_tujuan.kode} — ${r.klaster_tujuan.nama}` : "-") : (r.faskes_tujuan || "-")}</td>
+      <td>${r.alasan_rujukan}</td>
+      <td><span class="badge badge-${r.status === "diterima" ? "selesai" : (r.status === "batal" ? "batal" : "menunggu")}">${r.status}</span></td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Belum ada rujukan komplikasi tercatat.</td></tr>`;
 }
 </script>
 

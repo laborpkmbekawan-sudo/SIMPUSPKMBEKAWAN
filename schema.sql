@@ -1403,6 +1403,40 @@ create trigger trg_audit_persalinan after insert or update or delete on persalin
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 46. KLASTER 2 — FASE 5: Nifas (KF1-KF4) & Rujukan Komplikasi.
+--     Nifas: tabel baru kunjungan_nifas, reuse kehamilan (status
+--     'nifas'). Setelah KF4 disimpan, status kehamilan otomatis
+--     pindah ke 'selesai'.
+--     Rujukan Komplikasi: reuse tabel rujukan yang sudah ada,
+--     tidak ada tabel baru.
+-- ============================================================
+create table if not exists kunjungan_nifas (
+  id uuid primary key default gen_random_uuid(),
+  kehamilan_id uuid not null references kehamilan(id),
+  tahap text not null check (tahap in ('KF1', 'KF2', 'KF3', 'KF4')),
+  tanggal date not null default current_date,
+  tekanan_darah text,
+  suhu text,
+  involusi_uterus text,
+  lochea text,
+  tanda_bahaya jsonb not null default '[]'::jsonb,
+  kb_pasca_salin text,
+  konseling_gizi boolean not null default false,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kunjungan_nifas_kehamilan on kunjungan_nifas(kehamilan_id);
+
+alter table kunjungan_nifas enable row level security;
+create policy "authenticated_all_kunjungan_nifas" on kunjungan_nifas for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kunjungan_nifas on kunjungan_nifas;
+create trigger trg_audit_kunjungan_nifas after insert or update or delete on kunjungan_nifas
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
