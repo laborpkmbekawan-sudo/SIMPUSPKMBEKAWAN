@@ -113,7 +113,7 @@
 
         <div class="card" style="--accent:#9ca3af;">
           <h2><span class="card-num" style="background:#9ca3af;">⏰</span> Alert Jadwal &amp; Sasaran Belum Terlayani</h2>
-          <p style="font-size:12.5px; color:var(--muted);">Alert jadwal ANC/imunisasi/kontrol jatuh tempo, dan rekap sasaran belum terlayani bulan berjalan, akan aktif otomatis begitu modul ANC, Imunisasi, dan Kohort &amp; Register dibangun (menu-menu tersebut masih "segera dibangun"). Belum ada data terjadwal buat sekarang.</p>
+          <p style="font-size:12.5px; color:var(--muted);">Alert jadwal ANC/imunisasi/kontrol jatuh tempo otomatis, dan rekap sasaran belum terlayani bulan berjalan (di luar yang sudah ada di menu Kohort &amp; Register), masih direncanakan buat sesi berikutnya. Belum ada data terjadwal buat sekarang.</p>
         </div>
 
         <div class="card" style="--accent:#b3175a;">
@@ -1449,10 +1449,113 @@
 
       </div>
       <div id="panelLaporanInternal" style="display:none;">
-        <div class="k2-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▦</span> Filter Rekap</h2>
+          <div class="grid-3">
+            <div><label>Dari</label><input type="date" id="lapIntDari"></div>
+            <div><label>Sampai</label><input type="date" id="lapIntSampai"></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button class="btn-primary" onclick="muatLaporanInternalK2()" style="margin-bottom:12px;">Tampilkan</button>
+              <button class="btn-secondary" onclick="exportLaporanInternalK2Csv()" style="margin-bottom:12px;">Export CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="k2-stat-grid">
+          <div class="k2-stat-card" style="--accent:#173b5e;">
+            <div class="label">Total Catatan Layanan</div>
+            <div class="value" id="lapIntTotalLayanan">0</div>
+          </div>
+          <div class="k2-stat-card" style="--accent:#216ac5;">
+            <div class="label">Kunjungan Klaster 2</div>
+            <div class="value" id="lapIntTotalKunjungan">0</div>
+          </div>
+          <div class="k2-stat-card" style="--accent:#b3175a;">
+            <div class="label">Ibu Hamil Baru Tercatat</div>
+            <div class="value" id="lapIntBumilBaru">0</div>
+          </div>
+          <div class="k2-stat-card" style="--accent:#2f9e5c;">
+            <div class="label">Kelahiran Hidup Tercatat</div>
+            <div class="value" id="lapIntKelahiran">0</div>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2>Rekap Pelayanan per Jenis</h2>
+          <table>
+            <thead><tr><th>Jenis Layanan</th><th>Jumlah Tercatat</th></tr></thead>
+            <tbody id="tabelLaporanInternalK2"><tr><td colspan="2">Klik Tampilkan buat muat data.</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
       <div id="panelLaporanDinas" style="display:none;">
-        <div class="k2-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">📤</span> Filter Indikator KIA</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Rentang dipakai sebagai perkiraan periode sasaran (mis. HPHT ibu hamil, tanggal persalinan/KN/imunisasi). K4 dihitung dari total kunjungan ANC sepanjang riwayat kehamilan yang HPHT-nya jatuh di rentang ini — bukan cuma ANC dalam rentang tanggal.</p>
+          <div class="grid-3">
+            <div><label>Dari</label><input type="date" id="lapDinasDari"></div>
+            <div><label>Sampai</label><input type="date" id="lapDinasSampai"></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button class="btn-primary" onclick="muatLaporanDinasK2()" style="margin-bottom:12px;">Tampilkan</button>
+              <button class="btn-secondary" onclick="exportLaporanDinasK2Csv()" style="margin-bottom:12px;">Export CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="k2-stat-grid">
+          <div class="k2-stat-card" style="--accent:#b3175a;">
+            <div class="label">K1 (Ibu Hamil ANC Pertama)</div>
+            <div class="value" id="lapDinasK1">0</div>
+          </div>
+          <div class="k2-stat-card" style="--accent:#216ac5;">
+            <div class="label">K4 (Ibu Hamil ANC ≥4x)</div>
+            <div class="value" id="lapDinasK4">0</div>
+          </div>
+          <div class="k2-stat-card" style="--accent:#2f9e5c;">
+            <div class="label">Persalinan Ditolong Nakes</div>
+            <div class="value" id="lapDinasNakes">0</div>
+          </div>
+          <div class="k2-stat-card" style="--accent:#b77900;">
+            <div class="label">KN Lengkap (KN1-KN3)</div>
+            <div class="value" id="lapDinasKnLengkap">0</div>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2>Cakupan Indikator KIA</h2>
+          <table>
+            <thead><tr><th>Indikator</th><th>Jumlah</th><th>Keterangan</th></tr></thead>
+            <tbody id="tabelLaporanDinasIndikator"><tr><td colspan="3">Klik Tampilkan buat muat data.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2>Cakupan Imunisasi Dasar &amp; Lanjutan per Antigen</h2>
+          <table>
+            <thead><tr><th>Antigen</th><th>Jumlah Diberikan</th></tr></thead>
+            <tbody id="tabelLaporanDinasImunisasi"><tr><td colspan="2">Klik Tampilkan buat muat data.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#7a4fc4;">
+          <h2>Cakupan Imunisasi BIAS per Antigen</h2>
+          <table>
+            <thead><tr><th>Antigen</th><th>Jumlah Diberikan</th></tr></thead>
+            <tbody id="tabelLaporanDinasBias"><tr><td colspan="2">Klik Tampilkan buat muat data.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#b77900;">
+          <h2>Cakupan Vitamin A per Periode</h2>
+          <table>
+            <thead><tr><th>Periode</th><th>Jumlah Diberikan</th></tr></thead>
+            <tbody id="tabelLaporanDinasVitA"><tr><td colspan="2">Klik Tampilkan buat muat data.</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
       <div id="panelAudit" style="display:none;">
 
@@ -1549,6 +1652,8 @@ function gantiSubtabK2(tab) {
   if (tab === "rujukan") muatRiwayatRjkLabUmum();
   if (tab === "rm") muatAntrianRmK2();
   if (tab === "audit") muatAuditK2();
+  if (tab === "laporan-internal") muatLaporanInternalK2();
+  if (tab === "laporan-dinas") muatLaporanDinasK2();
 }
 
 // ---------- BAYI & BALITA — inner sub-tabs ----------
@@ -4247,6 +4352,203 @@ async function muatAuditK2() {
       <td>${ringkasanAudit(a)}</td>
     </tr>
   `).join("");
+}
+
+// ---------- LAPORAN INTERNAL (Klaster 2) ----------
+const LAYANAN_K2_INTERNAL = [
+  { label: "ANC (Kunjungan Ibu Hamil)", table: "kunjungan_anc", dateCol: "created_at" },
+  { label: "Imunisasi TT/Td Ibu Hamil", table: "imunisasi_tt", dateCol: "tanggal" },
+  { label: "Persalinan", table: "persalinan", dateCol: "tanggal" },
+  { label: "Nifas (KF1-KF4)", table: "kunjungan_nifas", dateCol: "tanggal" },
+  { label: "KN (Kunjungan Neonatal)", table: "kunjungan_kn", dateCol: "tanggal" },
+  { label: "Tumbuh Kembang & Gizi", table: "tumbuh_kembang", dateCol: "tanggal" },
+  { label: "Imunisasi Dasar & Lanjutan", table: "imunisasi_dasar", dateCol: "tanggal" },
+  { label: "Vitamin A", table: "vitamin_a", dateCol: "tanggal" },
+  { label: "MTBS/MTBM", table: "mtbs_mtbm", dateCol: "tanggal" },
+  { label: "Penjaringan Kesehatan Sekolah", table: "penjaringan_sekolah", dateCol: "tanggal" },
+  { label: "Imunisasi BIAS", table: "imunisasi_bias", dateCol: "tanggal" },
+  { label: "Pemeriksaan Berkala Sekolah", table: "pemeriksaan_berkala_sekolah", dateCol: "tanggal" },
+  { label: "PKPR & Skrining Remaja", table: "skrining_remaja", dateCol: "tanggal" },
+  { label: "TTD Remaja Putri", table: "ttd_remaja", dateCol: "tanggal" },
+  { label: "Rujukan (Internal/FKRTL)", table: "rujukan", dateCol: "created_at", filterKlaster: true },
+  { label: "Permintaan Lab", table: "rujukan_lab", dateCol: "created_at", filterKlaster: true }
+];
+
+async function hitungJumlahK2(table, dateCol, dari, sampai, filterKlaster, k2Id) {
+  let q = filterKlaster
+    ? supabaseClient.from(table).select("id, kunjungan_asal:kunjungan_asal_id!inner(klaster_id)", { count: "exact", head: true }).eq("kunjungan_asal.klaster_id", k2Id)
+    : supabaseClient.from(table).select("id", { count: "exact", head: true });
+
+  const isTimestamp = dateCol === "created_at";
+  if (dari) q = q.gte(dateCol, isTimestamp ? dari + "T00:00:00" : dari);
+  if (sampai) q = q.lte(dateCol, isTimestamp ? sampai + "T23:59:59" : sampai);
+
+  const { count, error } = await q;
+  return error ? 0 : (count ?? 0);
+}
+
+let laporanInternalK2Cache = [];
+
+async function muatLaporanInternalK2() {
+  isiDefaultTanggalKohort("lapIntDari", "lapIntSampai");
+  const dari = document.getElementById("lapIntDari").value;
+  const sampai = document.getElementById("lapIntSampai").value;
+  const tbody = document.getElementById("tabelLaporanInternalK2");
+  tbody.innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+
+  const k2Id = await ambilKlasterK2Id();
+
+  const hasil = await Promise.all(LAYANAN_K2_INTERNAL.map(l =>
+    hitungJumlahK2(l.table, l.dateCol, dari, sampai, l.filterKlaster, k2Id)
+  ));
+  laporanInternalK2Cache = LAYANAN_K2_INTERNAL.map((l, i) => ({ label: l.label, jumlah: hasil[i] }));
+
+  tbody.innerHTML = laporanInternalK2Cache.map(r => `<tr><td>${r.label}</td><td>${r.jumlah}</td></tr>`).join("");
+  document.getElementById("lapIntTotalLayanan").textContent = laporanInternalK2Cache.reduce((a, r) => a + r.jumlah, 0);
+
+  const { count: jmlKunjungan } = await supabaseClient
+    .from("kunjungan").select("id", { count: "exact", head: true })
+    .eq("klaster_id", k2Id)
+    .gte("tanggal", dari || "1900-01-01").lte("tanggal", sampai || "2999-12-31");
+  document.getElementById("lapIntTotalKunjungan").textContent = jmlKunjungan ?? 0;
+
+  const { count: jmlBumilBaru } = await supabaseClient
+    .from("kehamilan").select("id", { count: "exact", head: true })
+    .gte("created_at", (dari || "1900-01-01") + "T00:00:00").lte("created_at", (sampai || "2999-12-31") + "T23:59:59");
+  document.getElementById("lapIntBumilBaru").textContent = jmlBumilBaru ?? 0;
+
+  const { count: jmlKelahiran } = await supabaseClient
+    .from("persalinan").select("id", { count: "exact", head: true })
+    .eq("bayi_hidup", true)
+    .gte("tanggal", (dari || "1900-01-01") + "T00:00:00").lte("tanggal", (sampai || "2999-12-31") + "T23:59:59");
+  document.getElementById("lapIntKelahiran").textContent = jmlKelahiran ?? 0;
+}
+
+function exportLaporanInternalK2Csv() {
+  if (!laporanInternalK2Cache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Jenis Layanan", "Jumlah Tercatat"];
+  const rows = laporanInternalK2Cache.map(r => [r.label, r.jumlah]);
+  unduhCsv(`Laporan_Internal_Klaster2_${document.getElementById("lapIntDari").value}_${document.getElementById("lapIntSampai").value}.csv`, header, rows);
+}
+
+// ---------- LAPORAN KE DINAS KESEHATAN (indikator KIA, Klaster 2) ----------
+let laporanDinasK2Cache = { indikator: [], imunisasi: [], bias: [], vitA: [] };
+
+async function muatLaporanDinasK2() {
+  isiDefaultTanggalKohort("lapDinasDari", "lapDinasSampai");
+  const dari = document.getElementById("lapDinasDari").value;
+  const sampai = document.getElementById("lapDinasSampai").value;
+
+  const tIndikator = document.getElementById("tabelLaporanDinasIndikator");
+  const tImunisasi = document.getElementById("tabelLaporanDinasImunisasi");
+  const tBias = document.getElementById("tabelLaporanDinasBias");
+  const tVitA = document.getElementById("tabelLaporanDinasVitA");
+  tIndikator.innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+  tImunisasi.innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+  tBias.innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+  tVitA.innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+
+  // ----- K1 & K4: kehamilan dengan HPHT di rentang, dihitung dari total ANC seumur kehamilan -----
+  const { data: kehamilanRange, error: errKh } = await supabaseClient
+    .from("kehamilan").select("id")
+    .gte("hpht", dari || "1900-01-01").lte("hpht", sampai || "2999-12-31");
+
+  let k1 = 0, k4 = 0;
+  if (!errKh && kehamilanRange?.length) {
+    const jmlAnc = await Promise.all(kehamilanRange.map(k =>
+      supabaseClient.from("kunjungan_anc").select("id", { count: "exact", head: true }).eq("kehamilan_id", k.id)
+    ));
+    jmlAnc.forEach(r => {
+      const c = r.count ?? 0;
+      if (c >= 1) k1++;
+      if (c >= 4) k4++;
+    });
+  }
+  document.getElementById("lapDinasK1").textContent = k1;
+  document.getElementById("lapDinasK4").textContent = k4;
+
+  // ----- Persalinan ditolong nakes -----
+  const { data: persalinanRange } = await supabaseClient
+    .from("persalinan").select("penolong")
+    .gte("tanggal", (dari || "1900-01-01") + "T00:00:00").lte("tanggal", (sampai || "2999-12-31") + "T23:59:59");
+  const totalPersalinan = persalinanRange?.length ?? 0;
+  const persalinanNakes = (persalinanRange || []).filter(p => /bidan|dokter/i.test(p.penolong || "")).length;
+  document.getElementById("lapDinasNakes").textContent = persalinanNakes;
+
+  // ----- KN1 & KN Lengkap -----
+  const { data: knRange } = await supabaseClient
+    .from("kunjungan_kn").select("pasien_id, tahap")
+    .gte("tanggal", dari || "1900-01-01").lte("tanggal", sampai || "2999-12-31");
+  const kn1 = (knRange || []).filter(k => k.tahap === "KN1").length;
+  const tahapPerPasien = new Map();
+  (knRange || []).forEach(k => {
+    if (!tahapPerPasien.has(k.pasien_id)) tahapPerPasien.set(k.pasien_id, new Set());
+    tahapPerPasien.get(k.pasien_id).add(k.tahap);
+  });
+  const knLengkap = Array.from(tahapPerPasien.values()).filter(s => s.has("KN1") && s.has("KN2") && s.has("KN3")).length;
+  document.getElementById("lapDinasKnLengkap").textContent = knLengkap;
+
+  // ----- Nifas KF4 -----
+  const { count: kf4 } = await supabaseClient
+    .from("kunjungan_nifas").select("id", { count: "exact", head: true })
+    .eq("tahap", "KF4")
+    .gte("tanggal", dari || "1900-01-01").lte("tanggal", sampai || "2999-12-31");
+
+  laporanDinasK2Cache.indikator = [
+    { indikator: "K1 (Ibu Hamil ANC Pertama)", jumlah: k1, keterangan: "Dari kehamilan dengan HPHT di rentang" },
+    { indikator: "K4 (Ibu Hamil ANC ≥4x)", jumlah: k4, keterangan: "Dari kehamilan dengan HPHT di rentang, total ANC seumur kehamilan" },
+    { indikator: "Total Persalinan Tercatat", jumlah: totalPersalinan, keterangan: "Tanggal persalinan di rentang" },
+    { indikator: "Persalinan Ditolong Nakes", jumlah: persalinanNakes, keterangan: "Penolong mengandung kata bidan/dokter" },
+    { indikator: "Nifas Lengkap (KF4)", jumlah: kf4 ?? 0, keterangan: "Tanggal KF4 di rentang" },
+    { indikator: "KN1 (Kunjungan Neonatal Pertama)", jumlah: kn1, keterangan: "Tanggal KN1 di rentang" },
+    { indikator: "KN Lengkap (KN1-KN3)", jumlah: knLengkap, keterangan: "Bayi dengan KN1, KN2, dan KN3 tercatat di rentang" }
+  ];
+  tIndikator.innerHTML = laporanDinasK2Cache.indikator.map(r => `<tr><td>${r.indikator}</td><td>${r.jumlah}</td><td>${r.keterangan}</td></tr>`).join("");
+
+  // ----- Imunisasi Dasar per antigen -----
+  const { data: imunDasarRange } = await supabaseClient
+    .from("imunisasi_dasar").select("antigen")
+    .gte("tanggal", dari || "1900-01-01").lte("tanggal", sampai || "2999-12-31");
+  const grupDasar = {};
+  (imunDasarRange || []).forEach(r => { grupDasar[r.antigen] = (grupDasar[r.antigen] || 0) + 1; });
+  laporanDinasK2Cache.imunisasi = Object.keys(grupDasar).sort().map(k => ({ antigen: k, jumlah: grupDasar[k] }));
+  tImunisasi.innerHTML = laporanDinasK2Cache.imunisasi.length
+    ? laporanDinasK2Cache.imunisasi.map(r => `<tr><td>${r.antigen}</td><td>${r.jumlah}</td></tr>`).join("")
+    : `<tr><td colspan="2">Tidak ada data di rentang ini.</td></tr>`;
+
+  // ----- Imunisasi BIAS per antigen -----
+  const { data: biasRange } = await supabaseClient
+    .from("imunisasi_bias").select("antigen")
+    .gte("tanggal", dari || "1900-01-01").lte("tanggal", sampai || "2999-12-31");
+  const grupBias = {};
+  (biasRange || []).forEach(r => { grupBias[r.antigen] = (grupBias[r.antigen] || 0) + 1; });
+  laporanDinasK2Cache.bias = Object.keys(grupBias).sort().map(k => ({ antigen: k, jumlah: grupBias[k] }));
+  tBias.innerHTML = laporanDinasK2Cache.bias.length
+    ? laporanDinasK2Cache.bias.map(r => `<tr><td>${r.antigen}</td><td>${r.jumlah}</td></tr>`).join("")
+    : `<tr><td colspan="2">Tidak ada data di rentang ini.</td></tr>`;
+
+  // ----- Vitamin A per periode -----
+  const { data: vitARange } = await supabaseClient
+    .from("vitamin_a").select("periode")
+    .gte("tanggal", dari || "1900-01-01").lte("tanggal", sampai || "2999-12-31");
+  const grupVitA = {};
+  (vitARange || []).forEach(r => { grupVitA[r.periode] = (grupVitA[r.periode] || 0) + 1; });
+  laporanDinasK2Cache.vitA = Object.keys(grupVitA).sort().map(k => ({ periode: k, jumlah: grupVitA[k] }));
+  tVitA.innerHTML = laporanDinasK2Cache.vitA.length
+    ? laporanDinasK2Cache.vitA.map(r => `<tr><td>${r.periode}</td><td>${r.jumlah}</td></tr>`).join("")
+    : `<tr><td colspan="2">Tidak ada data di rentang ini.</td></tr>`;
+}
+
+function exportLaporanDinasK2Csv() {
+  if (!laporanDinasK2Cache.indikator.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Kategori", "Rincian", "Jumlah"];
+  const rows = [
+    ...laporanDinasK2Cache.indikator.map(r => ["Indikator KIA", r.indikator, r.jumlah]),
+    ...laporanDinasK2Cache.imunisasi.map(r => ["Imunisasi Dasar & Lanjutan", r.antigen, r.jumlah]),
+    ...laporanDinasK2Cache.bias.map(r => ["Imunisasi BIAS", r.antigen, r.jumlah]),
+    ...laporanDinasK2Cache.vitA.map(r => ["Vitamin A", r.periode, r.jumlah])
+  ];
+  unduhCsv(`Laporan_Dinas_Klaster2_${document.getElementById("lapDinasDari").value}_${document.getElementById("lapDinasSampai").value}.csv`, header, rows);
 }
 </script>
 
