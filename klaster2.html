@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klaster 2 - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ================= Klaster 2 (skema Plum/Teal, konsisten sama modul lain) ================= */
+.dash-content, .topbar { --navy:#0f2942; --navy-2:#173b5e; --teal-a:#1c7d7f; --teal-2:#26a3a0; --orange:#e0793c; --plum:#6a4c93; }
+
+.sidebar { background: linear-gradient(180deg, #3d2a5c 0%, #6a4c93 100%) !important; }
+.sidebar nav a.active { border-left: 3px solid #e0793c !important; background: rgba(255,255,255,.09) !important; }
+.sidebar nav a:hover { background: rgba(255,255,255,.06) !important; }
+.topbar h1 { color: var(--navy); }
+.ph-group-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.5); text-transform: uppercase; padding: 14px 18px 4px; }
+
+.dash-content .card { border-left: 4px solid var(--accent, var(--plum)); }
+.dash-content .card h2 { display: flex; align-items: center; gap: 8px; }
+
+.k2-segera { text-align: center; padding: 50px 20px; color: var(--muted); }
+.k2-segera .ic { font-size: 32px; margin-bottom: 10px; }
+.k2-segera .t { font-size: 14px; font-weight: 700; color: var(--navy-2); margin-bottom: 6px; }
+
+.k2-stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+.k2-stat-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; border-left:4px solid var(--accent,#999); }
+.k2-stat-card .label { font-size:11.5px; color:var(--muted); margin-bottom:6px; }
+.k2-stat-card .value { font-size:24px; font-weight:700; color:#111827; }
+
+.badge-sasaran { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600; }
+.badge-sasaran.bumil { background:#fbe4ee; color:#b3175a; }
+.badge-sasaran.bayi-balita { background:#e8f1ff; color:#216ac5; }
+.badge-sasaran.anak-sekolah { background:#fff4d6; color:#b77900; }
+.badge-sasaran.remaja { background:#ede9fe; color:#5b21b6; }
+.badge-sasaran.lainnya { background:#f1f2f4; color:#4b5563; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+    </div>
+
+    <nav>
+    <div class="ph-group-title">Klaster 2 — Ibu, Anak &amp; Remaja</div>
+    <a class="active" id="navDashboard" onclick="gantiSubtabK2('dashboard')">Dashboard</a>
+
+    <div class="ph-group-title">Pelayanan</div>
+    <a id="navIbu" onclick="gantiSubtabK2('ibu')">Ibu Hamil, Bersalin &amp; Nifas</a>
+    <a id="navBayiBalita" onclick="gantiSubtabK2('bayi-balita')">Bayi &amp; Balita</a>
+    <a id="navAnakSekolah" onclick="gantiSubtabK2('anak-sekolah')">Anak Prasekolah &amp; Usia Sekolah</a>
+    <a id="navRemaja" onclick="gantiSubtabK2('remaja')">Remaja</a>
+
+    <div class="ph-group-title">Data &amp; Rujukan</div>
+    <a id="navKohort" onclick="gantiSubtabK2('kohort')">Kohort &amp; Register</a>
+    <a id="navRujukan" onclick="gantiSubtabK2('rujukan')">Rujukan &amp; Permintaan Lab</a>
+    <a id="navRm" onclick="gantiSubtabK2('rm')">Rekam Medis &amp; Resep</a>
+
+    <div class="ph-group-title">Laporan &amp; Audit</div>
+    <a id="navLaporanInternal" onclick="gantiSubtabK2('laporan-internal')">Laporan Internal</a>
+    <a id="navLaporanDinas" onclick="gantiSubtabK2('laporan-dinas')">Laporan ke Dinas Kesehatan</a>
+    <a id="navAudit" onclick="gantiSubtabK2('audit')">Audit / Keamanan</a>
+
+    <div class="ph-group-title">Modul Lain</div>
+    <a href="index.html">Pendaftaran</a>
+    <a href="rekam-medis.html">Rekam Medis</a>
+    <a href="apotek.html">Apotek</a>
+    <a href="ugd.html">UGD</a>
+    <a href="pengaturan.html">Pengaturan</a>
+    </nav>
+  </aside>
+
+  <div class="main-wrap">
+
+    <div class="topbar">
+      <h1>Dashboard Klaster 2</h1>
+      <div class="user-info">
+        <span id="namaUser">Memuat...</span>
+        <button onclick="logout()">Keluar</button>
+      </div>
+    </div>
+
+    <div class="dash-content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <div id="panelDashboard">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Pengelompokan sasaran di bawah masih perkiraan sederhana berdasar usia (Bayi &amp; Balita &lt;5 th, Anak Sekolah 5–&lt;10 th, Remaja 10–18 th) ditambah status hamil aktif buat Bumil. Bisa disesuaikan lagi begitu modul Kohort &amp; Register dibangun.</p>
+
+        <div class="k2-stat-grid">
+          <div class="k2-stat-card" style="--accent:#b3175a;">
+            <div class="label">Bumil (Kunjungan Hari Ini)</div>
+            <div class="value" id="statBumil">0</div>
+          </div>
+          <div class="k2-stat-card" style="--accent:#216ac5;">
+            <div class="label">Bayi &amp; Balita</div>
+            <div class="value" id="statBayiBalita">0</div>
+          </div>
+          <div class="k2-stat-card" style="--accent:#b77900;">
+            <div class="label">Anak Sekolah</div>
+            <div class="value" id="statAnakSekolah">0</div>
+          </div>
+          <div class="k2-stat-card" style="--accent:#5b21b6;">
+            <div class="label">Remaja</div>
+            <div class="value" id="statRemaja">0</div>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#9ca3af;">
+          <h2><span class="card-num" style="background:#9ca3af;">⏰</span> Alert Jadwal &amp; Sasaran Belum Terlayani</h2>
+          <p style="font-size:12.5px; color:var(--muted);">Alert jadwal ANC/imunisasi/kontrol jatuh tempo, dan rekap sasaran belum terlayani bulan berjalan, akan aktif otomatis begitu modul ANC, Imunisasi, dan Kohort &amp; Register dibangun (menu-menu tersebut masih "segera dibangun"). Belum ada data terjadwal buat sekarang.</p>
+        </div>
+
+        <div class="card" style="--accent:#b3175a;">
+          <h2><span class="card-num" style="background:#b3175a;">🤰</span> Tandai Ibu Hamil Baru</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Tandai pasien perempuan sebagai sedang hamil supaya otomatis kehitung di kategori Bumil. Pencatatan ANC lengkap (TD, BB, TFU, LILA, dst.) menyusul di menu Ibu Hamil, Bersalin &amp; Nifas.</p>
+          <div id="msgTandaiHamil"></div>
+
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / Nama)</label>
+              <input type="text" id="hamilCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienHamil();}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienHamil()" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+
+          <div id="hamilHasilCari"></div>
+          <div id="hamilDaftarHasilCari"></div>
+
+          <div id="hamilCardForm" style="display:none; margin-top:16px; border-top:1px solid #e5e7eb; padding-top:16px;">
+            <div class="info-block">
+              <div class="info-row"><label>Nama</label><span id="hamilNamaPasien"></span></div>
+              <div class="info-row"><label>No. RM</label><span id="hamilNoRmPasien"></span></div>
+            </div>
+            <div class="grid-3" style="margin-top:12px;">
+              <div><label>HPHT (Hari Pertama Haid Terakhir)</label><input type="date" id="hamilHpht" onchange="hitungHplOtomatis()"></div>
+              <div><label>HPL (Taksiran Persalinan)</label><input type="date" id="hamilHpl" readonly style="background:#f7f8fa;"></div>
+              <div><label>Gravida (kehamilan ke-)</label><input type="number" id="hamilGravida" min="1"></div>
+            </div>
+            <label>Catatan (opsional)</label>
+            <textarea id="hamilCatatan" placeholder="Catatan singkat kondisi awal, kalau ada"></textarea>
+            <button class="btn-primary" onclick="simpanKehamilan()">Simpan &amp; Tandai Hamil</button>
+            <button class="btn-secondary" onclick="batalkanTandaiHamil()">Batal</button>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▣</span> Pasien Klaster 2 Hari Ini</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Antrian pasien yang terdaftar ke Klaster 2 (Ibu, Anak &amp; Remaja) hari ini — pendaftaran tetap lewat menu Pendaftaran seperti biasa.</p>
+          <table>
+            <thead><tr><th>No. Antrian</th><th>Nama</th><th>No. RM</th><th>Sasaran</th><th>Keluhan</th><th>Status</th></tr></thead>
+            <tbody id="tabelPasienK2HariIni"><tr><td colspan="6">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- ============ PANEL LAIN — SEGERA DIBANGUN ============ -->
+      <div id="panelIbu" style="display:none;">
+        <div class="k2-segera"><div class="ic">🤰</div><div class="t">Ibu Hamil, Bersalin &amp; Nifas</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelBayiBalita" style="display:none;">
+        <div class="k2-segera"><div class="ic">👶</div><div class="t">Bayi &amp; Balita</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelAnakSekolah" style="display:none;">
+        <div class="k2-segera"><div class="ic">🎒</div><div class="t">Anak Prasekolah &amp; Usia Sekolah</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelRemaja" style="display:none;">
+        <div class="k2-segera"><div class="ic">🧑</div><div class="t">Remaja</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelKohort" style="display:none;">
+        <div class="k2-segera"><div class="ic">📋</div><div class="t">Kohort &amp; Register</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelRujukan" style="display:none;">
+        <div class="k2-segera"><div class="ic">↦</div><div class="t">Rujukan &amp; Permintaan Lab</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelRm" style="display:none;">
+        <div class="k2-segera"><div class="ic">▤</div><div class="t">Rekam Medis &amp; Resep</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelLaporanInternal" style="display:none;">
+        <div class="k2-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelLaporanDinas" style="display:none;">
+        <div class="k2-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+      <div id="panelAudit" style="display:none;">
+        <div class="k2-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+let profilSaya = null;
+let pasienTerpilihHamil = null;
+let klasterK2IdCache = null;
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  profilSaya = await getProfilSaya();
+  cekAksesHalaman(profilSaya, "klaster2.html");
+  if (profilSaya) {
+    document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+  }
+
+  await muatDashboardK2();
+})();
+
+// ---------- Sub-tab nav ----------
+const SUBTAB_K2 = ["dashboard", "ibu", "bayi-balita", "anak-sekolah", "remaja", "kohort", "rujukan", "rm", "laporan-internal", "laporan-dinas", "audit"];
+function idPartK2(tab) {
+  return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
+}
+function gantiSubtabK2(tab) {
+  SUBTAB_K2.forEach(t => {
+    const idPart = idPartK2(t);
+    const panel = document.getElementById("panel" + idPart);
+    if (panel) panel.style.display = (t === tab) ? "block" : "none";
+    const nav = document.getElementById("nav" + idPart);
+    if (nav) nav.classList.toggle("active", t === tab);
+  });
+  const judul = {
+    "dashboard": "Dashboard Klaster 2", "ibu": "Ibu Hamil, Bersalin & Nifas", "bayi-balita": "Bayi & Balita",
+    "anak-sekolah": "Anak Prasekolah & Usia Sekolah", "remaja": "Remaja", "kohort": "Kohort & Register",
+    "rujukan": "Rujukan & Permintaan Lab", "rm": "Rekam Medis & Resep", "laporan-internal": "Laporan Internal",
+    "laporan-dinas": "Laporan ke Dinas Kesehatan", "audit": "Audit / Keamanan"
+  };
+  document.querySelector(".topbar h1").textContent = judul[tab] || "Klaster 2";
+  if (tab === "dashboard") muatDashboardK2();
+}
+
+// ---------- Helper ----------
+function hitungUmurTahun(tanggalLahir) {
+  const lahir = new Date(tanggalLahir);
+  const now = new Date();
+  let umur = now.getFullYear() - lahir.getFullYear();
+  const belumUlangTahun = (now.getMonth() < lahir.getMonth()) || (now.getMonth() === lahir.getMonth() && now.getDate() < lahir.getDate());
+  if (belumUlangTahun) umur--;
+  return umur;
+}
+
+function kategoriSasaran(pasien, setBumil) {
+  if (pasien.jenis_kelamin === "P" && setBumil.has(pasien.id)) return "bumil";
+  const umur = hitungUmurTahun(pasien.tanggal_lahir);
+  if (umur < 5) return "bayi-balita";
+  if (umur < 10) return "anak-sekolah";
+  if (umur <= 18) return "remaja";
+  return "lainnya";
+}
+
+function badgeSasaranHtml(kategori) {
+  const map = { bumil: "🤰 Bumil", "bayi-balita": "👶 Bayi/Balita", "anak-sekolah": "🎒 Anak Sekolah", remaja: "🧑 Remaja", lainnya: "Lainnya" };
+  return `<span class="badge-sasaran ${kategori}">${map[kategori] || "Lainnya"}</span>`;
+}
+
+async function ambilKlasterK2Id() {
+  if (klasterK2IdCache) return klasterK2IdCache;
+  const { data } = await supabaseClient.from("klaster").select("id").eq("kode", "K2").single();
+  klasterK2IdCache = data?.id || null;
+  return klasterK2IdCache;
+}
+
+// ---------- DASHBOARD ----------
+async function muatDashboardK2() {
+  const k2Id = await ambilKlasterK2Id();
+  const tbody = document.getElementById("tabelPasienK2HariIni");
+  if (!k2Id) { tbody.innerHTML = `<tr><td colspan="6">Klaster K2 tidak ditemukan di master data.</td></tr>`; return; }
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("*, pasien(nama, no_rm, tanggal_lahir, jenis_kelamin)")
+    .eq("klaster_id", k2Id)
+    .eq("tanggal", today)
+    .neq("status", "batal")
+    .order("no_antrian");
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  const pasienIdList = (data || []).map(k => k.pasien_id).filter(Boolean);
+  let setBumil = new Set();
+  if (pasienIdList.length) {
+    const { data: hamilData } = await supabaseClient
+      .from("kehamilan")
+      .select("pasien_id")
+      .eq("status", "hamil")
+      .in("pasien_id", pasienIdList);
+    setBumil = new Set((hamilData || []).map(h => h.pasien_id));
+  }
+
+  const kunjunganList = data || [];
+  const kategoriPerKunjungan = kunjunganList.map(k => k.pasien ? kategoriSasaran({ ...k.pasien, id: k.pasien_id }, setBumil) : "lainnya");
+
+  document.getElementById("statBumil").textContent = kategoriPerKunjungan.filter(k => k === "bumil").length;
+  document.getElementById("statBayiBalita").textContent = kategoriPerKunjungan.filter(k => k === "bayi-balita").length;
+  document.getElementById("statAnakSekolah").textContent = kategoriPerKunjungan.filter(k => k === "anak-sekolah").length;
+  document.getElementById("statRemaja").textContent = kategoriPerKunjungan.filter(k => k === "remaja").length;
+
+  tbody.innerHTML = kunjunganList.length ? kunjunganList.map((k, i) => `
+    <tr>
+      <td>${k.no_antrian || "-"}</td>
+      <td>${k.pasien?.nama || "-"}</td>
+      <td>${k.pasien?.no_rm || "-"}</td>
+      <td>${badgeSasaranHtml(kategoriPerKunjungan[i])}</td>
+      <td>${k.keluhan_awal || "-"}</td>
+      <td><span class="badge badge-${k.status === "selesai" ? "selesai" : (k.status === "batal" ? "batal" : "menunggu")}">${k.status}</span></td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Belum ada pasien terdaftar ke Klaster 2 hari ini.</td></tr>`;
+}
+
+// ---------- TANDAI IBU HAMIL BARU ----------
+async function cariPasienHamil() {
+  const kunci = document.getElementById("hamilCari").value.trim();
+  const msgBox = document.getElementById("msgTandaiHamil");
+  const hasilDiv = document.getElementById("hamilHasilCari");
+  const daftarDiv = document.getElementById("hamilDaftarHasilCari");
+  msgBox.innerHTML = "";
+  hasilDiv.innerHTML = "";
+  daftarDiv.innerHTML = "";
+  document.getElementById("hamilCardForm").style.display = "none";
+  pasienTerpilihHamil = null;
+
+  if (!kunci) { msgBox.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .eq("jenis_kelamin", "P")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+
+  if (!data.length) {
+    hasilDiv.innerHTML = `<div class="msg msg-error">Pasien perempuan dengan kata kunci ini tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran kalau pasien baru.</div>`;
+    return;
+  }
+
+  if (data.length === 1) {
+    pilihPasienHamil(data[0]);
+  } else {
+    daftarDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>NIK</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${p.nik}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienHamilDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienHamil = data;
+  }
+}
+
+function pilihPasienHamilDariHasil(i) {
+  pilihPasienHamil(window._hasilCariPasienHamil[i]);
+}
+
+async function pilihPasienHamil(pasien) {
+  pasienTerpilihHamil = pasien;
+  document.getElementById("hamilDaftarHasilCari").innerHTML = "";
+  document.getElementById("msgTandaiHamil").innerHTML = "";
+
+  const { data: sudahHamil } = await supabaseClient
+    .from("kehamilan")
+    .select("id")
+    .eq("pasien_id", pasien.id)
+    .eq("status", "hamil")
+    .maybeSingle();
+
+  if (sudahHamil) {
+    document.getElementById("hamilCardForm").style.display = "none";
+    document.getElementById("msgTandaiHamil").innerHTML = `<div class="msg msg-error">${pasien.nama} sudah tercatat sedang hamil (status aktif). Gak perlu ditandai ulang.</div>`;
+    return;
+  }
+
+  document.getElementById("hamilNamaPasien").textContent = pasien.nama;
+  document.getElementById("hamilNoRmPasien").textContent = pasien.no_rm || "-";
+  document.getElementById("hamilHpht").value = "";
+  document.getElementById("hamilHpl").value = "";
+  document.getElementById("hamilGravida").value = "";
+  document.getElementById("hamilCatatan").value = "";
+  document.getElementById("hamilCardForm").style.display = "block";
+}
+
+function hitungHplOtomatis() {
+  const hpht = document.getElementById("hamilHpht").value;
+  if (!hpht) { document.getElementById("hamilHpl").value = ""; return; }
+  const tgl = new Date(hpht);
+  tgl.setDate(tgl.getDate() + 280); // aturan Naegele: HPHT + 280 hari
+  document.getElementById("hamilHpl").value = tgl.toISOString().split("T")[0];
+}
+
+function batalkanTandaiHamil() {
+  pasienTerpilihHamil = null;
+  document.getElementById("hamilCardForm").style.display = "none";
+  document.getElementById("hamilCari").value = "";
+}
+
+async function simpanKehamilan() {
+  const msgBox = document.getElementById("msgTandaiHamil");
+  if (!pasienTerpilihHamil) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const hpht = document.getElementById("hamilHpht").value || null;
+  const hpl = document.getElementById("hamilHpl").value || null;
+  const gravida = document.getElementById("hamilGravida").value ? parseInt(document.getElementById("hamilGravida").value) : null;
+  const catatan = document.getElementById("hamilCatatan").value.trim() || null;
+
+  const { error } = await supabaseClient.from("kehamilan").insert({
+    pasien_id: pasienTerpilihHamil.id,
+    hpht,
+    hpl,
+    gravida,
+    status: "hamil",
+    catatan,
+    created_by: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">${pasienTerpilihHamil.nama} berhasil ditandai sedang hamil.</div>`;
+  document.getElementById("hamilCardForm").style.display = "none";
+  document.getElementById("hamilCari").value = "";
+  pasienTerpilihHamil = null;
+  await muatDashboardK2();
+}
+</script>
+
+</body>
+</html>

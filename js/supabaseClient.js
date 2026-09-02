@@ -206,12 +206,12 @@ async function panggilAdmin(action, payload) {
 // akses ke rekam-medis.html, walau role dasarnya bukan dokter/perawat/bidan.
 // ============================================================
 const AKSES_HALAMAN = {
-  admin: ["index.html", "rekam-medis.html", "apotek.html", "ugd.html", "pengaturan.html"],
+  admin: ["index.html", "rekam-medis.html", "apotek.html", "ugd.html", "klaster2.html", "pengaturan.html"],
   petugas: ["index.html", "rekam-medis.html", "pengaturan.html"],
   staff: ["index.html", "rekam-medis.html", "pengaturan.html"],
-  dokter: ["rekam-medis.html", "ugd.html", "pengaturan.html"],
-  perawat: ["rekam-medis.html", "ugd.html", "pengaturan.html"],
-  bidan: ["rekam-medis.html", "ugd.html", "pengaturan.html"],
+  dokter: ["rekam-medis.html", "ugd.html", "klaster2.html", "pengaturan.html"],
+  perawat: ["rekam-medis.html", "ugd.html", "klaster2.html", "pengaturan.html"],
+  bidan: ["rekam-medis.html", "ugd.html", "klaster2.html", "pengaturan.html"],
   farmasi: ["apotek.html", "pengaturan.html"]
 };
 

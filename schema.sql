@@ -1286,6 +1286,37 @@ create trigger trg_audit_observasi_ugd after insert or update or delete on obser
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 42. KLASTER 2 (IBU, ANAK & REMAJA) — FASE 1: Scaffold & Dashboard.
+--     Kunjungan Klaster 2 REUSE tabel kunjungan yang sudah ada
+--     (klaster_id = K2), gak ada tabel baru buat itu.
+--     Tabel kehamilan: dasar pelacakan status hamil pasien, dipakai
+--     buat kategori sasaran "Bumil" di Dashboard, dan nanti dipakai
+--     lagi oleh fitur ANC/Persalinan/Nifas.
+-- ============================================================
+create table if not exists kehamilan (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  hpht date,
+  hpl date,
+  gravida int,
+  paritas int,
+  status text not null default 'hamil' check (status in ('hamil', 'bersalin', 'nifas', 'selesai')),
+  catatan text,
+  created_by uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kehamilan_pasien on kehamilan(pasien_id);
+create index if not exists idx_kehamilan_status on kehamilan(status);
+
+alter table kehamilan enable row level security;
+create policy "authenticated_all_kehamilan" on kehamilan for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kehamilan on kehamilan;
+create trigger trg_audit_kehamilan after insert or update or delete on kehamilan
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
