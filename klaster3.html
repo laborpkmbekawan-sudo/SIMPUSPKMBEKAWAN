@@ -412,11 +412,119 @@
         </div>
 
         <div id="dewasaPanel-repro" style="display:none;">
-          <div class="k3-segera"><div class="ic">💗</div><div class="t">Kesehatan Reproduksi &amp; Caten</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">💗</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Kesehatan reproduksi umum &amp; pemeriksaan calon pengantin (caten) sebelum menikah.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="reproCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienRepro();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienRepro()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="reproHasilCari"></div>
+          </div>
+
+          <div id="reproWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Kesehatan Reproduksi &amp; Caten — <span id="reproNamaPasien"></span></h2>
+              <div id="msgRepro"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="reproTanggal" required></div>
+                <div>
+                  <label>Jenis Pemeriksaan</label>
+                  <select id="reproJenis">
+                    <option value="Kesehatan Reproduksi Umum">Kesehatan Reproduksi Umum</option>
+                    <option value="Calon Pengantin (Caten)">Calon Pengantin (Caten)</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Status Kesehatan Umum</label>
+                  <select id="reproStatus">
+                    <option value="">-- Pilih --</option>
+                    <option value="Sehat">Sehat</option>
+                    <option value="Perlu Tindak Lanjut">Perlu Tindak Lanjut</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+                <div><label>Nama Pasangan (kalau Caten)</label><input type="text" id="reproPasangan" placeholder="Opsional"></div>
+              </div>
+              <label>Hasil Pemeriksaan Penunjang</label>
+              <textarea id="reproPenunjang" placeholder="Hb, golongan darah, dsb (kalau ada)"></textarea>
+              <label>Catatan</label>
+              <textarea id="reproCatatan" placeholder="Catatan lain / rencana tindak lanjut"></textarea>
+              <button class="btn-primary" onclick="simpanRepro()">Simpan Kesehatan Reproduksi &amp; Caten</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Kesehatan Reproduksi &amp; Caten</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Jenis</th><th>Status</th><th>Pasangan</th><th>Penunjang</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatRepro"><tr><td colspan="6">Belum ada catatan kesehatan reproduksi/caten.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
+
         <div id="dewasaPanel-wus" style="display:none;">
-          <div class="k3-segera"><div class="ic">💉</div><div class="t">Skrining Status Imunisasi WUS</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#216ac5;">
+            <h2><span class="card-num" style="background:#216ac5;">💉</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Skrining kelengkapan imunisasi TT/Td pada Wanita Usia Subur — mencegah tetanus pada kehamilan mendatang.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="wusCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienWus();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienWus()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="wusHasilCari"></div>
+          </div>
+
+          <div id="wusWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Status Imunisasi TT/Td — <span id="wusNamaPasien"></span></h2>
+              <div id="msgWus"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="wusTanggal" required></div>
+                <div>
+                  <label>Status Imunisasi Diberikan</label>
+                  <select id="wusStatus">
+                    <option value="">-- Pilih --</option>
+                    <option value="TT1">TT1</option>
+                    <option value="TT2">TT2</option>
+                    <option value="TT3">TT3</option>
+                    <option value="TT4">TT4</option>
+                    <option value="TT5 (Lengkap)">TT5 (Lengkap)</option>
+                    <option value="Td (Booster)">Td (Booster)</option>
+                    <option value="Belum Pernah Diimunisasi">Belum Pernah Diimunisasi</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="wusCatatan" placeholder="Catatan lain"></textarea>
+              <button class="btn-primary" onclick="simpanWus()">Simpan Status Imunisasi WUS</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Imunisasi WUS</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Status</th><th>Catatan</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatWus"><tr><td colspan="4">Belum ada catatan imunisasi WUS.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
+
         <div id="dewasaPanel-jiwa" style="display:none;">
           <div class="k3-segera"><div class="ic">🧠</div><div class="t">Skrining Jiwa &amp; Kebugaran</div>Menu ini segera dibangun di sesi berikutnya.</div>
         </div>
@@ -1062,6 +1170,225 @@ async function simpanMenular() {
   document.getElementById("menularHepatitis").value = "";
   document.getElementById("menularCatatan").value = "";
   await muatRiwayatMenular();
+}
+
+// ---------- KESEHATAN REPRODUKSI & CATEN (Dewasa) ----------
+let pasienTerpilihRepro = null;
+
+async function cariPasienRepro() {
+  const kunci = document.getElementById("reproCari").value.trim();
+  const hasilDiv = document.getElementById("reproHasilCari");
+  document.getElementById("reproWrap").style.display = "none";
+  pasienTerpilihRepro = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienRepro(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienReproDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienRepro = data;
+  }
+}
+
+function pilihPasienReproDariHasil(i) {
+  pilihPasienRepro(window._hasilCariPasienRepro[i]);
+}
+
+function pilihPasienRepro(pasien) {
+  pasienTerpilihRepro = pasien;
+  document.getElementById("reproHasilCari").innerHTML = "";
+  document.getElementById("reproNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("reproWrap").style.display = "block";
+  document.getElementById("msgRepro").innerHTML = "";
+  document.getElementById("reproTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("reproJenis").value = "Kesehatan Reproduksi Umum";
+  document.getElementById("reproStatus").value = "";
+  document.getElementById("reproPasangan").value = "";
+  document.getElementById("reproPenunjang").value = "";
+  document.getElementById("reproCatatan").value = "";
+
+  muatRiwayatRepro();
+}
+
+async function muatRiwayatRepro() {
+  const tbody = document.getElementById("tabelRiwayatRepro");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kespro_caten")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihRepro.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan kesehatan reproduksi/caten.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.jenis || "-"}</td>
+      <td>${r.status_kesehatan_umum || "-"}</td>
+      <td>${r.nama_pasangan || "-"}</td>
+      <td>${r.hasil_penunjang || "-"}</td>
+      <td>${r.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanRepro() {
+  const msgBox = document.getElementById("msgRepro");
+  if (!pasienTerpilihRepro) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("reproTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("kespro_caten").insert({
+    pasien_id: pasienTerpilihRepro.id,
+    tanggal,
+    jenis: document.getElementById("reproJenis").value,
+    status_kesehatan_umum: document.getElementById("reproStatus").value || null,
+    nama_pasangan: document.getElementById("reproPasangan").value.trim() || null,
+    hasil_penunjang: document.getElementById("reproPenunjang").value.trim() || null,
+    catatan: document.getElementById("reproCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan kesehatan reproduksi/caten tersimpan.</div>`;
+  document.getElementById("reproStatus").value = "";
+  document.getElementById("reproPasangan").value = "";
+  document.getElementById("reproPenunjang").value = "";
+  document.getElementById("reproCatatan").value = "";
+  await muatRiwayatRepro();
+}
+
+// ---------- SKRINING STATUS IMUNISASI WUS (Dewasa) ----------
+let pasienTerpilihWus = null;
+
+async function cariPasienWus() {
+  const kunci = document.getElementById("wusCari").value.trim();
+  const hasilDiv = document.getElementById("wusHasilCari");
+  document.getElementById("wusWrap").style.display = "none";
+  pasienTerpilihWus = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienWus(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienWusDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienWus = data;
+  }
+}
+
+function pilihPasienWusDariHasil(i) {
+  pilihPasienWus(window._hasilCariPasienWus[i]);
+}
+
+function pilihPasienWus(pasien) {
+  pasienTerpilihWus = pasien;
+  document.getElementById("wusHasilCari").innerHTML = "";
+  document.getElementById("wusNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("wusWrap").style.display = "block";
+  document.getElementById("msgWus").innerHTML = "";
+  document.getElementById("wusTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("wusStatus").value = "";
+  document.getElementById("wusCatatan").value = "";
+
+  muatRiwayatWus();
+}
+
+async function muatRiwayatWus() {
+  const tbody = document.getElementById("tabelRiwayatWus");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("skrining_imunisasi_wus")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihWus.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada catatan imunisasi WUS.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(w => `
+    <tr>
+      <td>${new Date(w.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${w.status_tt || "-"}</td>
+      <td>${w.catatan || "-"}</td>
+      <td>${w.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanWus() {
+  const msgBox = document.getElementById("msgWus");
+  if (!pasienTerpilihWus) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("wusTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const status = document.getElementById("wusStatus").value;
+  if (!status) { msgBox.innerHTML = `<div class="msg msg-error">Pilih status imunisasi dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("skrining_imunisasi_wus").insert({
+    pasien_id: pasienTerpilihWus.id,
+    tanggal,
+    status_tt: status,
+    catatan: document.getElementById("wusCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Status imunisasi WUS tersimpan.</div>`;
+  document.getElementById("wusStatus").value = "";
+  document.getElementById("wusCatatan").value = "";
+  await muatRiwayatWus();
 }
 </script>
 </body>

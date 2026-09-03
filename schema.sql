@@ -1797,6 +1797,52 @@ create trigger trg_audit_skrining_menular_dewasa after insert or update or delet
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 54. KLASTER 3 — FASE 3: Pelayanan Usia Dewasa — Kesehatan
+--     Reproduksi & Caten, dan Skrining Status Imunisasi WUS.
+--     Reuse tabel pasien, tabel baru 2.
+-- ============================================================
+create table if not exists kespro_caten (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis text not null default 'Kesehatan Reproduksi Umum' check (jenis in ('Kesehatan Reproduksi Umum', 'Calon Pengantin (Caten)')),
+  status_kesehatan_umum text check (status_kesehatan_umum in ('Sehat', 'Perlu Tindak Lanjut', 'Perlu Rujuk')),
+  nama_pasangan text,
+  hasil_penunjang text,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kespro_caten_pasien on kespro_caten(pasien_id);
+
+alter table kespro_caten enable row level security;
+create policy "authenticated_all_kespro_caten" on kespro_caten for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kespro_caten on kespro_caten;
+create trigger trg_audit_kespro_caten after insert or update or delete on kespro_caten
+  for each row execute function fn_audit_log();
+
+create table if not exists skrining_imunisasi_wus (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  status_tt text not null check (status_tt in ('TT1', 'TT2', 'TT3', 'TT4', 'TT5 (Lengkap)', 'Td (Booster)', 'Belum Pernah Diimunisasi')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_skrining_imunisasi_wus_pasien on skrining_imunisasi_wus(pasien_id);
+
+alter table skrining_imunisasi_wus enable row level security;
+create policy "authenticated_all_skrining_imunisasi_wus" on skrining_imunisasi_wus for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_skrining_imunisasi_wus on skrining_imunisasi_wus;
+create trigger trg_audit_skrining_imunisasi_wus after insert or update or delete on skrining_imunisasi_wus
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
