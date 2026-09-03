@@ -2184,6 +2184,79 @@ select * from (values
 where not exists (select 1 from master_tarif);
 
 -- ============================================================
+-- 61. TARIF RESMI PUSKESMAS KAB. INDRAGIRI HILIR (2024) — ganti
+--     13 baris tarif placeholder (section 60) dengan tarif resmi
+--     dari dokumen "Tarif Pemeriksaan Puskesmas Inhil 2024".
+--     Tambahan:
+--     - kolom dasar_hukum: rujukan legal tiap baris tarif (SK/Perbup/
+--       Perda), diisi admin lewat Pengaturan, wajib diedit kalau ada
+--       revisi tarif resmi baru.
+--     - kategori diperluas dari 4 (Konsultasi/Pemeriksaan/Tindakan/
+--       Laboratorium) jadi 7, biar match struktur dokumen resmi:
+--       + Administrasi (pendaftaran, surat keterangan, dll)
+--       + KIA & KB (kehamilan, KB, persalinan)
+--       + Gigi & Mulut (poli gigi)
+--     Catatan: dropdown tarif di Rekam Medis & UGD saat ini cuma
+--     nampilin Konsultasi/Pemeriksaan/Tindakan/Laboratorium — item
+--     Administrasi/KIA & KB/Gigi & Mulut baru kebaca di Pengaturan >
+--     Master Tarif, belum ke-wiring ke titik input klinis (nyusul).
+-- ============================================================
+
+alter table master_tarif drop constraint if exists master_tarif_kategori_check;
+alter table master_tarif add constraint master_tarif_kategori_check
+  check (kategori in ('Konsultasi', 'Pemeriksaan', 'Tindakan', 'Laboratorium', 'Administrasi', 'KIA & KB', 'Gigi & Mulut'));
+
+alter table master_tarif add column if not exists dasar_hukum text;
+
+-- Buang 13 baris seed placeholder lama (section 60) — dikenali dari
+-- nama_layanan persis & belum pernah diedit admin (updated_at = created_at).
+-- Baris yang sudah diedit manual TIDAK kehapus, sengaja dijaga.
+delete from master_tarif
+where nama_layanan in (
+  'Konsultasi Dokter Umum', 'Konsultasi Dokter Gigi', 'Pemeriksaan Umum',
+  'Jahit Luka (per jahitan)', 'Nebulizer', 'Pasang Infus', 'Ganti Verban',
+  'Ekstraksi Gigi Sederhana', 'Gula Darah Sewaktu', 'Hemoglobin',
+  'Urin Lengkap', 'Kolesterol Total', 'Asam Urat'
+)
+and updated_at = created_at;
+
+insert into master_tarif (kategori, nama_layanan, tarif_umum, tarif_bpjs, keterangan, dasar_hukum)
+select * from (values
+  ('Administrasi', 'Pendaftaran & Kartu Identitas Pasien Baru', 5000::numeric, 0::numeric, 'Sekali bayar untuk pendaftaran awal', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Konsultasi', 'Pemeriksaan & Konsultasi Dokter Umum', 10000::numeric, 0::numeric, 'Pasien Umum non-BPJS', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Konsultasi', 'Pemeriksaan & Konsultasi Dokter Gigi', 15000::numeric, 0::numeric, 'Pasien Umum non-BPJS', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Administrasi', 'Surat Keterangan Sehat (SKS) / Bebas Buta Warna', 15000::numeric, 0::numeric, 'Keperluan administrasi/kerja', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Administrasi', 'Pemeriksaan Calon Pengantin (Catin)', 15000::numeric, 0::numeric, 'Belum termasuk cek laboratorium wajib', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Tindakan', 'Rawat Luka Ringan / Angkat Jahitan', 15000::numeric, 0::numeric, 'Termasuk ganti verban pertama', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Tindakan', 'Rawat Luka Sedang / Berat', 30000::numeric, 0::numeric, 'Sesuai tingkat keparahan luka', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Tindakan', 'Bedah Minor Sederhana', 50000::numeric, 0::numeric, 'Tindakan dokter di poli umum', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Tindakan', 'Bedah Minor Kompleks / Ekstirpasi Tumor Kecil', 100000::numeric, 0::numeric, 'Memerlukan anestesi lokal & penjahitan', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Tindakan', 'Insisi Abses', 25000::numeric, 0::numeric, 'Drainase infeksi kulit', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Tindakan', 'Pelayanan Nebulizer (per tindakan)', 25000::numeric, 0::numeric, 'Belum termasuk obat cairan nebulizer', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Tindakan', 'Pemberian Oksigen (per jam)', 15000::numeric, 0::numeric, 'Sesuai durasi pemakaian', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('KIA & KB', 'Pemeriksaan Kehamilan (ANC) / Nifas (PNC)', 15000::numeric, 0::numeric, 'Per kunjungan pemeriksaan', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('KIA & KB', 'Suntik KB (per kali tindakan)', 15000::numeric, 0::numeric, 'Sudah termasuk jasa suntik', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('KIA & KB', 'Pemasangan / Pencabutan IUD', 50000::numeric, 0::numeric, 'Jasa medis poli KB', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('KIA & KB', 'Pemasangan / Pencabutan Implan', 60000::numeric, 0::numeric, 'Jasa medis poli KB', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('KIA & KB', 'Pertolongan Persalinan Normal oleh Bidan', 700000::numeric, 0::numeric, 'Di Puskesmas PONED / Fasilitas', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('KIA & KB', 'Penanganan Awal Komplikasi Maternal/Neonatal', 125000::numeric, 0::numeric, 'Tindakan stabilisasi sebelum rujukan', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Gigi & Mulut', 'Pencabutan Gigi Susu', 15000::numeric, 0::numeric, 'Topikal / Infiltrasi lokal', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Gigi & Mulut', 'Pencabutan Gigi Permanen', 30000::numeric, 0::numeric, 'Tanpa komplikasi penyulit', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Gigi & Mulut', 'Penambalan Gigi (Sementara / Tetap)', 35000::numeric, 0::numeric, 'Tergantung bahan tambalan', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Gigi & Mulut', 'Pembersihan Karang Gigi (Scalling)', 50000::numeric, 0::numeric, 'Per rahang', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Laboratorium', 'Pemeriksaan Hemoglobin (Hb)', 10000::numeric, 0::numeric, 'Metode stik / hematologi', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Laboratorium', 'Gula Darah (Stik)', 15000::numeric, 0::numeric, 'Sewaktu atau puasa', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Laboratorium', 'Asam Urat (Stik)', 20000::numeric, 0::numeric, 'Metode stik digital', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Laboratorium', 'Kolesterol Total (Stik)', 30000::numeric, 0::numeric, 'Metode stik digital', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Laboratorium', 'Tes Kehamilan (Plano Test)', 15000::numeric, 0::numeric, 'Urine strip test', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Laboratorium', 'Urine Lengkap / Rutin', 18000::numeric, 0::numeric, 'Analisis urin rutin', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Laboratorium', 'Uji Widal', 25000::numeric, 0::numeric, 'Skrining demam tifoid', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Laboratorium', 'Tes Rapid (HIV / Sifilis / HBsAg)', 35000::numeric, 0::numeric, 'Per parameter pemeriksaan', 'Tarif Puskesmas Kab. Indragiri Hilir 2024'),
+  ('Laboratorium', 'Pemeriksaan EKG (Rekam Jantung)', 75000::numeric, 0::numeric, 'Termasuk interpretasi hasil', 'Tarif Puskesmas Kab. Indragiri Hilir 2024')
+) as resmi(kategori, nama_layanan, tarif_umum, tarif_bpjs, keterangan, dasar_hukum)
+where not exists (select 1 from master_tarif where dasar_hukum = 'Tarif Puskesmas Kab. Indragiri Hilir 2024');
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

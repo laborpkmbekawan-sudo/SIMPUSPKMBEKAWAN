@@ -158,15 +158,18 @@
 
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
       <button type="button" class="lap-tab active" id="tarifFilter-Semua" onclick="filterTarif('Semua')">Semua</button>
+      <button type="button" class="lap-tab" id="tarifFilter-Administrasi" onclick="filterTarif('Administrasi')">Administrasi</button>
       <button type="button" class="lap-tab" id="tarifFilter-Konsultasi" onclick="filterTarif('Konsultasi')">Konsultasi</button>
       <button type="button" class="lap-tab" id="tarifFilter-Pemeriksaan" onclick="filterTarif('Pemeriksaan')">Pemeriksaan</button>
       <button type="button" class="lap-tab" id="tarifFilter-Tindakan" onclick="filterTarif('Tindakan')">Tindakan</button>
+      <button type="button" class="lap-tab" id="tarifFilter-KiaKb" onclick="filterTarif('KIA & KB')">KIA &amp; KB</button>
+      <button type="button" class="lap-tab" id="tarifFilter-GigiMulut" onclick="filterTarif('Gigi & Mulut')">Gigi &amp; Mulut</button>
       <button type="button" class="lap-tab" id="tarifFilter-Laboratorium" onclick="filterTarif('Laboratorium')">Laboratorium</button>
     </div>
 
     <table>
-      <thead><tr><th>Kategori</th><th>Nama Layanan</th><th>Tarif Umum (Rp)</th><th>Tarif BPJS (Rp)</th><th>Status</th><th>Aksi</th></tr></thead>
-      <tbody id="tabelTarif"><tr><td colspan="6">Memuat...</td></tr></tbody>
+      <thead><tr><th>Kategori</th><th>Nama Layanan</th><th>Tarif Umum (Rp)</th><th>Tarif BPJS (Rp)</th><th>Dasar Hukum</th><th>Status</th><th>Aksi</th></tr></thead>
+      <tbody id="tabelTarif"><tr><td colspan="7">Memuat...</td></tr></tbody>
     </table>
 
     <h2 style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">Tambah / Edit Tarif</h2>
@@ -175,9 +178,12 @@
       <div>
         <label>Kategori *</label>
         <select id="tarifKategori" required>
+          <option value="Administrasi">Administrasi</option>
           <option value="Konsultasi">Konsultasi</option>
           <option value="Pemeriksaan">Pemeriksaan</option>
           <option value="Tindakan">Tindakan</option>
+          <option value="KIA & KB">KIA &amp; KB</option>
+          <option value="Gigi & Mulut">Gigi &amp; Mulut</option>
           <option value="Laboratorium">Laboratorium</option>
         </select>
       </div>
@@ -192,6 +198,8 @@
     </div>
     <label>Keterangan</label>
     <input type="text" id="tarifKeterangan" placeholder="Opsional, mis. Ditanggung kapitasi BPJS FKTP">
+    <label>Dasar Hukum</label>
+    <input type="text" id="tarifDasarHukum" placeholder="mis. Perbup Inhil No. X Tahun 2024 / SK Direktur BLUD No. Y — wajib diedit tiap ada revisi tarif resmi">
     <button type="button" class="btn-primary" onclick="simpanTarif()">Simpan Tarif</button>
     <button type="button" class="btn-secondary" id="btnBatalEditTarif" style="display:none;" onclick="batalEditTarif()">Batal Edit</button>
   </div>
@@ -441,10 +449,15 @@ async function simpanAkses() {
 let daftarTarifGlobal = [];
 let filterTarifAktif = "Semua";
 
+const SLUG_TARIF_KATEGORI = {
+  "Semua": "Semua", "Administrasi": "Administrasi", "Konsultasi": "Konsultasi",
+  "Pemeriksaan": "Pemeriksaan", "Tindakan": "Tindakan", "Laboratorium": "Laboratorium",
+  "KIA & KB": "KiaKb", "Gigi & Mulut": "GigiMulut"
+};
 function filterTarif(kategori) {
   filterTarifAktif = kategori;
-  ["Semua", "Konsultasi", "Pemeriksaan", "Tindakan", "Laboratorium"].forEach(k => {
-    document.getElementById(`tarifFilter-${k}`).classList.toggle("active", k === kategori);
+  Object.keys(SLUG_TARIF_KATEGORI).forEach(k => {
+    document.getElementById(`tarifFilter-${SLUG_TARIF_KATEGORI[k]}`).classList.toggle("active", k === kategori);
   });
   renderTabelTarif();
 }
@@ -467,7 +480,7 @@ function renderTabelTarif() {
   const tbody = document.getElementById("tabelTarif");
   const data = filterTarifAktif === "Semua" ? daftarTarifGlobal : daftarTarifGlobal.filter(t => t.kategori === filterTarifAktif);
 
-  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada tarif di kategori ini.</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada tarif di kategori ini.</td></tr>`; return; }
 
   tbody.innerHTML = data.map(t => `
     <tr>
@@ -475,6 +488,7 @@ function renderTabelTarif() {
       <td>${t.nama_layanan}${t.keterangan ? `<br><span style="font-size:11px; color:var(--muted);">${t.keterangan}</span>` : ""}</td>
       <td>Rp ${formatRupiah(t.tarif_umum)}</td>
       <td>Rp ${formatRupiah(t.tarif_bpjs)}</td>
+      <td style="font-size:11.5px; color:var(--muted);">${t.dasar_hukum || "-"}</td>
       <td><span class="badge ${t.aktif ? "badge-selesai" : "badge-batal"}">${t.aktif ? "Aktif" : "Nonaktif"}</span></td>
       <td><button type="button" class="btn-secondary" onclick="editTarif('${t.id}')">Edit</button></td>
     </tr>
@@ -490,6 +504,7 @@ function editTarif(id) {
   document.getElementById("tarifUmum").value = t.tarif_umum;
   document.getElementById("tarifBpjs").value = t.tarif_bpjs;
   document.getElementById("tarifKeterangan").value = t.keterangan || "";
+  document.getElementById("tarifDasarHukum").value = t.dasar_hukum || "";
   document.getElementById("tarifAktif").value = String(t.aktif);
   document.getElementById("btnBatalEditTarif").style.display = "inline-block";
   document.getElementById("cardTarif").scrollIntoView({ behavior: "smooth", block: "end" });
@@ -501,6 +516,7 @@ function batalEditTarif() {
   document.getElementById("tarifUmum").value = "";
   document.getElementById("tarifBpjs").value = "0";
   document.getElementById("tarifKeterangan").value = "";
+  document.getElementById("tarifDasarHukum").value = "";
   document.getElementById("tarifAktif").value = "true";
   document.getElementById("btnBatalEditTarif").style.display = "none";
 }
@@ -520,6 +536,7 @@ async function simpanTarif() {
     tarif_umum: tarifUmum,
     tarif_bpjs: parseFloat(document.getElementById("tarifBpjs").value) || 0,
     keterangan: document.getElementById("tarifKeterangan").value.trim() || null,
+    dasar_hukum: document.getElementById("tarifDasarHukum").value.trim() || null,
     aktif: document.getElementById("tarifAktif").value === "true",
     updated_by: profilSaya.id,
     updated_at: new Date().toISOString()
