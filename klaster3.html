@@ -256,11 +256,161 @@
         </div>
 
         <div id="dewasaPanel-kanker" style="display:none;">
-          <div class="k3-segera"><div class="ic">🎗</div><div class="t">Skrining Kanker &amp; Talasemia</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#b3175a;">
+            <h2><span class="card-num" style="background:#b3175a;">🎗</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Skrining IVA (leher rahim), SADANIS (payudara), dan talasemia — termasuk buat calon pengantin.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="kankerCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienKanker();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienKanker()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="kankerHasilCari"></div>
+          </div>
+
+          <div id="kankerWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Skrining Kanker &amp; Talasemia — <span id="kankerNamaPasien"></span></h2>
+              <div id="msgKanker"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="kankerTanggal" required></div>
+                <div>
+                  <label>Hasil IVA (Leher Rahim)</label>
+                  <select id="kankerIva">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Negatif">Negatif</option>
+                    <option value="Positif">Positif</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil SADANIS (Payudara)</label>
+                  <select id="kankerSadanis">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Benjolan Dicurigai">Benjolan Dicurigai</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Skrining Talasemia</label>
+                  <select id="kankerTalasemia">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Negatif">Negatif</option>
+                    <option value="Carrier (Pembawa Sifat)">Carrier (Pembawa Sifat)</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Untuk Calon Pengantin?</label>
+                  <select id="kankerCaten">
+                    <option value="false">Bukan</option>
+                    <option value="true">Ya, Caten</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="kankerCatatan" placeholder="Temuan lain / tindak lanjut"></textarea>
+              <button class="btn-primary" onclick="simpanKanker()">Simpan Skrining Kanker &amp; Talasemia</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Skrining Kanker &amp; Talasemia</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>IVA</th><th>SADANIS</th><th>Talasemia</th><th>Caten</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatKanker"><tr><td colspan="6">Belum ada catatan skrining kanker/talasemia.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
+
         <div id="dewasaPanel-menular" style="display:none;">
-          <div class="k3-segera"><div class="ic">🦠</div><div class="t">Skrining Penyakit Menular</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">🦠</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Skrining TBC, HIV, sifilis, hepatitis B. Hasil positif dikoordinasikan ke Klaster 4 (Penanggulangan Penyakit Menular).</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="menularCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienMenular();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienMenular()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="menularHasilCari"></div>
+          </div>
+
+          <div id="menularWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Skrining Penyakit Menular — <span id="menularNamaPasien"></span></h2>
+              <div id="msgMenular"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="menularTanggal" required></div>
+                <div>
+                  <label>Hasil Skrining TBC</label>
+                  <select id="menularTbc">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Negatif">Negatif</option>
+                    <option value="Suspek">Suspek</option>
+                    <option value="Positif">Positif</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil Skrining HIV</label>
+                  <select id="menularHiv">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Non-Reaktif">Non-Reaktif</option>
+                    <option value="Reaktif">Reaktif</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil Skrining Sifilis</label>
+                  <select id="menularSifilis">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Non-Reaktif">Non-Reaktif</option>
+                    <option value="Reaktif">Reaktif</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil Skrining Hepatitis B</label>
+                  <select id="menularHepatitis">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Non-Reaktif">Non-Reaktif</option>
+                    <option value="Reaktif">Reaktif</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="menularCatatan" placeholder="Temuan lain / rencana rujuk ke Klaster 4"></textarea>
+              <button class="btn-primary" onclick="simpanMenular()">Simpan Skrining Penyakit Menular</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Skrining Penyakit Menular</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>TBC</th><th>HIV</th><th>Sifilis</th><th>Hepatitis B</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatMenular"><tr><td colspan="6">Belum ada catatan skrining penyakit menular.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
+
         <div id="dewasaPanel-repro" style="display:none;">
           <div class="k3-segera"><div class="ic">💗</div><div class="t">Kesehatan Reproduksi &amp; Caten</div>Menu ini segera dibangun di sesi berikutnya.</div>
         </div>
@@ -684,6 +834,234 @@ async function simpanPtm() {
   document.getElementById("ptmPpok").value = "";
   document.getElementById("ptmCatatan").value = "";
   await muatRiwayatPtm();
+}
+
+// ---------- SKRINING KANKER & TALASEMIA (Dewasa) ----------
+let pasienTerpilihKanker = null;
+
+async function cariPasienKanker() {
+  const kunci = document.getElementById("kankerCari").value.trim();
+  const hasilDiv = document.getElementById("kankerHasilCari");
+  document.getElementById("kankerWrap").style.display = "none";
+  pasienTerpilihKanker = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienKanker(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienKankerDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienKanker = data;
+  }
+}
+
+function pilihPasienKankerDariHasil(i) {
+  pilihPasienKanker(window._hasilCariPasienKanker[i]);
+}
+
+function pilihPasienKanker(pasien) {
+  pasienTerpilihKanker = pasien;
+  document.getElementById("kankerHasilCari").innerHTML = "";
+  document.getElementById("kankerNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("kankerWrap").style.display = "block";
+  document.getElementById("msgKanker").innerHTML = "";
+  document.getElementById("kankerTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("kankerIva").value = "";
+  document.getElementById("kankerSadanis").value = "";
+  document.getElementById("kankerTalasemia").value = "";
+  document.getElementById("kankerCaten").value = "false";
+  document.getElementById("kankerCatatan").value = "";
+
+  muatRiwayatKanker();
+}
+
+async function muatRiwayatKanker() {
+  const tbody = document.getElementById("tabelRiwayatKanker");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("skrining_kanker_talasemia")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihKanker.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan skrining kanker/talasemia.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${new Date(k.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${k.hasil_iva || "-"}</td>
+      <td>${k.hasil_sadanis || "-"}</td>
+      <td>${k.skrining_talasemia || "-"}</td>
+      <td>${k.untuk_caten ? "Ya" : "Bukan"}</td>
+      <td>${k.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanKanker() {
+  const msgBox = document.getElementById("msgKanker");
+  if (!pasienTerpilihKanker) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("kankerTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("skrining_kanker_talasemia").insert({
+    pasien_id: pasienTerpilihKanker.id,
+    tanggal,
+    hasil_iva: document.getElementById("kankerIva").value || null,
+    hasil_sadanis: document.getElementById("kankerSadanis").value || null,
+    skrining_talasemia: document.getElementById("kankerTalasemia").value || null,
+    untuk_caten: document.getElementById("kankerCaten").value === "true",
+    catatan: document.getElementById("kankerCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Hasil skrining kanker/talasemia tersimpan.</div>`;
+  document.getElementById("kankerIva").value = "";
+  document.getElementById("kankerSadanis").value = "";
+  document.getElementById("kankerTalasemia").value = "";
+  document.getElementById("kankerCaten").value = "false";
+  document.getElementById("kankerCatatan").value = "";
+  await muatRiwayatKanker();
+}
+
+// ---------- SKRINING PENYAKIT MENULAR (Dewasa) ----------
+let pasienTerpilihMenular = null;
+
+async function cariPasienMenular() {
+  const kunci = document.getElementById("menularCari").value.trim();
+  const hasilDiv = document.getElementById("menularHasilCari");
+  document.getElementById("menularWrap").style.display = "none";
+  pasienTerpilihMenular = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienMenular(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienMenularDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienMenular = data;
+  }
+}
+
+function pilihPasienMenularDariHasil(i) {
+  pilihPasienMenular(window._hasilCariPasienMenular[i]);
+}
+
+function pilihPasienMenular(pasien) {
+  pasienTerpilihMenular = pasien;
+  document.getElementById("menularHasilCari").innerHTML = "";
+  document.getElementById("menularNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("menularWrap").style.display = "block";
+  document.getElementById("msgMenular").innerHTML = "";
+  document.getElementById("menularTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("menularTbc").value = "";
+  document.getElementById("menularHiv").value = "";
+  document.getElementById("menularSifilis").value = "";
+  document.getElementById("menularHepatitis").value = "";
+  document.getElementById("menularCatatan").value = "";
+
+  muatRiwayatMenular();
+}
+
+async function muatRiwayatMenular() {
+  const tbody = document.getElementById("tabelRiwayatMenular");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("skrining_menular_dewasa")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihMenular.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan skrining penyakit menular.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(m => `
+    <tr>
+      <td>${new Date(m.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${m.hasil_tbc || "-"}</td>
+      <td>${m.hasil_hiv || "-"}</td>
+      <td>${m.hasil_sifilis || "-"}</td>
+      <td>${m.hasil_hepatitis_b || "-"}</td>
+      <td>${m.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanMenular() {
+  const msgBox = document.getElementById("msgMenular");
+  if (!pasienTerpilihMenular) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("menularTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("skrining_menular_dewasa").insert({
+    pasien_id: pasienTerpilihMenular.id,
+    tanggal,
+    hasil_tbc: document.getElementById("menularTbc").value || null,
+    hasil_hiv: document.getElementById("menularHiv").value || null,
+    hasil_sifilis: document.getElementById("menularSifilis").value || null,
+    hasil_hepatitis_b: document.getElementById("menularHepatitis").value || null,
+    catatan: document.getElementById("menularCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Hasil skrining penyakit menular tersimpan.</div>`;
+  document.getElementById("menularTbc").value = "";
+  document.getElementById("menularHiv").value = "";
+  document.getElementById("menularSifilis").value = "";
+  document.getElementById("menularHepatitis").value = "";
+  document.getElementById("menularCatatan").value = "";
+  await muatRiwayatMenular();
 }
 </script>
 </body>

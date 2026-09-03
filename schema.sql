@@ -1748,6 +1748,55 @@ create trigger trg_audit_skrining_ptm after insert or update or delete on skrini
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 53. KLASTER 3 — FASE 2: Pelayanan Usia Dewasa — Skrining
+--     Kanker & Talasemia, dan Skrining Penyakit Menular. Reuse
+--     tabel pasien, tabel baru 2.
+-- ============================================================
+create table if not exists skrining_kanker_talasemia (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  hasil_iva text check (hasil_iva in ('Tidak Dilakukan', 'Negatif', 'Positif', 'Perlu Rujuk')),
+  hasil_sadanis text check (hasil_sadanis in ('Tidak Dilakukan', 'Normal', 'Benjolan Dicurigai', 'Perlu Rujuk')),
+  skrining_talasemia text check (skrining_talasemia in ('Tidak Dilakukan', 'Negatif', 'Carrier (Pembawa Sifat)', 'Perlu Rujuk')),
+  untuk_caten boolean not null default false,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_skrining_kanker_talasemia_pasien on skrining_kanker_talasemia(pasien_id);
+
+alter table skrining_kanker_talasemia enable row level security;
+create policy "authenticated_all_skrining_kanker_talasemia" on skrining_kanker_talasemia for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_skrining_kanker_talasemia on skrining_kanker_talasemia;
+create trigger trg_audit_skrining_kanker_talasemia after insert or update or delete on skrining_kanker_talasemia
+  for each row execute function fn_audit_log();
+
+create table if not exists skrining_menular_dewasa (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  hasil_tbc text check (hasil_tbc in ('Tidak Dilakukan', 'Negatif', 'Suspek', 'Positif')),
+  hasil_hiv text check (hasil_hiv in ('Tidak Dilakukan', 'Non-Reaktif', 'Reaktif')),
+  hasil_sifilis text check (hasil_sifilis in ('Tidak Dilakukan', 'Non-Reaktif', 'Reaktif')),
+  hasil_hepatitis_b text check (hasil_hepatitis_b in ('Tidak Dilakukan', 'Non-Reaktif', 'Reaktif')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_skrining_menular_dewasa_pasien on skrining_menular_dewasa(pasien_id);
+
+alter table skrining_menular_dewasa enable row level security;
+create policy "authenticated_all_skrining_menular_dewasa" on skrining_menular_dewasa for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_skrining_menular_dewasa on skrining_menular_dewasa;
+create trigger trg_audit_skrining_menular_dewasa after insert or update or delete on skrining_menular_dewasa
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
