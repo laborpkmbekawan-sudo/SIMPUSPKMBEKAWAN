@@ -1445,7 +1445,66 @@
 
       <!-- ============ AUDIT / KEAMANAN ============ -->
       <div id="panelAudit" style="display:none;">
-        <div class="k3-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+        <div class="card" style="--accent:#6a4c93;">
+          <h2><span class="card-num" style="background:#6a4c93;">🛡</span> Audit Trail — Klaster 3</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Jejak otomatis semua perubahan (tambah/ubah/hapus) pada seluruh catatan pelayanan Klaster 3 &amp; rujukan/lab. Dicatat langsung oleh database lewat trigger, gak bisa dipalsu/dihapus manual.</p>
+
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div><label>Dari Tanggal</label><input type="date" id="audK3Dari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="audK3Sampai"></div>
+            <div>
+              <label>Tabel</label>
+              <select id="audK3FilterTabel">
+                <option value="">Semua Tabel Klaster 3</option>
+                <option value="pemeriksaan_umum_dewasa">Pemeriksaan Umum Dewasa</option>
+                <option value="skrining_ptm">Skrining PTM</option>
+                <option value="skrining_kanker_talasemia">Skrining Kanker &amp; Talasemia</option>
+                <option value="skrining_menular_dewasa">Skrining Penyakit Menular Dewasa</option>
+                <option value="kespro_caten">Kesehatan Reproduksi &amp; Caten</option>
+                <option value="skrining_imunisasi_wus">Imunisasi WUS</option>
+                <option value="skrining_jiwa_kebugaran">Skrining Jiwa &amp; Kebugaran</option>
+                <option value="kesehatan_kerja">Kesehatan Kerja</option>
+                <option value="pemeriksaan_umum_ptm_lansia">Pemeriksaan Umum &amp; PTM Lansia</option>
+                <option value="skrining_geriatri">Skrining Geriatri</option>
+                <option value="skrining_indera_lansia">Skrining Indera</option>
+                <option value="skrining_menular_lansia">Skrining Penyakit Menular Lansia</option>
+                <option value="terapi_terpadu_lansia">Terapi Terpadu Lansia</option>
+                <option value="posbindu_ptm">Posbindu PTM</option>
+                <option value="kontrol_prolanis">Kontrol Prolanis</option>
+                <option value="rujukan_lab_k3">Rujukan &amp; Permintaan Lab</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Aksi</label>
+              <select id="audK3FilterAksi">
+                <option value="">Semua Aksi</option>
+                <option value="insert">Tambah (Insert)</option>
+                <option value="update">Ubah (Update)</option>
+                <option value="delete">Hapus (Delete)</option>
+              </select>
+            </div>
+            <div></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatAuditLogK3()" style="margin-bottom:12px;">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportAuditLogK3Csv()" style="margin-bottom:12px;">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="k3-stat-grid">
+            <div class="k3-stat-card"><div class="label">Total Perubahan</div><div class="value" id="audK3StatTotal">0</div></div>
+            <div class="k3-stat-card" style="--accent:#16865c;"><div class="label">Tambah</div><div class="value" id="audK3StatInsert">0</div></div>
+            <div class="k3-stat-card" style="--accent:#b77900;"><div class="label">Ubah</div><div class="value" id="audK3StatUpdate">0</div></div>
+            <div class="k3-stat-card" style="--accent:#c62836;"><div class="label">Hapus</div><div class="value" id="audK3StatDelete">0</div></div>
+          </div>
+
+          <table>
+            <thead><tr><th>Waktu</th><th>Tabel</th><th>Aksi</th><th>Petugas</th><th>Ringkasan</th><th></th></tr></thead>
+            <tbody id="audK3TabelLog"><tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+          <p style="font-size:11px; color:var(--muted); margin-top:8px;">Menampilkan maksimal 500 baris terbaru sesuai filter. Persempit rentang tanggal kalau butuh data lebih lama.</p>
+        </div>
       </div>
 
     </div>
@@ -3794,6 +3853,117 @@ async function muatLaporanDinas() {
   } catch (e) {
     alert("Gagal muat laporan Dinas: " + e.message);
   }
+}
+
+// ---------- AUDIT TRAIL — KLASTER 3 ----------
+let auditLogK3Cache = [];
+
+const TABEL_K3_ALL = [
+  "pemeriksaan_umum_dewasa", "skrining_ptm", "skrining_kanker_talasemia", "skrining_menular_dewasa",
+  "kespro_caten", "skrining_imunisasi_wus", "skrining_jiwa_kebugaran", "kesehatan_kerja",
+  "pemeriksaan_umum_ptm_lansia", "skrining_geriatri", "skrining_indera_lansia", "skrining_menular_lansia",
+  "terapi_terpadu_lansia", "posbindu_ptm", "kontrol_prolanis", "rujukan_lab_k3"
+];
+
+const LABEL_TABEL_AUDIT_K3 = {
+  pemeriksaan_umum_dewasa: "Pemeriksaan Umum Dewasa", skrining_ptm: "Skrining PTM",
+  skrining_kanker_talasemia: "Skrining Kanker & Talasemia", skrining_menular_dewasa: "Skrining Penyakit Menular Dewasa",
+  kespro_caten: "Kesehatan Reproduksi & Caten", skrining_imunisasi_wus: "Imunisasi WUS",
+  skrining_jiwa_kebugaran: "Skrining Jiwa & Kebugaran", kesehatan_kerja: "Kesehatan Kerja",
+  pemeriksaan_umum_ptm_lansia: "Pemeriksaan Umum & PTM Lansia", skrining_geriatri: "Skrining Geriatri",
+  skrining_indera_lansia: "Skrining Indera", skrining_menular_lansia: "Skrining Penyakit Menular Lansia",
+  terapi_terpadu_lansia: "Terapi Terpadu Lansia", posbindu_ptm: "Posbindu PTM",
+  kontrol_prolanis: "Kontrol Prolanis", rujukan_lab_k3: "Rujukan & Permintaan Lab"
+};
+const LABEL_AKSI_AUDIT_K3 = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
+const BADGE_AKSI_AUDIT_K3 = { insert: "badge-selesai", update: "badge-menunggu", delete: "badge-batal" };
+
+function ringkasBarisAuditK3(row) {
+  const data = row.data_baru || row.data_lama || {};
+  return `Tgl ${data.tanggal || "-"} — #${(row.record_id || "").slice(0, 8)}`;
+}
+
+async function muatAuditLogK3() {
+  const dari = document.getElementById("audK3Dari").value;
+  const sampai = document.getElementById("audK3Sampai").value;
+  const filterTabel = document.getElementById("audK3FilterTabel").value;
+  const filterAksi = document.getElementById("audK3FilterAksi").value;
+  const tbody = document.getElementById("audK3TabelLog");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  let q = supabaseClient
+    .from("audit_log")
+    .select("*, profil_pegawai(nama)")
+    .in("tabel", filterTabel ? [filterTabel] : TABEL_K3_ALL)
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (dari) q = q.gte("created_at", `${dari}T00:00:00`);
+  if (sampai) q = q.lte("created_at", `${sampai}T23:59:59`);
+  if (filterAksi) q = q.eq("aksi", filterAksi);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  auditLogK3Cache = data || [];
+
+  document.getElementById("audK3StatTotal").textContent = auditLogK3Cache.length;
+  document.getElementById("audK3StatInsert").textContent = auditLogK3Cache.filter(r => r.aksi === "insert").length;
+  document.getElementById("audK3StatUpdate").textContent = auditLogK3Cache.filter(r => r.aksi === "update").length;
+  document.getElementById("audK3StatDelete").textContent = auditLogK3Cache.filter(r => r.aksi === "delete").length;
+
+  tbody.innerHTML = auditLogK3Cache.length ? auditLogK3Cache.map((r, i) => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${LABEL_TABEL_AUDIT_K3[r.tabel] || r.tabel}</td>
+      <td><span class="badge ${BADGE_AKSI_AUDIT_K3[r.aksi] || ""}">${LABEL_AKSI_AUDIT_K3[r.aksi] || r.aksi}</span></td>
+      <td>${r.profil_pegawai ? r.profil_pegawai.nama : "-"}</td>
+      <td>${ringkasBarisAuditK3(r)}</td>
+      <td><button type="button" class="btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="toggleDetailAuditK3(${i})">Detail</button></td>
+    </tr>
+    <tr id="audK3Detail${i}" style="display:none;">
+      <td colspan="6">
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sebelum</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_lama ? JSON.stringify(r.data_lama, null, 2) : "(tidak ada — baris baru)"}</pre>
+          </div>
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sesudah</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_baru ? JSON.stringify(r.data_baru, null, 2) : "(tidak ada — baris dihapus)"}</pre>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Gak ada perubahan pada rentang &amp; filter ini.</td></tr>`;
+}
+
+function toggleDetailAuditK3(i) {
+  const row = document.getElementById(`audK3Detail${i}`);
+  if (row) row.style.display = row.style.display === "none" ? "table-row" : "none";
+}
+
+function exportAuditLogK3Csv() {
+  if (!auditLogK3Cache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Waktu", "Tabel", "Aksi", "Petugas", "Ringkasan", "Record ID"];
+  const rows = auditLogK3Cache.map(r => [
+    new Date(r.created_at).toLocaleString("id-ID"),
+    LABEL_TABEL_AUDIT_K3[r.tabel] || r.tabel,
+    LABEL_AKSI_AUDIT_K3[r.aksi] || r.aksi,
+    r.profil_pegawai ? r.profil_pegawai.nama : "-",
+    ringkasBarisAuditK3(r),
+    r.record_id || "-"
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("audK3Dari").value;
+  const sampaiInput = document.getElementById("audK3Sampai").value;
+  a.href = url;
+  a.download = `Audit_Log_Klaster3_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
