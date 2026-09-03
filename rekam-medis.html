@@ -76,6 +76,19 @@
 
       <div class="grid-2">
         <div>
+          <label>Jenis Layanan (Tarif Konsultasi/Pemeriksaan)</label>
+          <select id="rmTarifLayanan" onchange="tampilTarifLayanan()">
+            <option value="">-- Tidak dibilling / gratis --</option>
+          </select>
+        </div>
+        <div>
+          <label>Tarif</label>
+          <div id="rmTarifPreview" style="padding:9px 0; font-size:13.5px; font-weight:600; color:var(--navy-2, #173b5e);">-</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
           <label>Assessment (Diagnosa)</label>
           <input type="text" id="rmAssessment" list="diagnosaBpjsList" placeholder="Ketik nama diagnosa" oninput="isiOtomatisIcd()">
         </div>
@@ -99,13 +112,27 @@
         </div>
       </div>
       <div id="labSection" style="display:none; border-top:1px solid #e5e7eb; padding-top:16px; margin-bottom:16px;">
-        <label>Jenis Pemeriksaan Diminta</label>
+        <label>Pemeriksaan Lab Sesuai Tarif (centang yang diminta)</label>
+        <div id="labTarifChecklist" style="display:flex; flex-wrap:wrap; gap:10px 18px; margin-bottom:10px; font-size:13px;">-</div>
+        <label>Jenis Pemeriksaan Lain / Tambahan (tanpa tarif)</label>
         <textarea id="rmJenisLab" placeholder="Contoh: Gula Darah Sewaktu, Hemoglobin, Urin Lengkap"></textarea>
         <p style="font-size:12px; color:var(--muted);">Pasien otomatis masuk antrian klaster LK (Laboratorium). Hasil dicatat petugas lab, nanti kebaca balik di riwayat pasien.</p>
       </div>
 
       <div style="border-top:1px solid #e5e7eb; padding-top:16px; margin-bottom:16px;">
         <h2>Tindakan Medis (non-obat)</h2>
+        <div class="grid-2">
+          <div>
+            <label>Pilih dari Tarif (opsional)</label>
+            <select id="tmTarifPilih" onchange="pilihTarifTindakan()">
+              <option value="">-- Tindakan di luar daftar tarif --</option>
+            </select>
+          </div>
+          <div>
+            <label>Tarif</label>
+            <div id="tmTarifPreview" style="padding:9px 0; font-size:13px; font-weight:600; color:var(--navy-2, #173b5e);">-</div>
+          </div>
+        </div>
         <div class="grid-2">
           <div>
             <label>Nama Tindakan</label>
@@ -118,8 +145,8 @@
         </div>
         <button type="button" class="btn-secondary" onclick="tambahTindakan()">+ Tambah Tindakan</button>
         <table style="margin-top:12px;">
-          <thead><tr><th>Tindakan</th><th>Catatan</th><th></th></tr></thead>
-          <tbody id="tabelTindakan"><tr><td colspan="3" style="color:#9ca3af;">Belum ada tindakan ditambahkan.</td></tr></tbody>
+          <thead><tr><th>Tindakan</th><th>Catatan</th><th>Tarif</th><th></th></tr></thead>
+          <tbody id="tabelTindakan"><tr><td colspan="4" style="color:#9ca3af;">Belum ada tindakan ditambahkan.</td></tr></tbody>
         </table>
       </div>
 
@@ -177,10 +204,11 @@
 
         <table style="margin-top:12px;">
           <thead>
-            <tr><th>Obat</th><th>Dosis</th><th>Jumlah</th><th>Aturan Pakai</th><th></th></tr>
+            <tr><th>Obat</th><th>Dosis</th><th>Jumlah</th><th>Aturan Pakai</th><th>Harga</th><th></th></tr>
           </thead>
-          <tbody id="tabelResep"><tr><td colspan="5" style="color:#9ca3af;">Belum ada obat ditambahkan.</td></tr></tbody>
+          <tbody id="tabelResep"><tr><td colspan="6" style="color:#9ca3af;">Belum ada obat ditambahkan.</td></tr></tbody>
         </table>
+        <div id="totalResepPreview" style="text-align:right; font-size:13px; font-weight:600; margin-top:6px; color:var(--navy-2, #173b5e);"></div>
       </div>
 
       <button type="submit" class="btn-primary">Simpan Rekam Medis & Selesaikan</button>
@@ -422,6 +450,7 @@ let daftarTindakanMedis = [];
 let kunjunganLabAktif = null;
 let rujukanLabAktif = null;
 let daftarHasilLab = [];
+let daftarTarifRM = []; // cache master_tarif, dipakai buat 3 titik: konsultasi/pemeriksaan, tindakan, lab
 
 
 // Daftar diagnosa Kompetensi 4A (wajib tuntas FKTP, sesuai Panduan Kapitasi BPJS).
@@ -515,6 +544,7 @@ function isiOtomatisIcd() {
     document.getElementById("modeKlinis").style.display = "block";
     muatDaftarDiagnosaBpjs();
     await muatDaftarObat();
+    await muatMasterTarifRM();
     await muatAntrian();
   } else {
     document.getElementById("modePendaftaran").style.display = "block";
@@ -522,20 +552,106 @@ function isiOtomatisIcd() {
 })();
 
 async function muatDaftarObat() {
-  const { data, error } = await supabaseClient.from("obat").select("nama_obat, dosis, stok").gt("stok", 0).order("nama_obat");
+  const { data, error } = await supabaseClient.from("obat").select("nama_obat, dosis, stok, harga").gt("stok", 0).order("nama_obat");
   if (error) { console.error(error); return; }
 
-  // Kelompokkan per nama obat, dan per dosis (jumlahkan stok kalau ada beberapa batch dosis sama)
+  // Kelompokkan per nama obat, dan per dosis (jumlahkan stok kalau ada beberapa batch dosis sama).
+  // Harga dipakai dari batch pertama yang ketemu (harga antar batch obat sama harusnya seragam).
   const perNama = {};
+  const hargaPerNamaDosis = {};
   data.forEach(o => {
     if (!perNama[o.nama_obat]) perNama[o.nama_obat] = {};
     const key = o.dosis || "-";
     perNama[o.nama_obat][key] = (perNama[o.nama_obat][key] || 0) + o.stok;
+    const hargaKey = `${o.nama_obat}|||${key}`;
+    if (hargaPerNamaDosis[hargaKey] === undefined) hargaPerNamaDosis[hargaKey] = o.harga || 0;
   });
   window._daftarObatPerNama = perNama;
+  window._hargaObatPerNamaDosis = hargaPerNamaDosis;
 
   const dl = document.getElementById("daftarObatList");
   dl.innerHTML = Object.keys(perNama).map(nama => `<option value="${nama}">`).join("");
+}
+
+// ---------- TARIF UMUM — konsultasi/pemeriksaan, tindakan, lab ----------
+async function muatMasterTarifRM() {
+  const { data, error } = await supabaseClient.from("master_tarif").select("*").eq("aktif", true).order("kategori").order("nama_layanan");
+  if (error) { console.error(error); return; }
+  daftarTarifRM = data || [];
+
+  // Dropdown Konsultasi/Pemeriksaan
+  const selKonsultasi = document.getElementById("rmTarifLayanan");
+  const itemKonsultasi = daftarTarifRM.filter(t => t.kategori === "Konsultasi" || t.kategori === "Pemeriksaan");
+  selKonsultasi.innerHTML = `<option value="">-- Tidak dibilling / gratis --</option>` +
+    itemKonsultasi.map(t => `<option value="${t.id}">${t.nama_layanan} (${t.kategori})</option>`).join("");
+
+  // Dropdown Tindakan
+  const selTindakan = document.getElementById("tmTarifPilih");
+  const itemTindakan = daftarTarifRM.filter(t => t.kategori === "Tindakan");
+  selTindakan.innerHTML = `<option value="">-- Tindakan di luar daftar tarif --</option>` +
+    itemTindakan.map(t => `<option value="${t.id}">${t.nama_layanan}</option>`).join("");
+
+  // Checklist Lab
+  const itemLab = daftarTarifRM.filter(t => t.kategori === "Laboratorium");
+  const labDiv = document.getElementById("labTarifChecklist");
+  labDiv.innerHTML = itemLab.length ? itemLab.map(t => `
+    <label style="font-weight:400; display:inline-flex; align-items:center; gap:5px;">
+      <input type="checkbox" class="labTarifItem" value="${t.id}" style="width:auto;"> ${t.nama_layanan}
+    </label>
+  `).join("") : "Belum ada tarif Laboratorium — isi lewat menu Pengaturan.";
+}
+
+// Ambil tarif sesuai jenis bayar kunjungan aktif (BPJS pakai tarif_bpjs, biasanya 0/ditanggung kapitasi).
+function hargaTarifSesuaiBayar(tarifItem) {
+  if (!kunjunganAktif) return 0;
+  return kunjunganAktif.jenis_bayar === "BPJS" ? (tarifItem.tarif_bpjs || 0) : (tarifItem.tarif_umum || 0);
+}
+
+function tampilTarifLayanan() {
+  const id = document.getElementById("rmTarifLayanan").value;
+  const preview = document.getElementById("rmTarifPreview");
+  if (!id) { preview.textContent = "-"; return; }
+  const t = daftarTarifRM.find(x => x.id === id);
+  if (!t) { preview.textContent = "-"; return; }
+  const harga = hargaTarifSesuaiBayar(t);
+  preview.textContent = `Rp ${formatRupiahRM(harga)} (${kunjunganAktif?.jenis_bayar || "-"})`;
+}
+
+function pilihTarifTindakan() {
+  const id = document.getElementById("tmTarifPilih").value;
+  const preview = document.getElementById("tmTarifPreview");
+  if (!id) { preview.textContent = "-"; return; }
+  const t = daftarTarifRM.find(x => x.id === id);
+  if (!t) { preview.textContent = "-"; return; }
+  document.getElementById("tmNama").value = t.nama_layanan;
+  const harga = hargaTarifSesuaiBayar(t);
+  preview.textContent = `Rp ${formatRupiahRM(harga)}`;
+}
+
+function formatRupiahRM(angka) {
+  return new Intl.NumberFormat("id-ID").format(angka || 0);
+}
+
+// Tambah satu baris tagihan ke tagihan_kunjungan. Dipanggil setelah rekam_medis/
+// tindakan_medis/resep/rujukan_lab berhasil tersimpan — kegagalan di sini gak
+// membatalkan data klinis yang udah tersimpan, cuma dicatat sebagai peringatan
+// non-blocking di layar (lihat pemanggilnya). Mengembalikan pesan error kalau gagal, null kalau sukses.
+async function tambahTagihan(kategori, namaLayanan, jumlah, hargaSatuan, sumberTabel, sumberId, tarifId) {
+  const { error } = await supabaseClient.from("tagihan_kunjungan").insert({
+    kunjungan_id: kunjunganAktif.id,
+    kategori,
+    nama_layanan: namaLayanan,
+    jumlah,
+    harga_satuan: hargaSatuan,
+    subtotal: hargaSatuan * jumlah,
+    jenis_bayar: kunjunganAktif.jenis_bayar,
+    sumber_tabel: sumberTabel,
+    sumber_id: sumberId,
+    tarif_id: tarifId,
+    petugas_id: profilSaya.id
+  });
+  if (error) { console.error("Gagal simpan tagihan:", error); return error.message; }
+  return null;
 }
 
 function muatDosisUntukObat() {
@@ -586,14 +702,22 @@ muatDaftarKlasterTujuan();
 function tambahTindakan() {
   const nama = document.getElementById("tmNama").value.trim();
   const catatan = document.getElementById("tmCatatan").value.trim();
+  const tarifId = document.getElementById("tmTarifPilih").value || null;
   if (!nama) {
     alert("Isi nama tindakan dulu.");
     return;
   }
-  daftarTindakanMedis.push({ nama_tindakan: nama, catatan });
+  let harga = 0;
+  if (tarifId) {
+    const t = daftarTarifRM.find(x => x.id === tarifId);
+    if (t) harga = hargaTarifSesuaiBayar(t);
+  }
+  daftarTindakanMedis.push({ nama_tindakan: nama, catatan, tarif_id: tarifId, harga_satuan: harga });
   renderTabelTindakan();
   document.getElementById("tmNama").value = "";
   document.getElementById("tmCatatan").value = "";
+  document.getElementById("tmTarifPilih").value = "";
+  document.getElementById("tmTarifPreview").textContent = "-";
 }
 
 function hapusTindakan(idx) {
@@ -604,13 +728,14 @@ function hapusTindakan(idx) {
 function renderTabelTindakan() {
   const tbody = document.getElementById("tabelTindakan");
   if (!daftarTindakanMedis.length) {
-    tbody.innerHTML = `<tr><td colspan="3" style="color:#9ca3af;">Belum ada tindakan ditambahkan.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" style="color:#9ca3af;">Belum ada tindakan ditambahkan.</td></tr>`;
     return;
   }
   tbody.innerHTML = daftarTindakanMedis.map((t, i) => `
     <tr>
       <td>${t.nama_tindakan}</td>
       <td>${t.catatan || "-"}</td>
+      <td>${t.tarif_id ? "Rp " + formatRupiahRM(t.harga_satuan) : "-"}</td>
       <td><button type="button" class="btn-secondary" onclick="hapusTindakan(${i})">Hapus</button></td>
     </tr>
   `).join("");
@@ -641,7 +766,11 @@ function tambahObatResep() {
   }
 
   const aturanPakai = [frekuensi, waktu].filter(Boolean).join(" — ");
-  daftarObatResep.push({ nama_obat: nama, dosis, jumlah, aturan_pakai: aturanPakai });
+  const hargaKey = `${nama}|||${dosis}`;
+  const hargaSatuanAsli = (window._hargaObatPerNamaDosis || {})[hargaKey] || 0;
+  // BPJS: obat FKTP ditanggung kapitasi, jadi gak dibilling ke pasien (harga 0). Umum: bayar harga asli.
+  const hargaSatuan = (kunjunganAktif?.jenis_bayar === "BPJS") ? 0 : hargaSatuanAsli;
+  daftarObatResep.push({ nama_obat: nama, dosis, jumlah, aturan_pakai: aturanPakai, harga_satuan: hargaSatuan, subtotal: hargaSatuan * jumlah });
   renderTabelResep();
 
   document.getElementById("rObatNama").value = "";
@@ -660,8 +789,10 @@ function hapusObatResep(idx) {
 
 function renderTabelResep() {
   const tbody = document.getElementById("tabelResep");
+  const totalEl = document.getElementById("totalResepPreview");
   if (!daftarObatResep.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="color:#9ca3af;">Belum ada obat ditambahkan.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="color:#9ca3af;">Belum ada obat ditambahkan.</td></tr>`;
+    totalEl.textContent = "";
     return;
   }
   tbody.innerHTML = daftarObatResep.map((o, i) => `
@@ -670,9 +801,12 @@ function renderTabelResep() {
       <td>${o.dosis || "-"}</td>
       <td>${o.jumlah}</td>
       <td>${o.aturan_pakai || "-"}</td>
+      <td>Rp ${formatRupiahRM(o.subtotal || 0)}</td>
       <td><button type="button" class="btn-secondary" onclick="hapusObatResep(${i})">Hapus</button></td>
     </tr>
   `).join("");
+  const total = daftarObatResep.reduce((a, o) => a + (o.subtotal || 0), 0);
+  totalEl.textContent = kunjunganAktif?.jenis_bayar === "BPJS" ? "Obat ditanggung kapitasi BPJS (Rp 0)" : `Total Obat: Rp ${formatRupiahRM(total)}`;
 }
 
 async function muatAntrian() {
@@ -778,6 +912,12 @@ function bukaFormRM(kunjungan, bisaIsi = true) {
   document.getElementById("rmKlasterTujuan").value = "";
   document.getElementById("rmAlasanRujukan").value = "";
   document.getElementById("cardFormHasilLab").style.display = "none";
+  document.getElementById("rmTarifLayanan").value = "";
+  document.getElementById("rmTarifPreview").textContent = "-";
+  document.getElementById("tmTarifPilih").value = "";
+  document.getElementById("tmTarifPreview").textContent = "-";
+  document.querySelectorAll(".labTarifItem").forEach(cb => cb.checked = false);
+  document.getElementById("totalResepPreview").textContent = "";
 
   // Mode lihat saja: matikan semua input, sembunyikan tombol simpan
   const form = document.getElementById("formRM");
@@ -1031,32 +1171,53 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
   }
   catatLogAksesRm(kunjunganAktif.pasien_id, kunjunganAktif.id, "ubah", "Isi rekam medis (SOAP)");
 
+  const peringatanTagihan = [];
+
+  // 1b. Kalau pilih Jenis Layanan (Tarif Konsultasi/Pemeriksaan), catat tagihan
+  const tarifLayananId = document.getElementById("rmTarifLayanan").value;
+  if (tarifLayananId) {
+    const t = daftarTarifRM.find(x => x.id === tarifLayananId);
+    if (t) {
+      const err = await tambahTagihan(t.kategori, t.nama_layanan, 1, hargaTarifSesuaiBayar(t), "rekam_medis", dataRM.id, t.id);
+      if (err) peringatanTagihan.push(`tagihan ${t.kategori.toLowerCase()}`);
+    }
+  }
+
   // 2. Kalau perlu resep dan sudah ada obat ditambahkan, simpan ke tabel resep
   if (document.getElementById("rmButuhObat").checked && daftarObatResep.length > 0) {
-    const { error: errResep } = await supabaseClient.from("resep").insert({
+    const { data: dataResep, error: errResep } = await supabaseClient.from("resep").insert({
       kunjungan_id: kunjunganAktif.id,
       rekam_medis_id: dataRM.id,
       dokter_id: profilSaya.id,
       daftar_obat: daftarObatResep,
       status: "menunggu"
-    });
+    }).select().single();
     if (errResep) {
       msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi gagal simpan resep: ${errResep.message}</div>`;
       return;
+    }
+    for (const o of daftarObatResep) {
+      const err = await tambahTagihan("Obat", `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`, o.jumlah, o.harga_satuan || 0, "resep", dataResep.id, null);
+      if (err) { peringatanTagihan.push("tagihan obat"); break; }
     }
   }
 
   // 2b. Kalau ada tindakan medis (non-obat) ditambahkan, simpan ke tabel tindakan_medis
   if (daftarTindakanMedis.length > 0) {
-    const { error: errTindakan } = await supabaseClient.from("tindakan_medis").insert({
+    const { data: dataTindakan, error: errTindakan } = await supabaseClient.from("tindakan_medis").insert({
       kunjungan_id: kunjunganAktif.id,
       rekam_medis_id: dataRM.id,
       daftar_tindakan: daftarTindakanMedis,
       petugas_id: profilSaya.id
-    });
+    }).select().single();
     if (errTindakan) {
       msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, tapi gagal simpan tindakan medis: ${errTindakan.message}</div>`;
       return;
+    }
+    for (const t of daftarTindakanMedis) {
+      if (!t.tarif_id) continue; // tindakan di luar daftar tarif, gak dibilling
+      const err = await tambahTagihan("Tindakan", t.nama_tindakan, 1, t.harga_satuan || 0, "tindakan_medis", dataTindakan.id, t.tarif_id);
+      if (err) { peringatanTagihan.push("tagihan tindakan"); break; }
     }
   }
 
@@ -1074,7 +1235,11 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
   // 3b. Kalau perlu rujukan lab, bikin antrian baru di klaster LK + catat permintaan
   let pesanLab = "";
   if (document.getElementById("rmButuhLab").checked) {
-    const jenisLab = document.getElementById("rmJenisLab").value.trim();
+    const itemLabTerpilih = Array.from(document.querySelectorAll(".labTarifItem:checked"))
+      .map(cb => daftarTarifRM.find(t => t.id === cb.value))
+      .filter(Boolean);
+    const jenisLabTambahan = document.getElementById("rmJenisLab").value.trim();
+    const jenisLab = [...itemLabTerpilih.map(t => t.nama_layanan), jenisLabTambahan].filter(Boolean).join(", ");
     const klasterLk = (window._daftarKlaster || []).find(k => k.kode === "LK");
 
     if (!jenisLab) {
@@ -1122,6 +1287,11 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
     if (errRujukanLab) {
       msgBox.innerHTML = `<div class="msg msg-error">Rekam medis tersimpan, antrian lab dibuat, tapi catatan permintaan lab gagal tersimpan: ${errRujukanLab.message}</div>`;
       return;
+    }
+
+    for (const t of itemLabTerpilih) {
+      const err = await tambahTagihan("Laboratorium", t.nama_layanan, 1, hargaTarifSesuaiBayar(t), "rujukan_lab", kunjunganLab.id, t.id);
+      if (err) { peringatanTagihan.push("tagihan lab"); break; }
     }
 
     pesanLab = ` Pasien otomatis masuk antrian No. ${noAntrianLab} di klaster LK (Laboratorium).`;
@@ -1179,7 +1349,10 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
     pesanRujukan = ` Pasien otomatis masuk antrian No. ${noAntrianBaru} di klaster tujuan.`;
   }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Rekam medis tersimpan, tercatat atas nama ${profilSaya.nama}.${pesanLab}${pesanRujukan}</div>`;
+  const pesanTagihan = peringatanTagihan.length
+    ? ` (Peringatan: gagal catat ${[...new Set(peringatanTagihan)].join(", ")} — cek Master Tarif/koneksi.)`
+    : "";
+  msgBox.innerHTML = `<div class="msg msg-success">Rekam medis tersimpan, tercatat atas nama ${profilSaya.nama}.${pesanLab}${pesanRujukan}${pesanTagihan}</div>`;
   document.getElementById("cardFormRM").style.display = "none";
   kunjunganAktif = null;
   daftarObatResep = [];

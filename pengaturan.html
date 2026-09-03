@@ -151,6 +151,51 @@
     </div>
   </div>
 
+  <!-- ============ MASTER TARIF (admin only) ============ -->
+  <div class="card" id="cardTarif" style="display:none;">
+    <h2>Master Tarif Umum <span style="font-weight:400; font-size:12px; color:#6b7280;">(harga layanan buat pasien Umum &amp; BPJS — otomatis muncul saat dokter/perawat/bidan input pemeriksaan, tindakan, resep, atau lab)</span></h2>
+    <div id="msgBoxTarif"></div>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+      <button type="button" class="lap-tab active" id="tarifFilter-Semua" onclick="filterTarif('Semua')">Semua</button>
+      <button type="button" class="lap-tab" id="tarifFilter-Konsultasi" onclick="filterTarif('Konsultasi')">Konsultasi</button>
+      <button type="button" class="lap-tab" id="tarifFilter-Pemeriksaan" onclick="filterTarif('Pemeriksaan')">Pemeriksaan</button>
+      <button type="button" class="lap-tab" id="tarifFilter-Tindakan" onclick="filterTarif('Tindakan')">Tindakan</button>
+      <button type="button" class="lap-tab" id="tarifFilter-Laboratorium" onclick="filterTarif('Laboratorium')">Laboratorium</button>
+    </div>
+
+    <table>
+      <thead><tr><th>Kategori</th><th>Nama Layanan</th><th>Tarif Umum (Rp)</th><th>Tarif BPJS (Rp)</th><th>Status</th><th>Aksi</th></tr></thead>
+      <tbody id="tabelTarif"><tr><td colspan="6">Memuat...</td></tr></tbody>
+    </table>
+
+    <h2 style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">Tambah / Edit Tarif</h2>
+    <input type="hidden" id="tarifEditId">
+    <div class="grid-3">
+      <div>
+        <label>Kategori *</label>
+        <select id="tarifKategori" required>
+          <option value="Konsultasi">Konsultasi</option>
+          <option value="Pemeriksaan">Pemeriksaan</option>
+          <option value="Tindakan">Tindakan</option>
+          <option value="Laboratorium">Laboratorium</option>
+        </select>
+      </div>
+      <div><label>Nama Layanan *</label><input type="text" id="tarifNama" required placeholder="mis. Jahit Luka (per jahitan)"></div>
+      <div><label>Status</label>
+        <select id="tarifAktif"><option value="true">Aktif</option><option value="false">Nonaktif</option></select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div><label>Tarif Umum (Rp) *</label><input type="number" id="tarifUmum" required min="0" step="500"></div>
+      <div><label>Tarif BPJS (Rp)</label><input type="number" id="tarifBpjs" min="0" step="500" value="0"></div>
+    </div>
+    <label>Keterangan</label>
+    <input type="text" id="tarifKeterangan" placeholder="Opsional, mis. Ditanggung kapitasi BPJS FKTP">
+    <button type="button" class="btn-primary" onclick="simpanTarif()">Simpan Tarif</button>
+    <button type="button" class="btn-secondary" id="btnBatalEditTarif" style="display:none;" onclick="batalEditTarif()">Batal Edit</button>
+  </div>
+
 </div>
 
 <script src="js/supabaseClient.js"></script>
@@ -174,6 +219,8 @@ let pegawaiEdit = null;
     document.getElementById("cardAdmin").style.display = "block";
     await muatKlasterUntukSelect();
     await muatDaftarPegawai();
+    document.getElementById("cardTarif").style.display = "block";
+    await muatMasterTarif();
   }
 })();
 
@@ -388,6 +435,105 @@ async function simpanAkses() {
     ? `<div class="msg msg-error">Gagal simpan akses: ${error}</div>`
     : `<div class="msg msg-success">Klaster tambahan & hak akses berhasil disimpan.</div>`;
   if (!error) await muatDaftarPegawai();
+}
+
+// ---------- MASTER TARIF ----------
+let daftarTarifGlobal = [];
+let filterTarifAktif = "Semua";
+
+function filterTarif(kategori) {
+  filterTarifAktif = kategori;
+  ["Semua", "Konsultasi", "Pemeriksaan", "Tindakan", "Laboratorium"].forEach(k => {
+    document.getElementById(`tarifFilter-${k}`).classList.toggle("active", k === kategori);
+  });
+  renderTabelTarif();
+}
+
+async function muatMasterTarif() {
+  const { data, error } = await supabaseClient.from("master_tarif").select("*").order("kategori").order("nama_layanan");
+  if (error) {
+    document.getElementById("tabelTarif").innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`;
+    return;
+  }
+  daftarTarifGlobal = data || [];
+  renderTabelTarif();
+}
+
+function formatRupiah(angka) {
+  return new Intl.NumberFormat("id-ID").format(angka || 0);
+}
+
+function renderTabelTarif() {
+  const tbody = document.getElementById("tabelTarif");
+  const data = filterTarifAktif === "Semua" ? daftarTarifGlobal : daftarTarifGlobal.filter(t => t.kategori === filterTarifAktif);
+
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada tarif di kategori ini.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(t => `
+    <tr>
+      <td>${t.kategori}</td>
+      <td>${t.nama_layanan}${t.keterangan ? `<br><span style="font-size:11px; color:var(--muted);">${t.keterangan}</span>` : ""}</td>
+      <td>Rp ${formatRupiah(t.tarif_umum)}</td>
+      <td>Rp ${formatRupiah(t.tarif_bpjs)}</td>
+      <td><span class="badge ${t.aktif ? "badge-selesai" : "badge-batal"}">${t.aktif ? "Aktif" : "Nonaktif"}</span></td>
+      <td><button type="button" class="btn-secondary" onclick="editTarif('${t.id}')">Edit</button></td>
+    </tr>
+  `).join("");
+}
+
+function editTarif(id) {
+  const t = daftarTarifGlobal.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById("tarifEditId").value = t.id;
+  document.getElementById("tarifKategori").value = t.kategori;
+  document.getElementById("tarifNama").value = t.nama_layanan;
+  document.getElementById("tarifUmum").value = t.tarif_umum;
+  document.getElementById("tarifBpjs").value = t.tarif_bpjs;
+  document.getElementById("tarifKeterangan").value = t.keterangan || "";
+  document.getElementById("tarifAktif").value = String(t.aktif);
+  document.getElementById("btnBatalEditTarif").style.display = "inline-block";
+  document.getElementById("cardTarif").scrollIntoView({ behavior: "smooth", block: "end" });
+}
+
+function batalEditTarif() {
+  document.getElementById("tarifEditId").value = "";
+  document.getElementById("tarifNama").value = "";
+  document.getElementById("tarifUmum").value = "";
+  document.getElementById("tarifBpjs").value = "0";
+  document.getElementById("tarifKeterangan").value = "";
+  document.getElementById("tarifAktif").value = "true";
+  document.getElementById("btnBatalEditTarif").style.display = "none";
+}
+
+async function simpanTarif() {
+  const msgBox = document.getElementById("msgBoxTarif");
+  const id = document.getElementById("tarifEditId").value;
+  const nama = document.getElementById("tarifNama").value.trim();
+  const tarifUmum = parseFloat(document.getElementById("tarifUmum").value);
+
+  if (!nama) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama layanan dulu.</div>`; return; }
+  if (isNaN(tarifUmum) || tarifUmum < 0) { msgBox.innerHTML = `<div class="msg msg-error">Isi tarif Umum dengan angka valid.</div>`; return; }
+
+  const payload = {
+    kategori: document.getElementById("tarifKategori").value,
+    nama_layanan: nama,
+    tarif_umum: tarifUmum,
+    tarif_bpjs: parseFloat(document.getElementById("tarifBpjs").value) || 0,
+    keterangan: document.getElementById("tarifKeterangan").value.trim() || null,
+    aktif: document.getElementById("tarifAktif").value === "true",
+    updated_by: profilSaya.id,
+    updated_at: new Date().toISOString()
+  };
+
+  const { error } = id
+    ? await supabaseClient.from("master_tarif").update(payload).eq("id", id)
+    : await supabaseClient.from("master_tarif").insert(payload);
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Tarif "${nama}" tersimpan.</div>`;
+  batalEditTarif();
+  await muatMasterTarif();
 }
 </script>
 

@@ -2071,6 +2071,119 @@ create trigger trg_audit_kontrol_prolanis after insert or update or delete on ko
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 59. KLASTER 3 — FASE 7: Register & Kohort (agregasi query,
+--     tanpa tabel baru — gabung semua tabel klaster 3 yang sudah
+--     ada), dan Rujukan & Permintaan Lab (tabel baru 1, standalone
+--     dari sistem kunjungan/antrian, sejalan dengan pola pasien_id
+--     yang dipakai semua modul Klaster 3 lainnya).
+-- ============================================================
+create table if not exists rujukan_lab_k3 (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis text not null check (jenis in ('Rujukan Internal', 'Rujukan FKRTL', 'Permintaan Lab')),
+  tujuan text,
+  diagnosa_alasan text,
+  catatan text,
+  status text not null default 'Diajukan' check (status in ('Diajukan', 'Diterima', 'Selesai', 'Batal')),
+  hasil text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_rujukan_lab_k3_pasien on rujukan_lab_k3(pasien_id);
+create index if not exists idx_rujukan_lab_k3_tanggal on rujukan_lab_k3(tanggal);
+
+alter table rujukan_lab_k3 enable row level security;
+create policy "authenticated_all_rujukan_lab_k3" on rujukan_lab_k3 for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_rujukan_lab_k3 on rujukan_lab_k3;
+create trigger trg_audit_rujukan_lab_k3 after insert or update or delete on rujukan_lab_k3
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- 60. TARIF UMUM & TAGIHAN (BILLING) — fondasi buat Kasir.
+--     master_tarif: daftar harga per layanan (Konsultasi/
+--     Pemeriksaan/Tindakan/Laboratorium), beda kolom buat
+--     tarif Umum vs BPJS (BPJS biasanya 0 = ditanggung kapitasi,
+--     tapi tetap dicatat biar Kasir bisa verifikasi).
+--     tagihan_kunjungan: baris tagihan per kunjungan, auto-
+--     terisi tiap kali dokter/perawat/bidan input pemeriksaan,
+--     tindakan, resep obat, atau permintaan lab. Kasir (fitur
+--     nanti) tinggal baca & tutup tagihan dari sini.
+-- ============================================================
+create table if not exists master_tarif (
+  id uuid primary key default gen_random_uuid(),
+  kategori text not null check (kategori in ('Konsultasi', 'Pemeriksaan', 'Tindakan', 'Laboratorium')),
+  nama_layanan text not null,
+  tarif_umum numeric(12,2) not null default 0,
+  tarif_bpjs numeric(12,2) not null default 0,
+  keterangan text,
+  aktif boolean not null default true,
+  updated_by uuid references profil_pegawai(id),
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_master_tarif_kategori on master_tarif(kategori);
+
+alter table master_tarif enable row level security;
+create policy "authenticated_read_master_tarif" on master_tarif for select to authenticated using (true);
+create policy "admin_write_master_tarif" on master_tarif for insert to authenticated with check (
+  exists (select 1 from profil_pegawai where id = auth.uid() and role = 'admin')
+);
+create policy "admin_update_master_tarif" on master_tarif for update to authenticated using (
+  exists (select 1 from profil_pegawai where id = auth.uid() and role = 'admin')
+);
+
+create table if not exists tagihan_kunjungan (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_id uuid not null references kunjungan(id),
+  kategori text not null check (kategori in ('Konsultasi', 'Pemeriksaan', 'Tindakan', 'Laboratorium', 'Obat')),
+  nama_layanan text not null,
+  jumlah int not null default 1,
+  harga_satuan numeric(12,2) not null default 0,
+  subtotal numeric(12,2) not null default 0,
+  jenis_bayar text not null check (jenis_bayar in ('BPJS', 'Umum')),
+  sumber_tabel text,          -- 'rekam_medis' | 'tindakan_medis' | 'resep' | 'rujukan_lab'
+  sumber_id uuid,
+  tarif_id uuid references master_tarif(id),
+  status text not null default 'belum_dibayar' check (status in ('belum_dibayar', 'lunas', 'batal')),
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_tagihan_kunjungan_kunjungan on tagihan_kunjungan(kunjungan_id);
+create index if not exists idx_tagihan_kunjungan_status on tagihan_kunjungan(status);
+
+alter table tagihan_kunjungan enable row level security;
+create policy "authenticated_all_tagihan_kunjungan" on tagihan_kunjungan for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_tagihan_kunjungan on tagihan_kunjungan;
+create trigger trg_audit_tagihan_kunjungan after insert or update or delete on tagihan_kunjungan
+  for each row execute function fn_audit_log();
+
+-- Seed contoh tarif dasar biar Master Tarif gak kosong melompong pas pertama
+-- kali dibuka. Admin bebas edit/hapus/tambah lewat menu Pengaturan.
+insert into master_tarif (kategori, nama_layanan, tarif_umum, tarif_bpjs, keterangan)
+select * from (values
+  ('Konsultasi', 'Konsultasi Dokter Umum', 25000::numeric, 0::numeric, 'Kapitasi BPJS FKTP'),
+  ('Konsultasi', 'Konsultasi Dokter Gigi', 25000::numeric, 0::numeric, 'Kapitasi BPJS FKTP'),
+  ('Pemeriksaan', 'Pemeriksaan Umum', 15000::numeric, 0::numeric, NULL),
+  ('Tindakan', 'Jahit Luka (per jahitan)', 10000::numeric, 0::numeric, NULL),
+  ('Tindakan', 'Nebulizer', 20000::numeric, 0::numeric, NULL),
+  ('Tindakan', 'Pasang Infus', 30000::numeric, 0::numeric, NULL),
+  ('Tindakan', 'Ganti Verban', 15000::numeric, 0::numeric, NULL),
+  ('Tindakan', 'Ekstraksi Gigi Sederhana', 50000::numeric, 0::numeric, NULL),
+  ('Laboratorium', 'Gula Darah Sewaktu', 15000::numeric, 0::numeric, NULL),
+  ('Laboratorium', 'Hemoglobin', 10000::numeric, 0::numeric, NULL),
+  ('Laboratorium', 'Urin Lengkap', 20000::numeric, 0::numeric, NULL),
+  ('Laboratorium', 'Kolesterol Total', 25000::numeric, 0::numeric, NULL),
+  ('Laboratorium', 'Asam Urat', 15000::numeric, 0::numeric, NULL)
+) as seed(kategori, nama_layanan, tarif_umum, tarif_bpjs, keterangan)
+where not exists (select 1 from master_tarif);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
