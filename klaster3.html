@@ -679,10 +679,152 @@
         </div>
 
         <div id="lansiaPanel-umum">
-          <div class="k3-segera"><div class="ic">🧓</div><div class="t">Pemeriksaan Umum &amp; PTM Lansia</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">🧓</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pemeriksaan dasar &amp; skrining PTM (hipertensi/DM) khusus lansia.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="lansiaUmumCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienLansiaUmum();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienLansiaUmum()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="lansiaUmumHasilCari"></div>
+          </div>
+
+          <div id="lansiaUmumWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Pemeriksaan Umum &amp; PTM — <span id="lansiaUmumNamaPasien"></span></h2>
+              <div id="msgLansiaUmum"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="lansiaUmumTanggal" required></div>
+                <div><label>Tekanan Darah</label><input type="text" id="lansiaUmumTd" placeholder="mis. 120/80 mmHg"></div>
+                <div><label>Gula Darah Sewaktu</label><input type="text" id="lansiaUmumGds" placeholder="mg/dL"></div>
+              </div>
+              <div class="grid-3">
+                <div><label>Berat Badan</label><input type="text" id="lansiaUmumBb" placeholder="kg"></div>
+                <div><label>Tinggi Badan</label><input type="text" id="lansiaUmumTb" placeholder="cm"></div>
+                <div><label>Lingkar Perut</label><input type="text" id="lansiaUmumLp" placeholder="cm"></div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label>Hasil Skrining Hipertensi</label>
+                  <select id="lansiaUmumHipertensi">
+                    <option value="">-- Pilih --</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Pra-Hipertensi">Pra-Hipertensi</option>
+                    <option value="Hipertensi">Hipertensi</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil Skrining DM</label>
+                  <select id="lansiaUmumDm">
+                    <option value="">-- Pilih --</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Pra-Diabetes">Pra-Diabetes</option>
+                    <option value="Diabetes">Diabetes</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="lansiaUmumCatatan" placeholder="Temuan lain / rencana tindak lanjut"></textarea>
+              <button class="btn-primary" onclick="simpanLansiaUmum()">Simpan Pemeriksaan Umum &amp; PTM Lansia</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Pemeriksaan Umum &amp; PTM Lansia</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>TD</th><th>GDS</th><th>Hipertensi</th><th>DM</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatLansiaUmum"><tr><td colspan="6">Belum ada catatan pemeriksaan umum &amp; PTM lansia.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
         <div id="lansiaPanel-geriatri" style="display:none;">
-          <div class="k3-segera"><div class="ic">🧠</div><div class="t">Skrining Geriatri</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#6a4c93;">
+            <h2><span class="card-num" style="background:#6a4c93;">🧠</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Skrining geriatri: status gizi, tingkat kemandirian (ADL), status kognitif, dan risiko jatuh.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="geriatriCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienGeriatri();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienGeriatri()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="geriatriHasilCari"></div>
+          </div>
+
+          <div id="geriatriWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Skrining Geriatri — <span id="geriatriNamaPasien"></span></h2>
+              <div id="msgGeriatri"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="geriatriTanggal" required></div>
+                <div>
+                  <label>Status Gizi</label>
+                  <select id="geriatriGizi">
+                    <option value="">-- Pilih --</option>
+                    <option value="Gizi Baik">Gizi Baik</option>
+                    <option value="Berisiko Malnutrisi">Berisiko Malnutrisi</option>
+                    <option value="Malnutrisi">Malnutrisi</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Tingkat Kemandirian (ADL)</label>
+                  <select id="geriatriAdl">
+                    <option value="">-- Pilih --</option>
+                    <option value="Mandiri">Mandiri</option>
+                    <option value="Ketergantungan Ringan">Ketergantungan Ringan</option>
+                    <option value="Ketergantungan Sedang">Ketergantungan Sedang</option>
+                    <option value="Ketergantungan Berat">Ketergantungan Berat</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label>Status Kognitif</label>
+                  <select id="geriatriKognitif">
+                    <option value="">-- Pilih --</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Curiga Gangguan Kognitif">Curiga Gangguan Kognitif</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Risiko Jatuh</label>
+                  <select id="geriatriJatuh">
+                    <option value="">-- Pilih --</option>
+                    <option value="Rendah">Rendah</option>
+                    <option value="Sedang">Sedang</option>
+                    <option value="Tinggi">Tinggi</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="geriatriCatatan" placeholder="Temuan lain / rencana tindak lanjut"></textarea>
+              <button class="btn-primary" onclick="simpanGeriatri()">Simpan Skrining Geriatri</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Skrining Geriatri</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Gizi</th><th>ADL</th><th>Kognitif</th><th>Risiko Jatuh</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatGeriatri"><tr><td colspan="6">Belum ada catatan skrining geriatri.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
         <div id="lansiaPanel-mata" style="display:none;">
           <div class="k3-segera"><div class="ic">👁</div><div class="t">Skrining Indera Penglihatan</div>Menu ini segera dibangun di sesi berikutnya.</div>
@@ -1746,6 +1888,243 @@ async function simpanKerja() {
   document.getElementById("kerjaBahaya").value = "";
   document.getElementById("kerjaCatatan").value = "";
   await muatRiwayatKerja();
+}
+
+// ---------- PEMERIKSAAN UMUM & PTM LANSIA ----------
+let pasienTerpilihLansiaUmum = null;
+
+async function cariPasienLansiaUmum() {
+  const kunci = document.getElementById("lansiaUmumCari").value.trim();
+  const hasilDiv = document.getElementById("lansiaUmumHasilCari");
+  document.getElementById("lansiaUmumWrap").style.display = "none";
+  pasienTerpilihLansiaUmum = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienLansiaUmum(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienLansiaUmumDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienLansiaUmum = data;
+  }
+}
+
+function pilihPasienLansiaUmumDariHasil(i) {
+  pilihPasienLansiaUmum(window._hasilCariPasienLansiaUmum[i]);
+}
+
+function pilihPasienLansiaUmum(pasien) {
+  pasienTerpilihLansiaUmum = pasien;
+  document.getElementById("lansiaUmumHasilCari").innerHTML = "";
+  document.getElementById("lansiaUmumNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("lansiaUmumWrap").style.display = "block";
+  document.getElementById("msgLansiaUmum").innerHTML = "";
+  document.getElementById("lansiaUmumTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("lansiaUmumTd").value = "";
+  document.getElementById("lansiaUmumGds").value = "";
+  document.getElementById("lansiaUmumBb").value = "";
+  document.getElementById("lansiaUmumTb").value = "";
+  document.getElementById("lansiaUmumLp").value = "";
+  document.getElementById("lansiaUmumHipertensi").value = "";
+  document.getElementById("lansiaUmumDm").value = "";
+  document.getElementById("lansiaUmumCatatan").value = "";
+
+  muatRiwayatLansiaUmum();
+}
+
+async function muatRiwayatLansiaUmum() {
+  const tbody = document.getElementById("tabelRiwayatLansiaUmum");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pemeriksaan_umum_ptm_lansia")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihLansiaUmum.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan pemeriksaan umum &amp; PTM lansia.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(u => `
+    <tr>
+      <td>${new Date(u.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${u.tekanan_darah || "-"}</td>
+      <td>${u.gula_darah_sewaktu || "-"}</td>
+      <td>${u.hasil_hipertensi || "-"}</td>
+      <td>${u.hasil_dm || "-"}</td>
+      <td>${u.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanLansiaUmum() {
+  const msgBox = document.getElementById("msgLansiaUmum");
+  if (!pasienTerpilihLansiaUmum) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("lansiaUmumTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pemeriksaan_umum_ptm_lansia").insert({
+    pasien_id: pasienTerpilihLansiaUmum.id,
+    tanggal,
+    tekanan_darah: document.getElementById("lansiaUmumTd").value.trim() || null,
+    berat_badan: document.getElementById("lansiaUmumBb").value.trim() || null,
+    tinggi_badan: document.getElementById("lansiaUmumTb").value.trim() || null,
+    lingkar_perut: document.getElementById("lansiaUmumLp").value.trim() || null,
+    gula_darah_sewaktu: document.getElementById("lansiaUmumGds").value.trim() || null,
+    hasil_hipertensi: document.getElementById("lansiaUmumHipertensi").value || null,
+    hasil_dm: document.getElementById("lansiaUmumDm").value || null,
+    catatan: document.getElementById("lansiaUmumCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Pemeriksaan umum &amp; PTM lansia tersimpan.</div>`;
+  document.getElementById("lansiaUmumTd").value = "";
+  document.getElementById("lansiaUmumGds").value = "";
+  document.getElementById("lansiaUmumBb").value = "";
+  document.getElementById("lansiaUmumTb").value = "";
+  document.getElementById("lansiaUmumLp").value = "";
+  document.getElementById("lansiaUmumHipertensi").value = "";
+  document.getElementById("lansiaUmumDm").value = "";
+  document.getElementById("lansiaUmumCatatan").value = "";
+  await muatRiwayatLansiaUmum();
+}
+
+// ---------- SKRINING GERIATRI ----------
+let pasienTerpilihGeriatri = null;
+
+async function cariPasienGeriatri() {
+  const kunci = document.getElementById("geriatriCari").value.trim();
+  const hasilDiv = document.getElementById("geriatriHasilCari");
+  document.getElementById("geriatriWrap").style.display = "none";
+  pasienTerpilihGeriatri = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienGeriatri(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienGeriatriDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienGeriatri = data;
+  }
+}
+
+function pilihPasienGeriatriDariHasil(i) {
+  pilihPasienGeriatri(window._hasilCariPasienGeriatri[i]);
+}
+
+function pilihPasienGeriatri(pasien) {
+  pasienTerpilihGeriatri = pasien;
+  document.getElementById("geriatriHasilCari").innerHTML = "";
+  document.getElementById("geriatriNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("geriatriWrap").style.display = "block";
+  document.getElementById("msgGeriatri").innerHTML = "";
+  document.getElementById("geriatriTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("geriatriGizi").value = "";
+  document.getElementById("geriatriAdl").value = "";
+  document.getElementById("geriatriKognitif").value = "";
+  document.getElementById("geriatriJatuh").value = "";
+  document.getElementById("geriatriCatatan").value = "";
+
+  muatRiwayatGeriatri();
+}
+
+async function muatRiwayatGeriatri() {
+  const tbody = document.getElementById("tabelRiwayatGeriatri");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("skrining_geriatri")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihGeriatri.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan skrining geriatri.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(g => `
+    <tr>
+      <td>${new Date(g.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${g.status_gizi || "-"}</td>
+      <td>${g.tingkat_kemandirian_adl || "-"}</td>
+      <td>${g.status_kognitif || "-"}</td>
+      <td>${g.risiko_jatuh || "-"}</td>
+      <td>${g.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanGeriatri() {
+  const msgBox = document.getElementById("msgGeriatri");
+  if (!pasienTerpilihGeriatri) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("geriatriTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("skrining_geriatri").insert({
+    pasien_id: pasienTerpilihGeriatri.id,
+    tanggal,
+    status_gizi: document.getElementById("geriatriGizi").value || null,
+    tingkat_kemandirian_adl: document.getElementById("geriatriAdl").value || null,
+    status_kognitif: document.getElementById("geriatriKognitif").value || null,
+    risiko_jatuh: document.getElementById("geriatriJatuh").value || null,
+    catatan: document.getElementById("geriatriCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Skrining geriatri tersimpan.</div>`;
+  document.getElementById("geriatriGizi").value = "";
+  document.getElementById("geriatriAdl").value = "";
+  document.getElementById("geriatriKognitif").value = "";
+  document.getElementById("geriatriJatuh").value = "";
+  document.getElementById("geriatriCatatan").value = "";
+  await muatRiwayatGeriatri();
 }
 </script>
 </body>

@@ -1892,6 +1892,58 @@ create trigger trg_audit_kesehatan_kerja after insert or update or delete on kes
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 56. KLASTER 3 — FASE 4: Pelayanan Lansia — Pemeriksaan Umum
+--     & PTM Lansia, dan Skrining Geriatri. Reuse tabel pasien,
+--     tabel baru 2.
+-- ============================================================
+create table if not exists pemeriksaan_umum_ptm_lansia (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  tekanan_darah text,
+  berat_badan text,
+  tinggi_badan text,
+  lingkar_perut text,
+  gula_darah_sewaktu text,
+  hasil_hipertensi text check (hasil_hipertensi in ('Normal', 'Pra-Hipertensi', 'Hipertensi', 'Perlu Rujuk')),
+  hasil_dm text check (hasil_dm in ('Normal', 'Pra-Diabetes', 'Diabetes', 'Perlu Rujuk')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_umum_ptm_lansia_pasien on pemeriksaan_umum_ptm_lansia(pasien_id);
+
+alter table pemeriksaan_umum_ptm_lansia enable row level security;
+create policy "authenticated_all_pemeriksaan_umum_ptm_lansia" on pemeriksaan_umum_ptm_lansia for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_umum_ptm_lansia on pemeriksaan_umum_ptm_lansia;
+create trigger trg_audit_pemeriksaan_umum_ptm_lansia after insert or update or delete on pemeriksaan_umum_ptm_lansia
+  for each row execute function fn_audit_log();
+
+create table if not exists skrining_geriatri (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  status_gizi text check (status_gizi in ('Gizi Baik', 'Berisiko Malnutrisi', 'Malnutrisi')),
+  tingkat_kemandirian_adl text check (tingkat_kemandirian_adl in ('Mandiri', 'Ketergantungan Ringan', 'Ketergantungan Sedang', 'Ketergantungan Berat')),
+  status_kognitif text check (status_kognitif in ('Normal', 'Curiga Gangguan Kognitif', 'Perlu Rujuk')),
+  risiko_jatuh text check (risiko_jatuh in ('Rendah', 'Sedang', 'Tinggi')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_skrining_geriatri_pasien on skrining_geriatri(pasien_id);
+
+alter table skrining_geriatri enable row level security;
+create policy "authenticated_all_skrining_geriatri" on skrining_geriatri for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_skrining_geriatri on skrining_geriatri;
+create trigger trg_audit_skrining_geriatri after insert or update or delete on skrining_geriatri
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
