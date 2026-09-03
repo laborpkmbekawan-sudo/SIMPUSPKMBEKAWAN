@@ -526,10 +526,141 @@
         </div>
 
         <div id="dewasaPanel-jiwa" style="display:none;">
-          <div class="k3-segera"><div class="ic">🧠</div><div class="t">Skrining Jiwa &amp; Kebugaran</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#6a4c93;">
+            <h2><span class="card-num" style="background:#6a4c93;">🧠</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Skrining kesehatan jiwa (SDQ/SRQ), deteksi dini NAPZA, dan tes kebugaran jasmani.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="jiwaCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienJiwa();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienJiwa()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="jiwaHasilCari"></div>
+          </div>
+
+          <div id="jiwaWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Skrining Jiwa &amp; Kebugaran — <span id="jiwaNamaPasien"></span></h2>
+              <div id="msgJiwa"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="jiwaTanggal" required></div>
+                <div>
+                  <label>Skrining SDQ/SRQ-20</label>
+                  <select id="jiwaSdq">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Perlu Perhatian">Perlu Perhatian</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Deteksi Dini Masalah NAPZA</label>
+                  <select id="jiwaNapza">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Ada">Tidak Ada</option>
+                    <option value="Dicurigai">Dicurigai</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label>Tes Kebugaran Jasmani</label>
+                  <select id="jiwaKebugaran">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Baik">Baik</option>
+                    <option value="Cukup">Cukup</option>
+                    <option value="Kurang">Kurang</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="jiwaCatatan" placeholder="Temuan lain / rencana tindak lanjut"></textarea>
+              <button class="btn-primary" onclick="simpanJiwa()">Simpan Skrining Jiwa &amp; Kebugaran</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Skrining Jiwa &amp; Kebugaran</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>SDQ/SRQ</th><th>NAPZA</th><th>Kebugaran</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatJiwa"><tr><td colspan="5">Belum ada catatan skrining jiwa &amp; kebugaran.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
         <div id="dewasaPanel-kerja" style="display:none;">
-          <div class="k3-segera"><div class="ic">🦺</div><div class="t">Kesehatan Kerja</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#b8860b;">
+            <h2><span class="card-num" style="background:#b8860b;">🦺</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pemeriksaan kesehatan kerja — pra kerja, berkala, purna kerja, atau khusus pasca sakit.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="kerjaCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienKerja();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienKerja()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="kerjaHasilCari"></div>
+          </div>
+
+          <div id="kerjaWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Kesehatan Kerja — <span id="kerjaNamaPasien"></span></h2>
+              <div id="msgKerja"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="kerjaTanggal" required></div>
+                <div><label>Jenis Pekerjaan</label><input type="text" id="kerjaJenisPekerjaan" placeholder="Misal: Buruh pabrik, Petani, dsb"></div>
+                <div><label>Tempat Kerja</label><input type="text" id="kerjaTempatKerja" placeholder="Nama perusahaan / lokasi kerja"></div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label>Jenis Pemeriksaan</label>
+                  <select id="kerjaJenisPeriksa">
+                    <option value="">-- Pilih --</option>
+                    <option value="Pra Kerja">Pra Kerja</option>
+                    <option value="Berkala">Berkala</option>
+                    <option value="Purna Kerja">Purna Kerja</option>
+                    <option value="Khusus/Pasca Sakit">Khusus/Pasca Sakit</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil Pemeriksaan</label>
+                  <select id="kerjaHasil">
+                    <option value="">-- Pilih --</option>
+                    <option value="Sehat / Fit Bekerja">Sehat / Fit Bekerja</option>
+                    <option value="Sehat dengan Catatan">Sehat dengan Catatan</option>
+                    <option value="Perlu Tindak Lanjut">Perlu Tindak Lanjut</option>
+                    <option value="Tidak Fit Bekerja">Tidak Fit Bekerja</option>
+                  </select>
+                </div>
+              </div>
+              <label>Potensi Bahaya di Tempat Kerja</label>
+              <textarea id="kerjaBahaya" placeholder="Misal: bising, debu, bahan kimia, ergonomi, dsb"></textarea>
+              <label>Catatan</label>
+              <textarea id="kerjaCatatan" placeholder="Temuan lain / rekomendasi"></textarea>
+              <button class="btn-primary" onclick="simpanKerja()">Simpan Kesehatan Kerja</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Kesehatan Kerja</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Jenis Periksa</th><th>Pekerjaan</th><th>Hasil</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatKerja"><tr><td colspan="5">Belum ada catatan kesehatan kerja.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
 
       </div>
@@ -1389,6 +1520,232 @@ async function simpanWus() {
   document.getElementById("wusStatus").value = "";
   document.getElementById("wusCatatan").value = "";
   await muatRiwayatWus();
+}
+
+// ---------- SKRINING JIWA & KEBUGARAN (Dewasa) ----------
+let pasienTerpilihJiwa = null;
+
+async function cariPasienJiwa() {
+  const kunci = document.getElementById("jiwaCari").value.trim();
+  const hasilDiv = document.getElementById("jiwaHasilCari");
+  document.getElementById("jiwaWrap").style.display = "none";
+  pasienTerpilihJiwa = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienJiwa(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienJiwaDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienJiwa = data;
+  }
+}
+
+function pilihPasienJiwaDariHasil(i) {
+  pilihPasienJiwa(window._hasilCariPasienJiwa[i]);
+}
+
+function pilihPasienJiwa(pasien) {
+  pasienTerpilihJiwa = pasien;
+  document.getElementById("jiwaHasilCari").innerHTML = "";
+  document.getElementById("jiwaNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("jiwaWrap").style.display = "block";
+  document.getElementById("msgJiwa").innerHTML = "";
+  document.getElementById("jiwaTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("jiwaSdq").value = "";
+  document.getElementById("jiwaNapza").value = "";
+  document.getElementById("jiwaKebugaran").value = "";
+  document.getElementById("jiwaCatatan").value = "";
+
+  muatRiwayatJiwa();
+}
+
+async function muatRiwayatJiwa() {
+  const tbody = document.getElementById("tabelRiwayatJiwa");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("skrining_jiwa_kebugaran")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihJiwa.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan skrining jiwa &amp; kebugaran.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(j => `
+    <tr>
+      <td>${new Date(j.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${j.skrining_sdq_srq || "-"}</td>
+      <td>${j.masalah_napza || "-"}</td>
+      <td>${j.tes_kebugaran || "-"}</td>
+      <td>${j.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanJiwa() {
+  const msgBox = document.getElementById("msgJiwa");
+  if (!pasienTerpilihJiwa) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("jiwaTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("skrining_jiwa_kebugaran").insert({
+    pasien_id: pasienTerpilihJiwa.id,
+    tanggal,
+    skrining_sdq_srq: document.getElementById("jiwaSdq").value || null,
+    masalah_napza: document.getElementById("jiwaNapza").value || null,
+    tes_kebugaran: document.getElementById("jiwaKebugaran").value || null,
+    catatan: document.getElementById("jiwaCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Skrining jiwa &amp; kebugaran tersimpan.</div>`;
+  document.getElementById("jiwaSdq").value = "";
+  document.getElementById("jiwaNapza").value = "";
+  document.getElementById("jiwaKebugaran").value = "";
+  document.getElementById("jiwaCatatan").value = "";
+  await muatRiwayatJiwa();
+}
+
+// ---------- KESEHATAN KERJA (Dewasa) ----------
+let pasienTerpilihKerja = null;
+
+async function cariPasienKerja() {
+  const kunci = document.getElementById("kerjaCari").value.trim();
+  const hasilDiv = document.getElementById("kerjaHasilCari");
+  document.getElementById("kerjaWrap").style.display = "none";
+  pasienTerpilihKerja = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienKerja(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienKerjaDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienKerja = data;
+  }
+}
+
+function pilihPasienKerjaDariHasil(i) {
+  pilihPasienKerja(window._hasilCariPasienKerja[i]);
+}
+
+function pilihPasienKerja(pasien) {
+  pasienTerpilihKerja = pasien;
+  document.getElementById("kerjaHasilCari").innerHTML = "";
+  document.getElementById("kerjaNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("kerjaWrap").style.display = "block";
+  document.getElementById("msgKerja").innerHTML = "";
+  document.getElementById("kerjaTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("kerjaJenisPekerjaan").value = "";
+  document.getElementById("kerjaTempatKerja").value = "";
+  document.getElementById("kerjaJenisPeriksa").value = "";
+  document.getElementById("kerjaHasil").value = "";
+  document.getElementById("kerjaBahaya").value = "";
+  document.getElementById("kerjaCatatan").value = "";
+
+  muatRiwayatKerja();
+}
+
+async function muatRiwayatKerja() {
+  const tbody = document.getElementById("tabelRiwayatKerja");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kesehatan_kerja")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihKerja.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan kesehatan kerja.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${new Date(k.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${k.jenis_pemeriksaan || "-"}</td>
+      <td>${k.jenis_pekerjaan || "-"}</td>
+      <td>${k.hasil_pemeriksaan || "-"}</td>
+      <td>${k.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanKerja() {
+  const msgBox = document.getElementById("msgKerja");
+  if (!pasienTerpilihKerja) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("kerjaTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("kesehatan_kerja").insert({
+    pasien_id: pasienTerpilihKerja.id,
+    tanggal,
+    jenis_pekerjaan: document.getElementById("kerjaJenisPekerjaan").value.trim() || null,
+    tempat_kerja: document.getElementById("kerjaTempatKerja").value.trim() || null,
+    jenis_pemeriksaan: document.getElementById("kerjaJenisPeriksa").value || null,
+    potensi_bahaya: document.getElementById("kerjaBahaya").value.trim() || null,
+    hasil_pemeriksaan: document.getElementById("kerjaHasil").value || null,
+    catatan: document.getElementById("kerjaCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Kesehatan kerja tersimpan.</div>`;
+  document.getElementById("kerjaJenisPekerjaan").value = "";
+  document.getElementById("kerjaTempatKerja").value = "";
+  document.getElementById("kerjaJenisPeriksa").value = "";
+  document.getElementById("kerjaHasil").value = "";
+  document.getElementById("kerjaBahaya").value = "";
+  document.getElementById("kerjaCatatan").value = "";
+  await muatRiwayatKerja();
 }
 </script>
 </body>

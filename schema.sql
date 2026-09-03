@@ -1843,6 +1843,55 @@ create trigger trg_audit_skrining_imunisasi_wus after insert or update or delete
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 55. KLASTER 3 — FASE 3: Pelayanan Usia Dewasa — Skrining Jiwa
+--     & Kebugaran, dan Kesehatan Kerja. Reuse tabel pasien,
+--     tabel baru 2.
+-- ============================================================
+create table if not exists skrining_jiwa_kebugaran (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  skrining_sdq_srq text check (skrining_sdq_srq in ('Tidak Dilakukan', 'Normal', 'Perlu Perhatian', 'Perlu Rujuk')),
+  masalah_napza text check (masalah_napza in ('Tidak Ada', 'Dicurigai', 'Perlu Rujuk')),
+  tes_kebugaran text check (tes_kebugaran in ('Tidak Dilakukan', 'Baik', 'Cukup', 'Kurang')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_skrining_jiwa_kebugaran_pasien on skrining_jiwa_kebugaran(pasien_id);
+
+alter table skrining_jiwa_kebugaran enable row level security;
+create policy "authenticated_all_skrining_jiwa_kebugaran" on skrining_jiwa_kebugaran for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_skrining_jiwa_kebugaran on skrining_jiwa_kebugaran;
+create trigger trg_audit_skrining_jiwa_kebugaran after insert or update or delete on skrining_jiwa_kebugaran
+  for each row execute function fn_audit_log();
+
+create table if not exists kesehatan_kerja (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis_pekerjaan text,
+  tempat_kerja text,
+  jenis_pemeriksaan text check (jenis_pemeriksaan in ('Pra Kerja', 'Berkala', 'Purna Kerja', 'Khusus/Pasca Sakit')),
+  potensi_bahaya text,
+  hasil_pemeriksaan text check (hasil_pemeriksaan in ('Sehat / Fit Bekerja', 'Sehat dengan Catatan', 'Perlu Tindak Lanjut', 'Tidak Fit Bekerja')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kesehatan_kerja_pasien on kesehatan_kerja(pasien_id);
+
+alter table kesehatan_kerja enable row level security;
+create policy "authenticated_all_kesehatan_kerja" on kesehatan_kerja for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kesehatan_kerja on kesehatan_kerja;
+create trigger trg_audit_kesehatan_kerja after insert or update or delete on kesehatan_kerja
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
