@@ -1697,6 +1697,57 @@ create trigger trg_audit_ttd_remaja after insert or update or delete on ttd_rema
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 52. KLASTER 3 — FASE 1: Pelayanan Usia Dewasa — Pemeriksaan
+--     Umum & Skrining PTM. Reuse tabel pasien, tabel baru 2.
+-- ============================================================
+create table if not exists pemeriksaan_umum_dewasa (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  tekanan_darah text,
+  berat_badan text,
+  tinggi_badan text,
+  gula_darah_sewaktu text,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_umum_dewasa_pasien on pemeriksaan_umum_dewasa(pasien_id);
+
+alter table pemeriksaan_umum_dewasa enable row level security;
+create policy "authenticated_all_pemeriksaan_umum_dewasa" on pemeriksaan_umum_dewasa for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_umum_dewasa on pemeriksaan_umum_dewasa;
+create trigger trg_audit_pemeriksaan_umum_dewasa after insert or update or delete on pemeriksaan_umum_dewasa
+  for each row execute function fn_audit_log();
+
+create table if not exists skrining_ptm (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  berat_badan text,
+  tinggi_badan text,
+  lingkar_perut text,
+  hasil_hipertensi text check (hasil_hipertensi in ('Normal', 'Pra-Hipertensi', 'Hipertensi', 'Perlu Rujuk')),
+  hasil_dm text check (hasil_dm in ('Normal', 'Pra-Diabetes', 'Diabetes', 'Perlu Rujuk')),
+  risiko_jantung_stroke text check (risiko_jantung_stroke in ('Rendah', 'Sedang', 'Tinggi')),
+  hasil_ppok text check (hasil_ppok in ('Tidak Ada Gejala', 'Suspek', 'Perlu Rujuk')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_skrining_ptm_pasien on skrining_ptm(pasien_id);
+
+alter table skrining_ptm enable row level security;
+create policy "authenticated_all_skrining_ptm" on skrining_ptm for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_skrining_ptm on skrining_ptm;
+create trigger trg_audit_skrining_ptm after insert or update or delete on skrining_ptm
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
