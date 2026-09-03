@@ -1992,6 +1992,85 @@ create trigger trg_audit_skrining_menular_lansia after insert or update or delet
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 58. KLASTER 3 — FASE 6: Terapi Terpadu Lansia (nutup semua
+--     menu Pelayanan Lansia), dan Posbindu PTM & Prolanis
+--     (kegiatan Posbindu di Posyandu + kontrol rutin Prolanis).
+--     Reuse tabel pasien, tabel baru 3.
+-- ============================================================
+create table if not exists terapi_terpadu_lansia (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis_terapi text check (jenis_terapi in ('Senam Lansia', 'Fisioterapi Sederhana', 'Konseling Gizi', 'Pengobatan Sederhana', 'Lainnya')),
+  keluhan text,
+  tindakan_diberikan text,
+  hasil text check (hasil in ('Membaik', 'Stabil', 'Perlu Rujuk')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_terapi_terpadu_lansia_pasien on terapi_terpadu_lansia(pasien_id);
+
+alter table terapi_terpadu_lansia enable row level security;
+create policy "authenticated_all_terapi_terpadu_lansia" on terapi_terpadu_lansia for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_terapi_terpadu_lansia on terapi_terpadu_lansia;
+create trigger trg_audit_terapi_terpadu_lansia after insert or update or delete on terapi_terpadu_lansia
+  for each row execute function fn_audit_log();
+
+create table if not exists posbindu_ptm (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  nama_posyandu text,
+  berat_badan text,
+  tinggi_badan text,
+  lingkar_perut text,
+  tekanan_darah text,
+  gula_darah text,
+  kolesterol text,
+  asam_urat text,
+  hasil_igd text check (hasil_igd in ('Normal', 'Berisiko', 'Perlu Rujuk')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_posbindu_ptm_pasien on posbindu_ptm(pasien_id);
+
+alter table posbindu_ptm enable row level security;
+create policy "authenticated_all_posbindu_ptm" on posbindu_ptm for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_posbindu_ptm on posbindu_ptm;
+create trigger trg_audit_posbindu_ptm after insert or update or delete on posbindu_ptm
+  for each row execute function fn_audit_log();
+
+create table if not exists kontrol_prolanis (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis_penyakit_kronis text check (jenis_penyakit_kronis in ('Hipertensi', 'Diabetes Melitus', 'Hipertensi & Diabetes Melitus', 'Lainnya')),
+  status_kontrol text check (status_kontrol in ('Rutin', 'Tidak Rutin', 'Terlambat')),
+  tekanan_darah text,
+  gula_darah text,
+  obat_diberikan text,
+  tanggal_kontrol_berikutnya date,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kontrol_prolanis_pasien on kontrol_prolanis(pasien_id);
+
+alter table kontrol_prolanis enable row level security;
+create policy "authenticated_all_kontrol_prolanis" on kontrol_prolanis for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kontrol_prolanis on kontrol_prolanis;
+create trigger trg_audit_kontrol_prolanis after insert or update or delete on kontrol_prolanis
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

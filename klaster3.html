@@ -961,14 +961,209 @@
           </div>
         </div>
         <div id="lansiaPanel-terpadu" style="display:none;">
-          <div class="k3-segera"><div class="ic">🩺</div><div class="t">Terapi Terpadu Lansia</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#1c7d7f;">
+            <h2><span class="card-num" style="background:#1c7d7f;">🩺</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Terapi terpadu lansia — senam, fisioterapi sederhana, konseling gizi, atau pengobatan sederhana.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="terpaduCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienTerpadu();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienTerpadu()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="terpaduHasilCari"></div>
+          </div>
+
+          <div id="terpaduWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Terapi Terpadu Lansia — <span id="terpaduNamaPasien"></span></h2>
+              <div id="msgTerpadu"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="terpaduTanggal" required></div>
+                <div>
+                  <label>Jenis Terapi</label>
+                  <select id="terpaduJenis">
+                    <option value="">-- Pilih --</option>
+                    <option value="Senam Lansia">Senam Lansia</option>
+                    <option value="Fisioterapi Sederhana">Fisioterapi Sederhana</option>
+                    <option value="Konseling Gizi">Konseling Gizi</option>
+                    <option value="Pengobatan Sederhana">Pengobatan Sederhana</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil</label>
+                  <select id="terpaduHasil">
+                    <option value="">-- Pilih --</option>
+                    <option value="Membaik">Membaik</option>
+                    <option value="Stabil">Stabil</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+              </div>
+              <label>Keluhan</label>
+              <textarea id="terpaduKeluhan" placeholder="Keluhan pasien saat ini"></textarea>
+              <label>Tindakan Diberikan</label>
+              <textarea id="terpaduTindakan" placeholder="Tindakan / terapi yang diberikan"></textarea>
+              <label>Catatan</label>
+              <textarea id="terpaduCatatan" placeholder="Catatan lain / rencana lanjutan"></textarea>
+              <button class="btn-primary" onclick="simpanTerpadu()">Simpan Terapi Terpadu Lansia</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Terapi Terpadu Lansia</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Jenis Terapi</th><th>Hasil</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatTerpadu"><tr><td colspan="4">Belum ada catatan terapi terpadu lansia.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
 
       </div>
 
       <!-- ============ POSBINDU PTM & PROLANIS ============ -->
       <div id="panelPosbindu" style="display:none;">
-        <div class="k3-segera"><div class="ic">📋</div><div class="t">Posbindu PTM &amp; Prolanis</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="padding:10px 14px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="posbinduSub-ptm" onclick="gantiSubPosbindu('ptm')">Kegiatan Posbindu PTM</button>
+            <button type="button" class="lap-tab" id="posbinduSub-prolanis" onclick="gantiSubPosbindu('prolanis')">Kontrol Prolanis</button>
+          </div>
+        </div>
+
+        <div id="posbinduPanel-ptm">
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">📋</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pemeriksaan Posbindu PTM — dilaksanakan di kegiatan Posyandu. Sasaran usia produktif &amp; lansia di masyarakat.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="posbinduCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienPosbindu();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienPosbindu()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="posbinduHasilCari"></div>
+          </div>
+
+          <div id="posbinduWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Kegiatan Posbindu PTM — <span id="posbinduNamaPasien"></span></h2>
+              <div id="msgPosbindu"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="posbinduTanggal" required></div>
+                <div><label>Nama Posyandu</label><input type="text" id="posbinduNamaPos" placeholder="Nama posyandu tempat kegiatan"></div>
+                <div><label>Tekanan Darah</label><input type="text" id="posbinduTd" placeholder="mis. 120/80 mmHg"></div>
+              </div>
+              <div class="grid-3">
+                <div><label>Berat Badan</label><input type="text" id="posbinduBb" placeholder="kg"></div>
+                <div><label>Tinggi Badan</label><input type="text" id="posbinduTb" placeholder="cm"></div>
+                <div><label>Lingkar Perut</label><input type="text" id="posbinduLp" placeholder="cm"></div>
+              </div>
+              <div class="grid-3">
+                <div><label>Gula Darah</label><input type="text" id="posbinduGd" placeholder="mg/dL"></div>
+                <div><label>Kolesterol</label><input type="text" id="posbinduKolesterol" placeholder="mg/dL"></div>
+                <div><label>Asam Urat</label><input type="text" id="posbinduAsamUrat" placeholder="mg/dL"></div>
+              </div>
+              <label>Hasil Interpretasi Gizi &amp; Deteksi Dini (IGD)</label>
+              <select id="posbinduIgd" style="margin-bottom:12px;">
+                <option value="">-- Pilih --</option>
+                <option value="Normal">Normal</option>
+                <option value="Berisiko">Berisiko</option>
+                <option value="Perlu Rujuk">Perlu Rujuk</option>
+              </select>
+              <label>Catatan</label>
+              <textarea id="posbinduCatatan" placeholder="Temuan lain / rencana tindak lanjut"></textarea>
+              <button class="btn-primary" onclick="simpanPosbindu()">Simpan Kegiatan Posbindu PTM</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Posbindu PTM</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Posyandu</th><th>TD</th><th>GD</th><th>Hasil IGD</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatPosbindu"><tr><td colspan="6">Belum ada catatan Posbindu PTM.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <div id="posbinduPanel-prolanis" style="display:none;">
+
+          <div class="card" style="--accent:#b8860b;">
+            <h2><span class="card-num" style="background:#b8860b;">🩺</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Kontrol rutin peserta Program Pengelolaan Penyakit Kronis (Prolanis) — Hipertensi &amp; Diabetes Melitus.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="prolanisCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienProlanis();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienProlanis()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="prolanisHasilCari"></div>
+          </div>
+
+          <div id="prolanisWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Kontrol Prolanis — <span id="prolanisNamaPasien"></span></h2>
+              <div id="msgProlanis"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="prolanisTanggal" required></div>
+                <div>
+                  <label>Jenis Penyakit Kronis</label>
+                  <select id="prolanisJenis">
+                    <option value="">-- Pilih --</option>
+                    <option value="Hipertensi">Hipertensi</option>
+                    <option value="Diabetes Melitus">Diabetes Melitus</option>
+                    <option value="Hipertensi & Diabetes Melitus">Hipertensi &amp; Diabetes Melitus</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Status Kontrol</label>
+                  <select id="prolanisStatus">
+                    <option value="">-- Pilih --</option>
+                    <option value="Rutin">Rutin</option>
+                    <option value="Tidak Rutin">Tidak Rutin</option>
+                    <option value="Terlambat">Terlambat</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid-3">
+                <div><label>Tekanan Darah</label><input type="text" id="prolanisTd" placeholder="mis. 120/80 mmHg"></div>
+                <div><label>Gula Darah</label><input type="text" id="prolanisGd" placeholder="mg/dL"></div>
+                <div><label>Tanggal Kontrol Berikutnya</label><input type="date" id="prolanisKontrolBerikutnya"></div>
+              </div>
+              <label>Obat Diberikan</label>
+              <textarea id="prolanisObat" placeholder="Nama obat &amp; dosis yang diberikan"></textarea>
+              <label>Catatan</label>
+              <textarea id="prolanisCatatan" placeholder="Catatan lain / rencana tindak lanjut"></textarea>
+              <button class="btn-primary" onclick="simpanProlanis()">Simpan Kontrol Prolanis</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Kontrol Prolanis</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Jenis Penyakit</th><th>Status Kontrol</th><th>Kontrol Berikutnya</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatProlanis"><tr><td colspan="5">Belum ada catatan kontrol Prolanis.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
       </div>
 
       <!-- ============ REGISTER & KOHORT ============ -->
@@ -1064,6 +1259,17 @@ function gantiSubLansia(sub) {
     const panel = document.getElementById("lansiaPanel-" + s);
     if (panel) panel.style.display = (s === sub) ? "block" : "none";
     const btn = document.getElementById("lansiaSub-" + s);
+    if (btn) btn.classList.toggle("active", s === sub);
+  });
+}
+
+// ---------- POSBINDU PTM & PROLANIS — inner sub-tabs ----------
+const SUBPOSBINDU = ["ptm", "prolanis"];
+function gantiSubPosbindu(sub) {
+  SUBPOSBINDU.forEach(s => {
+    const panel = document.getElementById("posbinduPanel-" + s);
+    if (panel) panel.style.display = (s === sub) ? "block" : "none";
+    const btn = document.getElementById("posbinduSub-" + s);
     if (btn) btn.classList.toggle("active", s === sub);
   });
 }
@@ -2476,6 +2682,366 @@ async function simpanMenularLansia() {
   document.getElementById("menularLansiaHepatitis").value = "";
   document.getElementById("menularLansiaCatatan").value = "";
   await muatRiwayatMenularLansia();
+}
+
+// ---------- TERAPI TERPADU LANSIA ----------
+let pasienTerpilihTerpadu = null;
+
+async function cariPasienTerpadu() {
+  const kunci = document.getElementById("terpaduCari").value.trim();
+  const hasilDiv = document.getElementById("terpaduHasilCari");
+  document.getElementById("terpaduWrap").style.display = "none";
+  pasienTerpilihTerpadu = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienTerpadu(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienTerpaduDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienTerpadu = data;
+  }
+}
+
+function pilihPasienTerpaduDariHasil(i) {
+  pilihPasienTerpadu(window._hasilCariPasienTerpadu[i]);
+}
+
+function pilihPasienTerpadu(pasien) {
+  pasienTerpilihTerpadu = pasien;
+  document.getElementById("terpaduHasilCari").innerHTML = "";
+  document.getElementById("terpaduNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("terpaduWrap").style.display = "block";
+  document.getElementById("msgTerpadu").innerHTML = "";
+  document.getElementById("terpaduTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("terpaduJenis").value = "";
+  document.getElementById("terpaduHasil").value = "";
+  document.getElementById("terpaduKeluhan").value = "";
+  document.getElementById("terpaduTindakan").value = "";
+  document.getElementById("terpaduCatatan").value = "";
+
+  muatRiwayatTerpadu();
+}
+
+async function muatRiwayatTerpadu() {
+  const tbody = document.getElementById("tabelRiwayatTerpadu");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("terapi_terpadu_lansia")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihTerpadu.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada catatan terapi terpadu lansia.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(t => `
+    <tr>
+      <td>${new Date(t.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${t.jenis_terapi || "-"}</td>
+      <td>${t.hasil || "-"}</td>
+      <td>${t.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanTerpadu() {
+  const msgBox = document.getElementById("msgTerpadu");
+  if (!pasienTerpilihTerpadu) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("terpaduTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("terapi_terpadu_lansia").insert({
+    pasien_id: pasienTerpilihTerpadu.id,
+    tanggal,
+    jenis_terapi: document.getElementById("terpaduJenis").value || null,
+    keluhan: document.getElementById("terpaduKeluhan").value.trim() || null,
+    tindakan_diberikan: document.getElementById("terpaduTindakan").value.trim() || null,
+    hasil: document.getElementById("terpaduHasil").value || null,
+    catatan: document.getElementById("terpaduCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Terapi terpadu lansia tersimpan.</div>`;
+  document.getElementById("terpaduJenis").value = "";
+  document.getElementById("terpaduHasil").value = "";
+  document.getElementById("terpaduKeluhan").value = "";
+  document.getElementById("terpaduTindakan").value = "";
+  document.getElementById("terpaduCatatan").value = "";
+  await muatRiwayatTerpadu();
+}
+
+// ---------- POSBINDU PTM ----------
+let pasienTerpilihPosbindu = null;
+
+async function cariPasienPosbindu() {
+  const kunci = document.getElementById("posbinduCari").value.trim();
+  const hasilDiv = document.getElementById("posbinduHasilCari");
+  document.getElementById("posbinduWrap").style.display = "none";
+  pasienTerpilihPosbindu = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienPosbindu(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienPosbinduDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienPosbindu = data;
+  }
+}
+
+function pilihPasienPosbinduDariHasil(i) {
+  pilihPasienPosbindu(window._hasilCariPasienPosbindu[i]);
+}
+
+function pilihPasienPosbindu(pasien) {
+  pasienTerpilihPosbindu = pasien;
+  document.getElementById("posbinduHasilCari").innerHTML = "";
+  document.getElementById("posbinduNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("posbinduWrap").style.display = "block";
+  document.getElementById("msgPosbindu").innerHTML = "";
+  document.getElementById("posbinduTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("posbinduNamaPos").value = "";
+  document.getElementById("posbinduTd").value = "";
+  document.getElementById("posbinduBb").value = "";
+  document.getElementById("posbinduTb").value = "";
+  document.getElementById("posbinduLp").value = "";
+  document.getElementById("posbinduGd").value = "";
+  document.getElementById("posbinduKolesterol").value = "";
+  document.getElementById("posbinduAsamUrat").value = "";
+  document.getElementById("posbinduIgd").value = "";
+  document.getElementById("posbinduCatatan").value = "";
+
+  muatRiwayatPosbindu();
+}
+
+async function muatRiwayatPosbindu() {
+  const tbody = document.getElementById("tabelRiwayatPosbindu");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("posbindu_ptm")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihPosbindu.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan Posbindu PTM.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td>${new Date(p.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${p.nama_posyandu || "-"}</td>
+      <td>${p.tekanan_darah || "-"}</td>
+      <td>${p.gula_darah || "-"}</td>
+      <td>${p.hasil_igd || "-"}</td>
+      <td>${p.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanPosbindu() {
+  const msgBox = document.getElementById("msgPosbindu");
+  if (!pasienTerpilihPosbindu) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("posbinduTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("posbindu_ptm").insert({
+    pasien_id: pasienTerpilihPosbindu.id,
+    tanggal,
+    nama_posyandu: document.getElementById("posbinduNamaPos").value.trim() || null,
+    tekanan_darah: document.getElementById("posbinduTd").value.trim() || null,
+    berat_badan: document.getElementById("posbinduBb").value.trim() || null,
+    tinggi_badan: document.getElementById("posbinduTb").value.trim() || null,
+    lingkar_perut: document.getElementById("posbinduLp").value.trim() || null,
+    gula_darah: document.getElementById("posbinduGd").value.trim() || null,
+    kolesterol: document.getElementById("posbinduKolesterol").value.trim() || null,
+    asam_urat: document.getElementById("posbinduAsamUrat").value.trim() || null,
+    hasil_igd: document.getElementById("posbinduIgd").value || null,
+    catatan: document.getElementById("posbinduCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Kegiatan Posbindu PTM tersimpan.</div>`;
+  document.getElementById("posbinduNamaPos").value = "";
+  document.getElementById("posbinduTd").value = "";
+  document.getElementById("posbinduBb").value = "";
+  document.getElementById("posbinduTb").value = "";
+  document.getElementById("posbinduLp").value = "";
+  document.getElementById("posbinduGd").value = "";
+  document.getElementById("posbinduKolesterol").value = "";
+  document.getElementById("posbinduAsamUrat").value = "";
+  document.getElementById("posbinduIgd").value = "";
+  document.getElementById("posbinduCatatan").value = "";
+  await muatRiwayatPosbindu();
+}
+
+// ---------- KONTROL PROLANIS ----------
+let pasienTerpilihProlanis = null;
+
+async function cariPasienProlanis() {
+  const kunci = document.getElementById("prolanisCari").value.trim();
+  const hasilDiv = document.getElementById("prolanisHasilCari");
+  document.getElementById("prolanisWrap").style.display = "none";
+  pasienTerpilihProlanis = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienProlanis(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienProlanisDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienProlanis = data;
+  }
+}
+
+function pilihPasienProlanisDariHasil(i) {
+  pilihPasienProlanis(window._hasilCariPasienProlanis[i]);
+}
+
+function pilihPasienProlanis(pasien) {
+  pasienTerpilihProlanis = pasien;
+  document.getElementById("prolanisHasilCari").innerHTML = "";
+  document.getElementById("prolanisNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("prolanisWrap").style.display = "block";
+  document.getElementById("msgProlanis").innerHTML = "";
+  document.getElementById("prolanisTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("prolanisJenis").value = "";
+  document.getElementById("prolanisStatus").value = "";
+  document.getElementById("prolanisTd").value = "";
+  document.getElementById("prolanisGd").value = "";
+  document.getElementById("prolanisKontrolBerikutnya").value = "";
+  document.getElementById("prolanisObat").value = "";
+  document.getElementById("prolanisCatatan").value = "";
+
+  muatRiwayatProlanis();
+}
+
+async function muatRiwayatProlanis() {
+  const tbody = document.getElementById("tabelRiwayatProlanis");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kontrol_prolanis")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihProlanis.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan kontrol Prolanis.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td>${new Date(p.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${p.jenis_penyakit_kronis || "-"}</td>
+      <td>${p.status_kontrol || "-"}</td>
+      <td>${p.tanggal_kontrol_berikutnya ? new Date(p.tanggal_kontrol_berikutnya).toLocaleDateString("id-ID") : "-"}</td>
+      <td>${p.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanProlanis() {
+  const msgBox = document.getElementById("msgProlanis");
+  if (!pasienTerpilihProlanis) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("prolanisTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("kontrol_prolanis").insert({
+    pasien_id: pasienTerpilihProlanis.id,
+    tanggal,
+    jenis_penyakit_kronis: document.getElementById("prolanisJenis").value || null,
+    status_kontrol: document.getElementById("prolanisStatus").value || null,
+    tekanan_darah: document.getElementById("prolanisTd").value.trim() || null,
+    gula_darah: document.getElementById("prolanisGd").value.trim() || null,
+    tanggal_kontrol_berikutnya: document.getElementById("prolanisKontrolBerikutnya").value || null,
+    obat_diberikan: document.getElementById("prolanisObat").value.trim() || null,
+    catatan: document.getElementById("prolanisCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Kontrol Prolanis tersimpan.</div>`;
+  document.getElementById("prolanisJenis").value = "";
+  document.getElementById("prolanisStatus").value = "";
+  document.getElementById("prolanisTd").value = "";
+  document.getElementById("prolanisGd").value = "";
+  document.getElementById("prolanisKontrolBerikutnya").value = "";
+  document.getElementById("prolanisObat").value = "";
+  document.getElementById("prolanisCatatan").value = "";
+  await muatRiwayatProlanis();
 }
 </script>
 </body>
