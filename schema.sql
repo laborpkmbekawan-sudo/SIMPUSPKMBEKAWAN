@@ -1944,6 +1944,54 @@ create trigger trg_audit_skrining_geriatri after insert or update or delete on s
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 57. KLASTER 3 — FASE 5: Pelayanan Lansia — Skrining Indera
+--     Penglihatan, dan Skrining Penyakit Menular (Lansia).
+--     Reuse tabel pasien, tabel baru 2.
+-- ============================================================
+create table if not exists skrining_indera_lansia (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  visus_mata_kanan text,
+  visus_mata_kiri text,
+  hasil_katarak text check (hasil_katarak in ('Tidak Dilakukan', 'Tidak Ada', 'Dicurigai', 'Perlu Rujuk')),
+  hasil_pendengaran text check (hasil_pendengaran in ('Tidak Dilakukan', 'Normal', 'Gangguan Ringan', 'Gangguan Berat/Perlu Rujuk')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_skrining_indera_lansia_pasien on skrining_indera_lansia(pasien_id);
+
+alter table skrining_indera_lansia enable row level security;
+create policy "authenticated_all_skrining_indera_lansia" on skrining_indera_lansia for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_skrining_indera_lansia on skrining_indera_lansia;
+create trigger trg_audit_skrining_indera_lansia after insert or update or delete on skrining_indera_lansia
+  for each row execute function fn_audit_log();
+
+create table if not exists skrining_menular_lansia (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  hasil_tbc text check (hasil_tbc in ('Tidak Dilakukan', 'Negatif', 'Suspek', 'Positif')),
+  hasil_hiv text check (hasil_hiv in ('Tidak Dilakukan', 'Non-Reaktif', 'Reaktif')),
+  hasil_hepatitis_b text check (hasil_hepatitis_b in ('Tidak Dilakukan', 'Non-Reaktif', 'Reaktif')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_skrining_menular_lansia_pasien on skrining_menular_lansia(pasien_id);
+
+alter table skrining_menular_lansia enable row level security;
+create policy "authenticated_all_skrining_menular_lansia" on skrining_menular_lansia for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_skrining_menular_lansia on skrining_menular_lansia;
+create trigger trg_audit_skrining_menular_lansia after insert or update or delete on skrining_menular_lansia
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

@@ -827,10 +827,138 @@
           </div>
         </div>
         <div id="lansiaPanel-mata" style="display:none;">
-          <div class="k3-segera"><div class="ic">👁</div><div class="t">Skrining Indera Penglihatan</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#216ac5;">
+            <h2><span class="card-num" style="background:#216ac5;">👁</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Skrining indera penglihatan (visus &amp; katarak) dan pendengaran pada lansia.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="mataCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienMataLansia();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienMataLansia()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="mataHasilCari"></div>
+          </div>
+
+          <div id="mataWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Skrining Indera Penglihatan &amp; Pendengaran — <span id="mataNamaPasien"></span></h2>
+              <div id="msgMata"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="mataTanggal" required></div>
+                <div><label>Visus Mata Kanan</label><input type="text" id="mataVisusKanan" placeholder="mis. 6/6"></div>
+                <div><label>Visus Mata Kiri</label><input type="text" id="mataVisusKiri" placeholder="mis. 6/6"></div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label>Hasil Skrining Katarak</label>
+                  <select id="mataKatarak">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Tidak Ada">Tidak Ada</option>
+                    <option value="Dicurigai">Dicurigai</option>
+                    <option value="Perlu Rujuk">Perlu Rujuk</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil Skrining Pendengaran</label>
+                  <select id="mataPendengaran">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Gangguan Ringan">Gangguan Ringan</option>
+                    <option value="Gangguan Berat/Perlu Rujuk">Gangguan Berat/Perlu Rujuk</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="mataCatatan" placeholder="Temuan lain / rencana tindak lanjut"></textarea>
+              <button class="btn-primary" onclick="simpanMataLansia()">Simpan Skrining Indera</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Skrining Indera</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Visus Ka/Ki</th><th>Katarak</th><th>Pendengaran</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatMataLansia"><tr><td colspan="5">Belum ada catatan skrining indera.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
         <div id="lansiaPanel-menular" style="display:none;">
-          <div class="k3-segera"><div class="ic">🦠</div><div class="t">Skrining Penyakit Menular (Lansia)</div>Menu ini segera dibangun di sesi berikutnya.</div>
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">🦠</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Skrining penyakit menular (TBC/HIV/Hepatitis B) pada lansia.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="menularLansiaCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienMenularLansia();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienMenularLansia()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="menularLansiaHasilCari"></div>
+          </div>
+
+          <div id="menularLansiaWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Skrining Penyakit Menular — <span id="menularLansiaNamaPasien"></span></h2>
+              <div id="msgMenularLansia"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="menularLansiaTanggal" required></div>
+                <div>
+                  <label>Hasil Skrining TBC</label>
+                  <select id="menularLansiaTbc">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Negatif">Negatif</option>
+                    <option value="Suspek">Suspek</option>
+                    <option value="Positif">Positif</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil Skrining HIV</label>
+                  <select id="menularLansiaHiv">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Non-Reaktif">Non-Reaktif</option>
+                    <option value="Reaktif">Reaktif</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label>Hasil Skrining Hepatitis B</label>
+                  <select id="menularLansiaHepatitis">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Dilakukan">Tidak Dilakukan</option>
+                    <option value="Non-Reaktif">Non-Reaktif</option>
+                    <option value="Reaktif">Reaktif</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="menularLansiaCatatan" placeholder="Temuan lain / rencana rujuk"></textarea>
+              <button class="btn-primary" onclick="simpanMenularLansia()">Simpan Skrining Penyakit Menular</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Skrining Penyakit Menular</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>TBC</th><th>HIV</th><th>Hepatitis B</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatMenularLansia"><tr><td colspan="5">Belum ada catatan skrining penyakit menular.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
         <div id="lansiaPanel-terpadu" style="display:none;">
           <div class="k3-segera"><div class="ic">🩺</div><div class="t">Terapi Terpadu Lansia</div>Menu ini segera dibangun di sesi berikutnya.</div>
@@ -2125,6 +2253,229 @@ async function simpanGeriatri() {
   document.getElementById("geriatriJatuh").value = "";
   document.getElementById("geriatriCatatan").value = "";
   await muatRiwayatGeriatri();
+}
+
+// ---------- SKRINING INDERA PENGLIHATAN & PENDENGARAN (Lansia) ----------
+let pasienTerpilihMataLansia = null;
+
+async function cariPasienMataLansia() {
+  const kunci = document.getElementById("mataCari").value.trim();
+  const hasilDiv = document.getElementById("mataHasilCari");
+  document.getElementById("mataWrap").style.display = "none";
+  pasienTerpilihMataLansia = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienMataLansia(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienMataLansiaDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienMataLansia = data;
+  }
+}
+
+function pilihPasienMataLansiaDariHasil(i) {
+  pilihPasienMataLansia(window._hasilCariPasienMataLansia[i]);
+}
+
+function pilihPasienMataLansia(pasien) {
+  pasienTerpilihMataLansia = pasien;
+  document.getElementById("mataHasilCari").innerHTML = "";
+  document.getElementById("mataNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("mataWrap").style.display = "block";
+  document.getElementById("msgMata").innerHTML = "";
+  document.getElementById("mataTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("mataVisusKanan").value = "";
+  document.getElementById("mataVisusKiri").value = "";
+  document.getElementById("mataKatarak").value = "";
+  document.getElementById("mataPendengaran").value = "";
+  document.getElementById("mataCatatan").value = "";
+
+  muatRiwayatMataLansia();
+}
+
+async function muatRiwayatMataLansia() {
+  const tbody = document.getElementById("tabelRiwayatMataLansia");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("skrining_indera_lansia")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihMataLansia.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan skrining indera.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(m => `
+    <tr>
+      <td>${new Date(m.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${m.visus_mata_kanan || "-"} / ${m.visus_mata_kiri || "-"}</td>
+      <td>${m.hasil_katarak || "-"}</td>
+      <td>${m.hasil_pendengaran || "-"}</td>
+      <td>${m.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanMataLansia() {
+  const msgBox = document.getElementById("msgMata");
+  if (!pasienTerpilihMataLansia) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("mataTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("skrining_indera_lansia").insert({
+    pasien_id: pasienTerpilihMataLansia.id,
+    tanggal,
+    visus_mata_kanan: document.getElementById("mataVisusKanan").value.trim() || null,
+    visus_mata_kiri: document.getElementById("mataVisusKiri").value.trim() || null,
+    hasil_katarak: document.getElementById("mataKatarak").value || null,
+    hasil_pendengaran: document.getElementById("mataPendengaran").value || null,
+    catatan: document.getElementById("mataCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Skrining indera tersimpan.</div>`;
+  document.getElementById("mataVisusKanan").value = "";
+  document.getElementById("mataVisusKiri").value = "";
+  document.getElementById("mataKatarak").value = "";
+  document.getElementById("mataPendengaran").value = "";
+  document.getElementById("mataCatatan").value = "";
+  await muatRiwayatMataLansia();
+}
+
+// ---------- SKRINING PENYAKIT MENULAR (Lansia) ----------
+let pasienTerpilihMenularLansia = null;
+
+async function cariPasienMenularLansia() {
+  const kunci = document.getElementById("menularLansiaCari").value.trim();
+  const hasilDiv = document.getElementById("menularLansiaHasilCari");
+  document.getElementById("menularLansiaWrap").style.display = "none";
+  pasienTerpilihMenularLansia = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienMenularLansia(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienMenularLansiaDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienMenularLansia = data;
+  }
+}
+
+function pilihPasienMenularLansiaDariHasil(i) {
+  pilihPasienMenularLansia(window._hasilCariPasienMenularLansia[i]);
+}
+
+function pilihPasienMenularLansia(pasien) {
+  pasienTerpilihMenularLansia = pasien;
+  document.getElementById("menularLansiaHasilCari").innerHTML = "";
+  document.getElementById("menularLansiaNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("menularLansiaWrap").style.display = "block";
+  document.getElementById("msgMenularLansia").innerHTML = "";
+  document.getElementById("menularLansiaTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("menularLansiaTbc").value = "";
+  document.getElementById("menularLansiaHiv").value = "";
+  document.getElementById("menularLansiaHepatitis").value = "";
+  document.getElementById("menularLansiaCatatan").value = "";
+
+  muatRiwayatMenularLansia();
+}
+
+async function muatRiwayatMenularLansia() {
+  const tbody = document.getElementById("tabelRiwayatMenularLansia");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("skrining_menular_lansia")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihMenularLansia.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan skrining penyakit menular.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(mn => `
+    <tr>
+      <td>${new Date(mn.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${mn.hasil_tbc || "-"}</td>
+      <td>${mn.hasil_hiv || "-"}</td>
+      <td>${mn.hasil_hepatitis_b || "-"}</td>
+      <td>${mn.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanMenularLansia() {
+  const msgBox = document.getElementById("msgMenularLansia");
+  if (!pasienTerpilihMenularLansia) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("menularLansiaTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("skrining_menular_lansia").insert({
+    pasien_id: pasienTerpilihMenularLansia.id,
+    tanggal,
+    hasil_tbc: document.getElementById("menularLansiaTbc").value || null,
+    hasil_hiv: document.getElementById("menularLansiaHiv").value || null,
+    hasil_hepatitis_b: document.getElementById("menularLansiaHepatitis").value || null,
+    catatan: document.getElementById("menularLansiaCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Skrining penyakit menular tersimpan.</div>`;
+  document.getElementById("menularLansiaTbc").value = "";
+  document.getElementById("menularLansiaHiv").value = "";
+  document.getElementById("menularLansiaHepatitis").value = "";
+  document.getElementById("menularLansiaCatatan").value = "";
+  await muatRiwayatMenularLansia();
 }
 </script>
 </body>
