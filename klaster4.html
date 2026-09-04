@@ -943,12 +943,183 @@
 
       <!-- ============ KLB ============ -->
       <div id="panelKlb" style="display:none;">
-        <div class="k4-segera"><div class="ic">🚨</div><div class="t">Respon KLB</div>Input &amp; pelacakan status penanganan KLB, ORI, dan dokumentasi tindakan pengendalian — segera dibangun.</div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">🚨</span> Kejadian KLB</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Input &amp; pelacakan status penanganan Kejadian Luar Biasa (KLB), Outbreak Response Immunization (ORI), dan dokumentasi tindakan pengendalian. Penyelidikan Epidemiologi (PE) dicatat sebagai salah satu jenis tindakan.</p>
+          <button class="btn-primary" onclick="bukaFormKlbBaru()">+ Kejadian KLB Baru</button>
+        </div>
+
+        <div id="klbFormWrap" class="card" style="display:none; --accent:#173b5e;">
+          <h2>Kejadian KLB Baru</h2>
+          <div id="msgKlbBaru"></div>
+          <div class="grid-3">
+            <div><label>Judul / Nama Kejadian *</label><input type="text" id="klbJudul" placeholder="Contoh: KLB Diare Dusun Sukamaju"></div>
+            <div><label>Jenis Penyakit *</label><input type="text" id="klbJenisPenyakit" placeholder="Contoh: Diare Akut"></div>
+            <div><label>Lokasi</label><input type="text" id="klbLokasi" placeholder="Dusun/RT-RW/Desa"></div>
+            <div><label>Tanggal Ditemukan *</label><input type="date" id="klbTanggalDitemukan" required></div>
+            <div><label>Jumlah Kasus</label><input type="number" id="klbJumlahKasus" min="0"></div>
+            <div><label>Jumlah Meninggal</label><input type="number" id="klbJumlahMeninggal" min="0"></div>
+            <div>
+              <label>Sumber Laporan</label>
+              <select id="klbSumberLaporan">
+                <option value="">-- Pilih --</option>
+                <option value="Sinyal SKDR">Sinyal SKDR</option>
+                <option value="Laporan Masyarakat">Laporan Masyarakat</option>
+                <option value="Laporan Faskes/Kader">Laporan Faskes/Kader</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+          </div>
+          <label>Catatan Awal</label>
+          <textarea id="klbCatatanAwal" placeholder="Kronologi singkat, dugaan sumber, dll"></textarea>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-primary" onclick="simpanKlbBaru()">Simpan Kejadian</button>
+            <button class="btn-secondary" onclick="document.getElementById('klbFormWrap').style.display='none';">Batal</button>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2>Daftar Kejadian KLB</h2>
+          <div class="grid-3">
+            <div>
+              <label>Filter Status</label>
+              <select id="klbFilterStatus" onchange="muatDaftarKlb()">
+                <option value="">-- Semua --</option>
+                <option value="Aktif">Aktif</option>
+                <option value="Terkendali">Terkendali</option>
+                <option value="Selesai">Selesai</option>
+              </select>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Tgl Ditemukan</th><th>Judul</th><th>Jenis Penyakit</th><th>Lokasi</th><th>Kasus</th><th>Status</th><th></th></tr></thead>
+            <tbody id="tabelDaftarKlb"><tr><td colspan="7">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div id="klbDetailWrap" style="display:none;">
+          <div class="card" style="--accent:#6a4c93;">
+            <h2>Detail Kejadian — <span id="klbDetailJudul"></span></h2>
+            <div id="msgKlbDetail"></div>
+            <div class="k4-stat-grid">
+              <div class="k4-stat-card" style="--accent:#c0503f;"><div class="label">Jumlah Kasus</div><div class="value" id="klbDetailKasus">0</div></div>
+              <div class="k4-stat-card" style="--accent:#173b5e;"><div class="label">Jumlah Meninggal</div><div class="value" id="klbDetailMeninggal">0</div></div>
+              <div class="k4-stat-card" style="--accent:#2f9e5c;"><div class="label">Status</div><div class="value" id="klbDetailStatus" style="font-size:15px;">-</div></div>
+            </div>
+            <p style="font-size:12px; color:var(--muted);">Lokasi: <span id="klbDetailLokasi"></span> · Sumber Laporan: <span id="klbDetailSumber"></span></p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
+              <button class="btn-secondary" onclick="ubahStatusKlb('Aktif')">Tandai Aktif</button>
+              <button class="btn-secondary" onclick="ubahStatusKlb('Terkendali')">Tandai Terkendali</button>
+              <button class="btn-secondary" onclick="ubahStatusKlb('Selesai')">Tandai Selesai</button>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2>Tindakan Pengendalian</h2>
+            <div id="msgKlbTindakan"></div>
+            <div class="grid-3">
+              <div><label>Tanggal *</label><input type="date" id="klbTindakanTanggal" required></div>
+              <div>
+                <label>Jenis Tindakan</label>
+                <select id="klbTindakanJenis">
+                  <option value="">-- Pilih --</option>
+                  <option value="Penyelidikan Epidemiologi (PE)">Penyelidikan Epidemiologi (PE)</option>
+                  <option value="Pengambilan Sampel">Pengambilan Sampel</option>
+                  <option value="Fogging/Pengendalian Vektor">Fogging/Pengendalian Vektor</option>
+                  <option value="ORI (Outbreak Response Immunization)">ORI (Outbreak Response Immunization)</option>
+                  <option value="Penyuluhan/Edukasi Masyarakat">Penyuluhan/Edukasi Masyarakat</option>
+                  <option value="Isolasi/Karantina">Isolasi/Karantina</option>
+                  <option value="Rujukan Kasus">Rujukan Kasus</option>
+                  <option value="Lain-lain">Lain-lain</option>
+                </select>
+              </div>
+            </div>
+            <label>Deskripsi</label>
+            <textarea id="klbTindakanDeskripsi" placeholder="Detail tindakan yang dilakukan"></textarea>
+            <button class="btn-primary" onclick="simpanTindakanKlb()">Simpan Tindakan</button>
+
+            <table style="margin-top:14px;">
+              <thead><tr><th>Tanggal</th><th>Jenis Tindakan</th><th>Deskripsi</th><th>Petugas</th></tr></thead>
+              <tbody id="tabelTindakanKlb"><tr><td colspan="4">Belum ada tindakan.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- ============ KESLING ============ -->
       <div id="panelKesling" style="display:none;">
-        <div class="k4-segera"><div class="ic">🌿</div><div class="t">Kesehatan Lingkungan</div>Pengawasan kualitas air &amp; sanitasi, pengendalian vektor, inspeksi TTU/TPM, dan data zoonosis — segera dibangun.</div>
+
+        <div class="card" style="--accent:#2f9e5c;">
+          <h2><span class="card-num" style="background:#2f9e5c;">🌿</span> Catat Inspeksi Kesehatan Lingkungan</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pengawasan kualitas air &amp; sanitasi, TTU, TPM, pengendalian vektor, dan zoonosis (gigitan hewan penular rabies). Inspeksi berbasis tempat/sasaran, bukan pasien.</p>
+          <div id="msgKesling"></div>
+          <div class="grid-3">
+            <div><label>Tanggal *</label><input type="date" id="keslingTanggal" required></div>
+            <div>
+              <label>Jenis Inspeksi *</label>
+              <select id="keslingJenis">
+                <option value="">-- Pilih --</option>
+                <option value="Sarana Air Minum">Sarana Air Minum</option>
+                <option value="Sanitasi Rumah Tangga">Sanitasi Rumah Tangga</option>
+                <option value="TTU (Tempat-Tempat Umum)">TTU (Tempat-Tempat Umum)</option>
+                <option value="TPM (Tempat Pengelolaan Makanan)">TPM (Tempat Pengelolaan Makanan)</option>
+                <option value="Pengendalian Vektor">Pengendalian Vektor</option>
+                <option value="Zoonosis (Gigitan Hewan/Rabies)">Zoonosis (Gigitan Hewan/Rabies)</option>
+              </select>
+            </div>
+            <div><label>Nama Sasaran / Tempat *</label><input type="text" id="keslingNamaSasaran" placeholder="Nama warung, sumur, TPM, dll"></div>
+            <div><label>Alamat</label><input type="text" id="keslingAlamat" placeholder="Dusun/RT-RW/Desa"></div>
+            <div>
+              <label>Hasil Penilaian</label>
+              <select id="keslingHasil">
+                <option value="">-- Pilih --</option>
+                <option value="Memenuhi Syarat">Memenuhi Syarat</option>
+                <option value="Tidak Memenuhi Syarat">Tidak Memenuhi Syarat</option>
+                <option value="Perlu Perbaikan">Perlu Perbaikan</option>
+              </select>
+            </div>
+            <div>
+              <label>Status Tindak Lanjut</label>
+              <select id="keslingTindakLanjut">
+                <option value="Belum Ditindaklanjuti">Belum Ditindaklanjuti</option>
+                <option value="Dalam Proses">Dalam Proses</option>
+                <option value="Selesai">Selesai</option>
+              </select>
+            </div>
+          </div>
+          <label>Rekomendasi</label>
+          <textarea id="keslingRekomendasi" placeholder="Rekomendasi perbaikan buat pemilik/sasaran"></textarea>
+          <label>Catatan</label>
+          <textarea id="keslingCatatan" placeholder="Catatan tambahan"></textarea>
+          <button class="btn-primary" onclick="simpanKesling()">Simpan Inspeksi</button>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2>Riwayat Inspeksi</h2>
+          <div class="grid-3">
+            <div>
+              <label>Filter Jenis</label>
+              <select id="keslingFilterJenis" onchange="muatRiwayatKesling()">
+                <option value="">-- Semua --</option>
+                <option value="Sarana Air Minum">Sarana Air Minum</option>
+                <option value="Sanitasi Rumah Tangga">Sanitasi Rumah Tangga</option>
+                <option value="TTU (Tempat-Tempat Umum)">TTU (Tempat-Tempat Umum)</option>
+                <option value="TPM (Tempat Pengelolaan Makanan)">TPM (Tempat Pengelolaan Makanan)</option>
+                <option value="Pengendalian Vektor">Pengendalian Vektor</option>
+                <option value="Zoonosis (Gigitan Hewan/Rabies)">Zoonosis (Gigitan Hewan/Rabies)</option>
+              </select>
+            </div>
+            <div><label>Dari Tanggal</label><input type="date" id="keslingDari" onchange="muatRiwayatKesling()"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="keslingSampai" onchange="muatRiwayatKesling()"></div>
+          </div>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Jenis</th><th>Nama Sasaran</th><th>Hasil</th><th>Tindak Lanjut</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelRiwayatKesling"><tr><td colspan="6">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
 
       <!-- ============ REGISTER & KOHORT ============ -->
@@ -1260,6 +1431,8 @@ function gantiSubtabK4(tab) {
   };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Klaster 4";
   if (tab === "dashboard") muatDashboardK4();
+  if (tab === "klb") muatDaftarKlb();
+  if (tab === "kesling") muatRiwayatKesling();
 }
 
 // ---------- PROGRAM PENYAKIT MENULAR — inner sub-tabs ----------
@@ -2673,6 +2846,221 @@ async function muatStatusSkdrDashboard() {
   el.textContent = jumlahSinyal > 0 ? `⚠ ${jumlahSinyal} Sinyal` : "Aman";
 }
 
+// ---------- RESPON KLB ----------
+let klbAktifId = null;
+
+function bukaFormKlbBaru() {
+  document.getElementById("klbFormWrap").style.display = "block";
+  document.getElementById("msgKlbBaru").innerHTML = "";
+  document.getElementById("klbJudul").value = "";
+  document.getElementById("klbJenisPenyakit").value = "";
+  document.getElementById("klbLokasi").value = "";
+  document.getElementById("klbTanggalDitemukan").value = new Date().toISOString().split("T")[0];
+  document.getElementById("klbJumlahKasus").value = "";
+  document.getElementById("klbJumlahMeninggal").value = "";
+  document.getElementById("klbSumberLaporan").value = "";
+  document.getElementById("klbCatatanAwal").value = "";
+}
+
+async function simpanKlbBaru() {
+  const msgBox = document.getElementById("msgKlbBaru");
+  const judul = document.getElementById("klbJudul").value.trim();
+  const jenisPenyakit = document.getElementById("klbJenisPenyakit").value.trim();
+  const tanggalDitemukan = document.getElementById("klbTanggalDitemukan").value;
+  if (!judul || !jenisPenyakit || !tanggalDitemukan) { msgBox.innerHTML = `<div class="msg msg-error">Isi judul, jenis penyakit, dan tanggal ditemukan dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("klb_kejadian").insert({
+    judul,
+    jenis_penyakit: jenisPenyakit,
+    lokasi: document.getElementById("klbLokasi").value.trim() || null,
+    tanggal_ditemukan: tanggalDitemukan,
+    jumlah_kasus: document.getElementById("klbJumlahKasus").value !== "" ? parseInt(document.getElementById("klbJumlahKasus").value) : 0,
+    jumlah_meninggal: document.getElementById("klbJumlahMeninggal").value !== "" ? parseInt(document.getElementById("klbJumlahMeninggal").value) : 0,
+    sumber_laporan: document.getElementById("klbSumberLaporan").value || null,
+    catatan: document.getElementById("klbCatatanAwal").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  document.getElementById("klbFormWrap").style.display = "none";
+  await muatDaftarKlb();
+}
+
+async function muatDaftarKlb() {
+  const tbody = document.getElementById("tabelDaftarKlb");
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+
+  const filterStatus = document.getElementById("klbFilterStatus").value;
+  let q = supabaseClient.from("klb_kejadian").select("*").order("tanggal_ditemukan", { ascending: false });
+  if (filterStatus) q = q.eq("status", filterStatus);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada kejadian KLB.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${new Date(k.tanggal_ditemukan).toLocaleDateString("id-ID")}</td>
+      <td>${k.judul}</td>
+      <td>${k.jenis_penyakit}</td>
+      <td>${k.lokasi || "-"}</td>
+      <td>${k.jumlah_kasus}</td>
+      <td><span class="tag-status-tb${k.status === 'Aktif' ? ' masalah' : ''}${k.status === 'Selesai' ? ' selesai' : ''}">${k.status}</span></td>
+      <td><button class="btn-secondary" onclick="bukaDetailKlb('${k.id}')">Buka</button></td>
+    </tr>
+  `).join("");
+}
+
+async function bukaDetailKlb(id) {
+  klbAktifId = id;
+  document.getElementById("klbDetailWrap").style.display = "block";
+  document.getElementById("msgKlbDetail").innerHTML = "";
+
+  const { data, error } = await supabaseClient.from("klb_kejadian").select("*").eq("id", id).single();
+  if (error) { document.getElementById("msgKlbDetail").innerHTML = `<div class="msg msg-error">Gagal muat: ${error.message}</div>`; return; }
+
+  document.getElementById("klbDetailJudul").textContent = data.judul;
+  document.getElementById("klbDetailKasus").textContent = data.jumlah_kasus;
+  document.getElementById("klbDetailMeninggal").textContent = data.jumlah_meninggal;
+  document.getElementById("klbDetailStatus").textContent = data.status;
+  document.getElementById("klbDetailLokasi").textContent = data.lokasi || "-";
+  document.getElementById("klbDetailSumber").textContent = data.sumber_laporan || "-";
+
+  document.getElementById("klbTindakanTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("klbTindakanJenis").value = "";
+  document.getElementById("klbTindakanDeskripsi").value = "";
+  document.getElementById("msgKlbTindakan").innerHTML = "";
+
+  await muatTindakanKlb();
+  document.getElementById("klbDetailWrap").scrollIntoView({ behavior: "smooth" });
+}
+
+async function ubahStatusKlb(status) {
+  if (!klbAktifId) return;
+  const { error } = await supabaseClient.from("klb_kejadian").update({ status, updated_at: new Date().toISOString() }).eq("id", klbAktifId);
+  if (error) { document.getElementById("msgKlbDetail").innerHTML = `<div class="msg msg-error">Gagal ubah status: ${error.message}</div>`; return; }
+  document.getElementById("klbDetailStatus").textContent = status;
+  document.getElementById("msgKlbDetail").innerHTML = `<div class="msg msg-success">Status diubah jadi ${status}.</div>`;
+  await muatDaftarKlb();
+}
+
+async function muatTindakanKlb() {
+  const tbody = document.getElementById("tabelTindakanKlb");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("klb_tindakan")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("klb_id", klbAktifId)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada tindakan.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(t => `
+    <tr>
+      <td>${new Date(t.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${t.jenis_tindakan || "-"}</td>
+      <td>${t.deskripsi || "-"}</td>
+      <td>${t.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanTindakanKlb() {
+  const msgBox = document.getElementById("msgKlbTindakan");
+  if (!klbAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Buka kejadian KLB dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("klbTindakanTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("klb_tindakan").insert({
+    klb_id: klbAktifId,
+    tanggal,
+    jenis_tindakan: document.getElementById("klbTindakanJenis").value || null,
+    deskripsi: document.getElementById("klbTindakanDeskripsi").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Tindakan tersimpan.</div>`;
+  document.getElementById("klbTindakanDeskripsi").value = "";
+  await muatTindakanKlb();
+}
+
+// ---------- KESEHATAN LINGKUNGAN ----------
+async function simpanKesling() {
+  const msgBox = document.getElementById("msgKesling");
+  const tanggal = document.getElementById("keslingTanggal").value;
+  const jenis = document.getElementById("keslingJenis").value;
+  const namaSasaran = document.getElementById("keslingNamaSasaran").value.trim();
+  if (!tanggal || !jenis || !namaSasaran) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal, jenis inspeksi, dan nama sasaran dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("inspeksi_kesling").insert({
+    tanggal,
+    jenis_inspeksi: jenis,
+    nama_sasaran: namaSasaran,
+    alamat: document.getElementById("keslingAlamat").value.trim() || null,
+    hasil_penilaian: document.getElementById("keslingHasil").value || null,
+    rekomendasi: document.getElementById("keslingRekomendasi").value.trim() || null,
+    tindak_lanjut_status: document.getElementById("keslingTindakLanjut").value || "Belum Ditindaklanjuti",
+    catatan: document.getElementById("keslingCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Inspeksi tersimpan.</div>`;
+  document.getElementById("keslingNamaSasaran").value = "";
+  document.getElementById("keslingAlamat").value = "";
+  document.getElementById("keslingRekomendasi").value = "";
+  document.getElementById("keslingCatatan").value = "";
+  await muatRiwayatKesling();
+}
+
+async function muatRiwayatKesling() {
+  const tbody = document.getElementById("tabelRiwayatKesling");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const filterJenis = document.getElementById("keslingFilterJenis").value;
+  const dari = document.getElementById("keslingDari").value;
+  const sampai = document.getElementById("keslingSampai").value;
+
+  let q = supabaseClient.from("inspeksi_kesling").select("*, profil_pegawai:petugas_id(nama)").order("tanggal", { ascending: false }).limit(200);
+  if (filterJenis) q = q.eq("jenis_inspeksi", filterJenis);
+  if (dari) q = q.gte("tanggal", dari);
+  if (sampai) q = q.lte("tanggal", sampai);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan inspeksi.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.jenis_inspeksi}</td>
+      <td>${r.nama_sasaran}</td>
+      <td><span class="tag-status-tb${r.hasil_penilaian === 'Tidak Memenuhi Syarat' ? ' masalah' : ''}${r.hasil_penilaian === 'Memenuhi Syarat' ? ' selesai' : ''}">${r.hasil_penilaian || "-"}</span></td>
+      <td>
+        <select onchange="ubahTindakLanjutKesling('${r.id}', this.value)" style="font-size:12px; padding:2px 4px;">
+          <option value="Belum Ditindaklanjuti"${r.tindak_lanjut_status === 'Belum Ditindaklanjuti' ? ' selected' : ''}>Belum Ditindaklanjuti</option>
+          <option value="Dalam Proses"${r.tindak_lanjut_status === 'Dalam Proses' ? ' selected' : ''}>Dalam Proses</option>
+          <option value="Selesai"${r.tindak_lanjut_status === 'Selesai' ? ' selected' : ''}>Selesai</option>
+        </select>
+      </td>
+      <td>${r.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function ubahTindakLanjutKesling(id, status) {
+  const { error } = await supabaseClient.from("inspeksi_kesling").update({ tindak_lanjut_status: status, updated_at: new Date().toISOString() }).eq("id", id);
+  if (error) { alert("Gagal ubah status: " + error.message); }
+  await muatRiwayatKesling();
+}
+
 // ---------- REGISTER & KOHORT ----------
 const SUBREGISTER = ["kegiatan", "kohort"];
 function gantiSubRegister(sub) {
@@ -3153,7 +3541,7 @@ async function muatLaporanInternalK4() {
 // ---------- AUDIT TRAIL — KLASTER 4 ----------
 let auditLogK4Cache = [];
 
-const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "pemeriksaan_kusta", "kartu_pengobatan_mdt", "pemeriksaan_hiv", "kartu_pengobatan_arv", "pemeriksaan_hepatitis", "pemeriksaan_malaria", "pemeriksaan_ispa", "pemeriksaan_diare", "pemeriksaan_imunisasi_k4", "skdr_mingguan", "skdr_mingguan_item", "rujukan_lab_k4"];
+const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "pemeriksaan_kusta", "kartu_pengobatan_mdt", "pemeriksaan_hiv", "kartu_pengobatan_arv", "pemeriksaan_hepatitis", "pemeriksaan_malaria", "pemeriksaan_ispa", "pemeriksaan_diare", "pemeriksaan_imunisasi_k4", "skdr_mingguan", "skdr_mingguan_item", "klb_kejadian", "klb_tindakan", "inspeksi_kesling", "rujukan_lab_k4"];
 
 const LABEL_TABEL_AUDIT_K4 = {
   pemeriksaan_tb: "Kasus TB", kartu_kontrol_oat: "Kartu Kontrol OAT",
@@ -3163,6 +3551,8 @@ const LABEL_TABEL_AUDIT_K4 = {
   pemeriksaan_malaria: "Kasus Malaria", pemeriksaan_ispa: "Kasus ISPA",
   pemeriksaan_diare: "Kasus Diare", pemeriksaan_imunisasi_k4: "Imunisasi Program",
   skdr_mingguan: "Laporan SKDR Mingguan", skdr_mingguan_item: "Rekap Penyakit SKDR",
+  klb_kejadian: "Kejadian KLB", klb_tindakan: "Tindakan Pengendalian KLB",
+  inspeksi_kesling: "Inspeksi Kesehatan Lingkungan",
   rujukan_lab_k4: "Rujukan & Permintaan Lab"
 };
 const LABEL_AKSI_AUDIT_K4 = { insert: "Tambah", update: "Ubah", delete: "Hapus" };

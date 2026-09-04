@@ -2673,6 +2673,85 @@ create trigger trg_audit_skdr_mingguan_item after insert or update or delete on 
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 69. KLASTER 4 — FASE 6: Respon KLB (kejadian + tindakan
+--     pengendalian), Kesehatan Lingkungan (inspeksi TTU/TPM/air/
+--     sanitasi/vektor/zoonosis)
+-- ============================================================
+
+-- ---------- Kejadian KLB (header) ----------
+create table if not exists klb_kejadian (
+  id uuid primary key default gen_random_uuid(),
+  judul text not null,
+  jenis_penyakit text not null,
+  lokasi text,
+  tanggal_ditemukan date not null default current_date,
+  jumlah_kasus int not null default 0,
+  jumlah_meninggal int not null default 0,
+  sumber_laporan text check (sumber_laporan in ('Sinyal SKDR', 'Laporan Masyarakat', 'Laporan Faskes/Kader', 'Lainnya')),
+  status text not null default 'Aktif' check (status in ('Aktif', 'Terkendali', 'Selesai')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_klb_kejadian_status on klb_kejadian(status);
+create index if not exists idx_klb_kejadian_tanggal on klb_kejadian(tanggal_ditemukan);
+
+alter table klb_kejadian enable row level security;
+create policy "authenticated_all_klb_kejadian" on klb_kejadian for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_klb_kejadian on klb_kejadian;
+create trigger trg_audit_klb_kejadian after insert or update or delete on klb_kejadian
+  for each row execute function fn_audit_log();
+
+-- ---------- Tindakan pengendalian per kejadian KLB (timeline) ----------
+create table if not exists klb_tindakan (
+  id uuid primary key default gen_random_uuid(),
+  klb_id uuid not null references klb_kejadian(id) on delete cascade,
+  tanggal date not null default current_date,
+  jenis_tindakan text check (jenis_tindakan in ('Penyelidikan Epidemiologi (PE)', 'Pengambilan Sampel', 'Fogging/Pengendalian Vektor', 'ORI (Outbreak Response Immunization)', 'Penyuluhan/Edukasi Masyarakat', 'Isolasi/Karantina', 'Rujukan Kasus', 'Lain-lain')),
+  deskripsi text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_klb_tindakan_klb on klb_tindakan(klb_id);
+
+alter table klb_tindakan enable row level security;
+create policy "authenticated_all_klb_tindakan" on klb_tindakan for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_klb_tindakan on klb_tindakan;
+create trigger trg_audit_klb_tindakan after insert or update or delete on klb_tindakan
+  for each row execute function fn_audit_log();
+
+-- ---------- Inspeksi Kesehatan Lingkungan (berbasis tempat/sasaran, bukan pasien) ----------
+create table if not exists inspeksi_kesling (
+  id uuid primary key default gen_random_uuid(),
+  tanggal date not null default current_date,
+  jenis_inspeksi text not null check (jenis_inspeksi in ('Sarana Air Minum', 'Sanitasi Rumah Tangga', 'TTU (Tempat-Tempat Umum)', 'TPM (Tempat Pengelolaan Makanan)', 'Pengendalian Vektor', 'Zoonosis (Gigitan Hewan/Rabies)')),
+  nama_sasaran text not null,
+  alamat text,
+  hasil_penilaian text check (hasil_penilaian in ('Memenuhi Syarat', 'Tidak Memenuhi Syarat', 'Perlu Perbaikan')),
+  rekomendasi text,
+  tindak_lanjut_status text not null default 'Belum Ditindaklanjuti' check (tindak_lanjut_status in ('Belum Ditindaklanjuti', 'Dalam Proses', 'Selesai')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_inspeksi_kesling_jenis on inspeksi_kesling(jenis_inspeksi);
+create index if not exists idx_inspeksi_kesling_tanggal on inspeksi_kesling(tanggal);
+
+alter table inspeksi_kesling enable row level security;
+create policy "authenticated_all_inspeksi_kesling" on inspeksi_kesling for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_inspeksi_kesling on inspeksi_kesling;
+create trigger trg_audit_inspeksi_kesling after insert or update or delete on inspeksi_kesling
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
