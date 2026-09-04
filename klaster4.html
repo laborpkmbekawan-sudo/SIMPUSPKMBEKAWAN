@@ -95,7 +95,7 @@
       <!-- ============ DASHBOARD ============ -->
       <div id="panelDashboard">
 
-        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Alert kontak belum dilacak &amp; status SKDR masih direncanakan buat sesi berikutnya (nunggu modul Surveilans dibangun). Angka di bawah baru kunjungan hari ini yang sudah real.</p>
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Alert kontak umum masih direncanakan buat sesi berikutnya. Status SKDR di bawah sudah baca data real dari laporan mingguan.</p>
 
         <div class="k4-stat-grid">
           <div class="k4-stat-card" style="--accent:#1c7d7f;">
@@ -108,7 +108,7 @@
           </div>
           <div class="k4-stat-card" style="--accent:#6a4c93;">
             <div class="label">Status Kewaspadaan Dini (SKDR)</div>
-            <div class="value">-</div>
+            <div class="value" id="statSkdrK4" style="font-size:15px;">Memuat...</div>
           </div>
         </div>
 
@@ -800,13 +800,145 @@
 
           </div>
         </div>
-        <div id="programPanel-imunisasi" style="display:none;"><div class="k4-segera"><div class="ic">💉</div><div class="t">Imunisasi Program</div>Imunisasi terkait penyakit menular dewasa/lansia — segera dibangun.</div></div>
+        <!-- ===== Imunisasi Program ===== -->
+        <div id="programPanel-imunisasi" style="display:none;">
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">💉</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Imunisasi dewasa/lansia terkait pengendalian penyakit menular (Td, Hepatitis B dewasa, Influenza, Pneumonia, Meningitis Haji, COVID-19 booster, rabies pasca gigitan, dll). Imunisasi dasar bayi/balita ada di menu Klaster 2.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="imunCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienImun();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienImun()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="imunHasilCari"></div>
+          </div>
+
+          <div id="imunWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Imunisasi — <span id="imunNamaPasien"></span></h2>
+              <div id="msgImun"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="imunTanggal" required></div>
+                <div>
+                  <label>Jenis Imunisasi</label>
+                  <select id="imunJenis">
+                    <option value="">-- Pilih --</option>
+                    <option value="Td (Tetanus Difteri)">Td (Tetanus Difteri)</option>
+                    <option value="Hepatitis B Dewasa">Hepatitis B Dewasa</option>
+                    <option value="Influenza">Influenza</option>
+                    <option value="Pneumonia (PPV23)">Pneumonia (PPV23)</option>
+                    <option value="Meningitis Meningokokus (Calon Jemaah Haji)">Meningitis Meningokokus (Calon Jemaah Haji)</option>
+                    <option value="COVID-19 Booster">COVID-19 Booster</option>
+                    <option value="Rabies (Pasca Gigitan)">Rabies (Pasca Gigitan)</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Sasaran</label>
+                  <select id="imunSasaran">
+                    <option value="">-- Pilih --</option>
+                    <option value="Lansia">Lansia</option>
+                    <option value="WUS/Bumil">WUS/Bumil</option>
+                    <option value="Calon Jemaah Haji">Calon Jemaah Haji</option>
+                    <option value="Tenaga Kesehatan">Tenaga Kesehatan</option>
+                    <option value="Kontak Erat/Pasca Pajanan">Kontak Erat/Pasca Pajanan</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                  </select>
+                </div>
+                <div><label>Dosis ke-</label><input type="number" id="imunDosisKe" min="1" placeholder="1"></div>
+                <div>
+                  <label>KIPI (Kejadian Ikutan Pasca Imunisasi)</label>
+                  <select id="imunKipi">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Ada">Tidak Ada</option>
+                    <option value="Ringan">Ringan</option>
+                    <option value="Sedang">Sedang</option>
+                    <option value="Berat - Rujuk">Berat - Rujuk</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="imunCatatan" placeholder="Catatan tambahan"></textarea>
+              <button class="btn-primary" onclick="simpanImun()">Simpan Imunisasi</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Imunisasi</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Jenis</th><th>Sasaran</th><th>Dosis ke-</th><th>KIPI</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatImun"><tr><td colspan="6">Belum ada catatan imunisasi.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
 
       </div>
 
       <!-- ============ SURVEILANS ============ -->
       <div id="panelSurveilans" style="display:none;">
-        <div class="k4-segera"><div class="ic">📡</div><div class="t">Surveilans &amp; Kewaspadaan Dini</div>SKDR mingguan, deteksi sinyal lonjakan kasus, Penyelidikan Epidemiologi (PE), dan pelacakan kontak umum — segera dibangun.</div>
+
+        <div class="card" style="--accent:#6a4c93;">
+          <h2><span class="card-num" style="background:#6a4c93;">📡</span> Laporan SKDR Mingguan (W2)</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Sistem Kewaspadaan Dini &amp; Respons — rekap 24 jenis penyakit potensial wabah per minggu epidemiologi. Penyakit bertanda 🚩 wajib dilaporkan &lt;24 jam kalau ada kasus (sinyal langsung). Penyelidikan Epidemiologi (PE) dan Respon KLB dibangun terpisah di menu Respon KLB.</p>
+          <div class="grid-3">
+            <div><label>Minggu Epidemiologi ke-</label><input type="number" id="skdrMingguKe" min="1" max="53"></div>
+            <div><label>Tahun</label><input type="number" id="skdrTahun" min="2020" max="2100"></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button class="btn-secondary" onclick="isiMingguIniSkdr()" style="margin-bottom:12px;">Minggu Ini</button>
+              <button class="btn-primary" onclick="bukaLaporanSkdr()" style="margin-bottom:12px;">Buka / Buat Laporan</button>
+            </div>
+          </div>
+          <div id="msgSkdr"></div>
+        </div>
+
+        <div id="skdrWrap" style="display:none;">
+
+          <div class="k4-stat-grid">
+            <div class="k4-stat-card" style="--accent:#6a4c93;">
+              <div class="label">Periode</div>
+              <div class="value" id="skdrPeriodeLabel" style="font-size:15px;">-</div>
+            </div>
+            <div class="k4-stat-card" style="--accent:#c0503f;">
+              <div class="label">Jumlah Sinyal Aktif</div>
+              <div class="value" id="skdrJumlahSinyal">0</div>
+            </div>
+            <div class="k4-stat-card" style="--accent:#2f9e5c;">
+              <div class="label">Status Laporan</div>
+              <div class="value" id="skdrStatusLabel" style="font-size:15px;">-</div>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2>Rekap Kasus per Penyakit</h2>
+            <table>
+              <thead><tr><th>Penyakit</th><th>Jumlah Kasus</th><th>Jumlah Kematian</th><th>Sinyal</th></tr></thead>
+              <tbody id="tabelItemSkdr"><tr><td colspan="4">Memuat...</td></tr></tbody>
+            </table>
+            <label style="margin-top:10px;">Catatan Laporan</label>
+            <textarea id="skdrCatatan" placeholder="Catatan tambahan untuk laporan minggu ini"></textarea>
+            <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+              <button class="btn-primary" onclick="simpanItemSkdr()">Simpan Rekap</button>
+              <button class="btn-secondary" id="btnTandaiTerkirimSkdr" onclick="tandaiTerkirimSkdr()">Tandai Terkirim ke Dinas</button>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat Laporan SKDR</h2>
+            <table>
+              <thead><tr><th>Minggu</th><th>Periode</th><th>Sinyal</th><th>Status</th><th></th></tr></thead>
+              <tbody id="tabelRiwayatSkdr"><tr><td colspan="5">Belum ada laporan.</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
+
       </div>
 
       <!-- ============ KLB ============ -->
@@ -847,6 +979,7 @@
                   <option value="Kasus Malaria">Kasus Malaria</option>
                   <option value="Kasus ISPA">Kasus ISPA</option>
                   <option value="Kasus Diare">Kasus Diare</option>
+                  <option value="Imunisasi Program">Imunisasi Program</option>
                 </select>
               </div>
             </div>
@@ -1164,6 +1297,7 @@ async function muatDashboardK4() {
   if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
 
   document.getElementById("statKunjunganK4").textContent = data.length;
+  muatStatusSkdrDashboard();
 
   if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada pasien Klaster 4 hari ini.</td></tr>`; return; }
 
@@ -2203,6 +2337,342 @@ async function simpanDia() {
   await muatRiwayatDia();
 }
 
+// ---------- IMUNISASI PROGRAM (dewasa/lansia, klaster 4) ----------
+let pasienTerpilihImun = null;
+
+async function cariPasienImun() {
+  const kunci = document.getElementById("imunCari").value.trim();
+  const hasilDiv = document.getElementById("imunHasilCari");
+  document.getElementById("imunWrap").style.display = "none";
+  pasienTerpilihImun = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienImun(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienImunDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienImun = data;
+  }
+}
+
+function pilihPasienImunDariHasil(i) {
+  pilihPasienImun(window._hasilCariPasienImun[i]);
+}
+
+function pilihPasienImun(pasien) {
+  pasienTerpilihImun = pasien;
+  document.getElementById("imunHasilCari").innerHTML = "";
+  document.getElementById("imunNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("imunWrap").style.display = "block";
+
+  document.getElementById("msgImun").innerHTML = "";
+  document.getElementById("imunTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("imunJenis").value = "";
+  document.getElementById("imunSasaran").value = "";
+  document.getElementById("imunDosisKe").value = "";
+  document.getElementById("imunKipi").value = "";
+  document.getElementById("imunCatatan").value = "";
+
+  muatRiwayatImun();
+}
+
+async function muatRiwayatImun() {
+  const tbody = document.getElementById("tabelRiwayatImun");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pemeriksaan_imunisasi_k4")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihImun.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan imunisasi.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td>${new Date(d.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${d.jenis_imunisasi || "-"}</td>
+      <td>${d.sasaran || "-"}</td>
+      <td>${d.dosis_ke ?? "-"}</td>
+      <td><span class="tag-status-tb${d.kipi === 'Berat - Rujuk' ? ' masalah' : ''}${d.kipi === 'Tidak Ada' ? ' selesai' : ''}">${d.kipi || "-"}</span></td>
+      <td>${d.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanImun() {
+  const msgBox = document.getElementById("msgImun");
+  if (!pasienTerpilihImun) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("imunTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pemeriksaan_imunisasi_k4").insert({
+    pasien_id: pasienTerpilihImun.id,
+    tanggal,
+    jenis_imunisasi: document.getElementById("imunJenis").value || null,
+    sasaran: document.getElementById("imunSasaran").value || null,
+    dosis_ke: document.getElementById("imunDosisKe").value !== "" ? parseInt(document.getElementById("imunDosisKe").value) : null,
+    kipi: document.getElementById("imunKipi").value || null,
+    catatan: document.getElementById("imunCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan imunisasi tersimpan.</div>`;
+  document.getElementById("imunCatatan").value = "";
+  await muatRiwayatImun();
+}
+
+// ---------- SURVEILANS & KEWASPADAAN DINI (SKDR MINGGUAN) ----------
+// Daftar 24 penyakit standar SKDR (W2). is_alert = wajib lapor <24 jam kalau ada kasus (sinyal langsung).
+const DAFTAR_PENYAKIT_SKDR = [
+  { kode: "AFP", nama: "AFP (Lumpuh Layuh Mendadak)", alert: true },
+  { kode: "DIFTERI", nama: "Difteri", alert: true },
+  { kode: "PERTUSIS", nama: "Pertusis", alert: true },
+  { kode: "TETANUS_NEO", nama: "Tetanus Neonatorum", alert: true },
+  { kode: "TETANUS", nama: "Tetanus (Bukan Neonatorum)", alert: true },
+  { kode: "CAMPAK", nama: "Campak", alert: true },
+  { kode: "KOLERA", nama: "Suspek Kolera", alert: true },
+  { kode: "ANTRAKS", nama: "Suspek Antraks", alert: true },
+  { kode: "FLU_BURUNG", nama: "Suspek Flu Burung pada Manusia", alert: true },
+  { kode: "MERS", nama: "Suspek MERS-CoV", alert: true },
+  { kode: "KLASTER_TDK_LAZIM", nama: "Klaster Penyakit Tidak Lazim", alert: true },
+  { kode: "MENINGITIS", nama: "Suspek Meningitis/Ensefalitis", alert: true },
+  { kode: "DIARE_AKUT", nama: "Diare Akut", alert: false },
+  { kode: "DISENTRI", nama: "Diare Berdarah/Disentri", alert: false },
+  { kode: "MALARIA_KONF", nama: "Malaria Konfirmasi", alert: false },
+  { kode: "DBD", nama: "Tersangka Demam Dengue (DBD)", alert: false },
+  { kode: "PNEUMONIA", nama: "Pneumonia", alert: false },
+  { kode: "ISPA", nama: "ISPA", alert: false },
+  { kode: "LEPTOSPIROSIS", nama: "Suspek Leptospirosis", alert: false },
+  { kode: "ILI", nama: "ILI (Influenza Like Illness)", alert: false },
+  { kode: "CHIKUNGUNYA", nama: "Chikungunya", alert: false },
+  { kode: "HFMD", nama: "Suspek HFMD (Hand Foot Mouth Disease)", alert: false },
+  { kode: "GHPR", nama: "Gigitan Hewan Penular Rabies (GHPR)", alert: false },
+  { kode: "JAUNDICE", nama: "Jaundice Akut", alert: false }
+];
+// Ambang lonjakan sederhana buat penyakit non-alert (belum pakai baseline historis, versi awal).
+const AMBANG_SINYAL_NONALERT_SKDR = 5;
+
+let skdrAktif = null;
+let skdrItemAktif = [];
+
+function isoWeekInfo(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  return { minggu: weekNo, tahun: date.getUTCFullYear() };
+}
+
+function rentangMingguDariNomor(mingguKe, tahun) {
+  const simple = new Date(Date.UTC(tahun, 0, 1 + (mingguKe - 1) * 7));
+  const dayOfWeek = simple.getUTCDay() || 7;
+  const senin = new Date(simple);
+  senin.setUTCDate(simple.getUTCDate() - dayOfWeek + 1);
+  const minggu = new Date(senin);
+  minggu.setUTCDate(senin.getUTCDate() + 6);
+  return { mulai: senin.toISOString().split("T")[0], selesai: minggu.toISOString().split("T")[0] };
+}
+
+function isiMingguIniSkdr() {
+  const info = isoWeekInfo(new Date());
+  document.getElementById("skdrMingguKe").value = info.minggu;
+  document.getElementById("skdrTahun").value = info.tahun;
+}
+
+async function bukaLaporanSkdr() {
+  const msgBox = document.getElementById("msgSkdr");
+  const mingguKe = parseInt(document.getElementById("skdrMingguKe").value);
+  const tahun = parseInt(document.getElementById("skdrTahun").value);
+  if (!mingguKe || !tahun) { msgBox.innerHTML = `<div class="msg msg-error">Isi minggu ke- dan tahun dulu (atau klik Minggu Ini).</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Memuat laporan...</div>`;
+
+  let { data: header, error } = await supabaseClient
+    .from("skdr_mingguan")
+    .select("*")
+    .eq("minggu_ke", mingguKe)
+    .eq("tahun", tahun)
+    .maybeSingle();
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal muat: ${error.message}</div>`; return; }
+
+  if (!header) {
+    const rentang = rentangMingguDariNomor(mingguKe, tahun);
+    const { data: headerBaru, error: errBuat } = await supabaseClient
+      .from("skdr_mingguan")
+      .insert({ minggu_ke: mingguKe, tahun, tanggal_mulai: rentang.mulai, tanggal_selesai: rentang.selesai, petugas_id: profilSaya.id })
+      .select()
+      .single();
+    if (errBuat) { msgBox.innerHTML = `<div class="msg msg-error">Gagal buat laporan baru: ${errBuat.message}</div>`; return; }
+    header = headerBaru;
+
+    const itemBaru = DAFTAR_PENYAKIT_SKDR.map(p => ({
+      skdr_id: header.id, kode_penyakit: p.kode, nama_penyakit: p.nama, is_alert: p.alert
+    }));
+    const { error: errItem } = await supabaseClient.from("skdr_mingguan_item").insert(itemBaru);
+    if (errItem) { msgBox.innerHTML = `<div class="msg msg-error">Laporan dibuat tapi gagal isi daftar penyakit: ${errItem.message}</div>`; return; }
+  }
+
+  skdrAktif = header;
+  msgBox.innerHTML = "";
+  document.getElementById("skdrWrap").style.display = "block";
+  document.getElementById("skdrCatatan").value = header.catatan || "";
+  await muatItemSkdr();
+  await muatRiwayatSkdr();
+}
+
+async function muatItemSkdr() {
+  const tbody = document.getElementById("tabelItemSkdr");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("skdr_mingguan_item")
+    .select("*")
+    .eq("skdr_id", skdrAktif.id)
+    .order("is_alert", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  skdrItemAktif = data || [];
+  renderTampilanSkdr();
+}
+
+function renderTampilanSkdr() {
+  document.getElementById("skdrPeriodeLabel").textContent = `Minggu ${skdrAktif.minggu_ke}/${skdrAktif.tahun} (${new Date(skdrAktif.tanggal_mulai).toLocaleDateString("id-ID")} - ${new Date(skdrAktif.tanggal_selesai).toLocaleDateString("id-ID")})`;
+  document.getElementById("skdrStatusLabel").textContent = skdrAktif.status === "terkirim" ? "Terkirim ke Dinas" : "Draft";
+  document.getElementById("btnTandaiTerkirimSkdr").disabled = skdrAktif.status === "terkirim";
+  document.getElementById("btnTandaiTerkirimSkdr").textContent = skdrAktif.status === "terkirim" ? "Sudah Terkirim" : "Tandai Terkirim ke Dinas";
+
+  const jumlahSinyal = skdrItemAktif.filter(i => i.is_sinyal).length;
+  document.getElementById("skdrJumlahSinyal").textContent = jumlahSinyal;
+
+  const tbody = document.getElementById("tabelItemSkdr");
+  tbody.innerHTML = skdrItemAktif.map(i => `
+    <tr${i.is_sinyal ? ' style="background:#fbeaea;"' : ''}>
+      <td>${i.is_alert ? "🚩 " : ""}${i.nama_penyakit}</td>
+      <td><input type="number" min="0" style="width:80px;" value="${i.jumlah_kasus}" onchange="ubahAngkaItemSkdr('${i.id}', 'jumlah_kasus', this.value)"></td>
+      <td><input type="number" min="0" style="width:80px;" value="${i.jumlah_kematian}" onchange="ubahAngkaItemSkdr('${i.id}', 'jumlah_kematian', this.value)"></td>
+      <td>${i.is_sinyal ? '<span class="tag-status-tb masalah">SINYAL</span>' : '-'}</td>
+    </tr>
+  `).join("");
+}
+
+function ubahAngkaItemSkdr(itemId, kolom, nilai) {
+  const item = skdrItemAktif.find(i => i.id === itemId);
+  if (!item) return;
+  item[kolom] = parseInt(nilai) || 0;
+  item.is_sinyal = (item.is_alert && item.jumlah_kasus > 0) || (!item.is_alert && item.jumlah_kasus >= AMBANG_SINYAL_NONALERT_SKDR);
+  renderTampilanSkdr();
+}
+
+async function simpanItemSkdr() {
+  const msgBox = document.getElementById("msgSkdr");
+  msgBox.innerHTML = `<div class="msg msg-success">Menyimpan...</div>`;
+
+  try {
+    await Promise.all(skdrItemAktif.map(i =>
+      supabaseClient.from("skdr_mingguan_item").update({
+        jumlah_kasus: i.jumlah_kasus, jumlah_kematian: i.jumlah_kematian, is_sinyal: i.is_sinyal
+      }).eq("id", i.id)
+    ));
+    const catatan = document.getElementById("skdrCatatan").value.trim() || null;
+    await supabaseClient.from("skdr_mingguan").update({ catatan, updated_at: new Date().toISOString() }).eq("id", skdrAktif.id);
+    skdrAktif.catatan = catatan;
+
+    msgBox.innerHTML = `<div class="msg msg-success">Rekap SKDR minggu ${skdrAktif.minggu_ke}/${skdrAktif.tahun} tersimpan.</div>`;
+    await muatRiwayatSkdr();
+    await muatStatusSkdrDashboard();
+  } catch (e) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${e.message}</div>`;
+  }
+}
+
+async function tandaiTerkirimSkdr() {
+  if (!confirm(`Tandai laporan SKDR minggu ${skdrAktif.minggu_ke}/${skdrAktif.tahun} sebagai terkirim ke Dinas Kesehatan?`)) return;
+
+  const { error } = await supabaseClient.from("skdr_mingguan")
+    .update({ status: "terkirim", tanggal_terkirim: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("id", skdrAktif.id);
+
+  if (error) { document.getElementById("msgSkdr").innerHTML = `<div class="msg msg-error">Gagal: ${error.message}</div>`; return; }
+
+  skdrAktif.status = "terkirim";
+  renderTampilanSkdr();
+  await muatRiwayatSkdr();
+}
+
+async function muatRiwayatSkdr() {
+  const tbody = document.getElementById("tabelRiwayatSkdr");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("skdr_mingguan")
+    .select("*, skdr_mingguan_item(is_sinyal)")
+    .order("tahun", { ascending: false })
+    .order("minggu_ke", { ascending: false })
+    .limit(30);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada laporan.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => {
+    const jumlahSinyal = (r.skdr_mingguan_item || []).filter(i => i.is_sinyal).length;
+    return `
+    <tr>
+      <td>Minggu ${r.minggu_ke}/${r.tahun}</td>
+      <td>${new Date(r.tanggal_mulai).toLocaleDateString("id-ID")} - ${new Date(r.tanggal_selesai).toLocaleDateString("id-ID")}</td>
+      <td>${jumlahSinyal > 0 ? `<span class="tag-status-tb masalah">${jumlahSinyal} Sinyal</span>` : '<span class="tag-status-tb selesai">Aman</span>'}</td>
+      <td>${r.status === "terkirim" ? "Terkirim" : "Draft"}</td>
+      <td><button class="btn-secondary" onclick="document.getElementById('skdrMingguKe').value=${r.minggu_ke}; document.getElementById('skdrTahun').value=${r.tahun}; bukaLaporanSkdr();">Buka</button></td>
+    </tr>
+  `;
+  }).join("");
+}
+
+async function muatStatusSkdrDashboard() {
+  const el = document.getElementById("statSkdrK4");
+  if (!el) return;
+  const info = isoWeekInfo(new Date());
+  const { data, error } = await supabaseClient
+    .from("skdr_mingguan")
+    .select("*, skdr_mingguan_item(is_sinyal)")
+    .eq("minggu_ke", info.minggu)
+    .eq("tahun", info.tahun)
+    .maybeSingle();
+
+  if (error || !data) { el.textContent = "Belum Lapor Minggu Ini"; return; }
+  const jumlahSinyal = (data.skdr_mingguan_item || []).filter(i => i.is_sinyal).length;
+  el.textContent = jumlahSinyal > 0 ? `⚠ ${jumlahSinyal} Sinyal` : "Aman";
+}
+
 // ---------- REGISTER & KOHORT ----------
 const SUBREGISTER = ["kegiatan", "kohort"];
 function gantiSubRegister(sub) {
@@ -2223,7 +2693,8 @@ const SUMBER_K4 = [
   { tabel: "pemeriksaan_hepatitis", label: "Skrining Hepatitis", ringkas: r => `${r.jenis_layanan || "-"} — HBsAg:${r.hasil_hbsag || "-"} / Anti-HCV:${r.hasil_anti_hcv || "-"}` },
   { tabel: "pemeriksaan_malaria", label: "Kasus Malaria", ringkas: r => `${r.jenis_pemeriksaan || "-"} — ${r.hasil || "-"} (${r.asal_penularan || "-"})` },
   { tabel: "pemeriksaan_ispa", label: "Kasus ISPA", ringkas: r => `${r.kelompok_usia || "-"} — ${r.klasifikasi || "-"} / ${r.status_pengobatan || "-"}` },
-  { tabel: "pemeriksaan_diare", label: "Kasus Diare", ringkas: r => `${r.kelompok_usia || "-"} — ${r.derajat_dehidrasi || "-"} / ${r.tatalaksana || "-"}` }
+  { tabel: "pemeriksaan_diare", label: "Kasus Diare", ringkas: r => `${r.kelompok_usia || "-"} — ${r.derajat_dehidrasi || "-"} / ${r.tatalaksana || "-"}` },
+  { tabel: "pemeriksaan_imunisasi_k4", label: "Imunisasi Program", ringkas: r => `${r.jenis_imunisasi || "-"} — ${r.sasaran || "-"} / Dosis ke-${r.dosis_ke ?? "-"}` }
 ];
 
 async function muatRegisterKegiatanK4() {
@@ -2682,7 +3153,7 @@ async function muatLaporanInternalK4() {
 // ---------- AUDIT TRAIL — KLASTER 4 ----------
 let auditLogK4Cache = [];
 
-const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "pemeriksaan_kusta", "kartu_pengobatan_mdt", "pemeriksaan_hiv", "kartu_pengobatan_arv", "pemeriksaan_hepatitis", "pemeriksaan_malaria", "pemeriksaan_ispa", "pemeriksaan_diare", "rujukan_lab_k4"];
+const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "pemeriksaan_kusta", "kartu_pengobatan_mdt", "pemeriksaan_hiv", "kartu_pengobatan_arv", "pemeriksaan_hepatitis", "pemeriksaan_malaria", "pemeriksaan_ispa", "pemeriksaan_diare", "pemeriksaan_imunisasi_k4", "skdr_mingguan", "skdr_mingguan_item", "rujukan_lab_k4"];
 
 const LABEL_TABEL_AUDIT_K4 = {
   pemeriksaan_tb: "Kasus TB", kartu_kontrol_oat: "Kartu Kontrol OAT",
@@ -2690,7 +3161,9 @@ const LABEL_TABEL_AUDIT_K4 = {
   kartu_pengobatan_mdt: "Kartu Pengobatan MDT", pemeriksaan_hiv: "Layanan HIV/IMS",
   kartu_pengobatan_arv: "Kartu Pengobatan ARV", pemeriksaan_hepatitis: "Skrining Hepatitis",
   pemeriksaan_malaria: "Kasus Malaria", pemeriksaan_ispa: "Kasus ISPA",
-  pemeriksaan_diare: "Kasus Diare", rujukan_lab_k4: "Rujukan & Permintaan Lab"
+  pemeriksaan_diare: "Kasus Diare", pemeriksaan_imunisasi_k4: "Imunisasi Program",
+  skdr_mingguan: "Laporan SKDR Mingguan", skdr_mingguan_item: "Rekap Penyakit SKDR",
+  rujukan_lab_k4: "Rujukan & Permintaan Lab"
 };
 const LABEL_AKSI_AUDIT_K4 = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
 const BADGE_AKSI_AUDIT_K4 = { insert: "badge-selesai", update: "badge-menunggu", delete: "badge-batal" };

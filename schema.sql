@@ -2598,6 +2598,81 @@ create trigger trg_audit_pemeriksaan_diare after insert or update or delete on p
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 68. KLASTER 4 — FASE 5: Program Imunisasi (dewasa/lansia terkait
+--     penyakit menular), Surveilans & Kewaspadaan Dini (SKDR mingguan)
+-- ============================================================
+
+create table if not exists pemeriksaan_imunisasi_k4 (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis_imunisasi text check (jenis_imunisasi in ('Td (Tetanus Difteri)', 'Hepatitis B Dewasa', 'Influenza', 'Pneumonia (PPV23)', 'Meningitis Meningokokus (Calon Jemaah Haji)', 'COVID-19 Booster', 'Rabies (Pasca Gigitan)', 'Lain-lain')),
+  sasaran text check (sasaran in ('Lansia', 'WUS/Bumil', 'Calon Jemaah Haji', 'Tenaga Kesehatan', 'Kontak Erat/Pasca Pajanan', 'Lain-lain')),
+  dosis_ke int,
+  kipi text check (kipi in ('Tidak Ada', 'Ringan', 'Sedang', 'Berat - Rujuk')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_imunisasi_k4_pasien on pemeriksaan_imunisasi_k4(pasien_id);
+
+alter table pemeriksaan_imunisasi_k4 enable row level security;
+create policy "authenticated_all_pemeriksaan_imunisasi_k4" on pemeriksaan_imunisasi_k4 for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_imunisasi_k4 on pemeriksaan_imunisasi_k4;
+create trigger trg_audit_pemeriksaan_imunisasi_k4 after insert or update or delete on pemeriksaan_imunisasi_k4
+  for each row execute function fn_audit_log();
+
+-- ---------- Laporan Mingguan SKDR (W2) — header per minggu epidemiologi ----------
+create table if not exists skdr_mingguan (
+  id uuid primary key default gen_random_uuid(),
+  minggu_ke int not null check (minggu_ke between 1 and 53),
+  tahun int not null check (tahun between 2020 and 2100),
+  tanggal_mulai date not null,
+  tanggal_selesai date not null,
+  status text not null default 'draft' check (status in ('draft', 'terkirim')),
+  tanggal_terkirim timestamptz,
+  catatan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (minggu_ke, tahun)
+);
+
+create index if not exists idx_skdr_mingguan_periode on skdr_mingguan(tahun, minggu_ke);
+
+alter table skdr_mingguan enable row level security;
+create policy "authenticated_all_skdr_mingguan" on skdr_mingguan for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_skdr_mingguan on skdr_mingguan;
+create trigger trg_audit_skdr_mingguan after insert or update or delete on skdr_mingguan
+  for each row execute function fn_audit_log();
+
+-- ---------- Item per jenis penyakit dalam 1 laporan SKDR mingguan ----------
+create table if not exists skdr_mingguan_item (
+  id uuid primary key default gen_random_uuid(),
+  skdr_id uuid not null references skdr_mingguan(id) on delete cascade,
+  kode_penyakit text not null,
+  nama_penyakit text not null,
+  is_alert boolean not null default false,
+  jumlah_kasus int not null default 0,
+  jumlah_kematian int not null default 0,
+  is_sinyal boolean not null default false,
+  catatan text,
+  unique (skdr_id, kode_penyakit)
+);
+
+create index if not exists idx_skdr_mingguan_item_skdr on skdr_mingguan_item(skdr_id);
+
+alter table skdr_mingguan_item enable row level security;
+create policy "authenticated_all_skdr_mingguan_item" on skdr_mingguan_item for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_skdr_mingguan_item on skdr_mingguan_item;
+create trigger trg_audit_skdr_mingguan_item after insert or update or delete on skdr_mingguan_item
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
