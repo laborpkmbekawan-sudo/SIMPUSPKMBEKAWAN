@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poli Gigi &amp; Mulut - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ================= Poli Gigi & Mulut (skema Cyan/Merah, konsisten sama modul lain) ================= */
+.dash-content, .topbar { --navy:#0f2942; --navy-2:#173b5e; --teal-a:#1c7d7f; --teal-2:#26a3a0; --orange:#e0793c; --red:#c0503f; --green:#2f9e5c; --cyan:#1a7fa0; }
+
+.sidebar { background: linear-gradient(180deg, #0e3a4a 0%, #1a7fa0 100%) !important; }
+.sidebar nav a.active { border-left: 3px solid #c0503f !important; background: rgba(255,255,255,.09) !important; }
+.sidebar nav a:hover { background: rgba(255,255,255,.06) !important; }
+.topbar h1 { color: var(--navy); }
+.ph-group-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.5); text-transform: uppercase; padding: 14px 18px 4px; }
+
+.dash-content .card { border-left: 4px solid var(--accent, var(--teal-2)); }
+.dash-content .card h2 { display: flex; align-items: center; gap: 8px; }
+
+.gg-segera { text-align: center; padding: 50px 20px; color: var(--muted); }
+.gg-segera .ic { font-size: 32px; margin-bottom: 10px; }
+.gg-segera .t { font-size: 14px; font-weight: 700; color: var(--navy-2); margin-bottom: 6px; }
+
+.gg-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+.gg-stat-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; border-left:4px solid var(--accent,#999); }
+.gg-stat-card .label { font-size:11.5px; color:var(--muted); margin-bottom:6px; }
+.gg-stat-card .value { font-size:24px; font-weight:700; color:#111827; }
+
+.tag-status-gg { font-size:10px; padding:2px 8px; border-radius:5px; font-weight:700; background:#eef3fb; color:var(--navy-2); }
+.tag-status-gg.selesai { background:#e6f7ee; color:#16865c; }
+.tag-status-gg.masalah { background:#fbeaea; color:#c0503f; }
+
+/* Odontogram interaktif */
+.odonto-box { background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-bottom:18px; }
+.odonto-row { display:flex; justify-content:center; gap:4px; margin-bottom:6px; flex-wrap:wrap; }
+.tooth { width:30px; height:34px; border:1px solid var(--border); border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:10.5px; color:var(--muted); background:#f7fafb; cursor:pointer; user-select:none; font-weight:600; transition:transform .08s; }
+.tooth:hover { transform:scale(1.08); }
+.tooth.karies { background:#fbeaea; border-color:var(--red); color:var(--red); }
+.tooth.tambalan { background:#eef3fb; border-color:var(--cyan); color:var(--cyan); }
+.tooth.dicabut { background:#f0f0f0; border-color:#999; color:#999; text-decoration:line-through; }
+.tooth.perlu-perawatan { background:#fdf1e0; border-color:var(--orange); color:var(--orange); }
+.odonto-legend { display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:10.5px; color:var(--muted); flex-wrap:wrap; }
+.odonto-legend span { display:flex; align-items:center; gap:4px; }
+.odonto-dot { width:10px; height:10px; border-radius:3px; display:inline-block; }
+.odonto-hint { text-align:center; font-size:11px; color:var(--muted); margin-top:6px; }
+
+@media print {
+  .sidebar, .topbar, .card button, .btn-primary, .btn-secondary, .lap-tab-row { display:none !important; }
+  .dash-content { margin:0 !important; }
+  .card { border:none !important; box-shadow:none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+    </div>
+
+    <nav>
+    <div class="ph-group-title">Poli Gigi &amp; Mulut (Lintas Klaster)</div>
+    <a class="active" id="navDashboard" onclick="gantiSubtabGG('dashboard')">Dashboard</a>
+
+    <div class="ph-group-title">Pelayanan</div>
+    <a id="navPeriksa" onclick="gantiSubtabGG('periksa')">Pemeriksaan Gigi &amp; Mulut</a>
+    <a id="navTindakan" onclick="gantiSubtabGG('tindakan')">Tindakan</a>
+    <a id="navPromotif" onclick="gantiSubtabGG('promotif')">Promotif &amp; Preventif</a>
+
+    <div class="ph-group-title">Data &amp; Rujukan</div>
+    <a id="navRujukan" onclick="gantiSubtabGG('rujukan')">Rujukan &amp; Permintaan Lab</a>
+    <a id="navRm" onclick="gantiSubtabGG('rm')">Rekam Medis &amp; Resep</a>
+
+    <div class="ph-group-title">Laporan &amp; Audit</div>
+    <a id="navLaporanInternal" onclick="gantiSubtabGG('laporan-internal')">Laporan Internal</a>
+    <a id="navLaporanDinas" onclick="gantiSubtabGG('laporan-dinas')">Laporan ke Dinas Kesehatan</a>
+    <a id="navAudit" onclick="gantiSubtabGG('audit')">Audit / Keamanan</a>
+
+    <div class="ph-group-title">Modul Lain</div>
+    <a href="index.html">Pendaftaran</a>
+    <a href="rekam-medis.html">Rekam Medis</a>
+    <a href="apotek.html">Apotek</a>
+    <a href="ugd.html">UGD</a>
+    <a href="klaster2.html">Klaster 2</a>
+    <a href="klaster3.html">Klaster 3</a>
+    <a href="klaster4.html">Klaster 4</a>
+    <a href="pengaturan.html">Pengaturan</a>
+    <a href="kasir.html">Kasir</a>
+    </nav>
+  </aside>
+
+  <div class="main-wrap">
+
+    <div class="topbar">
+      <h1>Dashboard Poli Gigi &amp; Mulut</h1>
+      <div class="user-info">
+        <span id="namaUser">Memuat...</span>
+        <button onclick="logout()">Keluar</button>
+      </div>
+    </div>
+
+    <div class="dash-content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <div id="panelDashboard">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Angka kunjungan dihitung dari pemeriksaan gigi yang tercatat hari ini. Antrian real-time &amp; alert kontrol lanjutan masih direncanakan buat sesi berikutnya.</p>
+
+        <div class="gg-stat-grid">
+          <div class="gg-stat-card" style="--accent:#1a7fa0;">
+            <div class="label">Pemeriksaan Gigi Hari Ini</div>
+            <div class="value" id="statPeriksaGG">0</div>
+          </div>
+          <div class="gg-stat-card" style="--accent:#e0793c;">
+            <div class="label">Tindakan Hari Ini</div>
+            <div class="value" id="statTindakanGG">0</div>
+          </div>
+          <div class="gg-stat-card" style="--accent:#c0503f;">
+            <div class="label">Alert Kontrol Lanjutan</div>
+            <div class="value">-</div>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▣</span> Pemeriksaan Gigi Hari Ini</h2>
+          <table>
+            <thead><tr><th>Waktu</th><th>Pasien</th><th>Keluhan</th><th>Diagnosis</th></tr></thead>
+            <tbody id="tabelPeriksaGGHariIni"><tr><td colspan="4">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- ============ PEMERIKSAAN ============ -->
+      <div id="panelPeriksa" style="display:none;">
+
+        <div class="card" style="--accent:#1a7fa0;">
+          <h2><span class="card-num" style="background:#1a7fa0;">🦷</span> Cari Pasien</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Dasar penegakan diagnosis sebelum tindakan — odontogram, temuan klinis, dan diagnosis ICD-10 gigi.</p>
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / Nama)</label>
+              <input type="text" id="ggCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienGG();}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienGG()" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+          <div id="ggHasilCari"></div>
+        </div>
+
+        <div id="ggWrap" style="display:none;">
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2>Odontogram Digital — <span id="ggNamaPasienOdonto"></span></h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Klik gigi buat ubah status (siklus: Sehat → Karies → Tambalan → Dicabut → Perlu Perawatan → Sehat). Tersimpan otomatis tiap klik.</p>
+            <div class="odonto-box">
+              <div class="odonto-row" id="odontoRowAtas"></div>
+              <div class="odonto-row" id="odontoRowBawah"></div>
+              <div class="odonto-legend">
+                <span><i class="odonto-dot" style="background:#fbeaea; border:1px solid var(--red);"></i>Karies</span>
+                <span><i class="odonto-dot" style="background:#eef3fb; border:1px solid var(--cyan);"></i>Tambalan</span>
+                <span><i class="odonto-dot" style="background:#fdf1e0; border:1px solid var(--orange);"></i>Perlu Perawatan</span>
+                <span><i class="odonto-dot" style="background:#f0f0f0; border:1px solid #999;"></i>Dicabut</span>
+              </div>
+              <div class="odonto-hint" id="ggOdontoMsg"></div>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2>Pemeriksaan Klinis &amp; Diagnosis — <span id="ggNamaPasien"></span></h2>
+            <div id="msgGGPeriksa"></div>
+            <div class="grid-2">
+              <div><label>Tanggal *</label><input type="date" id="ggTanggal" required></div>
+              <div><label>Keluhan</label><input type="text" id="ggKeluhan" placeholder="Keluhan utama pasien"></div>
+            </div>
+            <div class="grid-2">
+              <div>
+                <label><input type="checkbox" id="ggKaries" style="width:auto; display:inline-block; margin-right:6px;">Ditemukan Karies</label>
+              </div>
+              <div>
+                <label><input type="checkbox" id="ggKalkulus" style="width:auto; display:inline-block; margin-right:6px;">Ditemukan Karang Gigi (Kalkulus)</label>
+              </div>
+            </div>
+            <label>Kelainan Jaringan Lunak Rongga Mulut</label>
+            <textarea id="ggJaringanLunak" placeholder="Kalau ada — sariawan, lesi, pembengkakan gusi, dll"></textarea>
+            <div class="grid-2">
+              <div><label>Kode ICD-10</label><input type="text" id="ggIcd10" placeholder="Contoh: K02.9"></div>
+              <div><label>Nama Diagnosis</label><input type="text" id="ggNamaDiagnosis" placeholder="Contoh: Karies Gigi, tidak spesifik"></div>
+            </div>
+            <label>Catatan</label>
+            <textarea id="ggCatatan" placeholder="Catatan tambahan"></textarea>
+            <button class="btn-primary" onclick="simpanPeriksaGG()">Simpan Pemeriksaan</button>
+          </div>
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat Pemeriksaan</h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Keluhan</th><th>Temuan</th><th>Diagnosis</th><th>Petugas</th></tr></thead>
+              <tbody id="tabelRiwayatPeriksaGG"><tr><td colspan="5">Belum ada catatan pemeriksaan.</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ============ TINDAKAN ============ -->
+      <div id="panelTindakan" style="display:none;">
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">✚</span> Cari Pasien</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pencatatan tiap prosedur gigi yang dilakukan — penambalan, pencabutan, scaling, perawatan saluran akar, bedah mulut kecil.</p>
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / Nama)</label>
+              <input type="text" id="tindCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienTind();}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienTind()" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+          <div id="tindHasilCari"></div>
+        </div>
+
+        <div id="tindWrap" style="display:none;">
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2>Catat Tindakan — <span id="tindNamaPasien"></span></h2>
+            <div id="msgTind"></div>
+            <div class="grid-3">
+              <div><label>Tanggal *</label><input type="date" id="tindTanggal" required></div>
+              <div>
+                <label>Jenis Tindakan *</label>
+                <select id="tindJenis" onchange="toggleBahanTumpatan()">
+                  <option value="">-- Pilih --</option>
+                  <option value="Penambalan (Tumpatan)">Penambalan (Tumpatan)</option>
+                  <option value="Pencabutan (Ekstraksi)">Pencabutan (Ekstraksi)</option>
+                  <option value="Pembersihan Karang Gigi (Scaling)">Pembersihan Karang Gigi (Scaling)</option>
+                  <option value="Perawatan Saluran Akar">Perawatan Saluran Akar</option>
+                  <option value="Tindakan Kecil Bedah Mulut">Tindakan Kecil Bedah Mulut</option>
+                  <option value="Lain-lain">Lain-lain</option>
+                </select>
+              </div>
+              <div><label>Nomor Gigi</label><input type="text" id="tindNomorGigi" placeholder="Contoh: 16 atau 16, 26"></div>
+            </div>
+            <div class="grid-3">
+              <div id="tindBahanWrap" style="display:none;"><label>Bahan Tumpatan</label><input type="text" id="tindBahan" placeholder="Komposit / GIC / Amalgam"></div>
+              <div>
+                <label>Anestesi</label>
+                <select id="tindAnestesi">
+                  <option value="">-- Pilih --</option>
+                  <option value="Tanpa Anestesi">Tanpa Anestesi</option>
+                  <option value="Topikal">Topikal</option>
+                  <option value="Infiltrasi">Infiltrasi</option>
+                  <option value="Blok">Blok</option>
+                </select>
+              </div>
+            </div>
+            <label>Catatan</label>
+            <textarea id="tindCatatan" placeholder="Catatan tambahan"></textarea>
+            <p style="font-size:11.5px; color:var(--muted); margin:-4px 0 12px;">Kalau jenisnya Penambalan atau Pencabutan dan nomor gigi diisi, status gigi di odontogram otomatis ikut ke-update.</p>
+            <button class="btn-primary" onclick="simpanTindakanGG()">Simpan Tindakan</button>
+          </div>
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat Tindakan</h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Jenis Tindakan</th><th>Nomor Gigi</th><th>Anestesi</th><th>Petugas</th></tr></thead>
+              <tbody id="tabelRiwayatTindGG"><tr><td colspan="5">Belum ada catatan tindakan.</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ============ PROMOTIF ============ -->
+      <div id="panelPromotif" style="display:none;">
+        <div class="gg-segera"><div class="ic">📢</div><div class="t">Promotif &amp; Preventif</div>UKGS (Usaha Kesehatan Gigi Sekolah), sikat gigi massal &amp; topikal fluor — segera dibangun.</div>
+      </div>
+
+      <!-- ============ RUJUKAN ============ -->
+      <div id="panelRujukan" style="display:none;">
+        <div class="gg-segera"><div class="ic">↦</div><div class="t">Rujukan &amp; Permintaan Lab</div>Permintaan lab pra-tindakan, terima hasil lab, rujuk internal &amp; eksternal — segera dibangun.</div>
+      </div>
+
+      <!-- ============ RM ============ -->
+      <div id="panelRm" style="display:none;">
+        <div class="gg-segera"><div class="ic">▤</div><div class="t">Rekam Medis &amp; Resep</div>Input resep pasca tindakan, terhubung otomatis ke akun Farmasi — segera dibangun.</div>
+      </div>
+
+      <!-- ============ LAPORAN INTERNAL ============ -->
+      <div id="panelLaporanInternal" style="display:none;">
+        <div class="gg-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div>Rekap kunjungan &amp; jenis tindakan, rekap capaian UKGS — segera dibangun.</div>
+      </div>
+
+      <!-- ============ LAPORAN DINAS ============ -->
+      <div id="panelLaporanDinas" style="display:none;">
+        <div class="gg-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div>Laporan bulanan kesehatan gigi &amp; mulut, laporan UKGS, kontribusi data LB1 — segera dibangun.</div>
+      </div>
+
+      <!-- ============ AUDIT ============ -->
+      <div id="panelAudit" style="display:none;">
+        <div class="gg-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div>Log input/edit data klinis &amp; log akses rekam medis — segera dibangun.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+let profilSaya = null;
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  profilSaya = await getProfilSaya();
+  cekAksesHalaman(profilSaya, "gigi.html");
+  if (profilSaya) {
+    document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+  }
+
+  await muatDashboardGG();
+})();
+
+// ---------- Sub-tab nav ----------
+const SUBTAB_GG = ["dashboard", "periksa", "tindakan", "promotif", "rujukan", "rm", "laporan-internal", "laporan-dinas", "audit"];
+function idPartGG(tab) {
+  return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
+}
+function gantiSubtabGG(tab) {
+  SUBTAB_GG.forEach(t => {
+    const idPart = idPartGG(t);
+    const panel = document.getElementById("panel" + idPart);
+    if (panel) panel.style.display = (t === tab) ? "block" : "none";
+    const nav = document.getElementById("nav" + idPart);
+    if (nav) nav.classList.toggle("active", t === tab);
+  });
+  const judul = {
+    "dashboard": "Dashboard Poli Gigi & Mulut", "periksa": "Pemeriksaan Gigi & Mulut", "tindakan": "Tindakan",
+    "promotif": "Promotif & Preventif", "rujukan": "Rujukan & Permintaan Lab", "rm": "Rekam Medis & Resep",
+    "laporan-internal": "Laporan Internal", "laporan-dinas": "Laporan ke Dinas Kesehatan", "audit": "Audit / Keamanan"
+  };
+  document.querySelector(".topbar h1").textContent = judul[tab] || "Poli Gigi & Mulut";
+  if (tab === "dashboard") muatDashboardGG();
+}
+
+// ---------- DASHBOARD ----------
+async function muatDashboardGG() {
+  const tbody = document.getElementById("tabelPeriksaGGHariIni");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const [{ data: periksa, error: errP }, { count: jumlahTindakan }] = await Promise.all([
+    supabaseClient.from("pemeriksaan_gigi").select("*, pasien:pasien_id(nama)").eq("tanggal", today).order("created_at", { ascending: false }),
+    supabaseClient.from("tindakan_gigi").select("*", { count: "exact", head: true }).eq("tanggal", today)
+  ]);
+
+  if (errP) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${errP.message}</td></tr>`; return; }
+
+  document.getElementById("statPeriksaGG").textContent = periksa.length;
+  document.getElementById("statTindakanGG").textContent = jumlahTindakan || 0;
+
+  if (!periksa.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada pemeriksaan gigi hari ini.</td></tr>`; return; }
+
+  tbody.innerHTML = periksa.map(p => `
+    <tr>
+      <td>${new Date(p.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${p.pasien?.nama || "-"}</td>
+      <td>${p.keluhan || "-"}</td>
+      <td>${p.nama_diagnosis || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+// ---------- Daftar 32 gigi permanen (FDI), susunan sesuai referensi ----------
+const GIGI_ATAS = ["18", "17", "16", "15", "14", "13", "12", "11", "21", "22", "23", "24", "25", "26", "27", "28"];
+const GIGI_BAWAH = ["48", "47", "46", "45", "44", "43", "42", "41", "31", "32", "33", "34", "35", "36", "37", "38"];
+const SIKLUS_STATUS_GIGI = ["Sehat", "Karies", "Tambalan", "Dicabut", "Perlu Perawatan"];
+const KELAS_STATUS_GIGI = { "Sehat": "", "Karies": "karies", "Tambalan": "tambalan", "Dicabut": "dicabut", "Perlu Perawatan": "perlu-perawatan" };
+
+// ---------- PEMERIKSAAN GIGI & MULUT ----------
+let pasienTerpilihGG = null;
+let odontogramCache = {};
+
+async function cariPasienGG() {
+  const kunci = document.getElementById("ggCari").value.trim();
+  const hasilDiv = document.getElementById("ggHasilCari");
+  document.getElementById("ggWrap").style.display = "none";
+  pasienTerpilihGG = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienGG(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienGGDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienGG = data;
+  }
+}
+
+function pilihPasienGGDariHasil(i) {
+  pilihPasienGG(window._hasilCariPasienGG[i]);
+}
+
+async function pilihPasienGG(pasien) {
+  pasienTerpilihGG = pasien;
+  document.getElementById("ggHasilCari").innerHTML = "";
+  document.getElementById("ggNamaPasienOdonto").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("ggNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("ggWrap").style.display = "block";
+
+  document.getElementById("msgGGPeriksa").innerHTML = "";
+  document.getElementById("ggTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("ggKeluhan").value = "";
+  document.getElementById("ggKaries").checked = false;
+  document.getElementById("ggKalkulus").checked = false;
+  document.getElementById("ggJaringanLunak").value = "";
+  document.getElementById("ggIcd10").value = "";
+  document.getElementById("ggNamaDiagnosis").value = "";
+  document.getElementById("ggCatatan").value = "";
+
+  await muatOdontogram();
+  await muatRiwayatPeriksaGG();
+}
+
+async function muatOdontogram() {
+  document.getElementById("ggOdontoMsg").textContent = "";
+  const { data, error } = await supabaseClient
+    .from("odontogram_gigi")
+    .select("*")
+    .eq("pasien_id", pasienTerpilihGG.id);
+
+  if (error) { document.getElementById("ggOdontoMsg").textContent = `Gagal muat odontogram: ${error.message}`; return; }
+
+  odontogramCache = {};
+  (data || []).forEach(g => { odontogramCache[g.nomor_gigi] = g.status; });
+  renderOdontogram();
+}
+
+function renderOdontogram() {
+  const buatTooth = (nomor) => {
+    const status = odontogramCache[nomor] || "Sehat";
+    const kelas = KELAS_STATUS_GIGI[status];
+    return `<div class="tooth${kelas ? " " + kelas : ""}" title="${status}" onclick="klikGigi('${nomor}')">${nomor}</div>`;
+  };
+  document.getElementById("odontoRowAtas").innerHTML = GIGI_ATAS.map(buatTooth).join("");
+  document.getElementById("odontoRowBawah").innerHTML = GIGI_BAWAH.map(buatTooth).join("");
+}
+
+async function klikGigi(nomor) {
+  const statusSekarang = odontogramCache[nomor] || "Sehat";
+  const idxSekarang = SIKLUS_STATUS_GIGI.indexOf(statusSekarang);
+  const statusBaru = SIKLUS_STATUS_GIGI[(idxSekarang + 1) % SIKLUS_STATUS_GIGI.length];
+  await ubahStatusGigi(nomor, statusBaru);
+}
+
+async function ubahStatusGigi(nomor, statusBaru) {
+  const msgBox = document.getElementById("ggOdontoMsg");
+  const { error } = await supabaseClient.from("odontogram_gigi").upsert({
+    pasien_id: pasienTerpilihGG.id,
+    nomor_gigi: nomor,
+    status: statusBaru,
+    updated_by: profilSaya.id,
+    updated_at: new Date().toISOString()
+  }, { onConflict: "pasien_id,nomor_gigi" });
+
+  if (error) { msgBox.textContent = `Gagal simpan gigi ${nomor}: ${error.message}`; return; }
+
+  odontogramCache[nomor] = statusBaru;
+  renderOdontogram();
+  msgBox.textContent = `Gigi ${nomor} diubah jadi "${statusBaru}" — tersimpan.`;
+}
+
+async function muatRiwayatPeriksaGG() {
+  const tbody = document.getElementById("tabelRiwayatPeriksaGG");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pemeriksaan_gigi")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihGG.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan pemeriksaan.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(d => {
+    const temuan = [d.temuan_karies ? "Karies" : null, d.temuan_kalkulus ? "Kalkulus" : null].filter(Boolean).join(", ") || "-";
+    return `
+    <tr>
+      <td>${new Date(d.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${d.keluhan || "-"}</td>
+      <td>${temuan}</td>
+      <td>${d.kode_icd10 ? `${d.kode_icd10} — ` : ""}${d.nama_diagnosis || "-"}</td>
+      <td>${d.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `;
+  }).join("");
+}
+
+async function simpanPeriksaGG() {
+  const msgBox = document.getElementById("msgGGPeriksa");
+  if (!pasienTerpilihGG) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("ggTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pemeriksaan_gigi").insert({
+    pasien_id: pasienTerpilihGG.id,
+    tanggal,
+    keluhan: document.getElementById("ggKeluhan").value.trim() || null,
+    temuan_karies: document.getElementById("ggKaries").checked,
+    temuan_kalkulus: document.getElementById("ggKalkulus").checked,
+    temuan_jaringan_lunak: document.getElementById("ggJaringanLunak").value.trim() || null,
+    kode_icd10: document.getElementById("ggIcd10").value.trim() || null,
+    nama_diagnosis: document.getElementById("ggNamaDiagnosis").value.trim() || null,
+    catatan: document.getElementById("ggCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Pemeriksaan tersimpan.</div>`;
+  document.getElementById("ggCatatan").value = "";
+  await muatRiwayatPeriksaGG();
+}
+
+// ---------- TINDAKAN ----------
+let pasienTerpilihTind = null;
+
+function toggleBahanTumpatan() {
+  const jenis = document.getElementById("tindJenis").value;
+  document.getElementById("tindBahanWrap").style.display = (jenis === "Penambalan (Tumpatan)") ? "block" : "none";
+}
+
+async function cariPasienTind() {
+  const kunci = document.getElementById("tindCari").value.trim();
+  const hasilDiv = document.getElementById("tindHasilCari");
+  document.getElementById("tindWrap").style.display = "none";
+  pasienTerpilihTind = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienTind(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienTindDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienTind = data;
+  }
+}
+
+function pilihPasienTindDariHasil(i) {
+  pilihPasienTind(window._hasilCariPasienTind[i]);
+}
+
+function pilihPasienTind(pasien) {
+  pasienTerpilihTind = pasien;
+  document.getElementById("tindHasilCari").innerHTML = "";
+  document.getElementById("tindNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("tindWrap").style.display = "block";
+
+  document.getElementById("msgTind").innerHTML = "";
+  document.getElementById("tindTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("tindJenis").value = "";
+  document.getElementById("tindNomorGigi").value = "";
+  document.getElementById("tindBahan").value = "";
+  document.getElementById("tindAnestesi").value = "";
+  document.getElementById("tindCatatan").value = "";
+  toggleBahanTumpatan();
+
+  muatRiwayatTindGG();
+}
+
+async function muatRiwayatTindGG() {
+  const tbody = document.getElementById("tabelRiwayatTindGG");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("tindakan_gigi")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihTind.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan tindakan.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(t => `
+    <tr>
+      <td>${new Date(t.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${t.jenis_tindakan}</td>
+      <td>${t.nomor_gigi || "-"}</td>
+      <td>${t.anestesi || "-"}</td>
+      <td>${t.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanTindakanGG() {
+  const msgBox = document.getElementById("msgTind");
+  if (!pasienTerpilihTind) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("tindTanggal").value;
+  const jenis = document.getElementById("tindJenis").value;
+  if (!tanggal || !jenis) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dan jenis tindakan dulu.</div>`; return; }
+
+  const nomorGigiRaw = document.getElementById("tindNomorGigi").value.trim();
+
+  const { error } = await supabaseClient.from("tindakan_gigi").insert({
+    pasien_id: pasienTerpilihTind.id,
+    tanggal,
+    jenis_tindakan: jenis,
+    nomor_gigi: nomorGigiRaw || null,
+    bahan_tumpatan: document.getElementById("tindBahan").value.trim() || null,
+    anestesi: document.getElementById("tindAnestesi").value || null,
+    catatan: document.getElementById("tindCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  // Auto-update odontogram kalau jenisnya Penambalan/Pencabutan dan nomor gigi diisi
+  if (nomorGigiRaw && (jenis === "Penambalan (Tumpatan)" || jenis === "Pencabutan (Ekstraksi)")) {
+    const statusBaru = jenis === "Penambalan (Tumpatan)" ? "Tambalan" : "Dicabut";
+    const daftarGigi = nomorGigiRaw.split(",").map(s => s.trim()).filter(Boolean);
+    for (const nomor of daftarGigi) {
+      await supabaseClient.from("odontogram_gigi").upsert({
+        pasien_id: pasienTerpilihTind.id,
+        nomor_gigi: nomor,
+        status: statusBaru,
+        updated_by: profilSaya.id,
+        updated_at: new Date().toISOString()
+      }, { onConflict: "pasien_id,nomor_gigi" });
+    }
+    msgBox.innerHTML = `<div class="msg msg-success">Tindakan tersimpan. Odontogram gigi ${daftarGigi.join(", ")} otomatis di-update jadi "${statusBaru}".</div>`;
+  } else {
+    msgBox.innerHTML = `<div class="msg msg-success">Tindakan tersimpan.</div>`;
+  }
+
+  document.getElementById("tindCatatan").value = "";
+  await muatRiwayatTindGG();
+}
+</script>
+</body>
+</html>

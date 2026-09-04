@@ -2780,6 +2780,82 @@ create trigger trg_audit_laporan_dinas_kirim after insert or update or delete on
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 71. POLI GIGI & MULUT (Lintas Klaster) — FASE 1: Pemeriksaan
+--     (odontogram + temuan klinis + diagnosis), Tindakan
+-- ============================================================
+
+-- ---------- Odontogram: peta kondisi TERKINI tiap gigi per pasien ----------
+-- Satu baris per (pasien, nomor_gigi) — di-upsert tiap kali status gigi berubah,
+-- jadi selalu representasi kondisi terbaru (bukan log riwayat).
+create table if not exists odontogram_gigi (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  nomor_gigi text not null,
+  status text not null default 'Sehat' check (status in ('Sehat', 'Karies', 'Tambalan', 'Dicabut', 'Perlu Perawatan')),
+  catatan text,
+  updated_by uuid references profil_pegawai(id),
+  updated_at timestamptz not null default now(),
+  unique (pasien_id, nomor_gigi)
+);
+
+create index if not exists idx_odontogram_gigi_pasien on odontogram_gigi(pasien_id);
+
+alter table odontogram_gigi enable row level security;
+create policy "authenticated_all_odontogram_gigi" on odontogram_gigi for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_odontogram_gigi on odontogram_gigi;
+create trigger trg_audit_odontogram_gigi after insert or update or delete on odontogram_gigi
+  for each row execute function fn_audit_log();
+
+-- ---------- Pemeriksaan Gigi & Mulut (per kunjungan) ----------
+create table if not exists pemeriksaan_gigi (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  keluhan text,
+  temuan_karies boolean not null default false,
+  temuan_kalkulus boolean not null default false,
+  temuan_jaringan_lunak text,
+  kode_icd10 text,
+  nama_diagnosis text,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_gigi_pasien on pemeriksaan_gigi(pasien_id);
+
+alter table pemeriksaan_gigi enable row level security;
+create policy "authenticated_all_pemeriksaan_gigi" on pemeriksaan_gigi for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_gigi on pemeriksaan_gigi;
+create trigger trg_audit_pemeriksaan_gigi after insert or update or delete on pemeriksaan_gigi
+  for each row execute function fn_audit_log();
+
+-- ---------- Tindakan Gigi (tambal, cabut, scaling, saluran akar, bedah mulut kecil) ----------
+create table if not exists tindakan_gigi (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis_tindakan text not null check (jenis_tindakan in ('Penambalan (Tumpatan)', 'Pencabutan (Ekstraksi)', 'Pembersihan Karang Gigi (Scaling)', 'Perawatan Saluran Akar', 'Tindakan Kecil Bedah Mulut', 'Lain-lain')),
+  nomor_gigi text,
+  bahan_tumpatan text,
+  anestesi text check (anestesi in ('Tanpa Anestesi', 'Topikal', 'Infiltrasi', 'Blok')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_tindakan_gigi_pasien on tindakan_gigi(pasien_id);
+
+alter table tindakan_gigi enable row level security;
+create policy "authenticated_all_tindakan_gigi" on tindakan_gigi for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_tindakan_gigi on tindakan_gigi;
+create trigger trg_audit_tindakan_gigi after insert or update or delete on tindakan_gigi
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
