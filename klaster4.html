@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klaster 4 - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ================= Klaster 4 (skema Teal Gelap/Merah, konsisten sama modul lain) ================= */
+.dash-content, .topbar { --navy:#0f2942; --navy-2:#173b5e; --teal-a:#1c7d7f; --teal-2:#26a3a0; --orange:#e0793c; --red:#c0503f; --green:#2f9e5c; }
+
+.sidebar { background: linear-gradient(180deg, #0d2e2c 0%, #1c7d7f 100%) !important; }
+.sidebar nav a.active { border-left: 3px solid #c0503f !important; background: rgba(255,255,255,.09) !important; }
+.sidebar nav a:hover { background: rgba(255,255,255,.06) !important; }
+.topbar h1 { color: var(--navy); }
+.ph-group-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.5); text-transform: uppercase; padding: 14px 18px 4px; }
+
+.dash-content .card { border-left: 4px solid var(--accent, var(--teal-2)); }
+.dash-content .card h2 { display: flex; align-items: center; gap: 8px; }
+
+.k4-segera { text-align: center; padding: 50px 20px; color: var(--muted); }
+.k4-segera .ic { font-size: 32px; margin-bottom: 10px; }
+.k4-segera .t { font-size: 14px; font-weight: 700; color: var(--navy-2); margin-bottom: 6px; }
+
+.k4-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+.k4-stat-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; border-left:4px solid var(--accent,#999); }
+.k4-stat-card .label { font-size:11.5px; color:var(--muted); margin-bottom:6px; }
+.k4-stat-card .value { font-size:24px; font-weight:700; color:#111827; }
+
+.tag-status-tb { font-size:10px; padding:2px 8px; border-radius:5px; font-weight:700; background:#eef3fb; color:var(--navy-2); }
+.tag-status-tb.selesai { background:#e6f7ee; color:#16865c; }
+.tag-status-tb.masalah { background:#fbeaea; color:#c0503f; }
+@media print {
+  .sidebar, .topbar, .card button, .btn-primary, .btn-secondary, .lap-tab-row { display:none !important; }
+  .dash-content { margin:0 !important; }
+  .card { border:none !important; box-shadow:none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+    </div>
+
+    <nav>
+    <div class="ph-group-title">Klaster 4 — Penyakit Menular &amp; Kesling</div>
+    <a class="active" id="navDashboard" onclick="gantiSubtabK4('dashboard')">Dashboard</a>
+
+    <div class="ph-group-title">Pelayanan</div>
+    <a id="navProgram" onclick="gantiSubtabK4('program')">Program Penyakit Menular</a>
+    <a id="navSurveilans" onclick="gantiSubtabK4('surveilans')">Surveilans &amp; Kewaspadaan Dini</a>
+    <a id="navKlb" onclick="gantiSubtabK4('klb')">Respon KLB</a>
+    <a id="navKesling" onclick="gantiSubtabK4('kesling')">Kesehatan Lingkungan</a>
+
+    <div class="ph-group-title">Data &amp; Rujukan</div>
+    <a id="navRegister" onclick="gantiSubtabK4('register')">Register &amp; Kohort</a>
+    <a id="navRujukan" onclick="gantiSubtabK4('rujukan')">Rujukan &amp; Permintaan Lab</a>
+    <a id="navRm" onclick="gantiSubtabK4('rm')">Rekam Medis &amp; Resep</a>
+
+    <div class="ph-group-title">Laporan &amp; Audit</div>
+    <a id="navLaporanInternal" onclick="gantiSubtabK4('laporan-internal')">Laporan Internal</a>
+    <a id="navLaporanDinas" onclick="gantiSubtabK4('laporan-dinas')">Laporan ke Dinas Kesehatan</a>
+    <a id="navAudit" onclick="gantiSubtabK4('audit')">Audit / Keamanan</a>
+
+    <div class="ph-group-title">Modul Lain</div>
+    <a href="index.html">Pendaftaran</a>
+    <a href="rekam-medis.html">Rekam Medis</a>
+    <a href="apotek.html">Apotek</a>
+    <a href="ugd.html">UGD</a>
+    <a href="klaster2.html">Klaster 2</a>
+    <a href="klaster3.html">Klaster 3</a>
+    <a href="pengaturan.html">Pengaturan</a>
+    <a href="kasir.html">Kasir</a>
+    </nav>
+  </aside>
+
+  <div class="main-wrap">
+
+    <div class="topbar">
+      <h1>Dashboard Klaster 4</h1>
+      <div class="user-info">
+        <span id="namaUser">Memuat...</span>
+        <button onclick="logout()">Keluar</button>
+      </div>
+    </div>
+
+    <div class="dash-content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <div id="panelDashboard">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Alert kontak belum dilacak &amp; status SKDR masih direncanakan buat sesi berikutnya (nunggu modul Surveilans dibangun). Angka di bawah baru kunjungan hari ini yang sudah real.</p>
+
+        <div class="k4-stat-grid">
+          <div class="k4-stat-card" style="--accent:#1c7d7f;">
+            <div class="label">Kunjungan Klaster 4 Hari Ini</div>
+            <div class="value" id="statKunjunganK4">0</div>
+          </div>
+          <div class="k4-stat-card" style="--accent:#c0503f;">
+            <div class="label">Alert Kontak Belum Dilacak</div>
+            <div class="value">-</div>
+          </div>
+          <div class="k4-stat-card" style="--accent:#6a4c93;">
+            <div class="label">Status Kewaspadaan Dini (SKDR)</div>
+            <div class="value">-</div>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▣</span> Pasien Klaster 4 Hari Ini</h2>
+          <table>
+            <thead><tr><th>No. Antrian</th><th>Nama</th><th>No. RM</th><th>Keluhan Awal</th><th>Status</th></tr></thead>
+            <tbody id="tabelPasienK4HariIni"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- ============ PROGRAM PENYAKIT MENULAR ============ -->
+      <div id="panelProgram" style="display:none;">
+
+        <div class="card" style="padding:10px 14px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="programSub-tb" onclick="gantiSubProgram('tb')">TB (Tuberkulosis)</button>
+            <button type="button" class="lap-tab" id="programSub-kusta" onclick="gantiSubProgram('kusta')">Kusta &amp; Frambusia</button>
+            <button type="button" class="lap-tab" id="programSub-hiv" onclick="gantiSubProgram('hiv')">HIV/IMS</button>
+            <button type="button" class="lap-tab" id="programSub-hepatitis" onclick="gantiSubProgram('hepatitis')">Hepatitis</button>
+            <button type="button" class="lap-tab" id="programSub-malaria" onclick="gantiSubProgram('malaria')">Malaria</button>
+            <button type="button" class="lap-tab" id="programSub-ispa" onclick="gantiSubProgram('ispa')">ISPA &amp; Pneumonia</button>
+            <button type="button" class="lap-tab" id="programSub-diare" onclick="gantiSubProgram('diare')">Diare</button>
+            <button type="button" class="lap-tab" id="programSub-imunisasi" onclick="gantiSubProgram('imunisasi')">Imunisasi Program</button>
+          </div>
+        </div>
+
+        <!-- ===== TB (Tuberkulosis) ===== -->
+        <div id="programPanel-tb">
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">🦠</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Diagnosis, kategori pengobatan, kartu kontrol OAT, dan pelacakan kontak TB.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="tbCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienTb();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienTb()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="tbHasilCari"></div>
+          </div>
+
+          <div id="tbWrap" style="display:none;">
+
+            <!-- Catat Kasus TB -->
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Kasus TB — <span id="tbNamaPasien"></span></h2>
+              <div id="msgTb"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="tbTanggal" required></div>
+                <div>
+                  <label>Tipe Pasien</label>
+                  <select id="tbTipePasien">
+                    <option value="">-- Pilih --</option>
+                    <option value="Baru">Baru</option>
+                    <option value="Kambuh">Kambuh</option>
+                    <option value="Pindahan">Pindahan</option>
+                    <option value="Setelah Putus Obat">Setelah Putus Obat</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Klasifikasi</label>
+                  <select id="tbKlasifikasi">
+                    <option value="">-- Pilih --</option>
+                    <option value="Paru">Paru</option>
+                    <option value="Ekstra Paru">Ekstra Paru</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Kategori Pengobatan</label>
+                  <select id="tbKategori">
+                    <option value="">-- Pilih --</option>
+                    <option value="Kategori 1">Kategori 1</option>
+                    <option value="Kategori 2">Kategori 2</option>
+                    <option value="Kategori Anak">Kategori Anak</option>
+                  </select>
+                </div>
+                <div><label>Tanggal Mulai Pengobatan</label><input type="date" id="tbTanggalMulai"></div>
+                <div>
+                  <label>Status Pengobatan</label>
+                  <select id="tbStatusPengobatan">
+                    <option value="">-- Pilih --</option>
+                    <option value="Dalam Pengobatan">Dalam Pengobatan</option>
+                    <option value="Sembuh">Sembuh</option>
+                    <option value="Pengobatan Lengkap">Pengobatan Lengkap</option>
+                    <option value="Putus Obat">Putus Obat</option>
+                    <option value="Gagal">Gagal</option>
+                    <option value="Pindah">Pindah</option>
+                    <option value="Meninggal">Meninggal</option>
+                  </select>
+                </div>
+              </div>
+              <label>Hasil Pemeriksaan (BTA/TCM/lainnya)</label>
+              <textarea id="tbHasilPemeriksaan" placeholder="Contoh: BTA (+2), TCM MTB Detected Rif Sensitif"></textarea>
+              <label>Catatan</label>
+              <textarea id="tbCatatan" placeholder="Catatan tambahan"></textarea>
+              <button class="btn-primary" onclick="simpanTb()">Simpan Kasus TB</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Kasus TB</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Tipe</th><th>Klasifikasi</th><th>Kategori</th><th>Status</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatTb"><tr><td colspan="6">Belum ada catatan kasus TB.</td></tr></tbody>
+              </table>
+            </div>
+
+            <!-- Kartu Kontrol OAT -->
+            <div class="card" style="--accent:#e0793c;">
+              <h2><span class="card-num" style="background:#e0793c;">💊</span> Kartu Kontrol OAT</h2>
+              <div id="msgOat"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="oatTanggal" required></div>
+                <div>
+                  <label>Fase</label>
+                  <select id="oatFase">
+                    <option value="">-- Pilih --</option>
+                    <option value="Intensif">Intensif</option>
+                    <option value="Lanjutan">Lanjutan</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Status Minum Obat</label>
+                  <select id="oatStatus">
+                    <option value="">-- Pilih --</option>
+                    <option value="Diminum">Diminum</option>
+                    <option value="Tidak Diminum">Tidak Diminum</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="oatCatatan" placeholder="Contoh: diawasi PMO, efek samping, dll"></textarea>
+              <button class="btn-primary" onclick="simpanOat()">Simpan Catatan OAT</button>
+
+              <table style="margin-top:14px;">
+                <thead><tr><th>Tanggal</th><th>Fase</th><th>Status</th><th>Catatan</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelKartuOat"><tr><td colspan="5">Belum ada catatan kartu kontrol OAT.</td></tr></tbody>
+              </table>
+            </div>
+
+            <!-- Pelacakan Kontak -->
+            <div class="card" style="--accent:#6a4c93;">
+              <h2><span class="card-num" style="background:#6a4c93;">🔍</span> Pelacakan Kontak Erat</h2>
+              <div id="msgKontak"></div>
+              <div class="grid-3">
+                <div><label>Nama Kontak *</label><input type="text" id="kontakNama" placeholder="Nama kontak erat"></div>
+                <div><label>Hubungan</label><input type="text" id="kontakHubungan" placeholder="Contoh: Anak, Suami, Tetangga"></div>
+                <div><label>Umur</label><input type="text" id="kontakUmur" placeholder="Contoh: 34 tahun"></div>
+                <div>
+                  <label>Status Pemantauan</label>
+                  <select id="kontakStatus">
+                    <option value="Belum Diperiksa">Belum Diperiksa</option>
+                    <option value="Diperiksa - Sehat">Diperiksa - Sehat</option>
+                    <option value="Suspek">Suspek</option>
+                    <option value="Positif">Positif</option>
+                  </select>
+                </div>
+                <div><label>Tanggal Periksa</label><input type="date" id="kontakTanggalPeriksa"></div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="kontakCatatan" placeholder="Catatan tambahan"></textarea>
+              <button class="btn-primary" onclick="simpanKontak()">Simpan Data Kontak</button>
+
+              <table style="margin-top:14px;">
+                <thead><tr><th>Nama</th><th>Hubungan</th><th>Umur</th><th>Status</th><th>Tgl Periksa</th><th>Catatan</th></tr></thead>
+                <tbody id="tabelKontak"><tr><td colspan="6">Belum ada data kontak erat.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===== Sub-program lain — segera ===== -->
+        <div id="programPanel-kusta" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">Kusta &amp; Frambusia</div>Pemeriksaan, klasifikasi PB/MB, dan pengobatan MDT — segera dibangun.</div></div>
+        <div id="programPanel-hiv" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">HIV/IMS</div>Skrining, konseling, dan rujukan pengobatan ARV — segera dibangun.</div></div>
+        <div id="programPanel-hepatitis" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">Hepatitis</div>Skrining dan tindak lanjut kasus positif — segera dibangun.</div></div>
+        <div id="programPanel-malaria" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">Malaria</div>Pemeriksaan &amp; pengobatan wilayah endemis — segera dibangun.</div></div>
+        <div id="programPanel-ispa" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">ISPA &amp; Pneumonia</div>Tatalaksana kasus terutama pada balita — segera dibangun.</div></div>
+        <div id="programPanel-diare" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">Diare</div>Tatalaksana &amp; pemantauan kasus diare — segera dibangun.</div></div>
+        <div id="programPanel-imunisasi" style="display:none;"><div class="k4-segera"><div class="ic">💉</div><div class="t">Imunisasi Program</div>Imunisasi terkait penyakit menular dewasa/lansia — segera dibangun.</div></div>
+
+      </div>
+
+      <!-- ============ SURVEILANS ============ -->
+      <div id="panelSurveilans" style="display:none;">
+        <div class="k4-segera"><div class="ic">📡</div><div class="t">Surveilans &amp; Kewaspadaan Dini</div>SKDR mingguan, deteksi sinyal lonjakan kasus, Penyelidikan Epidemiologi (PE), dan pelacakan kontak umum — segera dibangun.</div>
+      </div>
+
+      <!-- ============ KLB ============ -->
+      <div id="panelKlb" style="display:none;">
+        <div class="k4-segera"><div class="ic">🚨</div><div class="t">Respon KLB</div>Input &amp; pelacakan status penanganan KLB, ORI, dan dokumentasi tindakan pengendalian — segera dibangun.</div>
+      </div>
+
+      <!-- ============ KESLING ============ -->
+      <div id="panelKesling" style="display:none;">
+        <div class="k4-segera"><div class="ic">🌿</div><div class="t">Kesehatan Lingkungan</div>Pengawasan kualitas air &amp; sanitasi, pengendalian vektor, inspeksi TTU/TPM, dan data zoonosis — segera dibangun.</div>
+      </div>
+
+      <!-- ============ REGISTER ============ -->
+      <div id="panelRegister" style="display:none;">
+        <div class="k4-segera"><div class="ic">📗</div><div class="t">Register &amp; Kohort</div>Register TB, HIV/IMS, Kusta, dan program lain — segera dibangun (agregasi dari data pelayanan).</div>
+      </div>
+
+      <!-- ============ RUJUKAN ============ -->
+      <div id="panelRujukan" style="display:none;">
+        <div class="k4-segera"><div class="ic">↦</div><div class="t">Rujukan &amp; Permintaan Lab</div>Rujuk/permintaan lab, terima hasil lab, rujuk internal &amp; eksternal (RS TB-MDR) — segera dibangun.</div>
+      </div>
+
+      <!-- ============ RM ============ -->
+      <div id="panelRm" style="display:none;">
+        <div class="k4-segera"><div class="ic">▤</div><div class="t">Rekam Medis &amp; Resep</div>Pakai menu Rekam Medis (SOAP) &amp; Resep yang sudah ada di modul Rekam Medis — form yang sama berlaku untuk semua klaster, jadi tidak dibangun ulang di sini.</div>
+      </div>
+
+      <!-- ============ LAPORAN INTERNAL ============ -->
+      <div id="panelLaporanInternal" style="display:none;">
+        <div class="k4-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div>Rekap kasus per program, rekap kepatuhan pengobatan, rekap hasil pengendalian vektor &amp; kesling — segera dibangun.</div>
+      </div>
+
+      <!-- ============ LAPORAN DINAS ============ -->
+      <div id="panelLaporanDinas" style="display:none;">
+        <div class="k4-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div>SITB, SIHA, laporan Kusta, SKDR mingguan, W1 KLB, dan laporan Kesling — segera dibangun.</div>
+      </div>
+
+      <!-- ============ AUDIT ============ -->
+      <div id="panelAudit" style="display:none;">
+        <div class="k4-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div>Log input/edit data klinis dan log akses rekam medis — segera dibangun (pola sama dengan Audit Klaster 3).</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+let profilSaya = null;
+let klasterK4IdCache = null;
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  profilSaya = await getProfilSaya();
+  cekAksesHalaman(profilSaya, "klaster4.html");
+  if (profilSaya) {
+    document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+  }
+
+  await muatDashboardK4();
+})();
+
+// ---------- Sub-tab nav ----------
+const SUBTAB_K4 = ["dashboard", "program", "surveilans", "klb", "kesling", "register", "rujukan", "rm", "laporan-internal", "laporan-dinas", "audit"];
+function idPartK4(tab) {
+  return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
+}
+function gantiSubtabK4(tab) {
+  SUBTAB_K4.forEach(t => {
+    const idPart = idPartK4(t);
+    const panel = document.getElementById("panel" + idPart);
+    if (panel) panel.style.display = (t === tab) ? "block" : "none";
+    const nav = document.getElementById("nav" + idPart);
+    if (nav) nav.classList.toggle("active", t === tab);
+  });
+  const judul = {
+    "dashboard": "Dashboard Klaster 4", "program": "Program Penyakit Menular", "surveilans": "Surveilans & Kewaspadaan Dini",
+    "klb": "Respon KLB", "kesling": "Kesehatan Lingkungan", "register": "Register & Kohort",
+    "rujukan": "Rujukan & Permintaan Lab", "rm": "Rekam Medis & Resep", "laporan-internal": "Laporan Internal",
+    "laporan-dinas": "Laporan ke Dinas Kesehatan", "audit": "Audit / Keamanan"
+  };
+  document.querySelector(".topbar h1").textContent = judul[tab] || "Klaster 4";
+  if (tab === "dashboard") muatDashboardK4();
+}
+
+// ---------- PROGRAM PENYAKIT MENULAR — inner sub-tabs ----------
+const SUBPROGRAM = ["tb", "kusta", "hiv", "hepatitis", "malaria", "ispa", "diare", "imunisasi"];
+function gantiSubProgram(sub) {
+  SUBPROGRAM.forEach(s => {
+    const panel = document.getElementById("programPanel-" + s);
+    if (panel) panel.style.display = (s === sub) ? "block" : "none";
+    const btn = document.getElementById("programSub-" + s);
+    if (btn) btn.classList.toggle("active", s === sub);
+  });
+}
+
+async function ambilKlasterK4Id() {
+  if (klasterK4IdCache) return klasterK4IdCache;
+  const { data } = await supabaseClient.from("klaster").select("id").eq("kode", "K4").single();
+  klasterK4IdCache = data?.id || null;
+  return klasterK4IdCache;
+}
+
+// ---------- DASHBOARD ----------
+async function muatDashboardK4() {
+  const k4Id = await ambilKlasterK4Id();
+  const tbody = document.getElementById("tabelPasienK4HariIni");
+  if (!k4Id) { tbody.innerHTML = `<tr><td colspan="5">Klaster K4 tidak ditemukan di master data.</td></tr>`; return; }
+
+  const today = new Date().toISOString().split("T")[0];
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("*, pasien(nama, no_rm)")
+    .eq("klaster_id", k4Id)
+    .eq("tanggal", today)
+    .order("no_antrian");
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  document.getElementById("statKunjunganK4").textContent = data.length;
+
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada pasien Klaster 4 hari ini.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${k.no_antrian || "-"}</td>
+      <td>${k.pasien?.nama || "-"}</td>
+      <td>${k.pasien?.no_rm || "-"}</td>
+      <td>${k.keluhan_awal || "-"}</td>
+      <td><span class="badge badge-${k.status}">${k.status}</span></td>
+    </tr>
+  `).join("");
+}
+
+// ---------- PROGRAM TB ----------
+let pasienTerpilihTb = null;
+
+async function cariPasienTb() {
+  const kunci = document.getElementById("tbCari").value.trim();
+  const hasilDiv = document.getElementById("tbHasilCari");
+  document.getElementById("tbWrap").style.display = "none";
+  pasienTerpilihTb = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienTb(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienTbDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienTb = data;
+  }
+}
+
+function pilihPasienTbDariHasil(i) {
+  pilihPasienTb(window._hasilCariPasienTb[i]);
+}
+
+function pilihPasienTb(pasien) {
+  pasienTerpilihTb = pasien;
+  document.getElementById("tbHasilCari").innerHTML = "";
+  document.getElementById("tbNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("tbWrap").style.display = "block";
+
+  document.getElementById("msgTb").innerHTML = "";
+  document.getElementById("tbTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("tbTipePasien").value = "";
+  document.getElementById("tbKlasifikasi").value = "";
+  document.getElementById("tbKategori").value = "";
+  document.getElementById("tbTanggalMulai").value = "";
+  document.getElementById("tbStatusPengobatan").value = "";
+  document.getElementById("tbHasilPemeriksaan").value = "";
+  document.getElementById("tbCatatan").value = "";
+
+  document.getElementById("msgOat").innerHTML = "";
+  document.getElementById("oatTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("oatFase").value = "";
+  document.getElementById("oatStatus").value = "";
+  document.getElementById("oatCatatan").value = "";
+
+  document.getElementById("msgKontak").innerHTML = "";
+  document.getElementById("kontakNama").value = "";
+  document.getElementById("kontakHubungan").value = "";
+  document.getElementById("kontakUmur").value = "";
+  document.getElementById("kontakStatus").value = "Belum Diperiksa";
+  document.getElementById("kontakTanggalPeriksa").value = "";
+  document.getElementById("kontakCatatan").value = "";
+
+  muatRiwayatTb();
+  muatKartuOat();
+  muatKontak();
+}
+
+async function muatRiwayatTb() {
+  const tbody = document.getElementById("tabelRiwayatTb");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pemeriksaan_tb")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihTb.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan kasus TB.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(t => `
+    <tr>
+      <td>${new Date(t.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${t.tipe_pasien || "-"}</td>
+      <td>${t.klasifikasi || "-"}</td>
+      <td>${t.kategori_pengobatan || "-"}</td>
+      <td><span class="tag-status-tb${t.status_pengobatan === 'Sembuh' || t.status_pengobatan === 'Pengobatan Lengkap' ? ' selesai' : ''}${t.status_pengobatan === 'Putus Obat' || t.status_pengobatan === 'Gagal' || t.status_pengobatan === 'Meninggal' ? ' masalah' : ''}">${t.status_pengobatan || "-"}</span></td>
+      <td>${t.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanTb() {
+  const msgBox = document.getElementById("msgTb");
+  if (!pasienTerpilihTb) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("tbTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pemeriksaan_tb").insert({
+    pasien_id: pasienTerpilihTb.id,
+    tanggal,
+    tipe_pasien: document.getElementById("tbTipePasien").value || null,
+    klasifikasi: document.getElementById("tbKlasifikasi").value || null,
+    hasil_pemeriksaan: document.getElementById("tbHasilPemeriksaan").value.trim() || null,
+    kategori_pengobatan: document.getElementById("tbKategori").value || null,
+    tanggal_mulai_pengobatan: document.getElementById("tbTanggalMulai").value || null,
+    status_pengobatan: document.getElementById("tbStatusPengobatan").value || null,
+    catatan: document.getElementById("tbCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan kasus TB tersimpan.</div>`;
+  document.getElementById("tbHasilPemeriksaan").value = "";
+  document.getElementById("tbCatatan").value = "";
+  await muatRiwayatTb();
+}
+
+// ---------- KARTU KONTROL OAT ----------
+async function muatKartuOat() {
+  const tbody = document.getElementById("tabelKartuOat");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kartu_kontrol_oat")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihTb.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan kartu kontrol OAT.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(o => `
+    <tr>
+      <td>${new Date(o.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${o.fase || "-"}</td>
+      <td>${o.status_minum || "-"}</td>
+      <td>${o.catatan || "-"}</td>
+      <td>${o.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanOat() {
+  const msgBox = document.getElementById("msgOat");
+  if (!pasienTerpilihTb) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("oatTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("kartu_kontrol_oat").insert({
+    pasien_id: pasienTerpilihTb.id,
+    tanggal,
+    fase: document.getElementById("oatFase").value || null,
+    status_minum: document.getElementById("oatStatus").value || null,
+    catatan: document.getElementById("oatCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan kartu kontrol OAT tersimpan.</div>`;
+  document.getElementById("oatFase").value = "";
+  document.getElementById("oatStatus").value = "";
+  document.getElementById("oatCatatan").value = "";
+  await muatKartuOat();
+}
+
+// ---------- PELACAKAN KONTAK ----------
+async function muatKontak() {
+  const tbody = document.getElementById("tabelKontak");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pelacakan_kontak_tb")
+    .select("*")
+    .eq("pasien_id", pasienTerpilihTb.id)
+    .order("created_at", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada data kontak erat.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${k.nama_kontak}</td>
+      <td>${k.hubungan || "-"}</td>
+      <td>${k.umur || "-"}</td>
+      <td><span class="tag-status-tb${k.status_pemantauan === 'Diperiksa - Sehat' ? ' selesai' : ''}${k.status_pemantauan === 'Positif' ? ' masalah' : ''}">${k.status_pemantauan || "-"}</span></td>
+      <td>${k.tanggal_periksa ? new Date(k.tanggal_periksa).toLocaleDateString("id-ID") : "-"}</td>
+      <td>${k.catatan || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanKontak() {
+  const msgBox = document.getElementById("msgKontak");
+  if (!pasienTerpilihTb) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const nama = document.getElementById("kontakNama").value.trim();
+  if (!nama) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama kontak dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pelacakan_kontak_tb").insert({
+    pasien_id: pasienTerpilihTb.id,
+    nama_kontak: nama,
+    hubungan: document.getElementById("kontakHubungan").value.trim() || null,
+    umur: document.getElementById("kontakUmur").value.trim() || null,
+    status_pemantauan: document.getElementById("kontakStatus").value || "Belum Diperiksa",
+    tanggal_periksa: document.getElementById("kontakTanggalPeriksa").value || null,
+    catatan: document.getElementById("kontakCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Data kontak erat tersimpan.</div>`;
+  document.getElementById("kontakNama").value = "";
+  document.getElementById("kontakHubungan").value = "";
+  document.getElementById("kontakUmur").value = "";
+  document.getElementById("kontakStatus").value = "Belum Diperiksa";
+  document.getElementById("kontakTanggalPeriksa").value = "";
+  document.getElementById("kontakCatatan").value = "";
+  await muatKontak();
+}
+</script>
+</body>
+</html>

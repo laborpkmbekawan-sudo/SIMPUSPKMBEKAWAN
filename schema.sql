@@ -2306,6 +2306,79 @@ where tk.kunjungan_id = k.id and tk.pasien_id is null;
 create index if not exists idx_tagihan_kunjungan_pasien on tagihan_kunjungan(pasien_id);
 
 -- ============================================================
+-- 64. KLASTER 4 — FASE 1: Program TB (Tuberkulosis) — pelayanan,
+--     kartu kontrol OAT, pelacakan kontak. Pola sama dengan
+--     tabel-tabel Klaster 2/3: pasien_id langsung, gak lewat
+--     tabel "kasus" terpisah, biar konsisten & simpel.
+-- ============================================================
+
+create table if not exists pemeriksaan_tb (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  tipe_pasien text check (tipe_pasien in ('Baru', 'Kambuh', 'Pindahan', 'Setelah Putus Obat', 'Lain-lain')),
+  klasifikasi text check (klasifikasi in ('Paru', 'Ekstra Paru')),
+  hasil_pemeriksaan text,
+  kategori_pengobatan text check (kategori_pengobatan in ('Kategori 1', 'Kategori 2', 'Kategori Anak')),
+  tanggal_mulai_pengobatan date,
+  status_pengobatan text check (status_pengobatan in ('Dalam Pengobatan', 'Sembuh', 'Pengobatan Lengkap', 'Putus Obat', 'Gagal', 'Pindah', 'Meninggal')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_tb_pasien on pemeriksaan_tb(pasien_id);
+
+alter table pemeriksaan_tb enable row level security;
+create policy "authenticated_all_pemeriksaan_tb" on pemeriksaan_tb for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_tb on pemeriksaan_tb;
+create trigger trg_audit_pemeriksaan_tb after insert or update or delete on pemeriksaan_tb
+  for each row execute function fn_audit_log();
+
+create table if not exists kartu_kontrol_oat (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  fase text check (fase in ('Intensif', 'Lanjutan')),
+  status_minum text check (status_minum in ('Diminum', 'Tidak Diminum')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kartu_kontrol_oat_pasien on kartu_kontrol_oat(pasien_id);
+
+alter table kartu_kontrol_oat enable row level security;
+create policy "authenticated_all_kartu_kontrol_oat" on kartu_kontrol_oat for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kartu_kontrol_oat on kartu_kontrol_oat;
+create trigger trg_audit_kartu_kontrol_oat after insert or update or delete on kartu_kontrol_oat
+  for each row execute function fn_audit_log();
+
+create table if not exists pelacakan_kontak_tb (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  nama_kontak text not null,
+  hubungan text,
+  umur text,
+  status_pemantauan text check (status_pemantauan in ('Belum Diperiksa', 'Diperiksa - Sehat', 'Suspek', 'Positif')),
+  tanggal_periksa date,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pelacakan_kontak_tb_pasien on pelacakan_kontak_tb(pasien_id);
+
+alter table pelacakan_kontak_tb enable row level security;
+create policy "authenticated_all_pelacakan_kontak_tb" on pelacakan_kontak_tb for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pelacakan_kontak_tb on pelacakan_kontak_tb;
+create trigger trg_audit_pelacakan_kontak_tb after insert or update or delete on pelacakan_kontak_tb
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
