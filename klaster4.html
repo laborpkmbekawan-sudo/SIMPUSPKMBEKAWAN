@@ -313,14 +313,123 @@
         <div class="k4-segera"><div class="ic">🌿</div><div class="t">Kesehatan Lingkungan</div>Pengawasan kualitas air &amp; sanitasi, pengendalian vektor, inspeksi TTU/TPM, dan data zoonosis — segera dibangun.</div>
       </div>
 
-      <!-- ============ REGISTER ============ -->
+      <!-- ============ REGISTER & KOHORT ============ -->
       <div id="panelRegister" style="display:none;">
-        <div class="k4-segera"><div class="ic">📗</div><div class="t">Register &amp; Kohort</div>Register TB, HIV/IMS, Kusta, dan program lain — segera dibangun (agregasi dari data pelayanan).</div>
+
+        <div class="card" style="padding:10px 14px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="registerSub-kegiatan" onclick="gantiSubRegister('kegiatan')">Register Kegiatan</button>
+            <button type="button" class="lap-tab" id="registerSub-kohort" onclick="gantiSubRegister('kohort')">Kohort Pasien</button>
+          </div>
+        </div>
+
+        <div id="registerPanel-kegiatan">
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">📗</span> Register Kegiatan Klaster 4</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Rekap semua catatan pelayanan penyakit menular dalam satu register, urut tanggal terbaru. Baru mencakup TB — program lain otomatis ikut kalau sudah dibangun.</p>
+            <div class="grid-3">
+              <div><label>Dari Tanggal</label><input type="date" id="regDari"></div>
+              <div><label>Sampai Tanggal</label><input type="date" id="regSampai"></div>
+              <div>
+                <label>Jenis Layanan</label>
+                <select id="regJenis">
+                  <option value="">-- Semua --</option>
+                  <option value="Kasus TB">Kasus TB</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="muatRegisterKegiatanK4()">Tampilkan Register</button>
+          </div>
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Hasil Register — <span id="regJumlah">0</span> catatan</h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Nama Pasien</th><th>No. RM</th><th>Jenis Layanan</th><th>Ringkasan</th><th>Petugas</th></tr></thead>
+              <tbody id="tabelRegisterKegiatan"><tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan Register.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="registerPanel-kohort" style="display:none;">
+          <div class="card" style="--accent:#b3175a;">
+            <h2><span class="card-num" style="background:#b3175a;">🧾</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Lihat kohort perorangan — seluruh riwayat pelayanan Klaster 4 pasien ini, urut kronologis.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="kohortCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienKohort();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienKohort()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="kohortHasilCari"></div>
+          </div>
+
+          <div id="kohortWrap" style="display:none;">
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Kohort — <span id="kohortNamaPasien"></span></h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Jenis Layanan</th><th>Ringkasan</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelKohortPasien"><tr><td colspan="4">Memuat...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- ============ RUJUKAN ============ -->
+      <!-- ============ RUJUKAN & PERMINTAAN LAB ============ -->
       <div id="panelRujukan" style="display:none;">
-        <div class="k4-segera"><div class="ic">↦</div><div class="t">Rujukan &amp; Permintaan Lab</div>Rujuk/permintaan lab, terima hasil lab, rujuk internal &amp; eksternal (RS TB-MDR) — segera dibangun.</div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">↦</span> Cari Pasien</h2>
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / Nama)</label>
+              <input type="text" id="rujCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienRujukan();}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienRujukan()" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+          <div id="rujHasilCari"></div>
+        </div>
+
+        <div id="rujWrap" style="display:none;">
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2>Buat Rujukan / Permintaan Lab — <span id="rujNamaPasien"></span></h2>
+            <div id="msgRujukan"></div>
+            <div class="grid-3">
+              <div><label>Tanggal *</label><input type="date" id="rujTanggal" required></div>
+              <div>
+                <label>Jenis *</label>
+                <select id="rujJenis" onchange="toggleFieldRujukanK4()">
+                  <option value="">-- Pilih --</option>
+                  <option value="Rujukan Internal">Rujukan Internal (UGD/klaster lain)</option>
+                  <option value="Rujukan FKRTL">Rujukan FKRTL (RS TB-MDR/spesialistik)</option>
+                  <option value="Permintaan Lab">Permintaan Lab (sputum/TCM/rapid test)</option>
+                </select>
+              </div>
+              <div><label id="rujTujuanLabel">Tujuan</label><input type="text" id="rujTujuan" placeholder="Pilih jenis dulu"></div>
+            </div>
+            <label id="rujAlasanLabel">Diagnosa / Alasan Rujukan</label>
+            <textarea id="rujAlasan" placeholder="Diagnosa kerja / alasan rujukan / jenis pemeriksaan yang diminta"></textarea>
+            <label>Catatan</label>
+            <textarea id="rujCatatan" placeholder="Catatan tambahan"></textarea>
+            <button class="btn-primary" onclick="simpanRujukanK4()">Simpan</button>
+          </div>
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat Rujukan &amp; Permintaan Lab</h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Jenis</th><th>Tujuan</th><th>Status</th><th>Petugas</th><th>Hasil</th></tr></thead>
+              <tbody id="tabelRiwayatRujukan"><tr><td colspan="6">Belum ada catatan rujukan.</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
       </div>
 
       <!-- ============ RM ============ -->
@@ -673,6 +782,314 @@ async function simpanKontak() {
   document.getElementById("kontakTanggalPeriksa").value = "";
   document.getElementById("kontakCatatan").value = "";
   await muatKontak();
+}
+
+// ---------- REGISTER & KOHORT ----------
+const SUBREGISTER = ["kegiatan", "kohort"];
+function gantiSubRegister(sub) {
+  SUBREGISTER.forEach(s => {
+    const panel = document.getElementById("registerPanel-" + s);
+    if (panel) panel.style.display = (s === sub) ? "block" : "none";
+    const btn = document.getElementById("registerSub-" + s);
+    if (btn) btn.classList.toggle("active", s === sub);
+  });
+}
+
+// Semua sumber tabel klaster 4 yang digabung jadi Register & Kohort.
+// Baru TB — tambah baris di sini pas program lain (Kusta/HIV/dst) dibangun.
+const SUMBER_K4 = [
+  { tabel: "pemeriksaan_tb", label: "Kasus TB", ringkas: r => `${r.klasifikasi || "-"} / ${r.kategori_pengobatan || "-"} — ${r.status_pengobatan || "-"}` }
+];
+
+async function muatRegisterKegiatanK4() {
+  const tbody = document.getElementById("tabelRegisterKegiatan");
+  const jumlahEl = document.getElementById("regJumlah");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const dari = document.getElementById("regDari").value;
+  const sampai = document.getElementById("regSampai").value;
+  const filterJenis = document.getElementById("regJenis").value;
+
+  const sumberDipakai = filterJenis ? SUMBER_K4.filter(s => s.label === filterJenis) : SUMBER_K4;
+
+  try {
+    const hasilSemua = await Promise.all(sumberDipakai.map(async (s) => {
+      let q = supabaseClient.from(s.tabel).select("*, pasien:pasien_id(nama, no_rm), profil_pegawai:petugas_id(nama)").order("tanggal", { ascending: false }).limit(200);
+      if (dari) q = q.gte("tanggal", dari);
+      if (sampai) q = q.lte("tanggal", sampai);
+      const { data, error } = await q;
+      if (error) return [];
+      return (data || []).map(r => ({
+        tanggal: r.tanggal,
+        nama: r.pasien?.nama || "-",
+        no_rm: r.pasien?.no_rm || "-",
+        jenis: s.label,
+        ringkas: s.ringkas(r),
+        petugas: r.profil_pegawai?.nama || "-"
+      }));
+    }));
+
+    let gabung = hasilSemua.flat();
+    gabung.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+    gabung = gabung.slice(0, 300);
+
+    jumlahEl.textContent = gabung.length;
+    if (!gabung.length) { tbody.innerHTML = `<tr><td colspan="6">Tidak ada catatan pada rentang/filter ini.</td></tr>`; return; }
+
+    tbody.innerHTML = gabung.map(r => `
+      <tr>
+        <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+        <td>${r.nama}</td>
+        <td>${r.no_rm}</td>
+        <td>${r.jenis}</td>
+        <td>${r.ringkas}</td>
+        <td>${r.petugas}</td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6">Gagal muat register: ${e.message}</td></tr>`;
+  }
+}
+
+let pasienTerpilihKohort = null;
+
+async function cariPasienKohort() {
+  const kunci = document.getElementById("kohortCari").value.trim();
+  const hasilDiv = document.getElementById("kohortHasilCari");
+  document.getElementById("kohortWrap").style.display = "none";
+  pasienTerpilihKohort = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienKohort(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienKohortDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienKohort = data;
+  }
+}
+
+function pilihPasienKohortDariHasil(i) {
+  pilihPasienKohort(window._hasilCariPasienKohort[i]);
+}
+
+function pilihPasienKohort(pasien) {
+  pasienTerpilihKohort = pasien;
+  document.getElementById("kohortHasilCari").innerHTML = "";
+  document.getElementById("kohortNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("kohortWrap").style.display = "block";
+  muatKohortPasien();
+}
+
+async function muatKohortPasien() {
+  const tbody = document.getElementById("tabelKohortPasien");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  try {
+    const hasilSemua = await Promise.all(SUMBER_K4.map(async (s) => {
+      const { data, error } = await supabaseClient
+        .from(s.tabel)
+        .select("*, profil_pegawai:petugas_id(nama)")
+        .eq("pasien_id", pasienTerpilihKohort.id)
+        .order("tanggal", { ascending: false });
+      if (error) return [];
+      return (data || []).map(r => ({
+        tanggal: r.tanggal,
+        jenis: s.label,
+        ringkas: s.ringkas(r),
+        petugas: r.profil_pegawai?.nama || "-"
+      }));
+    }));
+
+    let gabung = hasilSemua.flat();
+    gabung.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+    if (!gabung.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada riwayat pelayanan Klaster 4 untuk pasien ini.</td></tr>`; return; }
+
+    tbody.innerHTML = gabung.map(r => `
+      <tr>
+        <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+        <td>${r.jenis}</td>
+        <td>${r.ringkas}</td>
+        <td>${r.petugas}</td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4">Gagal muat kohort: ${e.message}</td></tr>`;
+  }
+}
+
+// ---------- RUJUKAN & PERMINTAAN LAB ----------
+let pasienTerpilihRujukan = null;
+
+function toggleFieldRujukanK4() {
+  const jenis = document.getElementById("rujJenis").value;
+  const labelTujuan = document.getElementById("rujTujuanLabel");
+  const inputTujuan = document.getElementById("rujTujuan");
+  const labelAlasan = document.getElementById("rujAlasanLabel");
+  if (jenis === "Rujukan Internal") {
+    labelTujuan.textContent = "Klaster / Unit Tujuan";
+    inputTujuan.placeholder = "mis. UGD, Klaster 3";
+    labelAlasan.textContent = "Diagnosa / Alasan Rujukan";
+  } else if (jenis === "Rujukan FKRTL") {
+    labelTujuan.textContent = "Faskes Tujuan";
+    inputTujuan.placeholder = "mis. RS Rujukan TB-MDR";
+    labelAlasan.textContent = "Diagnosa / Alasan Rujukan";
+  } else if (jenis === "Permintaan Lab") {
+    labelTujuan.textContent = "Jenis Pemeriksaan Lab";
+    inputTujuan.placeholder = "mis. Sputum BTA, TCM, Rapid Test HIV";
+    labelAlasan.textContent = "Indikasi / Alasan Pemeriksaan";
+  } else {
+    labelTujuan.textContent = "Tujuan";
+    inputTujuan.placeholder = "Pilih jenis dulu";
+    labelAlasan.textContent = "Diagnosa / Alasan Rujukan";
+  }
+}
+
+async function cariPasienRujukan() {
+  const kunci = document.getElementById("rujCari").value.trim();
+  const hasilDiv = document.getElementById("rujHasilCari");
+  document.getElementById("rujWrap").style.display = "none";
+  pasienTerpilihRujukan = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienRujukan(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienRujukanDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienRujukan = data;
+  }
+}
+
+function pilihPasienRujukanDariHasil(i) {
+  pilihPasienRujukan(window._hasilCariPasienRujukan[i]);
+}
+
+function pilihPasienRujukan(pasien) {
+  pasienTerpilihRujukan = pasien;
+  document.getElementById("rujHasilCari").innerHTML = "";
+  document.getElementById("rujNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("rujWrap").style.display = "block";
+  document.getElementById("msgRujukan").innerHTML = "";
+  document.getElementById("rujTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("rujJenis").value = "";
+  document.getElementById("rujTujuan").value = "";
+  document.getElementById("rujAlasan").value = "";
+  document.getElementById("rujCatatan").value = "";
+  toggleFieldRujukanK4();
+
+  muatRiwayatRujukan();
+}
+
+async function muatRiwayatRujukan() {
+  const tbody = document.getElementById("tabelRiwayatRujukan");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("rujukan_lab_k4")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihRujukan.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan rujukan.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.jenis}</td>
+      <td>${r.tujuan || "-"}</td>
+      <td>
+        <select onchange="ubahStatusRujukanK4('${r.id}', this.value)" style="padding:4px 6px; font-size:12px;">
+          <option value="Diajukan" ${r.status === "Diajukan" ? "selected" : ""}>Diajukan</option>
+          <option value="Diterima" ${r.status === "Diterima" ? "selected" : ""}>Diterima</option>
+          <option value="Selesai" ${r.status === "Selesai" ? "selected" : ""}>Selesai</option>
+          <option value="Batal" ${r.status === "Batal" ? "selected" : ""}>Batal</option>
+        </select>
+      </td>
+      <td>${r.profil_pegawai?.nama || "-"}</td>
+      <td>${r.hasil ? `<span title="${r.hasil.replace(/"/g, "&quot;")}">📄 ada hasil</span>` : "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function ubahStatusRujukanK4(id, status) {
+  const { error } = await supabaseClient.from("rujukan_lab_k4").update({ status }).eq("id", id);
+  if (error) { alert("Gagal ubah status: " + error.message); return; }
+  await muatRiwayatRujukan();
+}
+
+async function simpanRujukanK4() {
+  const msgBox = document.getElementById("msgRujukan");
+  if (!pasienTerpilihRujukan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("rujTanggal").value;
+  const jenis = document.getElementById("rujJenis").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jenis rujukan/lab dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("rujukan_lab_k4").insert({
+    pasien_id: pasienTerpilihRujukan.id,
+    tanggal,
+    jenis,
+    tujuan: document.getElementById("rujTujuan").value.trim() || null,
+    diagnosa_alasan: document.getElementById("rujAlasan").value.trim() || null,
+    catatan: document.getElementById("rujCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">${jenis} tersimpan.</div>`;
+  document.getElementById("rujJenis").value = "";
+  document.getElementById("rujTujuan").value = "";
+  document.getElementById("rujAlasan").value = "";
+  document.getElementById("rujCatatan").value = "";
+  toggleFieldRujukanK4();
+  await muatRiwayatRujukan();
 }
 </script>
 </body>

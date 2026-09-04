@@ -2379,6 +2379,36 @@ create trigger trg_audit_pelacakan_kontak_tb after insert or update or delete on
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 65. KLASTER 4 — FASE 2: Register & Kohort (agregasi query,
+--     tanpa tabel baru — baru gabung pemeriksaan_tb, nambah lagi
+--     pas program lain dibangun), dan Rujukan & Permintaan Lab
+--     (tabel baru 1, pola sama persis dengan rujukan_lab_k3).
+-- ============================================================
+create table if not exists rujukan_lab_k4 (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis text not null check (jenis in ('Rujukan Internal', 'Rujukan FKRTL', 'Permintaan Lab')),
+  tujuan text,
+  diagnosa_alasan text,
+  catatan text,
+  status text not null default 'Diajukan' check (status in ('Diajukan', 'Diterima', 'Selesai', 'Batal')),
+  hasil text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_rujukan_lab_k4_pasien on rujukan_lab_k4(pasien_id);
+create index if not exists idx_rujukan_lab_k4_tanggal on rujukan_lab_k4(tanggal);
+
+alter table rujukan_lab_k4 enable row level security;
+create policy "authenticated_all_rujukan_lab_k4" on rujukan_lab_k4 for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_rujukan_lab_k4 on rujukan_lab_k4;
+create trigger trg_audit_rujukan_lab_k4 after insert or update or delete on rujukan_lab_k4
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
