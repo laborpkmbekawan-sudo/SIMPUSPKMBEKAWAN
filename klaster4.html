@@ -503,8 +503,163 @@
 
           </div>
         </div>
-        <div id="programPanel-hepatitis" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">Hepatitis</div>Skrining dan tindak lanjut kasus positif — segera dibangun.</div></div>
-        <div id="programPanel-malaria" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">Malaria</div>Pemeriksaan &amp; pengobatan wilayah endemis — segera dibangun.</div></div>
+        <!-- ===== Hepatitis ===== -->
+        <div id="programPanel-hepatitis" style="display:none;">
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">🦠</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Skrining Hepatitis B/C dan tindak lanjut kasus reaktif.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="hepCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienHep();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienHep()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="hepHasilCari"></div>
+          </div>
+
+          <div id="hepWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Skrining Hepatitis — <span id="hepNamaPasien"></span></h2>
+              <div id="msgHep"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="hepTanggal" required></div>
+                <div>
+                  <label>Jenis Layanan</label>
+                  <select id="hepJenisLayanan">
+                    <option value="">-- Pilih --</option>
+                    <option value="Skrining Hepatitis B">Skrining Hepatitis B</option>
+                    <option value="Skrining Hepatitis C">Skrining Hepatitis C</option>
+                    <option value="Konseling">Konseling</option>
+                    <option value="Rujukan">Rujukan</option>
+                  </select>
+                </div>
+                <div><label>Populasi Kunci / Kategori</label><input type="text" id="hepPopulasiKunci" placeholder="Contoh: Bumil, Nakes, Umum"></div>
+                <div>
+                  <label>Hasil HBsAg</label>
+                  <select id="hepHasilHbsag">
+                    <option value="">-- Pilih --</option>
+                    <option value="Belum Diperiksa">Belum Diperiksa</option>
+                    <option value="Non-Reaktif">Non-Reaktif</option>
+                    <option value="Reaktif">Reaktif</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil Anti-HCV</label>
+                  <select id="hepHasilHcv">
+                    <option value="">-- Pilih --</option>
+                    <option value="Belum Diperiksa">Belum Diperiksa</option>
+                    <option value="Non-Reaktif">Non-Reaktif</option>
+                    <option value="Reaktif">Reaktif</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Status Tindak Lanjut</label>
+                  <select id="hepStatusTindakLanjut">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Perlu">Tidak Perlu</option>
+                    <option value="Pemantauan">Pemantauan</option>
+                    <option value="Vaksinasi HBIg Bayi">Vaksinasi HBIg Bayi</option>
+                    <option value="Rujuk RS">Rujuk RS</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="hepCatatan" placeholder="Catatan tambahan"></textarea>
+              <button class="btn-primary" onclick="simpanHep()">Simpan Skrining Hepatitis</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Skrining Hepatitis</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Jenis Layanan</th><th>HBsAg</th><th>Anti-HCV</th><th>Tindak Lanjut</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatHep"><tr><td colspan="6">Belum ada catatan skrining hepatitis.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===== Malaria ===== -->
+        <div id="programPanel-malaria" style="display:none;">
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">🦠</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pemeriksaan &amp; pengobatan malaria wilayah endemis.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="malCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienMal();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienMal()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="malHasilCari"></div>
+          </div>
+
+          <div id="malWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Pemeriksaan Malaria — <span id="malNamaPasien"></span></h2>
+              <div id="msgMal"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="malTanggal" required></div>
+                <div>
+                  <label>Jenis Pemeriksaan</label>
+                  <select id="malJenisPemeriksaan">
+                    <option value="">-- Pilih --</option>
+                    <option value="Mikroskopis">Mikroskopis</option>
+                    <option value="RDT">RDT</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Hasil</label>
+                  <select id="malHasil">
+                    <option value="">-- Pilih --</option>
+                    <option value="Negatif">Negatif</option>
+                    <option value="Positif Pf">Positif Pf (Falciparum)</option>
+                    <option value="Positif Pv">Positif Pv (Vivax)</option>
+                    <option value="Positif Mixed">Positif Mixed</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Asal Penularan</label>
+                  <select id="malAsalPenularan">
+                    <option value="">-- Pilih --</option>
+                    <option value="Indigenous">Indigenous (Lokal)</option>
+                    <option value="Impor">Impor</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Status Pengobatan</label>
+                  <select id="malStatusPengobatan">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Perlu">Tidak Perlu</option>
+                    <option value="Diberi ACT">Diberi ACT</option>
+                    <option value="Rujuk RS">Rujuk RS</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="malCatatan" placeholder="Catatan tambahan"></textarea>
+              <button class="btn-primary" onclick="simpanMal()">Simpan Pemeriksaan Malaria</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Pemeriksaan Malaria</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Jenis</th><th>Hasil</th><th>Asal Penularan</th><th>Status Pengobatan</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatMal"><tr><td colspan="6">Belum ada catatan pemeriksaan malaria.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
         <div id="programPanel-ispa" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">ISPA &amp; Pneumonia</div>Tatalaksana kasus terutama pada balita — segera dibangun.</div></div>
         <div id="programPanel-diare" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">Diare</div>Tatalaksana &amp; pemantauan kasus diare — segera dibangun.</div></div>
         <div id="programPanel-imunisasi" style="display:none;"><div class="k4-segera"><div class="ic">💉</div><div class="t">Imunisasi Program</div>Imunisasi terkait penyakit menular dewasa/lansia — segera dibangun.</div></div>
@@ -550,6 +705,8 @@
                   <option value="Kasus TB">Kasus TB</option>
                   <option value="Kasus Kusta">Kasus Kusta</option>
                   <option value="Layanan HIV/IMS">Layanan HIV/IMS</option>
+                  <option value="Skrining Hepatitis">Skrining Hepatitis</option>
+                  <option value="Kasus Malaria">Kasus Malaria</option>
                 </select>
               </div>
             </div>
@@ -747,6 +904,8 @@
                 <option value="kartu_pengobatan_mdt">Kartu Pengobatan MDT</option>
                 <option value="pemeriksaan_hiv">Layanan HIV/IMS</option>
                 <option value="kartu_pengobatan_arv">Kartu Pengobatan ARV</option>
+                <option value="pemeriksaan_hepatitis">Skrining Hepatitis</option>
+                <option value="pemeriksaan_malaria">Kasus Malaria</option>
                 <option value="rujukan_lab_k4">Rujukan &amp; Permintaan Lab</option>
               </select>
             </div>
@@ -1456,6 +1615,230 @@ async function simpanArv() {
   await muatKartuArv();
 }
 
+// ---------- HEPATITIS ----------
+let pasienTerpilihHep = null;
+
+async function cariPasienHep() {
+  const kunci = document.getElementById("hepCari").value.trim();
+  const hasilDiv = document.getElementById("hepHasilCari");
+  document.getElementById("hepWrap").style.display = "none";
+  pasienTerpilihHep = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienHep(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienHepDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienHep = data;
+  }
+}
+
+function pilihPasienHepDariHasil(i) {
+  pilihPasienHep(window._hasilCariPasienHep[i]);
+}
+
+function pilihPasienHep(pasien) {
+  pasienTerpilihHep = pasien;
+  document.getElementById("hepHasilCari").innerHTML = "";
+  document.getElementById("hepNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("hepWrap").style.display = "block";
+
+  document.getElementById("msgHep").innerHTML = "";
+  document.getElementById("hepTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("hepJenisLayanan").value = "";
+  document.getElementById("hepPopulasiKunci").value = "";
+  document.getElementById("hepHasilHbsag").value = "";
+  document.getElementById("hepHasilHcv").value = "";
+  document.getElementById("hepStatusTindakLanjut").value = "";
+  document.getElementById("hepCatatan").value = "";
+
+  muatRiwayatHep();
+}
+
+async function muatRiwayatHep() {
+  const tbody = document.getElementById("tabelRiwayatHep");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pemeriksaan_hepatitis")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihHep.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan skrining hepatitis.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(h => `
+    <tr>
+      <td>${new Date(h.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${h.jenis_layanan || "-"}</td>
+      <td><span class="tag-status-tb${h.hasil_hbsag === 'Reaktif' ? ' masalah' : ''}${h.hasil_hbsag === 'Non-Reaktif' ? ' selesai' : ''}">${h.hasil_hbsag || "-"}</span></td>
+      <td><span class="tag-status-tb${h.hasil_anti_hcv === 'Reaktif' ? ' masalah' : ''}${h.hasil_anti_hcv === 'Non-Reaktif' ? ' selesai' : ''}">${h.hasil_anti_hcv || "-"}</span></td>
+      <td>${h.status_tindak_lanjut || "-"}</td>
+      <td>${h.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanHep() {
+  const msgBox = document.getElementById("msgHep");
+  if (!pasienTerpilihHep) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("hepTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pemeriksaan_hepatitis").insert({
+    pasien_id: pasienTerpilihHep.id,
+    tanggal,
+    jenis_layanan: document.getElementById("hepJenisLayanan").value || null,
+    populasi_kunci: document.getElementById("hepPopulasiKunci").value.trim() || null,
+    hasil_hbsag: document.getElementById("hepHasilHbsag").value || null,
+    hasil_anti_hcv: document.getElementById("hepHasilHcv").value || null,
+    status_tindak_lanjut: document.getElementById("hepStatusTindakLanjut").value || null,
+    catatan: document.getElementById("hepCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan skrining hepatitis tersimpan.</div>`;
+  document.getElementById("hepCatatan").value = "";
+  await muatRiwayatHep();
+}
+
+// ---------- MALARIA ----------
+let pasienTerpilihMal = null;
+
+async function cariPasienMal() {
+  const kunci = document.getElementById("malCari").value.trim();
+  const hasilDiv = document.getElementById("malHasilCari");
+  document.getElementById("malWrap").style.display = "none";
+  pasienTerpilihMal = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienMal(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienMalDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienMal = data;
+  }
+}
+
+function pilihPasienMalDariHasil(i) {
+  pilihPasienMal(window._hasilCariPasienMal[i]);
+}
+
+function pilihPasienMal(pasien) {
+  pasienTerpilihMal = pasien;
+  document.getElementById("malHasilCari").innerHTML = "";
+  document.getElementById("malNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("malWrap").style.display = "block";
+
+  document.getElementById("msgMal").innerHTML = "";
+  document.getElementById("malTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("malJenisPemeriksaan").value = "";
+  document.getElementById("malHasil").value = "";
+  document.getElementById("malAsalPenularan").value = "";
+  document.getElementById("malStatusPengobatan").value = "";
+  document.getElementById("malCatatan").value = "";
+
+  muatRiwayatMal();
+}
+
+async function muatRiwayatMal() {
+  const tbody = document.getElementById("tabelRiwayatMal");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pemeriksaan_malaria")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihMal.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan pemeriksaan malaria.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(m => `
+    <tr>
+      <td>${new Date(m.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${m.jenis_pemeriksaan || "-"}</td>
+      <td><span class="tag-status-tb${(m.hasil || "").startsWith("Positif") ? ' masalah' : ''}${m.hasil === 'Negatif' ? ' selesai' : ''}">${m.hasil || "-"}</span></td>
+      <td>${m.asal_penularan || "-"}</td>
+      <td>${m.status_pengobatan || "-"}</td>
+      <td>${m.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanMal() {
+  const msgBox = document.getElementById("msgMal");
+  if (!pasienTerpilihMal) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("malTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pemeriksaan_malaria").insert({
+    pasien_id: pasienTerpilihMal.id,
+    tanggal,
+    jenis_pemeriksaan: document.getElementById("malJenisPemeriksaan").value || null,
+    hasil: document.getElementById("malHasil").value || null,
+    asal_penularan: document.getElementById("malAsalPenularan").value || null,
+    status_pengobatan: document.getElementById("malStatusPengobatan").value || null,
+    catatan: document.getElementById("malCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan pemeriksaan malaria tersimpan.</div>`;
+  document.getElementById("malCatatan").value = "";
+  await muatRiwayatMal();
+}
+
 // ---------- REGISTER & KOHORT ----------
 const SUBREGISTER = ["kegiatan", "kohort"];
 function gantiSubRegister(sub) {
@@ -1472,7 +1855,9 @@ function gantiSubRegister(sub) {
 const SUMBER_K4 = [
   { tabel: "pemeriksaan_tb", label: "Kasus TB", ringkas: r => `${r.klasifikasi || "-"} / ${r.kategori_pengobatan || "-"} — ${r.status_pengobatan || "-"}` },
   { tabel: "pemeriksaan_kusta", label: "Kasus Kusta", ringkas: r => `${r.klasifikasi || "-"} / Cacat Tk.${r.cacat_tingkat ?? "-"} — ${r.status_pengobatan || "-"}` },
-  { tabel: "pemeriksaan_hiv", label: "Layanan HIV/IMS", ringkas: r => `${r.jenis_layanan || "-"} — ${r.hasil_tes || "-"} / ${r.status_pengobatan_arv || "-"}` }
+  { tabel: "pemeriksaan_hiv", label: "Layanan HIV/IMS", ringkas: r => `${r.jenis_layanan || "-"} — ${r.hasil_tes || "-"} / ${r.status_pengobatan_arv || "-"}` },
+  { tabel: "pemeriksaan_hepatitis", label: "Skrining Hepatitis", ringkas: r => `${r.jenis_layanan || "-"} — HBsAg:${r.hasil_hbsag || "-"} / Anti-HCV:${r.hasil_anti_hcv || "-"}` },
+  { tabel: "pemeriksaan_malaria", label: "Kasus Malaria", ringkas: r => `${r.jenis_pemeriksaan || "-"} — ${r.hasil || "-"} (${r.asal_penularan || "-"})` }
 ];
 
 async function muatRegisterKegiatanK4() {
@@ -1931,13 +2316,14 @@ async function muatLaporanInternalK4() {
 // ---------- AUDIT TRAIL — KLASTER 4 ----------
 let auditLogK4Cache = [];
 
-const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "pemeriksaan_kusta", "kartu_pengobatan_mdt", "pemeriksaan_hiv", "kartu_pengobatan_arv", "rujukan_lab_k4"];
+const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "pemeriksaan_kusta", "kartu_pengobatan_mdt", "pemeriksaan_hiv", "kartu_pengobatan_arv", "pemeriksaan_hepatitis", "pemeriksaan_malaria", "rujukan_lab_k4"];
 
 const LABEL_TABEL_AUDIT_K4 = {
   pemeriksaan_tb: "Kasus TB", kartu_kontrol_oat: "Kartu Kontrol OAT",
   pelacakan_kontak_tb: "Pelacakan Kontak TB", pemeriksaan_kusta: "Pemeriksaan Kusta",
   kartu_pengobatan_mdt: "Kartu Pengobatan MDT", pemeriksaan_hiv: "Layanan HIV/IMS",
-  kartu_pengobatan_arv: "Kartu Pengobatan ARV", rujukan_lab_k4: "Rujukan & Permintaan Lab"
+  kartu_pengobatan_arv: "Kartu Pengobatan ARV", pemeriksaan_hepatitis: "Skrining Hepatitis",
+  pemeriksaan_malaria: "Kasus Malaria", rujukan_lab_k4: "Rujukan & Permintaan Lab"
 };
 const LABEL_AKSI_AUDIT_K4 = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
 const BADGE_AKSI_AUDIT_K4 = { insert: "badge-selesai", update: "badge-menunggu", delete: "badge-batal" };

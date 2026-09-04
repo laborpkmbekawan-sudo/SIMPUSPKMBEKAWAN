@@ -2501,6 +2501,55 @@ create trigger trg_audit_kartu_pengobatan_arv after insert or update or delete o
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 66. KLASTER 4 — FASE 3: Program Hepatitis, Program Malaria
+-- ============================================================
+
+create table if not exists pemeriksaan_hepatitis (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis_layanan text check (jenis_layanan in ('Skrining Hepatitis B', 'Skrining Hepatitis C', 'Konseling', 'Rujukan')),
+  populasi_kunci text,
+  hasil_hbsag text check (hasil_hbsag in ('Belum Diperiksa', 'Non-Reaktif', 'Reaktif')),
+  hasil_anti_hcv text check (hasil_anti_hcv in ('Belum Diperiksa', 'Non-Reaktif', 'Reaktif')),
+  status_tindak_lanjut text check (status_tindak_lanjut in ('Tidak Perlu', 'Pemantauan', 'Vaksinasi HBIg Bayi', 'Rujuk RS')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_hepatitis_pasien on pemeriksaan_hepatitis(pasien_id);
+
+alter table pemeriksaan_hepatitis enable row level security;
+create policy "authenticated_all_pemeriksaan_hepatitis" on pemeriksaan_hepatitis for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_hepatitis on pemeriksaan_hepatitis;
+create trigger trg_audit_pemeriksaan_hepatitis after insert or update or delete on pemeriksaan_hepatitis
+  for each row execute function fn_audit_log();
+
+create table if not exists pemeriksaan_malaria (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis_pemeriksaan text check (jenis_pemeriksaan in ('Mikroskopis', 'RDT')),
+  hasil text check (hasil in ('Negatif', 'Positif Pf', 'Positif Pv', 'Positif Mixed')),
+  asal_penularan text check (asal_penularan in ('Indigenous', 'Impor')),
+  status_pengobatan text check (status_pengobatan in ('Tidak Perlu', 'Diberi ACT', 'Rujuk RS')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_malaria_pasien on pemeriksaan_malaria(pasien_id);
+
+alter table pemeriksaan_malaria enable row level security;
+create policy "authenticated_all_pemeriksaan_malaria" on pemeriksaan_malaria for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_malaria on pemeriksaan_malaria;
+create trigger trg_audit_pemeriksaan_malaria after insert or update or delete on pemeriksaan_malaria
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
