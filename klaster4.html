@@ -434,12 +434,77 @@
 
       <!-- ============ RM ============ -->
       <div id="panelRm" style="display:none;">
-        <div class="k4-segera"><div class="ic">▤</div><div class="t">Rekam Medis &amp; Resep</div>Pakai menu Rekam Medis (SOAP) &amp; Resep yang sudah ada di modul Rekam Medis — form yang sama berlaku untuk semua klaster, jadi tidak dibangun ulang di sini.</div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▤</span> Cari Pasien</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Lihat riwayat SOAP &amp; resep pasien dari semua kunjungan (lintas klaster). Pengisian SOAP/resep baru dilakukan lewat menu Rekam Medis utama.</p>
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / Nama)</label>
+              <input type="text" id="rmk4Cari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienRmK4();}">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button class="btn-primary" onclick="cariPasienRmK4()" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+          <div id="rmk4HasilCari"></div>
+        </div>
+
+        <div id="rmk4Wrap" style="display:none;">
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat Rekam Medis &amp; Resep — <span id="rmk4NamaPasien"></span></h2>
+            <div style="margin-bottom:10px;">
+              <a href="rekam-medis.html" target="_blank" class="btn-secondary" style="text-decoration:none; display:inline-block;">Buka Rekam Medis Lengkap (isi SOAP/resep baru) →</a>
+            </div>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Klaster</th><th>Keluhan</th><th>Diagnosa (ICD10)</th><th>Plan</th><th>Resep</th></tr></thead>
+              <tbody id="tabelRmk4"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- ============ LAPORAN INTERNAL ============ -->
       <div id="panelLaporanInternal" style="display:none;">
-        <div class="k4-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div>Rekap kasus per program, rekap kepatuhan pengobatan, rekap hasil pengendalian vektor &amp; kesling — segera dibangun.</div>
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">▦</span> Laporan Internal Klaster 4</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Rekap kegiatan internal per periode — dipakai buat evaluasi bulanan Puskesmas, bukan format baku Dinas Kesehatan. Baru mencakup TB, ikut nambah pas program lain dibangun.</p>
+          <div class="grid-3">
+            <div><label>Dari Tanggal</label><input type="date" id="lapIntDari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="lapIntSampai"></div>
+            <div style="display:flex; align-items:flex-end;"><button class="btn-primary" onclick="muatLaporanInternalK4()" style="margin-bottom:12px;">Tampilkan</button></div>
+          </div>
+        </div>
+
+        <div id="lapIntHasil" style="display:none;">
+          <div class="card" style="--accent:#173b5e;">
+            <h2>Ringkasan Periode</h2>
+            <div class="lap-summary-strip">
+              <div class="lap-sum-card"><div class="label">Total Kasus TB Dicatat</div><div class="value" id="lapIntTotalKegiatan">0</div></div>
+              <div class="lap-sum-card ok"><div class="label">Pasien TB Unik</div><div class="value" id="lapIntPasienUnik">0</div></div>
+              <div class="lap-sum-card warn"><div class="label">Putus Obat / Gagal</div><div class="value" id="lapIntKepatuhanBermasalah">0</div></div>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Rekap per Jenis Layanan</h2>
+            <table>
+              <thead><tr><th>Jenis Layanan</th><th>Jumlah Kegiatan</th><th>Pasien Unik</th></tr></thead>
+              <tbody id="tabelLapIntPerJenis"><tr><td colspan="3">Belum ada data.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2>Rekap Kepatuhan Pengobatan TB</h2>
+            <table>
+              <thead><tr><th>Status Pengobatan</th><th>Jumlah Kasus</th></tr></thead>
+              <tbody id="tabelLapIntKepatuhan"><tr><td colspan="2">Belum ada data.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- ============ LAPORAN DINAS ============ -->
@@ -449,7 +514,54 @@
 
       <!-- ============ AUDIT ============ -->
       <div id="panelAudit" style="display:none;">
-        <div class="k4-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div>Log input/edit data klinis dan log akses rekam medis — segera dibangun (pola sama dengan Audit Klaster 3).</div>
+        <div class="card" style="--accent:#6a4c93;">
+          <h2><span class="card-num" style="background:#6a4c93;">🛡</span> Audit Trail — Klaster 4</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Jejak otomatis semua perubahan (tambah/ubah/hapus) pada seluruh catatan pelayanan Klaster 4 &amp; rujukan/lab. Dicatat langsung oleh database lewat trigger, gak bisa dipalsu/dihapus manual.</p>
+
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div><label>Dari Tanggal</label><input type="date" id="audK4Dari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="audK4Sampai"></div>
+            <div>
+              <label>Tabel</label>
+              <select id="audK4FilterTabel">
+                <option value="">Semua Tabel Klaster 4</option>
+                <option value="pemeriksaan_tb">Kasus TB</option>
+                <option value="kartu_kontrol_oat">Kartu Kontrol OAT</option>
+                <option value="pelacakan_kontak_tb">Pelacakan Kontak TB</option>
+                <option value="rujukan_lab_k4">Rujukan &amp; Permintaan Lab</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Aksi</label>
+              <select id="audK4FilterAksi">
+                <option value="">Semua Aksi</option>
+                <option value="insert">Tambah (Insert)</option>
+                <option value="update">Ubah (Update)</option>
+                <option value="delete">Hapus (Delete)</option>
+              </select>
+            </div>
+            <div></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatAuditLogK4()" style="margin-bottom:12px;">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportAuditLogK4Csv()" style="margin-bottom:12px;">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="k4-stat-grid">
+            <div class="k4-stat-card"><div class="label">Total Perubahan</div><div class="value" id="audK4StatTotal">0</div></div>
+            <div class="k4-stat-card" style="--accent:#16865c;"><div class="label">Tambah</div><div class="value" id="audK4StatInsert">0</div></div>
+            <div class="k4-stat-card" style="--accent:#b77900;"><div class="label">Ubah</div><div class="value" id="audK4StatUpdate">0</div></div>
+            <div class="k4-stat-card" style="--accent:#c62836;"><div class="label">Hapus</div><div class="value" id="audK4StatDelete">0</div></div>
+          </div>
+
+          <table>
+            <thead><tr><th>Waktu</th><th>Tabel</th><th>Aksi</th><th>Petugas</th><th>Ringkasan</th><th></th></tr></thead>
+            <tbody id="audK4TabelLog"><tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+          <p style="font-size:11px; color:var(--muted); margin-top:8px;">Menampilkan maksimal 500 baris terbaru sesuai filter. Persempit rentang tanggal kalau butuh data lebih lama.</p>
+        </div>
       </div>
 
     </div>
@@ -1090,6 +1202,256 @@ async function simpanRujukanK4() {
   document.getElementById("rujCatatan").value = "";
   toggleFieldRujukanK4();
   await muatRiwayatRujukan();
+}
+
+// ---------- REKAM MEDIS & RESEP (read-only, lintas klaster) ----------
+let pasienTerpilihRmk4 = null;
+
+async function cariPasienRmK4() {
+  const kunci = document.getElementById("rmk4Cari").value.trim();
+  const hasilDiv = document.getElementById("rmk4HasilCari");
+  document.getElementById("rmk4Wrap").style.display = "none";
+  pasienTerpilihRmk4 = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienRmK4(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienRmK4DariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienRmk4 = data;
+  }
+}
+
+function pilihPasienRmK4DariHasil(i) {
+  pilihPasienRmK4(window._hasilCariPasienRmk4[i]);
+}
+
+function pilihPasienRmK4(pasien) {
+  pasienTerpilihRmk4 = pasien;
+  document.getElementById("rmk4HasilCari").innerHTML = "";
+  document.getElementById("rmk4NamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("rmk4Wrap").style.display = "block";
+  muatRiwayatRmK4();
+}
+
+async function muatRiwayatRmK4() {
+  const tbody = document.getElementById("tabelRmk4");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("id, tanggal, keluhan_awal, klaster(nama, kode), rekam_medis(assessment, kode_icd10, plan, created_at), resep(daftar_obat)")
+    .eq("pasien_id", pasienTerpilihRmk4.id)
+    .order("tanggal", { ascending: false })
+    .limit(30);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada riwayat kunjungan / rekam medis.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(k => {
+    const rm = (k.rekam_medis && k.rekam_medis[0]) || null;
+    const resepList = k.resep || [];
+    const obatRingkas = resepList.length
+      ? resepList.map(r => (r.daftar_obat || []).map(o => o.nama_obat).join(", ")).filter(Boolean).join(" | ")
+      : "-";
+    return `
+      <tr>
+        <td>${new Date(k.tanggal).toLocaleDateString("id-ID")}</td>
+        <td>${k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "-"}</td>
+        <td>${k.keluhan_awal || "-"}</td>
+        <td>${rm ? `${rm.assessment || "-"} ${rm.kode_icd10 ? "(" + rm.kode_icd10 + ")" : ""}` : "-"}</td>
+        <td>${rm?.plan || "-"}</td>
+        <td>${obatRingkas || "-"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// ---------- LAPORAN INTERNAL ----------
+async function muatLaporanInternalK4() {
+  const wrap = document.getElementById("lapIntHasil");
+  wrap.style.display = "block";
+  const dari = document.getElementById("lapIntDari").value;
+  const sampai = document.getElementById("lapIntSampai").value;
+
+  const tbodyJenis = document.getElementById("tabelLapIntPerJenis");
+  const tbodyKepatuhan = document.getElementById("tabelLapIntKepatuhan");
+  tbodyJenis.innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+  tbodyKepatuhan.innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+
+  try {
+    const hasilSemua = await Promise.all(SUMBER_K4.map(async (s) => {
+      let q = supabaseClient.from(s.tabel).select("pasien_id, tanggal");
+      if (dari) q = q.gte("tanggal", dari);
+      if (sampai) q = q.lte("tanggal", sampai);
+      const { data, error } = await q;
+      if (error) return { label: s.label, jumlah: 0, unik: 0 };
+      const rows = data || [];
+      const unik = new Set(rows.map(r => r.pasien_id)).size;
+      return { label: s.label, jumlah: rows.length, unik };
+    }));
+
+    const totalKegiatan = hasilSemua.reduce((a, b) => a + b.jumlah, 0);
+    document.getElementById("lapIntTotalKegiatan").textContent = totalKegiatan;
+
+    const semuaPasien = new Set();
+    const hasilRaw = await Promise.all(SUMBER_K4.map(async (s) => {
+      let q = supabaseClient.from(s.tabel).select("pasien_id");
+      if (dari) q = q.gte("tanggal", dari);
+      if (sampai) q = q.lte("tanggal", sampai);
+      const { data } = await q;
+      return (data || []).map(r => r.pasien_id);
+    }));
+    hasilRaw.flat().forEach(id => semuaPasien.add(id));
+    document.getElementById("lapIntPasienUnik").textContent = semuaPasien.size;
+
+    tbodyJenis.innerHTML = hasilSemua.map(h => `
+      <tr><td>${h.label}</td><td>${h.jumlah}</td><td>${h.unik}</td></tr>
+    `).join("");
+
+    // Rekap kepatuhan pengobatan (dari pemeriksaan_tb.status_pengobatan)
+    let qTb = supabaseClient.from("pemeriksaan_tb").select("status_pengobatan");
+    if (dari) qTb = qTb.gte("tanggal", dari);
+    if (sampai) qTb = qTb.lte("tanggal", sampai);
+    const { data: dataTb } = await qTb;
+    const rowsTb = dataTb || [];
+    const rekapStatus = {};
+    rowsTb.forEach(r => {
+      const s = r.status_pengobatan || "Belum Diisi";
+      rekapStatus[s] = (rekapStatus[s] || 0) + 1;
+    });
+    const bermasalah = (rekapStatus["Putus Obat"] || 0) + (rekapStatus["Gagal"] || 0);
+    document.getElementById("lapIntKepatuhanBermasalah").textContent = bermasalah;
+
+    const entriStatus = Object.entries(rekapStatus);
+    tbodyKepatuhan.innerHTML = entriStatus.length
+      ? entriStatus.map(([status, jumlah]) => `<tr><td>${status}</td><td>${jumlah}</td></tr>`).join("")
+      : `<tr><td colspan="2">Belum ada data.</td></tr>`;
+  } catch (e) {
+    tbodyJenis.innerHTML = `<tr><td colspan="3">Gagal muat laporan: ${e.message}</td></tr>`;
+  }
+}
+
+// ---------- AUDIT TRAIL — KLASTER 4 ----------
+let auditLogK4Cache = [];
+
+const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "rujukan_lab_k4"];
+
+const LABEL_TABEL_AUDIT_K4 = {
+  pemeriksaan_tb: "Kasus TB", kartu_kontrol_oat: "Kartu Kontrol OAT",
+  pelacakan_kontak_tb: "Pelacakan Kontak TB", rujukan_lab_k4: "Rujukan & Permintaan Lab"
+};
+const LABEL_AKSI_AUDIT_K4 = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
+const BADGE_AKSI_AUDIT_K4 = { insert: "badge-selesai", update: "badge-menunggu", delete: "badge-batal" };
+
+function ringkasBarisAuditK4(row) {
+  const data = row.data_baru || row.data_lama || {};
+  return `Tgl ${data.tanggal || "-"} — #${(row.record_id || "").slice(0, 8)}`;
+}
+
+async function muatAuditLogK4() {
+  const dari = document.getElementById("audK4Dari").value;
+  const sampai = document.getElementById("audK4Sampai").value;
+  const filterTabel = document.getElementById("audK4FilterTabel").value;
+  const filterAksi = document.getElementById("audK4FilterAksi").value;
+  const tbody = document.getElementById("audK4TabelLog");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  let q = supabaseClient
+    .from("audit_log")
+    .select("*, profil_pegawai(nama)")
+    .in("tabel", filterTabel ? [filterTabel] : TABEL_K4_ALL)
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (dari) q = q.gte("created_at", `${dari}T00:00:00`);
+  if (sampai) q = q.lte("created_at", `${sampai}T23:59:59`);
+  if (filterAksi) q = q.eq("aksi", filterAksi);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  auditLogK4Cache = data || [];
+
+  document.getElementById("audK4StatTotal").textContent = auditLogK4Cache.length;
+  document.getElementById("audK4StatInsert").textContent = auditLogK4Cache.filter(r => r.aksi === "insert").length;
+  document.getElementById("audK4StatUpdate").textContent = auditLogK4Cache.filter(r => r.aksi === "update").length;
+  document.getElementById("audK4StatDelete").textContent = auditLogK4Cache.filter(r => r.aksi === "delete").length;
+
+  tbody.innerHTML = auditLogK4Cache.length ? auditLogK4Cache.map((r, i) => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${LABEL_TABEL_AUDIT_K4[r.tabel] || r.tabel}</td>
+      <td><span class="badge ${BADGE_AKSI_AUDIT_K4[r.aksi] || ""}">${LABEL_AKSI_AUDIT_K4[r.aksi] || r.aksi}</span></td>
+      <td>${r.profil_pegawai ? r.profil_pegawai.nama : "-"}</td>
+      <td>${ringkasBarisAuditK4(r)}</td>
+      <td><button type="button" class="btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="toggleDetailAuditK4(${i})">Detail</button></td>
+    </tr>
+    <tr id="audK4Detail${i}" style="display:none;">
+      <td colspan="6">
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sebelum</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_lama ? JSON.stringify(r.data_lama, null, 2) : "(tidak ada — baris baru)"}</pre>
+          </div>
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sesudah</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_baru ? JSON.stringify(r.data_baru, null, 2) : "(tidak ada — baris dihapus)"}</pre>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Gak ada perubahan pada rentang &amp; filter ini.</td></tr>`;
+}
+
+function toggleDetailAuditK4(i) {
+  const row = document.getElementById(`audK4Detail${i}`);
+  if (row) row.style.display = row.style.display === "none" ? "table-row" : "none";
+}
+
+function exportAuditLogK4Csv() {
+  if (!auditLogK4Cache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Waktu", "Tabel", "Aksi", "Petugas", "Ringkasan", "Record ID"];
+  const rows = auditLogK4Cache.map(r => [
+    new Date(r.created_at).toLocaleString("id-ID"),
+    LABEL_TABEL_AUDIT_K4[r.tabel] || r.tabel,
+    LABEL_AKSI_AUDIT_K4[r.aksi] || r.aksi,
+    r.profil_pegawai ? r.profil_pegawai.nama : "-",
+    ringkasBarisAuditK4(r),
+    r.record_id || "-"
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("audK4Dari").value;
+  const sampaiInput = document.getElementById("audK4Sampai").value;
+  a.href = url;
+  a.download = `Audit_Log_Klaster4_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
