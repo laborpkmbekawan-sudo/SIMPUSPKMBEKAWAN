@@ -2281,6 +2281,31 @@ set dasar_hukum = 'Perda No. 4 Tahun 2024 tentang Pajak Daerah dan Retribusi Dae
 where dasar_hukum = 'Tarif Puskesmas Kab. Indragiri Hilir 2024' or dasar_hukum is null;
 
 -- ============================================================
+-- 63. KASIR — siap-siap tagihan_kunjungan buat dibaca & ditutup
+--     modul Kasir (kasir.html, baru):
+--     a) pasien_id: sebagian tagihan (ANC/Persalinan di KIA & KB)
+--        gak punya kunjungan_id, jadi gak ada jalan lacak ke pasien
+--        sama sekali — ditambal kolom ini (nullable, dipopulasi baik
+--        dari kunjungan_id maupun langsung pas insert).
+--     b) dibayar_oleh, dibayar_at, metode_bayar: jejak siapa/kapan/
+--        cara bayar pas kasir memproses pelunasan.
+-- ============================================================
+
+alter table tagihan_kunjungan add column if not exists pasien_id uuid references pasien(id);
+alter table tagihan_kunjungan add column if not exists dibayar_oleh uuid references profil_pegawai(id);
+alter table tagihan_kunjungan add column if not exists dibayar_at timestamptz;
+alter table tagihan_kunjungan add column if not exists metode_bayar text check (metode_bayar in ('Tunai', 'QRIS', 'Debit/Kredit', 'Transfer') or metode_bayar is null);
+
+-- Backfill pasien_id dari kunjungan yang udah ada, buat baris lama yang
+-- kunjungan_id-nya keisi tapi pasien_id-nya masih kosong.
+update tagihan_kunjungan tk
+set pasien_id = k.pasien_id
+from kunjungan k
+where tk.kunjungan_id = k.id and tk.pasien_id is null;
+
+create index if not exists idx_tagihan_kunjungan_pasien on tagihan_kunjungan(pasien_id);
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

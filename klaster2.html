@@ -73,6 +73,7 @@
     <a href="ugd.html">UGD</a>
     <a href="klaster3.html">Klaster 3</a>
     <a href="pengaturan.html">Pengaturan</a>
+    <a href="kasir.html">Kasir</a>
     </nav>
   </aside>
 
@@ -1931,7 +1932,7 @@ async function muatTarifKiaKb() {
   daftarTarifKiaKb = data || [];
 }
 
-async function tambahTagihanKiaKb(pasien, namaLayanan, sumberTabel, sumberId) {
+async function tambahTagihanKiaKb(pasien, namaLayanan, sumberTabel, sumberId, pasienId) {
   const t = daftarTarifKiaKb.find(x => x.nama_layanan === namaLayanan);
   if (!t) return null; // tarif belum diisi admin — gak wajib, skip senyap
   const jenisBayar = pasien?.status_bpjs === "aktif" ? "BPJS" : "Umum";
@@ -1939,8 +1940,10 @@ async function tambahTagihanKiaKb(pasien, namaLayanan, sumberTabel, sumberId) {
   // NOTE: ANC/Persalinan belum jalan lewat antrian kunjungan (beda arsitektur
   // dari Rekam Medis/UGD), jadi tagihan di sini gak terikat ke satu kunjungan_id
   // spesifik (kolom kunjungan_id di tagihan_kunjungan sudah dibuat nullable — section 62).
+  // Dilacak lewat pasien_id langsung (section 63) biar tetap ketemu di Kasir.
   const { error } = await supabaseClient.from("tagihan_kunjungan").insert({
     kunjungan_id: null,
+    pasien_id: pasienId,
     kategori: "KIA & KB",
     nama_layanan: namaLayanan,
     jumlah: 1,
@@ -2064,7 +2067,7 @@ async function simpanAnc() {
 
   if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan ANC: ${error.message}</div>`; return; }
 
-  const errTagihan = await tambahTagihanKiaKb(kehamilanTerpilihAnc.pasien, "Pemeriksaan Kehamilan (ANC) / Nifas (PNC)", "kunjungan_anc", ancBaru.id);
+  const errTagihan = await tambahTagihanKiaKb(kehamilanTerpilihAnc.pasien, "Pemeriksaan Kehamilan (ANC) / Nifas (PNC)", "kunjungan_anc", ancBaru.id, kehamilanTerpilihAnc.pasien_id);
 
   msgBox.innerHTML = `<div class="msg msg-success">Hasil ANC tersimpan.${errTagihan ? " (Peringatan: gagal catat tagihan — cek Master Tarif/koneksi.)" : ""}</div>`;
   ["ancTd", "ancBb", "ancTfu", "ancLila", "ancHb", "ancStatusGizi", "ancCatatan"].forEach(id => document.getElementById(id).value = "");
@@ -2215,7 +2218,7 @@ async function simpanPersalinan() {
   if (errUpdate) { msgBox.innerHTML = `<div class="msg msg-error">Persalinan tersimpan, tapi gagal update status kehamilan: ${errUpdate.message}</div>`; return; }
 
   const namaTarifPersalinan = jenis === "penyulit" ? "Penanganan Awal Komplikasi Maternal/Neonatal" : "Pertolongan Persalinan Normal oleh Bidan";
-  const errTagihan = await tambahTagihanKiaKb(kehamilanTerpilihPersalinan.pasien, namaTarifPersalinan, "persalinan", persalinanBaru.id);
+  const errTagihan = await tambahTagihanKiaKb(kehamilanTerpilihPersalinan.pasien, namaTarifPersalinan, "persalinan", persalinanBaru.id, kehamilanTerpilihPersalinan.pasien_id);
 
   msgBox.innerHTML = `<div class="msg msg-success">Persalinan tersimpan. Status ibu otomatis pindah ke masa Nifas.${errTagihan ? " (Peringatan: gagal catat tagihan — cek Master Tarif/koneksi.)" : ""}</div>`;
   document.getElementById("persalinanWrap").style.display = "none";

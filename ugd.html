@@ -106,6 +106,7 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
     <a href="rekam-medis.html">Rekam Medis</a>
     <a href="apotek.html">Apotek</a>
     <a href="pengaturan.html">Pengaturan</a>
+    <a href="kasir.html">Kasir</a>
     </nav>
   </aside>
 
@@ -309,6 +310,14 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
             <h2>Tindakan Kegawatdaruratan</h2>
             <div id="msgTindTindakan"></div>
             <div class="grid-2">
+              <div><label>Pilih dari Tarif (opsional)</label>
+                <select id="tindTarifPilih" onchange="pilihTarifTindakanUgd()">
+                  <option value="">-- Tindakan di luar daftar tarif --</option>
+                </select>
+              </div>
+              <div><label>Tarif</label><div id="tindTarifPreview" style="padding:9px 0; font-size:13px; font-weight:600; color:var(--navy-2, #173b5e);">-</div></div>
+            </div>
+            <div class="grid-2">
               <div><label>Nama Tindakan</label><input type="text" id="tindNamaTindakan" placeholder="misal: Pemasangan infus"></div>
               <div><label>Catatan</label><input type="text" id="tindCatatanTindakan" placeholder="opsional"></div>
             </div>
@@ -323,8 +332,10 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
           <div class="card" style="--accent:#6a4c93;">
             <h2>Permintaan Pemeriksaan Cito</h2>
             <div id="msgTindCito"></div>
+            <label>Pemeriksaan Lab Sesuai Tarif (centang yang diminta)</label>
+            <div id="citoTarifChecklist" style="display:flex; flex-wrap:wrap; gap:10px 18px; margin-bottom:10px; font-size:13px;">-</div>
             <div class="grid-2">
-              <div><label>Jenis Pemeriksaan</label><input type="text" id="tindJenisCito" placeholder="misal: Darah lengkap, GDS, Rontgen thorax"></div>
+              <div><label>Pemeriksaan Lain (di luar tarif)</label><input type="text" id="tindJenisCito" placeholder="misal: Rontgen thorax"></div>
               <div style="display:flex; align-items:flex-end;">
                 <button class="btn-primary" onclick="ajukanCito()" style="margin-bottom:12px;">Ajukan Cito ke Laboratorium</button>
               </div>
@@ -980,11 +991,12 @@ let kunjunganTerpilihTindakan = null; // { id: kunjungan_ugd.id, kunjungan_id, p
 let obatMasterCacheUgd = [];
 let daftarTindakanBaru = [];
 let daftarResepBaru = [];
+let daftarTarifUgd = []; // cache master_tarif buat Tindakan & Cito Lab UGD
 
 async function muatTindakan() {
   const { data, error } = await supabaseClient
     .from("kunjungan_ugd")
-    .select("id, kunjungan_id, pasien_id, triase_warna, status_ugd, kunjungan(no_kunjungan), pasien(nama, no_rm)")
+    .select("id, kunjungan_id, pasien_id, triase_warna, status_ugd, kunjungan(no_kunjungan, jenis_bayar), pasien(nama, no_rm)")
     .in("status_ugd", ["baru", "ditangani", "observasi"])
     .order("created_at", { ascending: true });
 
@@ -999,19 +1011,89 @@ async function muatTindakan() {
     pasienAktifCacheTindakan.map(p => `<option value="${p.id}">${p.pasien?.nama || "-"} (No. RM ${p.pasien?.no_rm || "-"}) ${p.triase_warna ? "— " + p.triase_warna.toUpperCase() : ""}</option>`).join("");
 
   if (!obatMasterCacheUgd.length) {
-    const { data: obatData } = await supabaseClient.from("obat").select("nama_obat, dosis").order("nama_obat");
+    const { data: obatData } = await supabaseClient.from("obat").select("nama_obat, dosis, harga").order("nama_obat");
     if (obatData) {
       const seen = new Set();
+      const hargaMap = {};
       obatMasterCacheUgd = obatData.filter(o => {
         const key = `${o.nama_obat}|${o.dosis || ""}`;
+        const hargaKey = `${o.nama_obat}|||${o.dosis || ""}`;
+        if (hargaMap[hargaKey] === undefined) hargaMap[hargaKey] = o.harga || 0;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       });
+      window._hargaObatUgd = hargaMap;
       document.getElementById("tindObatSelect").innerHTML = `<option value="">-- Pilih obat --</option>` +
         obatMasterCacheUgd.map(o => `<option value="${o.nama_obat}|||${o.dosis || ""}">${o.nama_obat}${o.dosis ? " — " + o.dosis : ""}</option>`).join("");
     }
   }
+
+  await muatMasterTarifUgd();
+}
+
+// ---------- TARIF UMUM — Tindakan & Cito Lab (UGD) ----------
+async function muatMasterTarifUgd() {
+  if (daftarTarifUgd.length) return; // cache sekali per sesi halaman, tarif jarang berubah
+  const { data, error } = await supabaseClient.from("master_tarif").select("*").eq("aktif", true).order("kategori").order("nama_layanan");
+  if (error) { console.error(error); return; }
+  daftarTarifUgd = data || [];
+
+  const selTindakan = document.getElementById("tindTarifPilih");
+  const itemTindakan = daftarTarifUgd.filter(t => t.kategori === "Tindakan");
+  selTindakan.innerHTML = `<option value="">-- Tindakan di luar daftar tarif --</option>` +
+    itemTindakan.map(t => `<option value="${t.id}">${t.nama_layanan}</option>`).join("");
+
+  const itemLab = daftarTarifUgd.filter(t => t.kategori === "Laboratorium");
+  const labDiv = document.getElementById("citoTarifChecklist");
+  labDiv.innerHTML = itemLab.length ? itemLab.map(t => `
+    <label style="font-weight:400; display:inline-flex; align-items:center; gap:5px;">
+      <input type="checkbox" class="citoTarifItem" value="${t.id}" style="width:auto;"> ${t.nama_layanan}
+    </label>
+  `).join("") : "Belum ada tarif Laboratorium — isi lewat menu Pengaturan.";
+}
+
+// Ambil tarif sesuai jenis bayar kunjungan UGD yang aktif (BPJS pakai tarif_bpjs, biasanya 0/ditanggung kapitasi).
+function hargaTarifSesuaiBayarUgd(tarifItem) {
+  const jenisBayar = kunjunganTerpilihTindakan?.kunjungan?.jenis_bayar;
+  return jenisBayar === "BPJS" ? (tarifItem.tarif_bpjs || 0) : (tarifItem.tarif_umum || 0);
+}
+
+function formatRupiahUgd(angka) {
+  return new Intl.NumberFormat("id-ID").format(angka || 0);
+}
+
+function pilihTarifTindakanUgd() {
+  const id = document.getElementById("tindTarifPilih").value;
+  const preview = document.getElementById("tindTarifPreview");
+  if (!id) { preview.textContent = "-"; return; }
+  const t = daftarTarifUgd.find(x => x.id === id);
+  if (!t) { preview.textContent = "-"; return; }
+  document.getElementById("tindNamaTindakan").value = t.nama_layanan;
+  const harga = hargaTarifSesuaiBayarUgd(t);
+  preview.textContent = `Rp ${formatRupiahUgd(harga)}`;
+}
+
+// Tambah satu baris tagihan ke tagihan_kunjungan buat pasien UGD yang lagi dipilih.
+// Kegagalan di sini gak membatalkan data klinis yang udah tersimpan, cuma jadi
+// peringatan non-blocking di layar (lihat pemanggilnya). null = sukses.
+async function tambahTagihanUgd(kategori, namaLayanan, jumlah, hargaSatuan, sumberTabel, sumberId, tarifId) {
+  const { error } = await supabaseClient.from("tagihan_kunjungan").insert({
+    kunjungan_id: kunjunganTerpilihTindakan.kunjungan_id,
+    pasien_id: kunjunganTerpilihTindakan.pasien_id,
+    kategori,
+    nama_layanan: namaLayanan,
+    jumlah,
+    harga_satuan: hargaSatuan,
+    subtotal: hargaSatuan * jumlah,
+    jenis_bayar: kunjunganTerpilihTindakan?.kunjungan?.jenis_bayar || "Umum",
+    sumber_tabel: sumberTabel,
+    sumber_id: sumberId,
+    tarif_id: tarifId,
+    petugas_id: profilSaya.id
+  });
+  if (error) { console.error("Gagal simpan tagihan UGD:", error); return error.message; }
+  return null;
 }
 
 async function pilihPasienTindakan(kunjunganUgdId) {
@@ -1101,10 +1183,18 @@ async function simpanPemeriksaanAwal() {
 function tambahBarisTindakan() {
   const nama = document.getElementById("tindNamaTindakan").value.trim();
   const catatan = document.getElementById("tindCatatanTindakan").value.trim();
+  const tarifId = document.getElementById("tindTarifPilih").value || null;
   if (!nama) return;
-  daftarTindakanBaru.push({ nama_tindakan: nama, catatan: catatan || null });
+  let harga = 0;
+  if (tarifId) {
+    const t = daftarTarifUgd.find(x => x.id === tarifId);
+    if (t) harga = hargaTarifSesuaiBayarUgd(t);
+  }
+  daftarTindakanBaru.push({ nama_tindakan: nama, catatan: catatan || null, tarif_id: tarifId, harga_satuan: harga });
   document.getElementById("tindNamaTindakan").value = "";
   document.getElementById("tindCatatanTindakan").value = "";
+  document.getElementById("tindTarifPilih").value = "";
+  document.getElementById("tindTarifPreview").textContent = "-";
   renderListTindakanBaru();
 }
 
@@ -1112,7 +1202,7 @@ function renderListTindakanBaru() {
   const ul = document.getElementById("listTindakanBaru");
   if (!daftarTindakanBaru.length) { ul.innerHTML = ""; return; }
   ul.innerHTML = daftarTindakanBaru.map((t, i) => `
-    <li><label>${t.nama_tindakan}${t.catatan ? " — " + t.catatan : ""}</label>
+    <li><label>${t.nama_tindakan}${t.catatan ? " — " + t.catatan : ""}${t.tarif_id ? " — Rp " + formatRupiahUgd(t.harga_satuan) : ""}</label>
       <button type="button" class="btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="daftarTindakanBaru.splice(${i},1); renderListTindakanBaru();">Hapus</button>
     </li>`).join("");
 }
@@ -1123,15 +1213,22 @@ async function simpanTindakan() {
   if (!daftarTindakanBaru.length) { msgBox.innerHTML = `<div class="msg msg-error">Tambah minimal 1 tindakan dulu.</div>`; return; }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
-  const { error } = await supabaseClient.from("tindakan_medis").insert({
+  const { data: dataTindakan, error } = await supabaseClient.from("tindakan_medis").insert({
     kunjungan_id: kunjunganTerpilihTindakan.kunjungan_id,
     daftar_tindakan: daftarTindakanBaru,
     petugas_id: user.id
-  });
+  }).select().single();
 
   if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan tindakan: ${error.message}</div>`; return; }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Tindakan tersimpan.</div>`;
+  let peringatan = "";
+  for (const t of daftarTindakanBaru) {
+    if (!t.tarif_id) continue;
+    const err = await tambahTagihanUgd("Tindakan", t.nama_tindakan, 1, t.harga_satuan || 0, "tindakan_medis", dataTindakan.id, t.tarif_id);
+    if (err) { peringatan = " (Peringatan: gagal catat sebagian tagihan tindakan — cek Master Tarif/koneksi.)"; break; }
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Tindakan tersimpan.${peringatan}</div>`;
   daftarTindakanBaru = [];
   renderListTindakanBaru();
   await pilihPasienTindakan(kunjunganTerpilihTindakan.id);
@@ -1140,8 +1237,13 @@ async function simpanTindakan() {
 async function ajukanCito() {
   const msgBox = document.getElementById("msgTindCito");
   if (!kunjunganTerpilihTindakan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
-  const jenis = document.getElementById("tindJenisCito").value.trim();
-  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Isi jenis pemeriksaan dulu.</div>`; return; }
+
+  const itemLabTerpilih = Array.from(document.querySelectorAll(".citoTarifItem:checked"))
+    .map(cb => daftarTarifUgd.find(t => t.id === cb.value))
+    .filter(Boolean);
+  const jenisTambahan = document.getElementById("tindJenisCito").value.trim();
+  const jenis = [...itemLabTerpilih.map(t => t.nama_layanan), jenisTambahan].filter(Boolean).join(", ");
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Centang dari tarif atau isi jenis pemeriksaan dulu.</div>`; return; }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   const { data: klasterLk, error: errKlaster } = await supabaseClient.from("klaster").select("id").eq("kode", "LK").single();
@@ -1180,8 +1282,15 @@ async function ajukanCito() {
 
   if (errRl) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan permintaan cito: ${errRl.message}</div>`; return; }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Permintaan cito diajukan — antrian No. ${noAntrianLab} di Laboratorium.</div>`;
+  let peringatan = "";
+  for (const t of itemLabTerpilih) {
+    const err = await tambahTagihanUgd("Laboratorium", t.nama_layanan, 1, hargaTarifSesuaiBayarUgd(t), "rujukan_lab", kunjunganLab.id, t.id);
+    if (err) { peringatan = " (Peringatan: gagal catat sebagian tagihan lab — cek Master Tarif/koneksi.)"; break; }
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Permintaan cito diajukan — antrian No. ${noAntrianLab} di Laboratorium.${peringatan}</div>`;
   document.getElementById("tindJenisCito").value = "";
+  document.querySelectorAll(".citoTarifItem").forEach(cb => cb.checked = false);
   await pilihPasienTindakan(kunjunganTerpilihTindakan.id);
 }
 
@@ -1192,7 +1301,11 @@ function tambahBarisResep() {
   const aturan = document.getElementById("tindAturanObat").value.trim();
   if (!namaDosis || !jumlah || jumlah <= 0) return;
   const [nama_obat, dosis] = namaDosis.split("|||");
-  daftarResepBaru.push({ nama_obat, dosis: dosis || null, jumlah, satuan: satuan || null, aturan_pakai: aturan || null });
+  const hargaAsli = (window._hargaObatUgd || {})[namaDosis] || 0;
+  // BPJS: obat FKTP ditanggung kapitasi, gak dibilling ke pasien (harga 0). Umum: bayar harga asli.
+  const jenisBayar = kunjunganTerpilihTindakan?.kunjungan?.jenis_bayar;
+  const harga_satuan = jenisBayar === "BPJS" ? 0 : hargaAsli;
+  daftarResepBaru.push({ nama_obat, dosis: dosis || null, jumlah, satuan: satuan || null, aturan_pakai: aturan || null, harga_satuan });
   document.getElementById("tindObatSelect").value = "";
   document.getElementById("tindJumlahObat").value = "1";
   document.getElementById("tindSatuanObat").value = "";
@@ -1204,7 +1317,7 @@ function renderListResepBaru() {
   const ul = document.getElementById("listResepBaru");
   if (!daftarResepBaru.length) { ul.innerHTML = ""; return; }
   ul.innerHTML = daftarResepBaru.map((o, i) => `
-    <li><label>${o.nama_obat}${o.dosis ? " " + o.dosis : ""} — ${o.jumlah}${o.satuan ? " " + o.satuan : ""}${o.aturan_pakai ? " (" + o.aturan_pakai + ")" : ""}</label>
+    <li><label>${o.nama_obat}${o.dosis ? " " + o.dosis : ""} — ${o.jumlah}${o.satuan ? " " + o.satuan : ""}${o.aturan_pakai ? " (" + o.aturan_pakai + ")" : ""}${o.harga_satuan ? " — Rp " + formatRupiahUgd(o.harga_satuan) : ""}</label>
       <button type="button" class="btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="daftarResepBaru.splice(${i},1); renderListResepBaru();">Hapus</button>
     </li>`).join("");
 }
@@ -1215,17 +1328,23 @@ async function simpanResepEmergency() {
   if (!daftarResepBaru.length) { msgBox.innerHTML = `<div class="msg msg-error">Tambah minimal 1 obat dulu.</div>`; return; }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
-  const { error } = await supabaseClient.from("resep").insert({
+  const { data: dataResep, error } = await supabaseClient.from("resep").insert({
     kunjungan_id: kunjunganTerpilihTindakan.kunjungan_id,
     dokter_id: user.id,
     daftar_obat: daftarResepBaru,
     is_cito: true,
     status: "menunggu"
-  });
+  }).select().single();
 
   if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal kirim resep: ${error.message}</div>`; return; }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Resep emergency terkirim ke Farmasi.</div>`;
+  let peringatan = "";
+  for (const o of daftarResepBaru) {
+    const err = await tambahTagihanUgd("Obat", `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`, o.jumlah, o.harga_satuan || 0, "resep", dataResep.id, null);
+    if (err) { peringatan = " (Peringatan: gagal catat sebagian tagihan obat — cek Master Tarif/koneksi.)"; break; }
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Resep emergency terkirim ke Farmasi.${peringatan}</div>`;
   daftarResepBaru = [];
   renderListResepBaru();
 }

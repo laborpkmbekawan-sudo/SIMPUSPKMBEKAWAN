@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kasir - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>SIMPUS UPTD PUSKESMAS BEKAWAN — Kasir</h1>
+  <div class="user-info">
+    <span id="namaUser">Memuat...</span>
+    <button onclick="logout()">Keluar</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="tab-nav">
+    <a href="index.html">Pendaftaran</a>
+    <a href="rekam-medis.html">Rekam Medis</a>
+    <a href="apotek.html">Apotek</a>
+    <a href="ugd.html">UGD</a>
+    <a href="klaster2.html">Klaster 2</a>
+    <a href="klaster3.html">Klaster 3</a>
+    <a href="pengaturan.html">Pengaturan</a>
+    <a href="kasir.html" class="active">Kasir</a>
+  </div>
+
+  <div class="lap-tabs">
+    <div class="lap-tab active" id="kasirTab-bayar" onclick="gantiTabKasir('bayar')">Proses Pembayaran</div>
+    <div class="lap-tab" id="kasirTab-riwayat" onclick="gantiTabKasir('riwayat')">Riwayat Transaksi</div>
+  </div>
+
+  <!-- ===== PROSES PEMBAYARAN ===== -->
+  <div id="panelKasirBayar">
+    <div class="card">
+      <h2>Cari Pasien</h2>
+      <div id="msgCariPasien"></div>
+      <div class="grid-2">
+        <div><label>Nama / No. RM Pasien</label><input type="text" id="kasirCariInput" placeholder="Ketik nama atau No. RM, lalu Enter" onkeydown="if(event.key==='Enter'){event.preventDefault(); cariPasienKasir();}"></div>
+        <div style="display:flex; align-items:flex-end;"><button type="button" class="btn-primary" onclick="cariPasienKasir()" style="margin-bottom:12px;">Cari</button></div>
+      </div>
+      <div id="hasilCariPasienKasir"></div>
+    </div>
+
+    <div class="card" id="cardTagihanPasien" style="display:none;">
+      <h2>Tagihan — <span id="kasirNamaPasien"></span> <span style="font-weight:400; font-size:12px; color:var(--muted);">(No. RM <span id="kasirNoRmPasien">-</span>)</span></h2>
+      <div id="msgTagihan"></div>
+      <table>
+        <thead><tr><th style="width:26px;"><input type="checkbox" id="chkSemuaTagihan" onchange="toggleSemuaTagihan(this)"></th><th>Tanggal</th><th>Kategori</th><th>Layanan</th><th>Sumber</th><th>Jml</th><th>Harga Satuan</th><th>Subtotal</th><th>Cara Bayar</th></tr></thead>
+        <tbody id="tabelTagihanPasien"><tr><td colspan="9">Belum ada pencarian.</td></tr></tbody>
+      </table>
+
+      <div style="display:flex; justify-content:flex-end; align-items:center; gap:16px; margin-top:14px; padding-top:14px; border-top:1px solid #e5e7eb;">
+        <div style="font-size:15px; font-weight:700; color:var(--navy, #173b5e);">Total Dipilih: Rp <span id="kasirTotalDipilih">0</span></div>
+      </div>
+      <div class="grid-2" style="margin-top:10px;">
+        <div><label>Metode Bayar</label>
+          <select id="kasirMetodeBayar">
+            <option value="Tunai">Tunai</option>
+            <option value="QRIS">QRIS</option>
+            <option value="Debit/Kredit">Debit/Kredit</option>
+            <option value="Transfer">Transfer</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:flex-end;">
+          <button type="button" class="btn-primary" onclick="prosesPembayaran()" style="margin-bottom:12px;">Proses Pembayaran</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== RIWAYAT TRANSAKSI ===== -->
+  <div id="panelKasirRiwayat" style="display:none;">
+    <div class="card">
+      <h2>Filter</h2>
+      <div class="grid-2">
+        <div><label>Dari Tanggal</label><input type="date" id="riwDari"></div>
+        <div><label>Sampai Tanggal</label><input type="date" id="riwSampai"></div>
+      </div>
+      <button type="button" class="btn-primary" onclick="muatRiwayatTransaksi()">Tampilkan</button>
+    </div>
+
+    <div class="stat-grid" id="riwRingkasan"></div>
+
+    <div class="card">
+      <h2>Daftar Transaksi Lunas</h2>
+      <table>
+        <thead><tr><th>Tanggal Bayar</th><th>Pasien</th><th>Kategori</th><th>Layanan</th><th>Subtotal</th><th>Jenis Bayar</th><th>Metode</th><th>Kasir</th></tr></thead>
+        <tbody id="tabelRiwayatTransaksi"><tr><td colspan="8">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div id="areaCetakStruk" class="kartu-cetak" style="width:340px;">
+  <h2>UPTD PUSKESMAS BEKAWAN</h2>
+  <p class="sub">Struk Pembayaran</p>
+  <div class="garis"></div>
+  <div class="baris"><span>Tanggal</span><span id="strukTanggal"></span></div>
+  <div class="baris"><span>Pasien</span><span id="strukNama"></span></div>
+  <div class="baris"><span>No. RM</span><span id="strukNoRm"></span></div>
+  <div class="baris"><span>Kasir</span><span id="strukKasir"></span></div>
+  <div class="garis"></div>
+  <div id="strukItemList"></div>
+  <div class="garis"></div>
+  <div class="baris" style="font-weight:700;"><span>TOTAL</span><span id="strukTotal"></span></div>
+  <div class="baris"><span>Metode Bayar</span><span id="strukMetode"></span></div>
+  <p class="catatan">Simpan struk ini sebagai bukti pembayaran yang sah.</p>
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+let profilSaya = null;
+let hasilCariCache = [];
+let pasienTerpilihKasir = null;
+let tagihanCachePasien = [];
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  profilSaya = await getProfilSaya();
+  cekAksesHalaman(profilSaya, "kasir.html");
+  sesuaikanTabNav(profilSaya);
+  if (profilSaya) document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+
+  const hariIni = new Date().toISOString().split("T")[0];
+  document.getElementById("riwDari").value = hariIni;
+  document.getElementById("riwSampai").value = hariIni;
+})();
+
+function gantiTabKasir(tab) {
+  document.getElementById("kasirTab-bayar").classList.toggle("active", tab === "bayar");
+  document.getElementById("kasirTab-riwayat").classList.toggle("active", tab === "riwayat");
+  document.getElementById("panelKasirBayar").style.display = tab === "bayar" ? "block" : "none";
+  document.getElementById("panelKasirRiwayat").style.display = tab === "riwayat" ? "block" : "none";
+  if (tab === "riwayat") muatRiwayatTransaksi();
+}
+
+function formatRupiahKasir(angka) {
+  return new Intl.NumberFormat("id-ID").format(angka || 0);
+}
+
+// ---------- CARI PASIEN ----------
+async function cariPasienKasir() {
+  const kata = document.getElementById("kasirCariInput").value.trim();
+  const msgBox = document.getElementById("msgCariPasien");
+  const hasilBox = document.getElementById("hasilCariPasienKasir");
+  document.getElementById("cardTagihanPasien").style.display = "none";
+
+  if (!kata) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama atau No. RM dulu.</div>`; return; }
+  msgBox.innerHTML = "";
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("id, nama, no_rm, nik, tanggal_lahir")
+    .or(`nama.ilike.%${kata}%,no_rm.ilike.%${kata}%`)
+    .is("digabung_ke_id", null)
+    .limit(15);
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilBox.innerHTML = `<p style="font-size:13px; color:var(--muted); margin-top:10px;">Gak ketemu pasien.</p>`; return; }
+
+  hasilCariCache = data;
+  hasilBox.innerHTML = `
+    <table style="margin-top:10px;">
+      <thead><tr><th>Nama</th><th>No. RM</th><th>NIK</th><th>Tgl Lahir</th><th></th></tr></thead>
+      <tbody>
+        ${data.map(p => `
+          <tr>
+            <td>${p.nama}</td>
+            <td>${p.no_rm || "-"}</td>
+            <td>${p.nik || "-"}</td>
+            <td>${p.tanggal_lahir ? new Date(p.tanggal_lahir).toLocaleDateString("id-ID") : "-"}</td>
+            <td><button type="button" class="btn-secondary" onclick="pilihPasienKasir('${p.id}')">Pilih</button></td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>`;
+}
+
+async function pilihPasienKasir(pasienId) {
+  const p = hasilCariCache.find(x => x.id === pasienId);
+  if (!p) return;
+  pasienTerpilihKasir = p;
+  document.getElementById("kasirNamaPasien").textContent = p.nama;
+  document.getElementById("kasirNoRmPasien").textContent = p.no_rm || "-";
+  document.getElementById("cardTagihanPasien").style.display = "block";
+  document.getElementById("hasilCariPasienKasir").innerHTML = "";
+  await muatTagihanPasien();
+}
+
+async function muatTagihanPasien() {
+  const tbody = document.getElementById("tabelTagihanPasien");
+  tbody.innerHTML = `<tr><td colspan="9">Memuat...</td></tr>`;
+  document.getElementById("msgTagihan").innerHTML = "";
+
+  const { data, error } = await supabaseClient
+    .from("tagihan_kunjungan")
+    .select("*, kunjungan(no_kunjungan)")
+    .eq("pasien_id", pasienTerpilihKasir.id)
+    .eq("status", "belum_dibayar")
+    .order("created_at", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="9">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  tagihanCachePasien = data || [];
+  if (!tagihanCachePasien.length) {
+    tbody.innerHTML = `<tr><td colspan="9">Gak ada tagihan belum dibayar buat pasien ini. 🎉</td></tr>`;
+    hitungTotalDipilih();
+    return;
+  }
+
+  tbody.innerHTML = tagihanCachePasien.map(t => `
+    <tr>
+      <td><input type="checkbox" class="chkTagihanItem" value="${t.id}" onchange="hitungTotalDipilih()"></td>
+      <td>${new Date(t.created_at).toLocaleDateString("id-ID")}</td>
+      <td>${t.kategori}</td>
+      <td>${t.nama_layanan}</td>
+      <td>${t.kunjungan?.no_kunjungan || "Non-kunjungan (KIA/KB)"}</td>
+      <td>${t.jumlah}</td>
+      <td>Rp ${formatRupiahKasir(t.harga_satuan)}</td>
+      <td>Rp ${formatRupiahKasir(t.subtotal)}</td>
+      <td>${t.jenis_bayar}</td>
+    </tr>
+  `).join("");
+  hitungTotalDipilih();
+}
+
+function toggleSemuaTagihan(master) {
+  document.querySelectorAll(".chkTagihanItem").forEach(cb => cb.checked = master.checked);
+  hitungTotalDipilih();
+}
+
+function hitungTotalDipilih() {
+  const idTerpilih = Array.from(document.querySelectorAll(".chkTagihanItem:checked")).map(cb => cb.value);
+  const total = tagihanCachePasien.filter(t => idTerpilih.includes(t.id)).reduce((s, t) => s + Number(t.subtotal), 0);
+  document.getElementById("kasirTotalDipilih").textContent = formatRupiahKasir(total);
+}
+
+async function prosesPembayaran() {
+  const msgBox = document.getElementById("msgTagihan");
+  const idTerpilih = Array.from(document.querySelectorAll(".chkTagihanItem:checked")).map(cb => cb.value);
+  if (!idTerpilih.length) { msgBox.innerHTML = `<div class="msg msg-error">Centang minimal 1 tagihan dulu.</div>`; return; }
+
+  const metode = document.getElementById("kasirMetodeBayar").value;
+  const itemDibayar = tagihanCachePasien.filter(t => idTerpilih.includes(t.id));
+  const total = itemDibayar.reduce((s, t) => s + Number(t.subtotal), 0);
+
+  const { error } = await supabaseClient
+    .from("tagihan_kunjungan")
+    .update({
+      status: "lunas",
+      metode_bayar: metode,
+      dibayar_oleh: profilSaya.id,
+      dibayar_at: new Date().toISOString()
+    })
+    .in("id", idTerpilih);
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal proses pembayaran: ${error.message}</div>`; return; }
+
+  cetakStruk(itemDibayar, total, metode);
+  msgBox.innerHTML = `<div class="msg msg-success">Pembayaran Rp ${formatRupiahKasir(total)} berhasil diproses.</div>
+    <button class="btn-secondary" onclick="window.print()">Cetak Ulang Struk</button>`;
+  await muatTagihanPasien();
+}
+
+function cetakStruk(items, total, metode) {
+  document.getElementById("strukTanggal").textContent = new Date().toLocaleString("id-ID");
+  document.getElementById("strukNama").textContent = pasienTerpilihKasir.nama;
+  document.getElementById("strukNoRm").textContent = pasienTerpilihKasir.no_rm || "-";
+  document.getElementById("strukKasir").textContent = profilSaya.nama;
+  document.getElementById("strukItemList").innerHTML = items.map(t => `
+    <div class="baris"><span>${t.nama_layanan} x${t.jumlah}</span><span>Rp ${formatRupiahKasir(t.subtotal)}</span></div>
+  `).join("");
+  document.getElementById("strukTotal").textContent = `Rp ${formatRupiahKasir(total)}`;
+  document.getElementById("strukMetode").textContent = metode;
+
+  document.getElementById("areaCetakStruk").classList.add("aktif-cetak");
+  window.print();
+  setTimeout(() => document.getElementById("areaCetakStruk").classList.remove("aktif-cetak"), 500);
+}
+
+// ---------- RIWAYAT TRANSAKSI ----------
+async function muatRiwayatTransaksi() {
+  const dari = document.getElementById("riwDari").value;
+  const sampai = document.getElementById("riwSampai").value;
+  const tbody = document.getElementById("tabelRiwayatTransaksi");
+  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
+
+  let q = supabaseClient
+    .from("tagihan_kunjungan")
+    .select("*, pasien(nama, no_rm), profil_pegawai:dibayar_oleh(nama)")
+    .eq("status", "lunas")
+    .order("dibayar_at", { ascending: false });
+
+  if (dari) q = q.gte("dibayar_at", `${dari}T00:00:00`);
+  if (sampai) q = q.lte("dibayar_at", `${sampai}T23:59:59`);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="8">Belum ada transaksi lunas di rentang ini.</td></tr>`;
+    document.getElementById("riwRingkasan").innerHTML = "";
+    return;
+  }
+
+  const totalKas = data.reduce((s, t) => s + Number(t.subtotal), 0);
+  const perMetode = {};
+  data.forEach(t => { perMetode[t.metode_bayar || "-"] = (perMetode[t.metode_bayar || "-"] || 0) + Number(t.subtotal); });
+
+  document.getElementById("riwRingkasan").innerHTML = `
+    <div class="stat-card"><div class="label">Total Pemasukan</div><div class="value">Rp ${formatRupiahKasir(totalKas)}</div></div>
+    <div class="stat-card"><div class="label">Jumlah Transaksi</div><div class="value">${data.length}</div></div>
+    ${Object.entries(perMetode).map(([m, v]) => `<div class="stat-card"><div class="label">${m}</div><div class="value">Rp ${formatRupiahKasir(v)}</div></div>`).join("")}
+  `;
+
+  tbody.innerHTML = data.map(t => `
+    <tr>
+      <td>${new Date(t.dibayar_at).toLocaleString("id-ID")}</td>
+      <td>${t.pasien?.nama || "-"} (${t.pasien?.no_rm || "-"})</td>
+      <td>${t.kategori}</td>
+      <td>${t.nama_layanan}</td>
+      <td>Rp ${formatRupiahKasir(t.subtotal)}</td>
+      <td>${t.jenis_bayar}</td>
+      <td>${t.metode_bayar || "-"}</td>
+      <td>${t.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+</script>
+
+</body>
+</html>

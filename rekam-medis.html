@@ -27,6 +27,7 @@
     <a href="klaster2.html">Klaster 2</a>
     <a href="klaster3.html">Klaster 3</a>
     <a href="pengaturan.html">Pengaturan</a>
+    <a href="kasir.html">Kasir</a>
   </div>
 
   <div id="modeKlinis" style="display:none;">
@@ -639,6 +640,7 @@ function formatRupiahRM(angka) {
 async function tambahTagihan(kategori, namaLayanan, jumlah, hargaSatuan, sumberTabel, sumberId, tarifId) {
   const { error } = await supabaseClient.from("tagihan_kunjungan").insert({
     kunjungan_id: kunjunganAktif.id,
+    pasien_id: kunjunganAktif.pasien_id,
     kategori,
     nama_layanan: namaLayanan,
     jumlah,
