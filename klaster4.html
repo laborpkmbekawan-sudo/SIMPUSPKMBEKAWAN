@@ -288,8 +288,221 @@
         </div>
 
         <!-- ===== Sub-program lain — segera ===== -->
-        <div id="programPanel-kusta" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">Kusta &amp; Frambusia</div>Pemeriksaan, klasifikasi PB/MB, dan pengobatan MDT — segera dibangun.</div></div>
-        <div id="programPanel-hiv" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">HIV/IMS</div>Skrining, konseling, dan rujukan pengobatan ARV — segera dibangun.</div></div>
+        <!-- ===== Kusta & Frambusia ===== -->
+        <div id="programPanel-kusta" style="display:none;">
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">🦠</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Pemeriksaan kusta, klasifikasi PB/MB, dan kartu pengobatan MDT.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="kustaCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienKusta();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienKusta()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="kustaHasilCari"></div>
+          </div>
+
+          <div id="kustaWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Pemeriksaan Kusta — <span id="kustaNamaPasien"></span></h2>
+              <div id="msgKusta"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="kustaTanggal" required></div>
+                <div>
+                  <label>Tipe Pasien</label>
+                  <select id="kustaTipePasien">
+                    <option value="">-- Pilih --</option>
+                    <option value="Baru">Baru</option>
+                    <option value="Kambuh">Kambuh</option>
+                    <option value="Pindahan">Pindahan</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Klasifikasi</label>
+                  <select id="kustaKlasifikasi">
+                    <option value="">-- Pilih --</option>
+                    <option value="PB">PB (Pausibasiler)</option>
+                    <option value="MB">MB (Multibasiler)</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Tingkat Cacat</label>
+                  <select id="kustaCacatTingkat">
+                    <option value="">-- Pilih --</option>
+                    <option value="0">Tingkat 0</option>
+                    <option value="1">Tingkat 1</option>
+                    <option value="2">Tingkat 2</option>
+                  </select>
+                </div>
+                <div><label>Jumlah Lesi Kulit</label><input type="number" id="kustaJumlahLesi" min="0" placeholder="Jumlah bercak"></div>
+                <div>
+                  <label>Status Pengobatan</label>
+                  <select id="kustaStatusPengobatan">
+                    <option value="">-- Pilih --</option>
+                    <option value="Dalam Pengobatan MDT">Dalam Pengobatan MDT</option>
+                    <option value="RFT">RFT (Release From Treatment)</option>
+                    <option value="Default">Default (Putus Obat)</option>
+                    <option value="Pindah">Pindah</option>
+                    <option value="Meninggal">Meninggal</option>
+                  </select>
+                </div>
+                <div><label>Tanggal Mulai MDT</label><input type="date" id="kustaTanggalMulai"></div>
+              </div>
+              <label>Hasil Pemeriksaan</label>
+              <textarea id="kustaHasilPemeriksaan" placeholder="Contoh: bercak hipopigmentasi, mati rasa (+), BTA kulit negatif"></textarea>
+              <label>Catatan</label>
+              <textarea id="kustaCatatan" placeholder="Catatan tambahan"></textarea>
+              <button class="btn-primary" onclick="simpanKusta()">Simpan Pemeriksaan Kusta</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Pemeriksaan Kusta</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Tipe</th><th>Klasifikasi</th><th>Cacat</th><th>Status</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatKusta"><tr><td colspan="6">Belum ada catatan pemeriksaan kusta.</td></tr></tbody>
+              </table>
+            </div>
+
+            <div class="card" style="--accent:#e0793c;">
+              <h2><span class="card-num" style="background:#e0793c;">💊</span> Kartu Pengobatan MDT</h2>
+              <div id="msgMdt"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="mdtTanggal" required></div>
+                <div><label>Bulan Ke-</label><input type="number" id="mdtBulanKe" min="1" placeholder="Contoh: 3"></div>
+                <div>
+                  <label>Status Minum Obat</label>
+                  <select id="mdtStatus">
+                    <option value="">-- Pilih --</option>
+                    <option value="Diminum">Diminum</option>
+                    <option value="Tidak Diminum">Tidak Diminum</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="mdtCatatan" placeholder="Efek samping, kepatuhan, dll"></textarea>
+              <button class="btn-primary" onclick="simpanMdt()">Simpan Catatan MDT</button>
+
+              <table style="margin-top:14px;">
+                <thead><tr><th>Tanggal</th><th>Bulan Ke</th><th>Status</th><th>Catatan</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelKartuMdt"><tr><td colspan="5">Belum ada catatan kartu MDT.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===== HIV/IMS ===== -->
+        <div id="programPanel-hiv" style="display:none;">
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">🦠</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Skrining HIV/IMS, konseling, dan pemantauan pengobatan ARV.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="hivCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienHiv();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienHiv()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="hivHasilCari"></div>
+          </div>
+
+          <div id="hivWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Layanan HIV/IMS — <span id="hivNamaPasien"></span></h2>
+              <div id="msgHiv"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="hivTanggal" required></div>
+                <div>
+                  <label>Jenis Layanan</label>
+                  <select id="hivJenisLayanan">
+                    <option value="">-- Pilih --</option>
+                    <option value="Skrining HIV">Skrining HIV</option>
+                    <option value="Skrining IMS">Skrining IMS</option>
+                    <option value="Konseling">Konseling</option>
+                    <option value="Rujukan ARV">Rujukan ARV</option>
+                  </select>
+                </div>
+                <div><label>Populasi Kunci / Kategori</label><input type="text" id="hivPopulasiKunci" placeholder="Contoh: Bumil, Pasien TB, Umum"></div>
+                <div>
+                  <label>Hasil Tes HIV</label>
+                  <select id="hivHasilTes">
+                    <option value="">-- Pilih --</option>
+                    <option value="Belum Diperiksa">Belum Diperiksa</option>
+                    <option value="Non-Reaktif">Non-Reaktif</option>
+                    <option value="Reaktif">Reaktif</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Konseling</label>
+                  <select id="hivKonseling">
+                    <option value="">-- Pilih --</option>
+                    <option value="Pra Tes">Pra Tes</option>
+                    <option value="Pasca Tes">Pasca Tes</option>
+                    <option value="Pra & Pasca Tes">Pra &amp; Pasca Tes</option>
+                    <option value="Tidak">Tidak</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Status Pengobatan ARV</label>
+                  <select id="hivStatusArv">
+                    <option value="">-- Pilih --</option>
+                    <option value="Belum ARV">Belum ARV</option>
+                    <option value="Dalam Pengobatan ARV">Dalam Pengobatan ARV</option>
+                    <option value="Rujuk RS">Rujuk RS</option>
+                  </select>
+                </div>
+              </div>
+              <label>Hasil Pemeriksaan IMS</label>
+              <textarea id="hivHasilIms" placeholder="Contoh: sifilis non-reaktif, keputihan (-)"></textarea>
+              <label>Catatan</label>
+              <textarea id="hivCatatan" placeholder="Catatan tambahan"></textarea>
+              <button class="btn-primary" onclick="simpanHiv()">Simpan Layanan HIV/IMS</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Layanan HIV/IMS</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Jenis Layanan</th><th>Hasil Tes HIV</th><th>Status ARV</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatHiv"><tr><td colspan="5">Belum ada catatan layanan HIV/IMS.</td></tr></tbody>
+              </table>
+            </div>
+
+            <div class="card" style="--accent:#e0793c;">
+              <h2><span class="card-num" style="background:#e0793c;">💊</span> Kartu Pengobatan ARV</h2>
+              <div id="msgArv"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="arvTanggal" required></div>
+                <div>
+                  <label>Status Minum Obat</label>
+                  <select id="arvStatus">
+                    <option value="">-- Pilih --</option>
+                    <option value="Diminum">Diminum</option>
+                    <option value="Tidak Diminum">Tidak Diminum</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="arvCatatan" placeholder="Efek samping, kepatuhan, dll"></textarea>
+              <button class="btn-primary" onclick="simpanArv()">Simpan Catatan ARV</button>
+
+              <table style="margin-top:14px;">
+                <thead><tr><th>Tanggal</th><th>Status</th><th>Catatan</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelKartuArv"><tr><td colspan="4">Belum ada catatan kartu ARV.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
         <div id="programPanel-hepatitis" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">Hepatitis</div>Skrining dan tindak lanjut kasus positif — segera dibangun.</div></div>
         <div id="programPanel-malaria" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">Malaria</div>Pemeriksaan &amp; pengobatan wilayah endemis — segera dibangun.</div></div>
         <div id="programPanel-ispa" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">ISPA &amp; Pneumonia</div>Tatalaksana kasus terutama pada balita — segera dibangun.</div></div>
@@ -335,6 +548,8 @@
                 <select id="regJenis">
                   <option value="">-- Semua --</option>
                   <option value="Kasus TB">Kasus TB</option>
+                  <option value="Kasus Kusta">Kasus Kusta</option>
+                  <option value="Layanan HIV/IMS">Layanan HIV/IMS</option>
                 </select>
               </div>
             </div>
@@ -482,9 +697,9 @@
           <div class="card" style="--accent:#173b5e;">
             <h2>Ringkasan Periode</h2>
             <div class="lap-summary-strip">
-              <div class="lap-sum-card"><div class="label">Total Kasus TB Dicatat</div><div class="value" id="lapIntTotalKegiatan">0</div></div>
-              <div class="lap-sum-card ok"><div class="label">Pasien TB Unik</div><div class="value" id="lapIntPasienUnik">0</div></div>
-              <div class="lap-sum-card warn"><div class="label">Putus Obat / Gagal</div><div class="value" id="lapIntKepatuhanBermasalah">0</div></div>
+              <div class="lap-sum-card"><div class="label">Total Kegiatan Program Menular</div><div class="value" id="lapIntTotalKegiatan">0</div></div>
+              <div class="lap-sum-card ok"><div class="label">Pasien Unik (Semua Program)</div><div class="value" id="lapIntPasienUnik">0</div></div>
+              <div class="lap-sum-card warn"><div class="label">Putus Obat / Gagal / Default</div><div class="value" id="lapIntKepatuhanBermasalah">0</div></div>
             </div>
           </div>
 
@@ -497,10 +712,10 @@
           </div>
 
           <div class="card" style="--accent:#c0503f;">
-            <h2>Rekap Kepatuhan Pengobatan TB</h2>
+            <h2>Rekap Kepatuhan Pengobatan (TB + Kusta + HIV)</h2>
             <table>
-              <thead><tr><th>Status Pengobatan</th><th>Jumlah Kasus</th></tr></thead>
-              <tbody id="tabelLapIntKepatuhan"><tr><td colspan="2">Belum ada data.</td></tr></tbody>
+              <thead><tr><th>Program</th><th>Status Pengobatan</th><th>Jumlah Kasus</th></tr></thead>
+              <tbody id="tabelLapIntKepatuhan"><tr><td colspan="3">Belum ada data.</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -528,6 +743,10 @@
                 <option value="pemeriksaan_tb">Kasus TB</option>
                 <option value="kartu_kontrol_oat">Kartu Kontrol OAT</option>
                 <option value="pelacakan_kontak_tb">Pelacakan Kontak TB</option>
+                <option value="pemeriksaan_kusta">Pemeriksaan Kusta</option>
+                <option value="kartu_pengobatan_mdt">Kartu Pengobatan MDT</option>
+                <option value="pemeriksaan_hiv">Layanan HIV/IMS</option>
+                <option value="kartu_pengobatan_arv">Kartu Pengobatan ARV</option>
                 <option value="rujukan_lab_k4">Rujukan &amp; Permintaan Lab</option>
               </select>
             </div>
@@ -896,6 +1115,347 @@ async function simpanKontak() {
   await muatKontak();
 }
 
+// ---------- KUSTA & FRAMBUSIA ----------
+let pasienTerpilihKusta = null;
+
+async function cariPasienKusta() {
+  const kunci = document.getElementById("kustaCari").value.trim();
+  const hasilDiv = document.getElementById("kustaHasilCari");
+  document.getElementById("kustaWrap").style.display = "none";
+  pasienTerpilihKusta = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienKusta(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienKustaDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienKusta = data;
+  }
+}
+
+function pilihPasienKustaDariHasil(i) {
+  pilihPasienKusta(window._hasilCariPasienKusta[i]);
+}
+
+function pilihPasienKusta(pasien) {
+  pasienTerpilihKusta = pasien;
+  document.getElementById("kustaHasilCari").innerHTML = "";
+  document.getElementById("kustaNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("kustaWrap").style.display = "block";
+
+  document.getElementById("msgKusta").innerHTML = "";
+  document.getElementById("kustaTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("kustaTipePasien").value = "";
+  document.getElementById("kustaKlasifikasi").value = "";
+  document.getElementById("kustaCacatTingkat").value = "";
+  document.getElementById("kustaJumlahLesi").value = "";
+  document.getElementById("kustaStatusPengobatan").value = "";
+  document.getElementById("kustaTanggalMulai").value = "";
+  document.getElementById("kustaHasilPemeriksaan").value = "";
+  document.getElementById("kustaCatatan").value = "";
+
+  document.getElementById("msgMdt").innerHTML = "";
+  document.getElementById("mdtTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("mdtBulanKe").value = "";
+  document.getElementById("mdtStatus").value = "";
+  document.getElementById("mdtCatatan").value = "";
+
+  muatRiwayatKusta();
+  muatKartuMdt();
+}
+
+async function muatRiwayatKusta() {
+  const tbody = document.getElementById("tabelRiwayatKusta");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pemeriksaan_kusta")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihKusta.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan pemeriksaan kusta.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${new Date(k.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${k.tipe_pasien || "-"}</td>
+      <td>${k.klasifikasi || "-"}</td>
+      <td>${k.cacat_tingkat ?? "-"}</td>
+      <td><span class="tag-status-tb${k.status_pengobatan === 'RFT' ? ' selesai' : ''}${k.status_pengobatan === 'Default' || k.status_pengobatan === 'Meninggal' ? ' masalah' : ''}">${k.status_pengobatan || "-"}</span></td>
+      <td>${k.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanKusta() {
+  const msgBox = document.getElementById("msgKusta");
+  if (!pasienTerpilihKusta) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("kustaTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pemeriksaan_kusta").insert({
+    pasien_id: pasienTerpilihKusta.id,
+    tanggal,
+    tipe_pasien: document.getElementById("kustaTipePasien").value || null,
+    klasifikasi: document.getElementById("kustaKlasifikasi").value || null,
+    cacat_tingkat: document.getElementById("kustaCacatTingkat").value !== "" ? parseInt(document.getElementById("kustaCacatTingkat").value) : null,
+    jumlah_lesi_kulit: document.getElementById("kustaJumlahLesi").value !== "" ? parseInt(document.getElementById("kustaJumlahLesi").value) : null,
+    hasil_pemeriksaan: document.getElementById("kustaHasilPemeriksaan").value.trim() || null,
+    status_pengobatan: document.getElementById("kustaStatusPengobatan").value || null,
+    tanggal_mulai_mdt: document.getElementById("kustaTanggalMulai").value || null,
+    catatan: document.getElementById("kustaCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan pemeriksaan kusta tersimpan.</div>`;
+  document.getElementById("kustaHasilPemeriksaan").value = "";
+  document.getElementById("kustaCatatan").value = "";
+  await muatRiwayatKusta();
+}
+
+async function muatKartuMdt() {
+  const tbody = document.getElementById("tabelKartuMdt");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kartu_pengobatan_mdt")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihKusta.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan kartu MDT.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(m => `
+    <tr>
+      <td>${new Date(m.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${m.bulan_ke ?? "-"}</td>
+      <td>${m.status_minum || "-"}</td>
+      <td>${m.catatan || "-"}</td>
+      <td>${m.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanMdt() {
+  const msgBox = document.getElementById("msgMdt");
+  if (!pasienTerpilihKusta) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("mdtTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("kartu_pengobatan_mdt").insert({
+    pasien_id: pasienTerpilihKusta.id,
+    tanggal,
+    bulan_ke: document.getElementById("mdtBulanKe").value !== "" ? parseInt(document.getElementById("mdtBulanKe").value) : null,
+    status_minum: document.getElementById("mdtStatus").value || null,
+    catatan: document.getElementById("mdtCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan kartu MDT tersimpan.</div>`;
+  document.getElementById("mdtBulanKe").value = "";
+  document.getElementById("mdtStatus").value = "";
+  document.getElementById("mdtCatatan").value = "";
+  await muatKartuMdt();
+}
+
+// ---------- HIV / IMS ----------
+let pasienTerpilihHiv = null;
+
+async function cariPasienHiv() {
+  const kunci = document.getElementById("hivCari").value.trim();
+  const hasilDiv = document.getElementById("hivHasilCari");
+  document.getElementById("hivWrap").style.display = "none";
+  pasienTerpilihHiv = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienHiv(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienHivDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienHiv = data;
+  }
+}
+
+function pilihPasienHivDariHasil(i) {
+  pilihPasienHiv(window._hasilCariPasienHiv[i]);
+}
+
+function pilihPasienHiv(pasien) {
+  pasienTerpilihHiv = pasien;
+  document.getElementById("hivHasilCari").innerHTML = "";
+  document.getElementById("hivNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("hivWrap").style.display = "block";
+
+  document.getElementById("msgHiv").innerHTML = "";
+  document.getElementById("hivTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("hivJenisLayanan").value = "";
+  document.getElementById("hivPopulasiKunci").value = "";
+  document.getElementById("hivHasilTes").value = "";
+  document.getElementById("hivKonseling").value = "";
+  document.getElementById("hivStatusArv").value = "";
+  document.getElementById("hivHasilIms").value = "";
+  document.getElementById("hivCatatan").value = "";
+
+  document.getElementById("msgArv").innerHTML = "";
+  document.getElementById("arvTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("arvStatus").value = "";
+  document.getElementById("arvCatatan").value = "";
+
+  muatRiwayatHiv();
+  muatKartuArv();
+}
+
+async function muatRiwayatHiv() {
+  const tbody = document.getElementById("tabelRiwayatHiv");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pemeriksaan_hiv")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihHiv.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan layanan HIV/IMS.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(h => `
+    <tr>
+      <td>${new Date(h.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${h.jenis_layanan || "-"}</td>
+      <td><span class="tag-status-tb${h.hasil_tes === 'Reaktif' ? ' masalah' : ''}${h.hasil_tes === 'Non-Reaktif' ? ' selesai' : ''}">${h.hasil_tes || "-"}</span></td>
+      <td>${h.status_pengobatan_arv || "-"}</td>
+      <td>${h.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanHiv() {
+  const msgBox = document.getElementById("msgHiv");
+  if (!pasienTerpilihHiv) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("hivTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pemeriksaan_hiv").insert({
+    pasien_id: pasienTerpilihHiv.id,
+    tanggal,
+    jenis_layanan: document.getElementById("hivJenisLayanan").value || null,
+    populasi_kunci: document.getElementById("hivPopulasiKunci").value.trim() || null,
+    hasil_tes: document.getElementById("hivHasilTes").value || null,
+    hasil_ims: document.getElementById("hivHasilIms").value.trim() || null,
+    konseling: document.getElementById("hivKonseling").value || null,
+    status_pengobatan_arv: document.getElementById("hivStatusArv").value || null,
+    catatan: document.getElementById("hivCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan layanan HIV/IMS tersimpan.</div>`;
+  document.getElementById("hivHasilIms").value = "";
+  document.getElementById("hivCatatan").value = "";
+  await muatRiwayatHiv();
+}
+
+async function muatKartuArv() {
+  const tbody = document.getElementById("tabelKartuArv");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kartu_pengobatan_arv")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihHiv.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada catatan kartu ARV.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(a => `
+    <tr>
+      <td>${new Date(a.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${a.status_minum || "-"}</td>
+      <td>${a.catatan || "-"}</td>
+      <td>${a.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanArv() {
+  const msgBox = document.getElementById("msgArv");
+  if (!pasienTerpilihHiv) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("arvTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("kartu_pengobatan_arv").insert({
+    pasien_id: pasienTerpilihHiv.id,
+    tanggal,
+    status_minum: document.getElementById("arvStatus").value || null,
+    catatan: document.getElementById("arvCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan kartu ARV tersimpan.</div>`;
+  document.getElementById("arvStatus").value = "";
+  document.getElementById("arvCatatan").value = "";
+  await muatKartuArv();
+}
+
 // ---------- REGISTER & KOHORT ----------
 const SUBREGISTER = ["kegiatan", "kohort"];
 function gantiSubRegister(sub) {
@@ -908,9 +1468,11 @@ function gantiSubRegister(sub) {
 }
 
 // Semua sumber tabel klaster 4 yang digabung jadi Register & Kohort.
-// Baru TB — tambah baris di sini pas program lain (Kusta/HIV/dst) dibangun.
+// Tambah baris di sini tiap program baru (Hepatitis/Malaria/dst) dibangun.
 const SUMBER_K4 = [
-  { tabel: "pemeriksaan_tb", label: "Kasus TB", ringkas: r => `${r.klasifikasi || "-"} / ${r.kategori_pengobatan || "-"} — ${r.status_pengobatan || "-"}` }
+  { tabel: "pemeriksaan_tb", label: "Kasus TB", ringkas: r => `${r.klasifikasi || "-"} / ${r.kategori_pengobatan || "-"} — ${r.status_pengobatan || "-"}` },
+  { tabel: "pemeriksaan_kusta", label: "Kasus Kusta", ringkas: r => `${r.klasifikasi || "-"} / Cacat Tk.${r.cacat_tingkat ?? "-"} — ${r.status_pengobatan || "-"}` },
+  { tabel: "pemeriksaan_hiv", label: "Layanan HIV/IMS", ringkas: r => `${r.jenis_layanan || "-"} — ${r.hasil_tes || "-"} / ${r.status_pengobatan_arv || "-"}` }
 ];
 
 async function muatRegisterKegiatanK4() {
@@ -1299,7 +1861,7 @@ async function muatLaporanInternalK4() {
   const tbodyJenis = document.getElementById("tabelLapIntPerJenis");
   const tbodyKepatuhan = document.getElementById("tabelLapIntKepatuhan");
   tbodyJenis.innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
-  tbodyKepatuhan.innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+  tbodyKepatuhan.innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
 
   try {
     const hasilSemua = await Promise.all(SUMBER_K4.map(async (s) => {
@@ -1331,24 +1893,36 @@ async function muatLaporanInternalK4() {
       <tr><td>${h.label}</td><td>${h.jumlah}</td><td>${h.unik}</td></tr>
     `).join("");
 
-    // Rekap kepatuhan pengobatan (dari pemeriksaan_tb.status_pengobatan)
-    let qTb = supabaseClient.from("pemeriksaan_tb").select("status_pengobatan");
-    if (dari) qTb = qTb.gte("tanggal", dari);
-    if (sampai) qTb = qTb.lte("tanggal", sampai);
-    const { data: dataTb } = await qTb;
-    const rowsTb = dataTb || [];
-    const rekapStatus = {};
-    rowsTb.forEach(r => {
-      const s = r.status_pengobatan || "Belum Diisi";
-      rekapStatus[s] = (rekapStatus[s] || 0) + 1;
-    });
-    const bermasalah = (rekapStatus["Putus Obat"] || 0) + (rekapStatus["Gagal"] || 0);
-    document.getElementById("lapIntKepatuhanBermasalah").textContent = bermasalah;
+    // Rekap kepatuhan pengobatan gabungan: TB, Kusta, HIV/ARV
+    const PROGRAM_STATUS = [
+      { tabel: "pemeriksaan_tb", label: "TB", kolom: "status_pengobatan", bermasalah: ["Putus Obat", "Gagal"] },
+      { tabel: "pemeriksaan_kusta", label: "Kusta", kolom: "status_pengobatan", bermasalah: ["Default"] },
+      { tabel: "pemeriksaan_hiv", label: "HIV/ARV", kolom: "status_pengobatan_arv", bermasalah: [] }
+    ];
 
-    const entriStatus = Object.entries(rekapStatus);
-    tbodyKepatuhan.innerHTML = entriStatus.length
-      ? entriStatus.map(([status, jumlah]) => `<tr><td>${status}</td><td>${jumlah}</td></tr>`).join("")
-      : `<tr><td colspan="2">Belum ada data.</td></tr>`;
+    let bermasalahTotal = 0;
+    const barisKepatuhan = [];
+    for (const p of PROGRAM_STATUS) {
+      let q = supabaseClient.from(p.tabel).select(p.kolom);
+      if (dari) q = q.gte("tanggal", dari);
+      if (sampai) q = q.lte("tanggal", sampai);
+      const { data } = await q;
+      const rows = data || [];
+      const rekap = {};
+      rows.forEach(r => {
+        const s = r[p.kolom] || "Belum Diisi";
+        rekap[s] = (rekap[s] || 0) + 1;
+      });
+      Object.entries(rekap).forEach(([status, jumlah]) => {
+        barisKepatuhan.push({ program: p.label, status, jumlah });
+        if (p.bermasalah.includes(status)) bermasalahTotal += jumlah;
+      });
+    }
+    document.getElementById("lapIntKepatuhanBermasalah").textContent = bermasalahTotal;
+
+    tbodyKepatuhan.innerHTML = barisKepatuhan.length
+      ? barisKepatuhan.map(r => `<tr><td>${r.program}</td><td>${r.status}</td><td>${r.jumlah}</td></tr>`).join("")
+      : `<tr><td colspan="3">Belum ada data.</td></tr>`;
   } catch (e) {
     tbodyJenis.innerHTML = `<tr><td colspan="3">Gagal muat laporan: ${e.message}</td></tr>`;
   }
@@ -1357,11 +1931,13 @@ async function muatLaporanInternalK4() {
 // ---------- AUDIT TRAIL — KLASTER 4 ----------
 let auditLogK4Cache = [];
 
-const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "rujukan_lab_k4"];
+const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "pemeriksaan_kusta", "kartu_pengobatan_mdt", "pemeriksaan_hiv", "kartu_pengobatan_arv", "rujukan_lab_k4"];
 
 const LABEL_TABEL_AUDIT_K4 = {
   pemeriksaan_tb: "Kasus TB", kartu_kontrol_oat: "Kartu Kontrol OAT",
-  pelacakan_kontak_tb: "Pelacakan Kontak TB", rujukan_lab_k4: "Rujukan & Permintaan Lab"
+  pelacakan_kontak_tb: "Pelacakan Kontak TB", pemeriksaan_kusta: "Pemeriksaan Kusta",
+  kartu_pengobatan_mdt: "Kartu Pengobatan MDT", pemeriksaan_hiv: "Layanan HIV/IMS",
+  kartu_pengobatan_arv: "Kartu Pengobatan ARV", rujukan_lab_k4: "Rujukan & Permintaan Lab"
 };
 const LABEL_AKSI_AUDIT_K4 = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
 const BADGE_AKSI_AUDIT_K4 = { insert: "badge-selesai", update: "badge-menunggu", delete: "badge-batal" };

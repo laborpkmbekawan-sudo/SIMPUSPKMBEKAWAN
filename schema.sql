@@ -2409,6 +2409,98 @@ create trigger trg_audit_rujukan_lab_k4 after insert or update or delete on ruju
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 65. KLASTER 4 — FASE 2: Program Kusta & Frambusia, Program HIV/IMS
+-- ============================================================
+
+create table if not exists pemeriksaan_kusta (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  tipe_pasien text check (tipe_pasien in ('Baru', 'Kambuh', 'Pindahan', 'Lain-lain')),
+  klasifikasi text check (klasifikasi in ('PB', 'MB')),
+  cacat_tingkat smallint check (cacat_tingkat in (0, 1, 2)),
+  jumlah_lesi_kulit int,
+  hasil_pemeriksaan text,
+  status_pengobatan text check (status_pengobatan in ('Dalam Pengobatan MDT', 'RFT', 'Default', 'Pindah', 'Meninggal')),
+  tanggal_mulai_mdt date,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_kusta_pasien on pemeriksaan_kusta(pasien_id);
+
+alter table pemeriksaan_kusta enable row level security;
+create policy "authenticated_all_pemeriksaan_kusta" on pemeriksaan_kusta for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_kusta on pemeriksaan_kusta;
+create trigger trg_audit_pemeriksaan_kusta after insert or update or delete on pemeriksaan_kusta
+  for each row execute function fn_audit_log();
+
+create table if not exists kartu_pengobatan_mdt (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  bulan_ke int,
+  status_minum text check (status_minum in ('Diminum', 'Tidak Diminum')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kartu_pengobatan_mdt_pasien on kartu_pengobatan_mdt(pasien_id);
+
+alter table kartu_pengobatan_mdt enable row level security;
+create policy "authenticated_all_kartu_pengobatan_mdt" on kartu_pengobatan_mdt for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kartu_pengobatan_mdt on kartu_pengobatan_mdt;
+create trigger trg_audit_kartu_pengobatan_mdt after insert or update or delete on kartu_pengobatan_mdt
+  for each row execute function fn_audit_log();
+
+create table if not exists pemeriksaan_hiv (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis_layanan text check (jenis_layanan in ('Skrining HIV', 'Skrining IMS', 'Konseling', 'Rujukan ARV')),
+  populasi_kunci text,
+  hasil_tes text check (hasil_tes in ('Belum Diperiksa', 'Non-Reaktif', 'Reaktif')),
+  hasil_ims text,
+  konseling text check (konseling in ('Pra Tes', 'Pasca Tes', 'Pra & Pasca Tes', 'Tidak')),
+  status_pengobatan_arv text check (status_pengobatan_arv in ('Belum ARV', 'Dalam Pengobatan ARV', 'Rujuk RS')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_hiv_pasien on pemeriksaan_hiv(pasien_id);
+
+alter table pemeriksaan_hiv enable row level security;
+create policy "authenticated_all_pemeriksaan_hiv" on pemeriksaan_hiv for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_hiv on pemeriksaan_hiv;
+create trigger trg_audit_pemeriksaan_hiv after insert or update or delete on pemeriksaan_hiv
+  for each row execute function fn_audit_log();
+
+create table if not exists kartu_pengobatan_arv (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  status_minum text check (status_minum in ('Diminum', 'Tidak Diminum')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kartu_pengobatan_arv_pasien on kartu_pengobatan_arv(pasien_id);
+
+alter table kartu_pengobatan_arv enable row level security;
+create policy "authenticated_all_kartu_pengobatan_arv" on kartu_pengobatan_arv for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kartu_pengobatan_arv on kartu_pengobatan_arv;
+create trigger trg_audit_kartu_pengobatan_arv after insert or update or delete on kartu_pengobatan_arv
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
