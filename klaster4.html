@@ -660,8 +660,146 @@
 
           </div>
         </div>
-        <div id="programPanel-ispa" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">ISPA &amp; Pneumonia</div>Tatalaksana kasus terutama pada balita — segera dibangun.</div></div>
-        <div id="programPanel-diare" style="display:none;"><div class="k4-segera"><div class="ic">🦠</div><div class="t">Diare</div>Tatalaksana &amp; pemantauan kasus diare — segera dibangun.</div></div>
+        <!-- ===== ISPA & Pneumonia ===== -->
+        <div id="programPanel-ispa" style="display:none;">
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">🦠</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Tatalaksana ISPA &amp; Pneumonia, terutama pada balita.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="ispaCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienIspa();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienIspa()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="ispaHasilCari"></div>
+          </div>
+
+          <div id="ispaWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Pemeriksaan ISPA — <span id="ispaNamaPasien"></span></h2>
+              <div id="msgIspa"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="ispaTanggal" required></div>
+                <div>
+                  <label>Kelompok Usia</label>
+                  <select id="ispaKelompokUsia">
+                    <option value="">-- Pilih --</option>
+                    <option value="Balita">Balita</option>
+                    <option value="Anak">Anak</option>
+                    <option value="Dewasa">Dewasa</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Klasifikasi</label>
+                  <select id="ispaKlasifikasi">
+                    <option value="">-- Pilih --</option>
+                    <option value="Bukan Pneumonia">Bukan Pneumonia</option>
+                    <option value="Pneumonia">Pneumonia</option>
+                    <option value="Pneumonia Berat">Pneumonia Berat</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Status Pengobatan</label>
+                  <select id="ispaStatusPengobatan">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tidak Perlu Obat">Tidak Perlu Obat</option>
+                    <option value="Rawat Jalan - Antibiotik">Rawat Jalan - Antibiotik</option>
+                    <option value="Rujuk RS">Rujuk RS</option>
+                  </select>
+                </div>
+              </div>
+              <label>Gejala</label>
+              <textarea id="ispaGejala" placeholder="Contoh: napas cepat, tarikan dinding dada ke dalam, demam"></textarea>
+              <label>Catatan</label>
+              <textarea id="ispaCatatan" placeholder="Catatan tambahan"></textarea>
+              <button class="btn-primary" onclick="simpanIspa()">Simpan Pemeriksaan ISPA</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Pemeriksaan ISPA</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Usia</th><th>Klasifikasi</th><th>Status Pengobatan</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatIspa"><tr><td colspan="5">Belum ada catatan pemeriksaan ISPA.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===== Diare ===== -->
+        <div id="programPanel-diare" style="display:none;">
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">🦠</span> Cari Pasien</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Tatalaksana &amp; pemantauan kasus diare.</p>
+            <div class="grid-2">
+              <div>
+                <label>Cari Pasien (NIK / No. RM / Nama)</label>
+                <input type="text" id="diaCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienDia();}">
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="cariPasienDia()" style="margin-bottom:12px;">Cari Pasien</button>
+              </div>
+            </div>
+            <div id="diaHasilCari"></div>
+          </div>
+
+          <div id="diaWrap" style="display:none;">
+
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Catat Pemeriksaan Diare — <span id="diaNamaPasien"></span></h2>
+              <div id="msgDia"></div>
+              <div class="grid-3">
+                <div><label>Tanggal *</label><input type="date" id="diaTanggal" required></div>
+                <div>
+                  <label>Kelompok Usia</label>
+                  <select id="diaKelompokUsia">
+                    <option value="">-- Pilih --</option>
+                    <option value="Balita">Balita</option>
+                    <option value="Anak">Anak</option>
+                    <option value="Dewasa">Dewasa</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Derajat Dehidrasi</label>
+                  <select id="diaDerajatDehidrasi">
+                    <option value="">-- Pilih --</option>
+                    <option value="Tanpa Dehidrasi">Tanpa Dehidrasi</option>
+                    <option value="Dehidrasi Ringan-Sedang">Dehidrasi Ringan-Sedang</option>
+                    <option value="Dehidrasi Berat">Dehidrasi Berat</option>
+                  </select>
+                </div>
+                <div><label>Frekuensi BAB per Hari</label><input type="number" id="diaFrekuensiBab" min="0" placeholder="Contoh: 6"></div>
+                <div>
+                  <label>Tatalaksana</label>
+                  <select id="diaTatalaksana">
+                    <option value="">-- Pilih --</option>
+                    <option value="Oralit + Zinc">Oralit + Zinc</option>
+                    <option value="Infus RL">Infus RL</option>
+                    <option value="Rujuk RS">Rujuk RS</option>
+                  </select>
+                </div>
+              </div>
+              <label>Catatan</label>
+              <textarea id="diaCatatan" placeholder="Catatan tambahan"></textarea>
+              <button class="btn-primary" onclick="simpanDia()">Simpan Pemeriksaan Diare</button>
+            </div>
+
+            <div class="card" style="--accent:#26a3a0;">
+              <h2>Riwayat Pemeriksaan Diare</h2>
+              <table>
+                <thead><tr><th>Tanggal</th><th>Usia</th><th>Derajat Dehidrasi</th><th>Frek. BAB</th><th>Tatalaksana</th><th>Petugas</th></tr></thead>
+                <tbody id="tabelRiwayatDia"><tr><td colspan="6">Belum ada catatan pemeriksaan diare.</td></tr></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
         <div id="programPanel-imunisasi" style="display:none;"><div class="k4-segera"><div class="ic">💉</div><div class="t">Imunisasi Program</div>Imunisasi terkait penyakit menular dewasa/lansia — segera dibangun.</div></div>
 
       </div>
@@ -707,6 +845,8 @@
                   <option value="Layanan HIV/IMS">Layanan HIV/IMS</option>
                   <option value="Skrining Hepatitis">Skrining Hepatitis</option>
                   <option value="Kasus Malaria">Kasus Malaria</option>
+                  <option value="Kasus ISPA">Kasus ISPA</option>
+                  <option value="Kasus Diare">Kasus Diare</option>
                 </select>
               </div>
             </div>
@@ -906,6 +1046,8 @@
                 <option value="kartu_pengobatan_arv">Kartu Pengobatan ARV</option>
                 <option value="pemeriksaan_hepatitis">Skrining Hepatitis</option>
                 <option value="pemeriksaan_malaria">Kasus Malaria</option>
+                <option value="pemeriksaan_ispa">Kasus ISPA</option>
+                <option value="pemeriksaan_diare">Kasus Diare</option>
                 <option value="rujukan_lab_k4">Rujukan &amp; Permintaan Lab</option>
               </select>
             </div>
@@ -1839,6 +1981,228 @@ async function simpanMal() {
   await muatRiwayatMal();
 }
 
+// ---------- ISPA & PNEUMONIA ----------
+let pasienTerpilihIspa = null;
+
+async function cariPasienIspa() {
+  const kunci = document.getElementById("ispaCari").value.trim();
+  const hasilDiv = document.getElementById("ispaHasilCari");
+  document.getElementById("ispaWrap").style.display = "none";
+  pasienTerpilihIspa = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienIspa(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienIspaDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienIspa = data;
+  }
+}
+
+function pilihPasienIspaDariHasil(i) {
+  pilihPasienIspa(window._hasilCariPasienIspa[i]);
+}
+
+function pilihPasienIspa(pasien) {
+  pasienTerpilihIspa = pasien;
+  document.getElementById("ispaHasilCari").innerHTML = "";
+  document.getElementById("ispaNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("ispaWrap").style.display = "block";
+
+  document.getElementById("msgIspa").innerHTML = "";
+  document.getElementById("ispaTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("ispaKelompokUsia").value = "";
+  document.getElementById("ispaKlasifikasi").value = "";
+  document.getElementById("ispaStatusPengobatan").value = "";
+  document.getElementById("ispaGejala").value = "";
+  document.getElementById("ispaCatatan").value = "";
+
+  muatRiwayatIspa();
+}
+
+async function muatRiwayatIspa() {
+  const tbody = document.getElementById("tabelRiwayatIspa");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pemeriksaan_ispa")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihIspa.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada catatan pemeriksaan ISPA.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(i => `
+    <tr>
+      <td>${new Date(i.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${i.kelompok_usia || "-"}</td>
+      <td><span class="tag-status-tb${i.klasifikasi === 'Pneumonia Berat' ? ' masalah' : ''}${i.klasifikasi === 'Bukan Pneumonia' ? ' selesai' : ''}">${i.klasifikasi || "-"}</span></td>
+      <td>${i.status_pengobatan || "-"}</td>
+      <td>${i.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanIspa() {
+  const msgBox = document.getElementById("msgIspa");
+  if (!pasienTerpilihIspa) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("ispaTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pemeriksaan_ispa").insert({
+    pasien_id: pasienTerpilihIspa.id,
+    tanggal,
+    kelompok_usia: document.getElementById("ispaKelompokUsia").value || null,
+    klasifikasi: document.getElementById("ispaKlasifikasi").value || null,
+    status_pengobatan: document.getElementById("ispaStatusPengobatan").value || null,
+    gejala: document.getElementById("ispaGejala").value.trim() || null,
+    catatan: document.getElementById("ispaCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan pemeriksaan ISPA tersimpan.</div>`;
+  document.getElementById("ispaGejala").value = "";
+  document.getElementById("ispaCatatan").value = "";
+  await muatRiwayatIspa();
+}
+
+// ---------- DIARE ----------
+let pasienTerpilihDia = null;
+
+async function cariPasienDia() {
+  const kunci = document.getElementById("diaCari").value.trim();
+  const hasilDiv = document.getElementById("diaHasilCari");
+  document.getElementById("diaWrap").style.display = "none";
+  pasienTerpilihDia = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienDia(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienDiaDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienDia = data;
+  }
+}
+
+function pilihPasienDiaDariHasil(i) {
+  pilihPasienDia(window._hasilCariPasienDia[i]);
+}
+
+function pilihPasienDia(pasien) {
+  pasienTerpilihDia = pasien;
+  document.getElementById("diaHasilCari").innerHTML = "";
+  document.getElementById("diaNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("diaWrap").style.display = "block";
+
+  document.getElementById("msgDia").innerHTML = "";
+  document.getElementById("diaTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("diaKelompokUsia").value = "";
+  document.getElementById("diaDerajatDehidrasi").value = "";
+  document.getElementById("diaFrekuensiBab").value = "";
+  document.getElementById("diaTatalaksana").value = "";
+  document.getElementById("diaCatatan").value = "";
+
+  muatRiwayatDia();
+}
+
+async function muatRiwayatDia() {
+  const tbody = document.getElementById("tabelRiwayatDia");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("pemeriksaan_diare")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihDia.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan pemeriksaan diare.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td>${new Date(d.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${d.kelompok_usia || "-"}</td>
+      <td><span class="tag-status-tb${d.derajat_dehidrasi === 'Dehidrasi Berat' ? ' masalah' : ''}${d.derajat_dehidrasi === 'Tanpa Dehidrasi' ? ' selesai' : ''}">${d.derajat_dehidrasi || "-"}</span></td>
+      <td>${d.frekuensi_bab ?? "-"}</td>
+      <td>${d.tatalaksana || "-"}</td>
+      <td>${d.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanDia() {
+  const msgBox = document.getElementById("msgDia");
+  if (!pasienTerpilihDia) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("diaTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("pemeriksaan_diare").insert({
+    pasien_id: pasienTerpilihDia.id,
+    tanggal,
+    kelompok_usia: document.getElementById("diaKelompokUsia").value || null,
+    derajat_dehidrasi: document.getElementById("diaDerajatDehidrasi").value || null,
+    frekuensi_bab: document.getElementById("diaFrekuensiBab").value !== "" ? parseInt(document.getElementById("diaFrekuensiBab").value) : null,
+    tatalaksana: document.getElementById("diaTatalaksana").value || null,
+    catatan: document.getElementById("diaCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan pemeriksaan diare tersimpan.</div>`;
+  document.getElementById("diaCatatan").value = "";
+  await muatRiwayatDia();
+}
+
 // ---------- REGISTER & KOHORT ----------
 const SUBREGISTER = ["kegiatan", "kohort"];
 function gantiSubRegister(sub) {
@@ -1857,7 +2221,9 @@ const SUMBER_K4 = [
   { tabel: "pemeriksaan_kusta", label: "Kasus Kusta", ringkas: r => `${r.klasifikasi || "-"} / Cacat Tk.${r.cacat_tingkat ?? "-"} — ${r.status_pengobatan || "-"}` },
   { tabel: "pemeriksaan_hiv", label: "Layanan HIV/IMS", ringkas: r => `${r.jenis_layanan || "-"} — ${r.hasil_tes || "-"} / ${r.status_pengobatan_arv || "-"}` },
   { tabel: "pemeriksaan_hepatitis", label: "Skrining Hepatitis", ringkas: r => `${r.jenis_layanan || "-"} — HBsAg:${r.hasil_hbsag || "-"} / Anti-HCV:${r.hasil_anti_hcv || "-"}` },
-  { tabel: "pemeriksaan_malaria", label: "Kasus Malaria", ringkas: r => `${r.jenis_pemeriksaan || "-"} — ${r.hasil || "-"} (${r.asal_penularan || "-"})` }
+  { tabel: "pemeriksaan_malaria", label: "Kasus Malaria", ringkas: r => `${r.jenis_pemeriksaan || "-"} — ${r.hasil || "-"} (${r.asal_penularan || "-"})` },
+  { tabel: "pemeriksaan_ispa", label: "Kasus ISPA", ringkas: r => `${r.kelompok_usia || "-"} — ${r.klasifikasi || "-"} / ${r.status_pengobatan || "-"}` },
+  { tabel: "pemeriksaan_diare", label: "Kasus Diare", ringkas: r => `${r.kelompok_usia || "-"} — ${r.derajat_dehidrasi || "-"} / ${r.tatalaksana || "-"}` }
 ];
 
 async function muatRegisterKegiatanK4() {
@@ -2316,14 +2682,15 @@ async function muatLaporanInternalK4() {
 // ---------- AUDIT TRAIL — KLASTER 4 ----------
 let auditLogK4Cache = [];
 
-const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "pemeriksaan_kusta", "kartu_pengobatan_mdt", "pemeriksaan_hiv", "kartu_pengobatan_arv", "pemeriksaan_hepatitis", "pemeriksaan_malaria", "rujukan_lab_k4"];
+const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "pemeriksaan_kusta", "kartu_pengobatan_mdt", "pemeriksaan_hiv", "kartu_pengobatan_arv", "pemeriksaan_hepatitis", "pemeriksaan_malaria", "pemeriksaan_ispa", "pemeriksaan_diare", "rujukan_lab_k4"];
 
 const LABEL_TABEL_AUDIT_K4 = {
   pemeriksaan_tb: "Kasus TB", kartu_kontrol_oat: "Kartu Kontrol OAT",
   pelacakan_kontak_tb: "Pelacakan Kontak TB", pemeriksaan_kusta: "Pemeriksaan Kusta",
   kartu_pengobatan_mdt: "Kartu Pengobatan MDT", pemeriksaan_hiv: "Layanan HIV/IMS",
   kartu_pengobatan_arv: "Kartu Pengobatan ARV", pemeriksaan_hepatitis: "Skrining Hepatitis",
-  pemeriksaan_malaria: "Kasus Malaria", rujukan_lab_k4: "Rujukan & Permintaan Lab"
+  pemeriksaan_malaria: "Kasus Malaria", pemeriksaan_ispa: "Kasus ISPA",
+  pemeriksaan_diare: "Kasus Diare", rujukan_lab_k4: "Rujukan & Permintaan Lab"
 };
 const LABEL_AKSI_AUDIT_K4 = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
 const BADGE_AKSI_AUDIT_K4 = { insert: "badge-selesai", update: "badge-menunggu", delete: "badge-batal" };

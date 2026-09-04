@@ -2550,6 +2550,54 @@ create trigger trg_audit_pemeriksaan_malaria after insert or update or delete on
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 67. KLASTER 4 — FASE 4: Program ISPA & Pneumonia, Program Diare
+-- ============================================================
+
+create table if not exists pemeriksaan_ispa (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  kelompok_usia text check (kelompok_usia in ('Balita', 'Anak', 'Dewasa')),
+  klasifikasi text check (klasifikasi in ('Bukan Pneumonia', 'Pneumonia', 'Pneumonia Berat')),
+  gejala text,
+  status_pengobatan text check (status_pengobatan in ('Tidak Perlu Obat', 'Rawat Jalan - Antibiotik', 'Rujuk RS')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_ispa_pasien on pemeriksaan_ispa(pasien_id);
+
+alter table pemeriksaan_ispa enable row level security;
+create policy "authenticated_all_pemeriksaan_ispa" on pemeriksaan_ispa for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_ispa on pemeriksaan_ispa;
+create trigger trg_audit_pemeriksaan_ispa after insert or update or delete on pemeriksaan_ispa
+  for each row execute function fn_audit_log();
+
+create table if not exists pemeriksaan_diare (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  kelompok_usia text check (kelompok_usia in ('Balita', 'Anak', 'Dewasa')),
+  derajat_dehidrasi text check (derajat_dehidrasi in ('Tanpa Dehidrasi', 'Dehidrasi Ringan-Sedang', 'Dehidrasi Berat')),
+  frekuensi_bab int,
+  tatalaksana text check (tatalaksana in ('Oralit + Zinc', 'Infus RL', 'Rujuk RS')),
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemeriksaan_diare_pasien on pemeriksaan_diare(pasien_id);
+
+alter table pemeriksaan_diare enable row level security;
+create policy "authenticated_all_pemeriksaan_diare" on pemeriksaan_diare for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemeriksaan_diare on pemeriksaan_diare;
+create trigger trg_audit_pemeriksaan_diare after insert or update or delete on pemeriksaan_diare
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
