@@ -2257,6 +2257,30 @@ select * from (values
 where not exists (select 1 from master_tarif where dasar_hukum = 'Tarif Puskesmas Kab. Indragiri Hilir 2024');
 
 -- ============================================================
+-- 62. FIX KRITIKAL + DASAR HUKUM RESMI.
+--     a) tagihan_kunjungan.kategori check constraint KETINGGALAN pas
+--        section 61 nambah kategori baru ke master_tarif — insert
+--        tagihan kategori 'Administrasi'/'KIA & KB'/'Gigi & Mulut'
+--        bakal GAGAL tanpa ini. Disamain sama master_tarif.
+--     b) tagihan_kunjungan.kunjungan_id dibikin nullable — ANC &
+--        Persalinan (klaster2) gak jalan lewat antrian kunjungan
+--        kayak Rekam Medis/UGD, jadi gak selalu ada kunjungan_id.
+--     c) dasar_hukum semua tarif di-update ke rujukan resmi:
+--        Perda No. 4 Tahun 2024 tentang Pajak Daerah dan Retribusi
+--        Daerah (Kab. Indragiri Hilir).
+-- ============================================================
+
+alter table tagihan_kunjungan drop constraint if exists tagihan_kunjungan_kategori_check;
+alter table tagihan_kunjungan add constraint tagihan_kunjungan_kategori_check
+  check (kategori in ('Konsultasi', 'Pemeriksaan', 'Tindakan', 'Laboratorium', 'Obat', 'Administrasi', 'KIA & KB', 'Gigi & Mulut'));
+
+alter table tagihan_kunjungan alter column kunjungan_id drop not null;
+
+update master_tarif
+set dasar_hukum = 'Perda No. 4 Tahun 2024 tentang Pajak Daerah dan Retribusi Daerah (Kab. Indragiri Hilir)'
+where dasar_hukum = 'Tarif Puskesmas Kab. Indragiri Hilir 2024' or dasar_hukum is null;
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
