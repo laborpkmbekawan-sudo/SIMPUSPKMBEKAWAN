@@ -2752,6 +2752,34 @@ create trigger trg_audit_inspeksi_kesling after insert or update or delete on in
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 70. KLASTER 4 — FASE 7: Laporan ke Dinas Kesehatan
+--     (rekap program SITB/SIHA/Kusta, W1 KLB, rekap Kesling)
+-- ============================================================
+
+alter table klb_kejadian add column if not exists w1_dilaporkan boolean not null default false;
+alter table klb_kejadian add column if not exists tanggal_w1_dilaporkan timestamptz;
+
+create table if not exists laporan_dinas_kirim (
+  id uuid primary key default gen_random_uuid(),
+  jenis_laporan text not null,
+  periode_label text,
+  tanggal_kirim date not null default current_date,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_laporan_dinas_kirim_jenis on laporan_dinas_kirim(jenis_laporan);
+create index if not exists idx_laporan_dinas_kirim_tanggal on laporan_dinas_kirim(tanggal_kirim);
+
+alter table laporan_dinas_kirim enable row level security;
+create policy "authenticated_all_laporan_dinas_kirim" on laporan_dinas_kirim for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_laporan_dinas_kirim on laporan_dinas_kirim;
+create trigger trg_audit_laporan_dinas_kirim after insert or update or delete on laporan_dinas_kirim
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

@@ -1325,7 +1325,98 @@
 
       <!-- ============ LAPORAN DINAS ============ -->
       <div id="panelLaporanDinas" style="display:none;">
-        <div class="k4-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div>SITB, SIHA, laporan Kusta, SKDR mingguan, W1 KLB, dan laporan Kesling — segera dibangun.</div>
+
+        <div class="card" style="padding:10px 14px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="dinasSub-program" onclick="gantiSubDinas('program')">Laporan Program (SITB/SIHA/Kusta)</button>
+            <button type="button" class="lap-tab" id="dinasSub-w1kesling" onclick="gantiSubDinas('w1kesling')">W1 KLB &amp; Rekap Kesling</button>
+          </div>
+        </div>
+
+        <!-- ===== Sub: Laporan Program ===== -->
+        <div id="dinasPanel-program">
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">📤</span> Laporan Program ke Dinas Kesehatan</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Rekap ringkasan buat entri SITB (TB), SIHA (HIV/IMS), dan Laporan Kusta — format Puskesmas, bukan langsung upload ke sistem Dinkes.</p>
+            <div class="grid-3">
+              <div>
+                <label>Program</label>
+                <select id="dinasProgram">
+                  <option value="tb">TB — SITB</option>
+                  <option value="hiv">HIV/IMS — SIHA</option>
+                  <option value="kusta">Kusta</option>
+                </select>
+              </div>
+              <div><label>Dari Tanggal</label><input type="date" id="dinasDari"></div>
+              <div><label>Sampai Tanggal</label><input type="date" id="dinasSampai"></div>
+            </div>
+            <button class="btn-primary" onclick="muatRekapDinasProgram()">Tampilkan Rekap</button>
+            <div id="msgDinasProgram"></div>
+          </div>
+
+          <div id="dinasProgramHasil" style="display:none;">
+            <div class="card" style="--accent:#173b5e;">
+              <h2>Rekap — <span id="dinasProgramJudul"></span></h2>
+              <table>
+                <thead><tr><th>Status/Klasifikasi</th><th>Jumlah Kasus</th></tr></thead>
+                <tbody id="tabelRekapDinasProgram"><tr><td colspan="2">Belum ada data.</td></tr></tbody>
+              </table>
+              <p style="font-size:12px; color:var(--muted); margin-top:8px;">Total kasus periode ini: <strong id="dinasProgramTotal">0</strong></p>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn-secondary" onclick="exportDinasProgramCsv()">⬇️ Export CSV</button>
+                <button class="btn-primary" onclick="tandaiKirimDinasProgram()">Tandai Terkirim ke Dinas</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat Pengiriman — Laporan Program</h2>
+            <table>
+              <thead><tr><th>Tanggal Kirim</th><th>Jenis Laporan</th><th>Periode</th><th>Petugas</th></tr></thead>
+              <tbody id="tabelRiwayatKirimProgram"><tr><td colspan="4">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== Sub: W1 KLB & Kesling ===== -->
+        <div id="dinasPanel-w1kesling" style="display:none;">
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">🚨</span> Laporan W1 — Kejadian KLB</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">W1 wajib dilaporkan &lt;24 jam sejak KLB ditemukan/ditetapkan. Daftar di bawah nunjukin semua kejadian KLB, tandai kejadian yang udah dilaporkan W1 ke Dinas.</p>
+            <table>
+              <thead><tr><th>Tgl Ditemukan</th><th>Judul</th><th>Jenis Penyakit</th><th>Kasus</th><th>Status W1</th><th></th></tr></thead>
+              <tbody id="tabelW1Klb"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2><span class="card-num" style="background:#2f9e5c;">🌿</span> Rekap Kesling ke Dinas</h2>
+            <div class="grid-3">
+              <div><label>Dari Tanggal</label><input type="date" id="dinasKeslingDari"></div>
+              <div><label>Sampai Tanggal</label><input type="date" id="dinasKeslingSampai"></div>
+              <div style="display:flex; align-items:flex-end;"><button class="btn-primary" onclick="muatRekapDinasKesling()" style="margin-bottom:12px;">Tampilkan Rekap</button></div>
+            </div>
+            <div id="dinasKeslingHasil" style="display:none;">
+              <table>
+                <thead><tr><th>Jenis Inspeksi</th><th>Jumlah</th><th>Memenuhi Syarat</th><th>Tidak Memenuhi Syarat</th><th>Perlu Perbaikan</th></tr></thead>
+                <tbody id="tabelRekapDinasKesling"><tr><td colspan="5">Belum ada data.</td></tr></tbody>
+              </table>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                <button class="btn-secondary" onclick="exportDinasKeslingCsv()">⬇️ Export CSV</button>
+                <button class="btn-primary" onclick="tandaiKirimDinasKesling()">Tandai Terkirim ke Dinas</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat Pengiriman — W1 &amp; Kesling</h2>
+            <table>
+              <thead><tr><th>Tanggal Kirim</th><th>Jenis Laporan</th><th>Periode</th><th>Petugas</th></tr></thead>
+              <tbody id="tabelRiwayatKirimW1Kesling"><tr><td colspan="4">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- ============ AUDIT ============ -->
@@ -1433,6 +1524,7 @@ function gantiSubtabK4(tab) {
   if (tab === "dashboard") muatDashboardK4();
   if (tab === "klb") muatDaftarKlb();
   if (tab === "kesling") muatRiwayatKesling();
+  if (tab === "laporan-dinas") gantiSubDinas("program");
 }
 
 // ---------- PROGRAM PENYAKIT MENULAR — inner sub-tabs ----------
@@ -3061,6 +3153,216 @@ async function ubahTindakLanjutKesling(id, status) {
   await muatRiwayatKesling();
 }
 
+// ---------- LAPORAN KE DINAS KESEHATAN ----------
+function gantiSubDinas(sub) {
+  ["program", "w1kesling"].forEach(s => {
+    const panel = document.getElementById("dinasPanel-" + s);
+    if (panel) panel.style.display = (s === sub) ? "block" : "none";
+    const btn = document.getElementById("dinasSub-" + s);
+    if (btn) btn.classList.toggle("active", s === sub);
+  });
+  if (sub === "program") muatRiwayatKirimDinas("program");
+  if (sub === "w1kesling") { muatW1Klb(); muatRiwayatKirimDinas("w1kesling"); }
+}
+
+const LABEL_DINAS_PROGRAM = { tb: "TB — SITB", hiv: "HIV/IMS — SIHA", kusta: "Laporan Kusta" };
+const KOLOM_STATUS_DINAS_PROGRAM = {
+  tb: { tabel: "pemeriksaan_tb", kolom: "status_pengobatan" },
+  hiv: { tabel: "pemeriksaan_hiv", kolom: "jenis_layanan" },
+  kusta: { tabel: "pemeriksaan_kusta", kolom: "klasifikasi" }
+};
+
+let dinasProgramCache = { program: null, dari: null, sampai: null, rekap: [] };
+
+async function muatRekapDinasProgram() {
+  const msgBox = document.getElementById("msgDinasProgram");
+  const program = document.getElementById("dinasProgram").value;
+  const dari = document.getElementById("dinasDari").value;
+  const sampai = document.getElementById("dinasSampai").value;
+  if (!dari || !sampai) { msgBox.innerHTML = `<div class="msg msg-error">Isi rentang tanggal dulu.</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Memuat...</div>`;
+  const cfg = KOLOM_STATUS_DINAS_PROGRAM[program];
+
+  const { data, error } = await supabaseClient
+    .from(cfg.tabel)
+    .select("*")
+    .gte("tanggal", dari)
+    .lte("tanggal", sampai);
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal muat: ${error.message}</div>`; return; }
+
+  const kelompok = {};
+  (data || []).forEach(r => {
+    const key = r[cfg.kolom] || "Tidak Diisi";
+    kelompok[key] = (kelompok[key] || 0) + 1;
+  });
+  const rekap = Object.entries(kelompok).map(([label, jumlah]) => ({ label, jumlah }));
+
+  dinasProgramCache = { program, dari, sampai, rekap, total: data.length };
+  msgBox.innerHTML = "";
+  document.getElementById("dinasProgramHasil").style.display = "block";
+  document.getElementById("dinasProgramJudul").textContent = `${LABEL_DINAS_PROGRAM[program]} (${new Date(dari).toLocaleDateString("id-ID")} - ${new Date(sampai).toLocaleDateString("id-ID")})`;
+  document.getElementById("dinasProgramTotal").textContent = data.length;
+
+  const tbody = document.getElementById("tabelRekapDinasProgram");
+  tbody.innerHTML = rekap.length ? rekap.map(r => `<tr><td>${r.label}</td><td>${r.jumlah}</td></tr>`).join("") : `<tr><td colspan="2">Tidak ada kasus pada periode ini.</td></tr>`;
+}
+
+function exportDinasProgramCsv() {
+  if (!dinasProgramCache.rekap.length) { alert("Belum ada data buat diexport. Klik Tampilkan Rekap dulu."); return; }
+  const header = ["Status/Klasifikasi", "Jumlah Kasus"];
+  const rows = dinasProgramCache.rekap.map(r => [r.label, r.jumlah]);
+  const csv = [header, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `laporan_${dinasProgramCache.program}_${dinasProgramCache.dari}_${dinasProgramCache.sampai}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function tandaiKirimDinasProgram() {
+  if (!dinasProgramCache.rekap.length && dinasProgramCache.total === 0) {
+    if (!confirm("Rekap kosong (tidak ada kasus di periode ini). Tetap tandai terkirim?")) return;
+  }
+  const periodeLabel = `${dinasProgramCache.dari} s.d. ${dinasProgramCache.sampai}`;
+  const { error } = await supabaseClient.from("laporan_dinas_kirim").insert({
+    jenis_laporan: LABEL_DINAS_PROGRAM[dinasProgramCache.program],
+    periode_label: periodeLabel,
+    petugas_id: profilSaya.id
+  });
+  if (error) { alert("Gagal tandai terkirim: " + error.message); return; }
+  alert("Laporan ditandai terkirim ke Dinas.");
+  await muatRiwayatKirimDinas("program");
+}
+
+async function muatRiwayatKirimDinas(kelompok) {
+  const jenisProgram = Object.values(LABEL_DINAS_PROGRAM);
+  const jenisW1Kesling = ["W1 KLB", "Rekap Kesling"];
+  const tbodyId = kelompok === "program" ? "tabelRiwayatKirimProgram" : "tabelRiwayatKirimW1Kesling";
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("laporan_dinas_kirim")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .in("jenis_laporan", kelompok === "program" ? jenisProgram : jenisW1Kesling)
+    .order("tanggal_kirim", { ascending: false })
+    .limit(50);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada riwayat pengiriman.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal_kirim).toLocaleDateString("id-ID")}</td>
+      <td>${r.jenis_laporan}</td>
+      <td>${r.periode_label || "-"}</td>
+      <td>${r.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function muatW1Klb() {
+  const tbody = document.getElementById("tabelW1Klb");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("klb_kejadian")
+    .select("*")
+    .order("tanggal_ditemukan", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada kejadian KLB.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${new Date(k.tanggal_ditemukan).toLocaleDateString("id-ID")}</td>
+      <td>${k.judul}</td>
+      <td>${k.jenis_penyakit}</td>
+      <td>${k.jumlah_kasus}</td>
+      <td>${k.w1_dilaporkan ? `<span class="tag-status-tb selesai">Sudah Lapor</span>` : `<span class="tag-status-tb masalah">Belum Lapor</span>`}</td>
+      <td>${k.w1_dilaporkan ? "-" : `<button class="btn-secondary" onclick="tandaiW1Klb('${k.id}', '${k.judul.replace(/'/g, "\\'")}')">Tandai Sudah Lapor W1</button>`}</td>
+    </tr>
+  `).join("");
+}
+
+async function tandaiW1Klb(id, judul) {
+  if (!confirm(`Tandai kejadian "${judul}" sudah dilaporkan W1 ke Dinas Kesehatan?`)) return;
+
+  const { error } = await supabaseClient.from("klb_kejadian")
+    .update({ w1_dilaporkan: true, tanggal_w1_dilaporkan: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) { alert("Gagal: " + error.message); return; }
+
+  await supabaseClient.from("laporan_dinas_kirim").insert({
+    jenis_laporan: "W1 KLB", periode_label: judul, petugas_id: profilSaya.id
+  });
+
+  await muatW1Klb();
+  await muatRiwayatKirimDinas("w1kesling");
+}
+
+let dinasKeslingCache = { dari: null, sampai: null, rekap: [] };
+
+async function muatRekapDinasKesling() {
+  const dari = document.getElementById("dinasKeslingDari").value;
+  const sampai = document.getElementById("dinasKeslingSampai").value;
+  if (!dari || !sampai) { alert("Isi rentang tanggal dulu."); return; }
+
+  const { data, error } = await supabaseClient
+    .from("inspeksi_kesling")
+    .select("*")
+    .gte("tanggal", dari)
+    .lte("tanggal", sampai);
+
+  if (error) { alert("Gagal muat: " + error.message); return; }
+
+  const kelompok = {};
+  (data || []).forEach(r => {
+    if (!kelompok[r.jenis_inspeksi]) kelompok[r.jenis_inspeksi] = { jenis: r.jenis_inspeksi, jumlah: 0, ms: 0, tms: 0, perbaikan: 0 };
+    kelompok[r.jenis_inspeksi].jumlah++;
+    if (r.hasil_penilaian === "Memenuhi Syarat") kelompok[r.jenis_inspeksi].ms++;
+    if (r.hasil_penilaian === "Tidak Memenuhi Syarat") kelompok[r.jenis_inspeksi].tms++;
+    if (r.hasil_penilaian === "Perlu Perbaikan") kelompok[r.jenis_inspeksi].perbaikan++;
+  });
+  const rekap = Object.values(kelompok);
+
+  dinasKeslingCache = { dari, sampai, rekap };
+  document.getElementById("dinasKeslingHasil").style.display = "block";
+  const tbody = document.getElementById("tabelRekapDinasKesling");
+  tbody.innerHTML = rekap.length ? rekap.map(r => `
+    <tr><td>${r.jenis}</td><td>${r.jumlah}</td><td>${r.ms}</td><td>${r.tms}</td><td>${r.perbaikan}</td></tr>
+  `).join("") : `<tr><td colspan="5">Tidak ada inspeksi pada periode ini.</td></tr>`;
+}
+
+function exportDinasKeslingCsv() {
+  if (!dinasKeslingCache.rekap.length) { alert("Belum ada data buat diexport. Klik Tampilkan Rekap dulu."); return; }
+  const header = ["Jenis Inspeksi", "Jumlah", "Memenuhi Syarat", "Tidak Memenuhi Syarat", "Perlu Perbaikan"];
+  const rows = dinasKeslingCache.rekap.map(r => [r.jenis, r.jumlah, r.ms, r.tms, r.perbaikan]);
+  const csv = [header, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `rekap_kesling_${dinasKeslingCache.dari}_${dinasKeslingCache.sampai}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function tandaiKirimDinasKesling() {
+  if (!dinasKeslingCache.rekap.length && !confirm("Rekap kosong. Tetap tandai terkirim?")) return;
+  const periodeLabel = `${dinasKeslingCache.dari} s.d. ${dinasKeslingCache.sampai}`;
+  const { error } = await supabaseClient.from("laporan_dinas_kirim").insert({
+    jenis_laporan: "Rekap Kesling", periode_label: periodeLabel, petugas_id: profilSaya.id
+  });
+  if (error) { alert("Gagal tandai terkirim: " + error.message); return; }
+  alert("Rekap Kesling ditandai terkirim ke Dinas.");
+  await muatRiwayatKirimDinas("w1kesling");
+}
+
 // ---------- REGISTER & KOHORT ----------
 const SUBREGISTER = ["kegiatan", "kohort"];
 function gantiSubRegister(sub) {
@@ -3541,7 +3843,7 @@ async function muatLaporanInternalK4() {
 // ---------- AUDIT TRAIL — KLASTER 4 ----------
 let auditLogK4Cache = [];
 
-const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "pemeriksaan_kusta", "kartu_pengobatan_mdt", "pemeriksaan_hiv", "kartu_pengobatan_arv", "pemeriksaan_hepatitis", "pemeriksaan_malaria", "pemeriksaan_ispa", "pemeriksaan_diare", "pemeriksaan_imunisasi_k4", "skdr_mingguan", "skdr_mingguan_item", "klb_kejadian", "klb_tindakan", "inspeksi_kesling", "rujukan_lab_k4"];
+const TABEL_K4_ALL = ["pemeriksaan_tb", "kartu_kontrol_oat", "pelacakan_kontak_tb", "pemeriksaan_kusta", "kartu_pengobatan_mdt", "pemeriksaan_hiv", "kartu_pengobatan_arv", "pemeriksaan_hepatitis", "pemeriksaan_malaria", "pemeriksaan_ispa", "pemeriksaan_diare", "pemeriksaan_imunisasi_k4", "skdr_mingguan", "skdr_mingguan_item", "klb_kejadian", "klb_tindakan", "inspeksi_kesling", "laporan_dinas_kirim", "rujukan_lab_k4"];
 
 const LABEL_TABEL_AUDIT_K4 = {
   pemeriksaan_tb: "Kasus TB", kartu_kontrol_oat: "Kartu Kontrol OAT",
@@ -3552,7 +3854,7 @@ const LABEL_TABEL_AUDIT_K4 = {
   pemeriksaan_diare: "Kasus Diare", pemeriksaan_imunisasi_k4: "Imunisasi Program",
   skdr_mingguan: "Laporan SKDR Mingguan", skdr_mingguan_item: "Rekap Penyakit SKDR",
   klb_kejadian: "Kejadian KLB", klb_tindakan: "Tindakan Pengendalian KLB",
-  inspeksi_kesling: "Inspeksi Kesehatan Lingkungan",
+  inspeksi_kesling: "Inspeksi Kesehatan Lingkungan", laporan_dinas_kirim: "Pengiriman Laporan ke Dinas",
   rujukan_lab_k4: "Rujukan & Permintaan Lab"
 };
 const LABEL_AKSI_AUDIT_K4 = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
