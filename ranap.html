@@ -33,6 +33,15 @@
 .bed.terisi { background:var(--red); }
 .bed.kosong { background:var(--green); }
 .bed.maintenance { background:#8a8a8a; }
+
+.ph-info-grid { display:flex; flex-direction:column; gap:4px; }
+.ph-info-row { display:flex; justify-content:space-between; font-size:12.5px; padding:3px 0; border-bottom:1px dashed var(--border); }
+.ph-info-row span:first-child { color:var(--muted); }
+@media print {
+  .sidebar, .topbar, .card button, .btn-primary, .btn-secondary, #kliprintHideRanap { display:none !important; }
+  .dash-content { margin:0 !important; }
+  .card { border:none !important; box-shadow:none !important; }
+}
 .bed .bnum { font-size:12.5px; font-weight:700; }
 .bed .bruang { font-size:9.5px; opacity:.9; }
 
@@ -683,13 +692,127 @@ tr.ranap-row-clickable:hover td { background:#f7fafb; }
         </div>
       </div>
       <div id="panelLaporanDinas" style="display:none;">
-        <div class="card"><div class="ranap-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+
+        <div class="card" style="--accent:#c0503f;" id="kliprintHideRanap">
+          <h2><span class="card-num" style="background:#c0503f;">📤</span> Indikator Pelayanan Rawat Inap</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Format indikator rawat inap (BOR, LOS, TOI, BTO, GDR, NDR) untuk laporan bulanan ke Dinas Kesehatan.</p>
+          <div class="grid-3">
+            <div><label>Bulan</label>
+              <select id="lapDinasRanapBulan">
+                <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div><label>Tahun</label><input type="number" id="lapDinasRanapTahun" value="2026" style="width:100px;"></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button class="btn-primary" onclick="muatLaporanDinasRanap()" style="margin-bottom:12px;">Tampilkan</button>
+              <button class="btn-secondary" onclick="window.print()" style="margin-bottom:12px;">🖨 Cetak</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="lapDinasRanapHasil" style="display:none;">
+          <div class="card" style="--accent:#173b5e;">
+            <div class="ph-info-grid">
+              <div class="ph-info-row"><span>Puskesmas</span><span>UPTD Puskesmas Bekawan</span></div>
+              <div class="ph-info-row"><span>Periode</span><span id="lapDinasRanapPeriode">-</span></div>
+              <div class="ph-info-row"><span>Tanggal Cetak</span><span id="lapDinasRanapTglCetak">-</span></div>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2>Data Dasar</h2>
+            <table>
+              <thead><tr><th>Indikator</th><th>Jumlah</th></tr></thead>
+              <tbody>
+                <tr><td>Jumlah Tempat Tidur</td><td id="dinasRanapTT">0</td></tr>
+                <tr><td>Pasien Masuk</td><td id="dinasRanapMasuk">0</td></tr>
+                <tr><td>Pasien Keluar Hidup</td><td id="dinasRanapKeluarHidup">0</td></tr>
+                <tr><td>Pasien Keluar Mati &lt; 48 Jam</td><td id="dinasRanapMatiDibawah48">0</td></tr>
+                <tr><td>Pasien Keluar Mati &ge; 48 Jam</td><td id="dinasRanapMatiDiatas48">0</td></tr>
+                <tr><td>Total Pasien Keluar (Hidup + Mati)</td><td id="dinasRanapTotalKeluar">0</td></tr>
+                <tr><td>Hari Perawatan (Pasien Hari)</td><td id="dinasRanapHariRawat">0</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#b8860b;">
+            <h2>Indikator Pelayanan Rawat Inap</h2>
+            <table>
+              <thead><tr><th>Indikator</th><th>Nilai</th><th>Standar Ideal (Depkes)</th></tr></thead>
+              <tbody>
+                <tr><td>BOR (Bed Occupancy Rate)</td><td id="dinasRanapBor">0%</td><td>60% – 85%</td></tr>
+                <tr><td>LOS (Length of Stay)</td><td id="dinasRanapLos">0 hari</td><td>6 – 9 hari</td></tr>
+                <tr><td>TOI (Turn Over Interval)</td><td id="dinasRanapToi">0 hari</td><td>1 – 3 hari</td></tr>
+                <tr><td>BTO (Bed Turn Over)</td><td id="dinasRanapBto">0 kali</td><td>40 – 50 kali/tahun</td></tr>
+                <tr><td>GDR (Gross Death Rate)</td><td id="dinasRanapGdr">0 ‰</td><td>&lt; 45‰</td></tr>
+                <tr><td>NDR (Net Death Rate)</td><td id="dinasRanapNdr">0 ‰</td><td>&lt; 25‰</td></tr>
+              </tbody>
+            </table>
+            <p style="font-size:11px; color:var(--muted); margin-top:8px;">Standar berdasarkan Depkes RI (Barber-Johnson). Angka kematian dihitung per 1000 pasien keluar.</p>
+          </div>
+        </div>
+
       </div>
+
       <div id="panelBpjs" style="display:none;">
         <div class="card"><div class="ranap-segera"><div class="ic">📄</div><div class="t">Kelengkapan Berkas Klaim BPJS</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
       </div>
+
+      <!-- ============ AUDIT / KEAMANAN ============ -->
       <div id="panelAudit" style="display:none;">
-        <div class="card"><div class="ranap-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+        <div class="card" style="--accent:#6a4c93;">
+          <h2><span class="card-num" style="background:#6a4c93;">🛡</span> Audit Trail — Rawat Inap</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Jejak otomatis semua perubahan (tambah/ubah/hapus) pada data rawat inap: bed, admisi, asuhan, observasi, visite &amp; discharge. Dicatat langsung oleh database lewat trigger, gak bisa dipalsu/dihapus manual.</p>
+
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div><label>Dari Tanggal</label><input type="date" id="audRanapDari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="audRanapSampai"></div>
+            <div>
+              <label>Tabel</label>
+              <select id="audRanapFilterTabel">
+                <option value="">Semua Tabel Rawat Inap</option>
+                <option value="bed_rawat">Master Tempat Tidur</option>
+                <option value="kunjungan_ranap">Admisi / Status Rawat Inap</option>
+                <option value="asuhan_ranap">Asuhan Keperawatan Harian</option>
+                <option value="observasi_ranap">Tanda Vital Berkala</option>
+                <option value="visite_ranap">Visite Dokter</option>
+                <option value="discharge_ranap">Discharge Planning</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Aksi</label>
+              <select id="audRanapFilterAksi">
+                <option value="">Semua Aksi</option>
+                <option value="insert">Tambah (Insert)</option>
+                <option value="update">Ubah (Update)</option>
+                <option value="delete">Hapus (Delete)</option>
+              </select>
+            </div>
+            <div></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatAuditLogRanap()" style="margin-bottom:12px;">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportAuditLogRanapCsv()" style="margin-bottom:12px;">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="ranap-stat-grid">
+            <div class="ranap-stat-card"><div class="label">Total Perubahan</div><div class="value" id="audRanapStatTotal">0</div></div>
+            <div class="ranap-stat-card" style="--accent:#16865c;"><div class="label">Tambah</div><div class="value" id="audRanapStatInsert">0</div></div>
+            <div class="ranap-stat-card" style="--accent:#b77900;"><div class="label">Ubah</div><div class="value" id="audRanapStatUpdate">0</div></div>
+            <div class="ranap-stat-card" style="--accent:#c62836;"><div class="label">Hapus</div><div class="value" id="audRanapStatDelete">0</div></div>
+          </div>
+
+          <table>
+            <thead><tr><th>Waktu</th><th>Tabel</th><th>Aksi</th><th>Petugas</th><th>Ringkasan</th><th></th></tr></thead>
+            <tbody id="audRanapTabelLog"><tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+          <p style="font-size:11px; color:var(--muted); margin-top:8px;">Menampilkan maksimal 500 baris terbaru sesuai filter. Persempit rentang tanggal kalau butuh data lebih lama.</p>
+        </div>
       </div>
 
     </div>
@@ -1836,6 +1959,191 @@ async function muatLaporanInternalRanap() {
   } catch (e) {
     tbodySumber.innerHTML = `<tr><td colspan="2">Gagal muat: ${e.message}</td></tr>`;
   }
+}
+
+// ---------- LAPORAN KE DINAS KESEHATAN (Indikator Rawat Inap) ----------
+async function muatLaporanDinasRanap() {
+  const wrap = document.getElementById("lapDinasRanapHasil");
+  wrap.style.display = "block";
+  const bulan = parseInt(document.getElementById("lapDinasRanapBulan").value);
+  const tahun = parseInt(document.getElementById("lapDinasRanapTahun").value);
+  const namaBulan = document.getElementById("lapDinasRanapBulan").selectedOptions[0].textContent;
+
+  document.getElementById("lapDinasRanapPeriode").textContent = `${namaBulan} ${tahun}`;
+  document.getElementById("lapDinasRanapTglCetak").textContent = new Date().toLocaleDateString("id-ID");
+
+  const dari = `${tahun}-${String(bulan).padStart(2, "0")}-01`;
+  const lastDay = new Date(tahun, bulan, 0).getDate();
+  const sampai = `${tahun}-${String(bulan).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+  const dariStart = `${dari}T00:00:00`;
+  const sampaiEnd = `${sampai}T23:59:59`;
+
+  try {
+    const { count: totalBed } = await supabaseClient.from("bed_rawat").select("*", { count: "exact", head: true });
+
+    const { data: dataMasuk, error: errMasuk } = await supabaseClient
+      .from("kunjungan_ranap").select("id").gte("tanggal_masuk", dariStart).lte("tanggal_masuk", sampaiEnd);
+    if (errMasuk) throw errMasuk;
+
+    const { data: dataKeluar, error: errKeluar } = await supabaseClient
+      .from("kunjungan_ranap").select("status_ranap, tanggal_masuk, tanggal_keluar")
+      .in("status_ranap", ["pulang", "dirujuk", "meninggal"])
+      .not("tanggal_keluar", "is", null)
+      .gte("tanggal_keluar", dariStart).lte("tanggal_keluar", sampaiEnd);
+    if (errKeluar) throw errKeluar;
+
+    const { data: dataOverlap, error: errOverlap } = await supabaseClient
+      .from("kunjungan_ranap").select("tanggal_masuk, tanggal_keluar").lte("tanggal_masuk", sampaiEnd);
+    if (errOverlap) throw errOverlap;
+
+    const semuaKeluar = dataKeluar || [];
+    const keluarMati = semuaKeluar.filter(k => k.status_ranap === "meninggal");
+    const keluarHidup = semuaKeluar.filter(k => k.status_ranap !== "meninggal");
+    const matiDiatas48 = keluarMati.filter(k => (new Date(k.tanggal_keluar) - new Date(k.tanggal_masuk)) / 3600000 >= 48).length;
+    const matiDibawah48 = keluarMati.length - matiDiatas48;
+    const totalKeluar = semuaKeluar.length;
+
+    const batasAwal = new Date(dariStart);
+    const batasAkhir = new Date(sampaiEnd);
+    let pasienHari = 0;
+    (dataOverlap || []).forEach(k => {
+      const masuk = new Date(k.tanggal_masuk);
+      const keluar = k.tanggal_keluar ? new Date(k.tanggal_keluar) : new Date();
+      const mulai = masuk < batasAwal ? batasAwal : masuk;
+      const selesai = keluar > batasAkhir ? batasAkhir : keluar;
+      const hari = (selesai - mulai) / 86400000;
+      if (hari > 0) pasienHari += hari;
+    });
+
+    const jumlahHariPeriode = Math.max(1, (batasAkhir - batasAwal) / 86400000);
+    const tt = totalBed || 0;
+    const bor = tt ? (pasienHari / (tt * jumlahHariPeriode)) * 100 : 0;
+    const los = totalKeluar
+      ? semuaKeluar.reduce((sum, k) => sum + (new Date(k.tanggal_keluar) - new Date(k.tanggal_masuk)) / 86400000, 0) / totalKeluar
+      : 0;
+    const toi = (tt && totalKeluar) ? ((tt * jumlahHariPeriode) - pasienHari) / totalKeluar : 0;
+    const bto = tt ? totalKeluar / tt : 0;
+    const gdr = totalKeluar ? (keluarMati.length / totalKeluar) * 1000 : 0;
+    const ndr = totalKeluar ? (matiDiatas48 / totalKeluar) * 1000 : 0;
+
+    document.getElementById("dinasRanapTT").textContent = tt;
+    document.getElementById("dinasRanapMasuk").textContent = (dataMasuk || []).length;
+    document.getElementById("dinasRanapKeluarHidup").textContent = keluarHidup.length;
+    document.getElementById("dinasRanapMatiDibawah48").textContent = matiDibawah48;
+    document.getElementById("dinasRanapMatiDiatas48").textContent = matiDiatas48;
+    document.getElementById("dinasRanapTotalKeluar").textContent = totalKeluar;
+    document.getElementById("dinasRanapHariRawat").textContent = pasienHari.toFixed(1);
+
+    document.getElementById("dinasRanapBor").textContent = `${bor.toFixed(1)}%`;
+    document.getElementById("dinasRanapLos").textContent = `${los.toFixed(1)} hari`;
+    document.getElementById("dinasRanapToi").textContent = `${toi.toFixed(1)} hari`;
+    document.getElementById("dinasRanapBto").textContent = `${bto.toFixed(1)} kali`;
+    document.getElementById("dinasRanapGdr").textContent = `${gdr.toFixed(1)} ‰`;
+    document.getElementById("dinasRanapNdr").textContent = `${ndr.toFixed(1)} ‰`;
+  } catch (e) {
+    alert("Gagal muat laporan Dinas: " + e.message);
+  }
+}
+
+// ---------- AUDIT TRAIL — RAWAT INAP ----------
+let auditLogRanapCache = [];
+
+const TABEL_RANAP_ALL = ["bed_rawat", "kunjungan_ranap", "asuhan_ranap", "observasi_ranap", "visite_ranap", "discharge_ranap"];
+
+const LABEL_TABEL_AUDIT_RANAP = {
+  bed_rawat: "Master Tempat Tidur", kunjungan_ranap: "Admisi / Status Rawat Inap",
+  asuhan_ranap: "Asuhan Keperawatan Harian", observasi_ranap: "Tanda Vital Berkala",
+  visite_ranap: "Visite Dokter", discharge_ranap: "Discharge Planning"
+};
+const LABEL_AKSI_AUDIT_RANAP = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
+const BADGE_AKSI_AUDIT_RANAP = { insert: "badge-selesai", update: "badge-menunggu", delete: "badge-batal" };
+
+function ringkasBarisAuditRanap(row) {
+  const data = row.data_baru || row.data_lama || {};
+  return `#${(row.record_id || "").slice(0, 8)}${data.status_ranap ? " — " + labelStatusRanap(data.status_ranap) : ""}`;
+}
+
+async function muatAuditLogRanap() {
+  const dari = document.getElementById("audRanapDari").value;
+  const sampai = document.getElementById("audRanapSampai").value;
+  const filterTabel = document.getElementById("audRanapFilterTabel").value;
+  const filterAksi = document.getElementById("audRanapFilterAksi").value;
+  const tbody = document.getElementById("audRanapTabelLog");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  let q = supabaseClient
+    .from("audit_log")
+    .select("*, profil_pegawai(nama)")
+    .in("tabel", filterTabel ? [filterTabel] : TABEL_RANAP_ALL)
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (dari) q = q.gte("created_at", `${dari}T00:00:00`);
+  if (sampai) q = q.lte("created_at", `${sampai}T23:59:59`);
+  if (filterAksi) q = q.eq("aksi", filterAksi);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  auditLogRanapCache = data || [];
+
+  document.getElementById("audRanapStatTotal").textContent = auditLogRanapCache.length;
+  document.getElementById("audRanapStatInsert").textContent = auditLogRanapCache.filter(r => r.aksi === "insert").length;
+  document.getElementById("audRanapStatUpdate").textContent = auditLogRanapCache.filter(r => r.aksi === "update").length;
+  document.getElementById("audRanapStatDelete").textContent = auditLogRanapCache.filter(r => r.aksi === "delete").length;
+
+  tbody.innerHTML = auditLogRanapCache.length ? auditLogRanapCache.map((r, i) => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${LABEL_TABEL_AUDIT_RANAP[r.tabel] || r.tabel}</td>
+      <td><span class="badge ${BADGE_AKSI_AUDIT_RANAP[r.aksi] || ""}">${LABEL_AKSI_AUDIT_RANAP[r.aksi] || r.aksi}</span></td>
+      <td>${r.profil_pegawai ? r.profil_pegawai.nama : "-"}</td>
+      <td>${ringkasBarisAuditRanap(r)}</td>
+      <td><button type="button" class="btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="toggleDetailAuditRanap(${i})">Detail</button></td>
+    </tr>
+    <tr id="audRanapDetail${i}" style="display:none;">
+      <td colspan="6">
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sebelum</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_lama ? JSON.stringify(r.data_lama, null, 2) : "(tidak ada — baris baru)"}</pre>
+          </div>
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sesudah</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_baru ? JSON.stringify(r.data_baru, null, 2) : "(tidak ada — baris dihapus)"}</pre>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Gak ada perubahan pada rentang &amp; filter ini.</td></tr>`;
+}
+
+function toggleDetailAuditRanap(i) {
+  const row = document.getElementById(`audRanapDetail${i}`);
+  if (row) row.style.display = row.style.display === "none" ? "table-row" : "none";
+}
+
+function exportAuditLogRanapCsv() {
+  if (!auditLogRanapCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Waktu", "Tabel", "Aksi", "Petugas", "Ringkasan", "Record ID"];
+  const rows = auditLogRanapCache.map(r => [
+    new Date(r.created_at).toLocaleString("id-ID"),
+    LABEL_TABEL_AUDIT_RANAP[r.tabel] || r.tabel,
+    LABEL_AKSI_AUDIT_RANAP[r.aksi] || r.aksi,
+    r.profil_pegawai ? r.profil_pegawai.nama : "-",
+    ringkasBarisAuditRanap(r),
+    r.record_id || "-"
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("audRanapDari").value;
+  const sampaiInput = document.getElementById("audRanapSampai").value;
+  a.href = url;
+  a.download = `Audit_Log_RawatInap_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
