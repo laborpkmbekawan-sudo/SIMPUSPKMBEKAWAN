@@ -3139,6 +3139,82 @@ create trigger trg_audit_berkas_klaim_bpjs_ranap after insert or update or delet
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 78. KLASTER 1 (MANAJEMEN) — Surat Masuk & Keluar
+--     Register surat masuk + disposisi digital ke akun pegawai tujuan,
+--     dan surat keluar bernomor urut (dihitung per bulan berjalan di
+--     sisi aplikasi, format "NNN/TU/<romawi bulan>/<tahun>").
+--     file_url cuma link teks (mis. Google Drive) — belum ada upload
+--     file beneran, sama kayak file_url di sbbk_penerimaan.
+-- ============================================================
+create table if not exists surat_masuk (
+  id uuid primary key default gen_random_uuid(),
+  nomor_surat text,
+  tanggal_terima date not null default current_date,
+  tanggal_surat date,
+  asal_instansi text not null,
+  perihal text not null,
+  sifat text not null default 'biasa' check (sifat in ('biasa', 'segera', 'rahasia')),
+  file_url text,
+  status text not null default 'baru' check (status in ('baru', 'didisposisi', 'ditindaklanjuti', 'selesai')),
+  catatan text,
+  dicatat_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists surat_masuk_disposisi (
+  id uuid primary key default gen_random_uuid(),
+  surat_masuk_id uuid not null references surat_masuk(id) on delete cascade,
+  tujuan_pegawai_id uuid not null references profil_pegawai(id),
+  instruksi text,
+  status text not null default 'menunggu' check (status in ('menunggu', 'ditindaklanjuti', 'selesai')),
+  dibuat_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  ditindaklanjuti_at timestamptz
+);
+
+create table if not exists surat_keluar (
+  id uuid primary key default gen_random_uuid(),
+  nomor_surat text unique,
+  tanggal_surat date not null default current_date,
+  perihal text not null,
+  tujuan text not null,
+  sifat text not null default 'biasa' check (sifat in ('biasa', 'segera', 'rahasia')),
+  isi_ringkas text,
+  file_url text,
+  status text not null default 'draft' check (status in ('draft', 'menunggu_ttd', 'terkirim')),
+  dibuat_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_surat_masuk_tanggal on surat_masuk(tanggal_terima);
+create index if not exists idx_surat_masuk_status on surat_masuk(status);
+create index if not exists idx_surat_masuk_disposisi_surat on surat_masuk_disposisi(surat_masuk_id);
+create index if not exists idx_surat_masuk_disposisi_tujuan on surat_masuk_disposisi(tujuan_pegawai_id);
+create index if not exists idx_surat_keluar_tanggal on surat_keluar(tanggal_surat);
+
+alter table surat_masuk enable row level security;
+alter table surat_masuk_disposisi enable row level security;
+alter table surat_keluar enable row level security;
+
+create policy "authenticated_all_surat_masuk" on surat_masuk for all to authenticated using (true) with check (true);
+create policy "authenticated_all_surat_masuk_disposisi" on surat_masuk_disposisi for all to authenticated using (true) with check (true);
+create policy "authenticated_all_surat_keluar" on surat_keluar for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_surat_masuk on surat_masuk;
+create trigger trg_audit_surat_masuk after insert or update or delete on surat_masuk
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_surat_masuk_disposisi on surat_masuk_disposisi;
+create trigger trg_audit_surat_masuk_disposisi after insert or update or delete on surat_masuk_disposisi
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_surat_keluar on surat_keluar;
+create trigger trg_audit_surat_keluar after insert or update or delete on surat_keluar
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

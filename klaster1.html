@@ -251,9 +251,117 @@
 
       </div>
 
-      <!-- ============ SURAT MASUK & KELUAR (segera) ============ -->
+      <!-- ============ SURAT MASUK & KELUAR ============ -->
       <div id="panelSurat" style="display:none;">
-        <div class="k1-segera"><div class="ic">✉</div><div class="t">Surat Masuk &amp; Keluar</div>Register surat masuk, buat surat keluar bernomor otomatis, disposisi digital, dan arsip digital — segera dibangun di sesi berikutnya.</div>
+
+        <div class="card" style="padding:10px 14px; --accent:#e0793c;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="suratSub-masuk" onclick="gantiSubSurat('masuk')">Surat Masuk</button>
+            <button type="button" class="lap-tab" id="suratSub-keluar" onclick="gantiSubSurat('keluar')">Surat Keluar</button>
+          </div>
+        </div>
+
+        <!-- ===== SURAT MASUK ===== -->
+        <div id="suratPanel-masuk">
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">＋</span> Catat Surat Masuk Baru</h2>
+            <div id="msgSuratMasuk"></div>
+            <div class="grid-3">
+              <div><label>Nomor Surat (dari pengirim, opsional)</label><input type="text" id="smNomor"></div>
+              <div><label>Tanggal Terima *</label><input type="date" id="smTanggalTerima" required></div>
+              <div><label>Tanggal Surat</label><input type="date" id="smTanggalSurat"></div>
+            </div>
+            <div class="grid-2">
+              <div><label>Asal Instansi/Pengirim *</label><input type="text" id="smAsal" required placeholder="mis. Dinas Kesehatan Kab. Indragiri Hilir"></div>
+              <div>
+                <label>Sifat</label>
+                <select id="smSifat">
+                  <option value="biasa">Biasa</option>
+                  <option value="segera">Segera</option>
+                  <option value="rahasia">Rahasia</option>
+                </select>
+              </div>
+            </div>
+            <label>Perihal *</label>
+            <input type="text" id="smPerihal" required placeholder="mis. Undangan rapat lintas sektor">
+            <div class="grid-2">
+              <div><label>Link Arsip Digital (opsional)</label><input type="text" id="smFileUrl" placeholder="link Google Drive scan surat"></div>
+              <div><label>Catatan (opsional)</label><input type="text" id="smCatatan"></div>
+            </div>
+            <button type="button" class="btn-primary" onclick="simpanSuratMasuk()">Simpan Surat Masuk</button>
+          </div>
+
+          <div class="card" style="padding:10px 14px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="lap-tab active" id="smFilter-semua" onclick="filterSuratMasuk('semua')">Semua</button>
+              <button type="button" class="lap-tab" id="smFilter-baru" onclick="filterSuratMasuk('baru')">Baru</button>
+              <button type="button" class="lap-tab" id="smFilter-didisposisi" onclick="filterSuratMasuk('didisposisi')">Didisposisi</button>
+              <button type="button" class="lap-tab" id="smFilter-ditindaklanjuti" onclick="filterSuratMasuk('ditindaklanjuti')">Ditindaklanjuti</button>
+              <button type="button" class="lap-tab" id="smFilter-selesai" onclick="filterSuratMasuk('selesai')">Selesai</button>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Daftar Surat Masuk</h2>
+            <table>
+              <thead><tr><th>Tgl Terima</th><th>Asal</th><th>Perihal</th><th>Sifat</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelSuratMasuk"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+          <div id="detailSuratMasuk"></div>
+
+        </div>
+
+        <!-- ===== SURAT KELUAR ===== -->
+        <div id="suratPanel-keluar" style="display:none;">
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">＋</span> Buat Surat Keluar (Draft)</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Nomor surat otomatis dibuat (format NNN/TU/bulan romawi/tahun) begitu status diubah ke "Terkirim" — sebelum itu masih draft, bisa diedit bebas.</p>
+            <div id="msgSuratKeluar"></div>
+            <div class="grid-2">
+              <div><label>Tanggal Surat *</label><input type="date" id="skTanggal" required></div>
+              <div>
+                <label>Sifat</label>
+                <select id="skSifat">
+                  <option value="biasa">Biasa</option>
+                  <option value="segera">Segera</option>
+                  <option value="rahasia">Rahasia</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div><label>Tujuan Surat *</label><input type="text" id="skTujuan" required placeholder="mis. Kepala Dinas Kesehatan Kab. Indragiri Hilir"></div>
+              <div><label>Perihal *</label><input type="text" id="skPerihal" required placeholder="mis. Permohonan narasumber penyuluhan"></div>
+            </div>
+            <label>Isi Ringkas (opsional)</label>
+            <textarea id="skIsiRingkas" rows="3"></textarea>
+            <label>Link File Draft/Final (opsional)</label>
+            <input type="text" id="skFileUrl" placeholder="link Google Drive draft/scan surat bertandatangan">
+            <button type="button" class="btn-primary" onclick="simpanSuratKeluar()">Simpan Draft</button>
+          </div>
+
+          <div class="card" style="padding:10px 14px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="lap-tab active" id="skFilter-semua" onclick="filterSuratKeluar('semua')">Semua</button>
+              <button type="button" class="lap-tab" id="skFilter-draft" onclick="filterSuratKeluar('draft')">Draft</button>
+              <button type="button" class="lap-tab" id="skFilter-menunggu_ttd" onclick="filterSuratKeluar('menunggu_ttd')">Menunggu TTD</button>
+              <button type="button" class="lap-tab" id="skFilter-terkirim" onclick="filterSuratKeluar('terkirim')">Terkirim</button>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Daftar Surat Keluar</h2>
+            <table>
+              <thead><tr><th>No. Surat</th><th>Tanggal</th><th>Tujuan</th><th>Perihal</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelSuratKeluar"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
+
       </div>
 
       <!-- ============ PERENCANAAN (segera) ============ -->
@@ -331,6 +439,12 @@ let pegawaiEdit = null;
     document.getElementById("tabelPegawai").innerHTML = `<tr><td colspan="6">Kelola akun cuma bisa dilakukan admin.</td></tr>`;
     document.getElementById("formPegawaiBaru").style.display = "none";
   }
+
+  document.getElementById("smTanggalTerima").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("skTanggal").value = new Date().toISOString().slice(0, 10);
+  await muatDaftarPegawaiUntukDisposisi();
+  await muatSuratMasuk();
+  await muatSuratKeluar();
 })();
 
 function gantiSubtabK1(tab) {
@@ -585,6 +699,318 @@ async function simpanAkses() {
     ? `<div class="msg msg-error">Gagal simpan akses: ${error}</div>`
     : `<div class="msg msg-success">Klaster tambahan & hak akses berhasil disimpan.</div>`;
   if (!error) await muatDaftarPegawai();
+}
+
+// ============================================================
+// SURAT MASUK & KELUAR
+// ============================================================
+let daftarSuratMasukGlobal = [];
+let daftarSuratKeluarGlobal = [];
+let filterSuratMasukAktif = "semua";
+let filterSuratKeluarAktif = "semua";
+let daftarPegawaiUntukDisposisi = [];
+
+const LABEL_STATUS_SURAT_MASUK = { baru: "Baru", didisposisi: "Didisposisi", ditindaklanjuti: "Ditindaklanjuti", selesai: "Selesai" };
+const BADGE_STATUS_SURAT_MASUK = { baru: "badge-menunggu", didisposisi: "badge-dipanggil", ditindaklanjuti: "badge-diperiksa", selesai: "badge-selesai" };
+const LABEL_STATUS_SURAT_KELUAR = { draft: "Draft", menunggu_ttd: "Menunggu TTD", terkirim: "Terkirim" };
+const BADGE_STATUS_SURAT_KELUAR = { draft: "badge-menunggu", menunggu_ttd: "badge-dipanggil", terkirim: "badge-selesai" };
+const BULAN_ROMAWI = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+
+function gantiSubSurat(sub) {
+  document.getElementById("suratPanel-masuk").style.display = sub === "masuk" ? "block" : "none";
+  document.getElementById("suratPanel-keluar").style.display = sub === "keluar" ? "block" : "none";
+  document.getElementById("suratSub-masuk").classList.toggle("active", sub === "masuk");
+  document.getElementById("suratSub-keluar").classList.toggle("active", sub === "keluar");
+}
+
+async function muatDaftarPegawaiUntukDisposisi() {
+  const { data, error } = await supabaseClient.from("profil_pegawai").select("id, nama, role").eq("aktif", true).order("nama");
+  if (!error) daftarPegawaiUntukDisposisi = data || [];
+}
+
+// ---------- Surat Masuk ----------
+async function simpanSuratMasuk() {
+  const msgBox = document.getElementById("msgSuratMasuk");
+  const tanggalTerima = document.getElementById("smTanggalTerima").value;
+  const asal = document.getElementById("smAsal").value.trim();
+  const perihal = document.getElementById("smPerihal").value.trim();
+
+  if (!tanggalTerima || !asal || !perihal) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal terima, asal instansi, dan perihal dulu.</div>`;
+    return;
+  }
+
+  const payload = {
+    nomor_surat: document.getElementById("smNomor").value.trim() || null,
+    tanggal_terima: tanggalTerima,
+    tanggal_surat: document.getElementById("smTanggalSurat").value || null,
+    asal_instansi: asal,
+    perihal,
+    sifat: document.getElementById("smSifat").value,
+    file_url: document.getElementById("smFileUrl").value.trim() || null,
+    catatan: document.getElementById("smCatatan").value.trim() || null,
+    dicatat_oleh: profilSaya.id,
+  };
+
+  const { error } = await supabaseClient.from("surat_masuk").insert(payload);
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`;
+    return;
+  }
+  msgBox.innerHTML = `<div class="msg msg-success">Surat masuk "${perihal}" tersimpan. Buka baris di tabel buat disposisi ke petugas terkait.</div>`;
+  document.getElementById("smNomor").value = "";
+  document.getElementById("smTanggalSurat").value = "";
+  document.getElementById("smAsal").value = "";
+  document.getElementById("smPerihal").value = "";
+  document.getElementById("smFileUrl").value = "";
+  document.getElementById("smCatatan").value = "";
+  await muatSuratMasuk();
+}
+
+function filterSuratMasuk(status) {
+  filterSuratMasukAktif = status;
+  ["semua", "baru", "didisposisi", "ditindaklanjuti", "selesai"].forEach(s => {
+    document.getElementById(`smFilter-${s}`).classList.toggle("active", s === status);
+  });
+  renderTabelSuratMasuk();
+}
+
+async function muatSuratMasuk() {
+  const { data, error } = await supabaseClient
+    .from("surat_masuk")
+    .select("*, surat_masuk_disposisi(id, tujuan_pegawai_id, instruksi, status, created_at, ditindaklanjuti_at, profil_pegawai:tujuan_pegawai_id(nama))")
+    .order("tanggal_terima", { ascending: false });
+  if (error) {
+    document.getElementById("tabelSuratMasuk").innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`;
+    return;
+  }
+  daftarSuratMasukGlobal = data || [];
+  renderTabelSuratMasuk();
+}
+
+function renderTabelSuratMasuk() {
+  const tbody = document.getElementById("tabelSuratMasuk");
+  const data = filterSuratMasukAktif === "semua"
+    ? daftarSuratMasukGlobal
+    : daftarSuratMasukGlobal.filter(s => s.status === filterSuratMasukAktif);
+
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada surat masuk.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(s => `
+    <tr class="clickable-row" onclick="lihatDetailSuratMasuk('${s.id}')" style="cursor:pointer;">
+      <td>${formatTanggalID(s.tanggal_terima)}</td>
+      <td>${s.asal_instansi}</td>
+      <td>${s.perihal}${s.nomor_surat ? `<br><span style="font-size:11px; color:var(--muted);">No. ${s.nomor_surat}</span>` : ""}</td>
+      <td>${s.sifat}</td>
+      <td><span class="badge ${BADGE_STATUS_SURAT_MASUK[s.status]}">${LABEL_STATUS_SURAT_MASUK[s.status]}</span></td>
+      <td><button class="btn-secondary" onclick="event.stopPropagation(); lihatDetailSuratMasuk('${s.id}')">Buka</button></td>
+    </tr>
+  `).join("");
+}
+
+function formatTanggalID(tgl) {
+  if (!tgl) return "-";
+  return new Date(tgl + "T00:00:00").toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function lihatDetailSuratMasuk(id) {
+  const s = daftarSuratMasukGlobal.find(x => x.id === id);
+  if (!s) return;
+  const disposisi = s.surat_masuk_disposisi || [];
+
+  const opsiPegawai = daftarPegawaiUntukDisposisi.map(p => `<option value="${p.id}">${p.nama} (${p.role})</option>`).join("");
+
+  const disposisiHtml = disposisi.length ? disposisi.map(d => `
+    <div class="info-row">
+      <label>${d.profil_pegawai?.nama || "-"}${d.instruksi ? ` — <span style="font-weight:400;">${d.instruksi}</span>` : ""}</label>
+      <span>
+        <span class="badge ${d.status === "selesai" ? "badge-selesai" : d.status === "ditindaklanjuti" ? "badge-diperiksa" : "badge-menunggu"}">${d.status === "selesai" ? "Selesai" : d.status === "ditindaklanjuti" ? "Ditindaklanjuti" : "Menunggu"}</span>
+        ${d.status === "menunggu" ? `<button class="btn-secondary" style="margin-left:6px;" onclick="updateStatusDisposisi('${d.id}', 'ditindaklanjuti', '${s.id}')">Tandai Ditindaklanjuti</button>` : ""}
+        ${d.status === "ditindaklanjuti" ? `<button class="btn-secondary" style="margin-left:6px;" onclick="updateStatusDisposisi('${d.id}', 'selesai', '${s.id}')">Tandai Selesai</button>` : ""}
+      </span>
+    </div>
+  `).join("") : `<p style="font-size:13px; color:#6b7280;">Belum ada disposisi.</p>`;
+
+  document.getElementById("detailSuratMasuk").innerHTML = `
+    <div class="card" style="--accent:#e0793c;">
+      <h2><span class="card-num" style="background:#e0793c;">✉</span> Detail Surat Masuk — ${s.perihal}</h2>
+      <div class="info-block" style="margin-bottom:16px;">
+        <div class="info-row"><label>Asal</label><span>${s.asal_instansi}</span></div>
+        <div class="info-row"><label>Nomor Surat</label><span>${s.nomor_surat || "-"}</span></div>
+        <div class="info-row"><label>Tanggal Terima</label><span>${formatTanggalID(s.tanggal_terima)}</span></div>
+        <div class="info-row"><label>Sifat</label><span>${s.sifat}</span></div>
+        <div class="info-row"><label>Arsip Digital</label><span>${s.file_url ? `<a href="${s.file_url}" target="_blank" rel="noopener">Buka link</a>` : "-"}</span></div>
+        <div class="info-row"><label>Catatan</label><span>${s.catatan || "-"}</span></div>
+        <div class="info-row"><label>Status</label><span><span class="badge ${BADGE_STATUS_SURAT_MASUK[s.status]}">${LABEL_STATUS_SURAT_MASUK[s.status]}</span></span></div>
+      </div>
+
+      <h3 style="font-size:14px; color:var(--navy); margin-bottom:8px;">Disposisi</h3>
+      ${disposisiHtml}
+
+      <div class="grid-3" style="margin-top:14px;">
+        <select id="dispTujuan-${s.id}"><option value="">- Pilih tujuan -</option>${opsiPegawai}</select>
+        <input type="text" id="dispInstruksi-${s.id}" placeholder="Instruksi (opsional)">
+        <button class="btn-primary" onclick="tambahDisposisi('${s.id}')">Kirim Disposisi</button>
+      </div>
+
+      <div style="margin-top:14px;">
+        ${s.status !== "selesai" ? `<button class="btn-secondary" onclick="tandaiSuratMasukSelesai('${s.id}')">Tandai Selesai</button>` : ""}
+        <button class="btn-secondary" onclick="document.getElementById('detailSuratMasuk').innerHTML=''">Tutup</button>
+      </div>
+    </div>
+  `;
+}
+
+async function tambahDisposisi(suratId) {
+  const tujuan = document.getElementById(`dispTujuan-${suratId}`).value;
+  const instruksi = document.getElementById(`dispInstruksi-${suratId}`).value.trim() || null;
+  if (!tujuan) { alert("Pilih tujuan disposisi dulu."); return; }
+
+  const { error } = await supabaseClient.from("surat_masuk_disposisi").insert({
+    surat_masuk_id: suratId, tujuan_pegawai_id: tujuan, instruksi, dibuat_oleh: profilSaya.id
+  });
+  if (error) { alert("Gagal kirim disposisi: " + error.message); return; }
+
+  const surat = daftarSuratMasukGlobal.find(s => s.id === suratId);
+  if (surat && surat.status === "baru") {
+    await supabaseClient.from("surat_masuk").update({ status: "didisposisi", updated_at: new Date().toISOString() }).eq("id", suratId);
+  }
+  await muatSuratMasuk();
+  lihatDetailSuratMasuk(suratId);
+}
+
+async function updateStatusDisposisi(disposisiId, statusBaru, suratId) {
+  const payload = { status: statusBaru };
+  if (statusBaru === "ditindaklanjuti") payload.ditindaklanjuti_at = new Date().toISOString();
+  const { error } = await supabaseClient.from("surat_masuk_disposisi").update(payload).eq("id", disposisiId);
+  if (error) { alert("Gagal update disposisi: " + error.message); return; }
+
+  const surat = daftarSuratMasukGlobal.find(s => s.id === suratId);
+  if (surat && surat.status !== "selesai" && statusBaru === "ditindaklanjuti") {
+    await supabaseClient.from("surat_masuk").update({ status: "ditindaklanjuti", updated_at: new Date().toISOString() }).eq("id", suratId);
+  }
+  await muatSuratMasuk();
+  lihatDetailSuratMasuk(suratId);
+}
+
+async function tandaiSuratMasukSelesai(suratId) {
+  const { error } = await supabaseClient.from("surat_masuk").update({ status: "selesai", updated_at: new Date().toISOString() }).eq("id", suratId);
+  if (error) { alert("Gagal update status: " + error.message); return; }
+  await muatSuratMasuk();
+  lihatDetailSuratMasuk(suratId);
+}
+
+// ---------- Surat Keluar ----------
+async function simpanSuratKeluar() {
+  const msgBox = document.getElementById("msgSuratKeluar");
+  const tanggal = document.getElementById("skTanggal").value;
+  const tujuan = document.getElementById("skTujuan").value.trim();
+  const perihal = document.getElementById("skPerihal").value.trim();
+
+  if (!tanggal || !tujuan || !perihal) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal surat, tujuan, dan perihal dulu.</div>`;
+    return;
+  }
+
+  const payload = {
+    tanggal_surat: tanggal,
+    tujuan,
+    perihal,
+    sifat: document.getElementById("skSifat").value,
+    isi_ringkas: document.getElementById("skIsiRingkas").value.trim() || null,
+    file_url: document.getElementById("skFileUrl").value.trim() || null,
+    dibuat_oleh: profilSaya.id,
+  };
+
+  const { error } = await supabaseClient.from("surat_keluar").insert(payload);
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan draft: ${error.message}</div>`;
+    return;
+  }
+  msgBox.innerHTML = `<div class="msg msg-success">Draft surat keluar ke "${tujuan}" tersimpan. Nomor otomatis muncul pas status diubah ke Terkirim.</div>`;
+  document.getElementById("skTujuan").value = "";
+  document.getElementById("skPerihal").value = "";
+  document.getElementById("skIsiRingkas").value = "";
+  document.getElementById("skFileUrl").value = "";
+  await muatSuratKeluar();
+}
+
+function filterSuratKeluar(status) {
+  filterSuratKeluarAktif = status;
+  ["semua", "draft", "menunggu_ttd", "terkirim"].forEach(s => {
+    document.getElementById(`skFilter-${s}`).classList.toggle("active", s === status);
+  });
+  renderTabelSuratKeluar();
+}
+
+async function muatSuratKeluar() {
+  const { data, error } = await supabaseClient.from("surat_keluar").select("*").order("created_at", { ascending: false });
+  if (error) {
+    document.getElementById("tabelSuratKeluar").innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`;
+    return;
+  }
+  daftarSuratKeluarGlobal = data || [];
+  renderTabelSuratKeluar();
+}
+
+function renderTabelSuratKeluar() {
+  const tbody = document.getElementById("tabelSuratKeluar");
+  const data = filterSuratKeluarAktif === "semua"
+    ? daftarSuratKeluarGlobal
+    : daftarSuratKeluarGlobal.filter(s => s.status === filterSuratKeluarAktif);
+
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada surat keluar.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(s => {
+    let aksi = "";
+    if (s.status === "draft") aksi = `<button class="btn-secondary" onclick="ajukanTtdSuratKeluar('${s.id}')">Ajukan TTD</button>`;
+    else if (s.status === "menunggu_ttd") aksi = `<button class="btn-primary" onclick="kirimSuratKeluar('${s.id}')">Tandai Terkirim (buat nomor)</button>`;
+    else if (s.file_url) aksi = `<a href="${s.file_url}" target="_blank" rel="noopener">Buka file</a>`;
+    return `
+      <tr>
+        <td>${s.nomor_surat || "-"}</td>
+        <td>${formatTanggalID(s.tanggal_surat)}</td>
+        <td>${s.tujuan}</td>
+        <td>${s.perihal}</td>
+        <td><span class="badge ${BADGE_STATUS_SURAT_KELUAR[s.status]}">${LABEL_STATUS_SURAT_KELUAR[s.status]}</span></td>
+        <td>${aksi}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function ajukanTtdSuratKeluar(id) {
+  const { error } = await supabaseClient.from("surat_keluar").update({ status: "menunggu_ttd", updated_at: new Date().toISOString() }).eq("id", id);
+  if (error) { alert("Gagal ubah status: " + error.message); return; }
+  await muatSuratKeluar();
+}
+
+async function kirimSuratKeluar(id) {
+  const surat = daftarSuratKeluarGlobal.find(s => s.id === id);
+  if (!surat) return;
+
+  const tanggal = new Date(surat.tanggal_surat + "T00:00:00");
+  const tahun = tanggal.getFullYear();
+  const romawiBulan = BULAN_ROMAWI[tanggal.getMonth()];
+
+  const { count, error: errCount } = await supabaseClient
+    .from("surat_keluar")
+    .select("id", { count: "exact", head: true })
+    .not("nomor_surat", "is", null)
+    .like("nomor_surat", `%/${tahun}`);
+
+  if (errCount) { alert("Gagal hitung nomor urut: " + errCount.message); return; }
+
+  const nomorUrut = String((count || 0) + 1).padStart(3, "0");
+  const nomorSurat = `${nomorUrut}/TU/${romawiBulan}/${tahun}`;
+
+  const { error } = await supabaseClient.from("surat_keluar").update({
+    status: "terkirim", nomor_surat: nomorSurat, updated_at: new Date().toISOString()
+  }).eq("id", id);
+
+  if (error) { alert("Gagal tandai terkirim: " + error.message); return; }
+  alert(`Surat keluar terkirim dengan nomor ${nomorSurat}`);
+  await muatSuratKeluar();
 }
 </script>
 </body>
