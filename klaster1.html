@@ -1305,9 +1305,131 @@
 
       </div>
 
-      <!-- ============ AUDIT / KEAMANAN (segera) ============ -->
+      <!-- ============ AUDIT / KEAMANAN ============ -->
       <div id="panelAudit" style="display:none;">
-        <div class="k1-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div>Log aktivitas user, log akses data keuangan, log akses data kepegawaian, monitoring kepatuhan dokumentasi mutu — segera dibangun. Log sesi aktif (paksa logout) sudah jalan lewat tabel sesi_aktif.</div>
+
+        <div class="card" style="padding:10px 14px; --accent:#173b5e;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="auSub-aktivitas" onclick="gantiSubAudit('aktivitas')">Log Aktivitas User</button>
+            <button type="button" class="lap-tab" id="auSub-keuangan" onclick="gantiSubAudit('keuangan')">Log Akses Keuangan</button>
+            <button type="button" class="lap-tab" id="auSub-kepegawaian" onclick="gantiSubAudit('kepegawaian')">Log Akses Kepegawaian</button>
+            <button type="button" class="lap-tab" id="auSub-mutu" onclick="gantiSubAudit('mutu')">Kepatuhan Dokumentasi Mutu</button>
+          </div>
+        </div>
+
+        <!-- ===== LOG AKTIVITAS USER (sesi login) ===== -->
+        <div id="auPanel-aktivitas">
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">🛡</span> Log Aktivitas User (Sesi Login)</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Siapa login, dari perangkat apa, kapan terakhir aktif. Dicatat otomatis tiap 30 detik selagi sesi terbuka. Sesi yang dipaksa logout ditandai "Dicabut".</p>
+            <table>
+              <thead><tr><th>Nama</th><th>Role</th><th>Perangkat</th><th>Login</th><th>Terakhir Aktif</th><th>Status</th></tr></thead>
+              <tbody id="tabelAuditAktivitas"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== LOG AKSES DATA KEUANGAN ===== -->
+        <div id="auPanel-keuangan" style="display:none;">
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2><span class="card-num" style="background:#2f9e5c;">▤</span> Log Akses Data Keuangan</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Jejak otomatis tambah/ubah/hapus pada pos anggaran, transaksi, dan rekonsiliasi kas. Dicatat langsung oleh database lewat trigger, gak bisa dipalsu/dihapus manual.</p>
+            <div class="grid-3" style="margin-bottom:14px;">
+              <div><label>Dari Tanggal</label><input type="date" id="auKgDari"></div>
+              <div><label>Sampai Tanggal</label><input type="date" id="auKgSampai"></div>
+              <div>
+                <label>Tabel</label>
+                <select id="auKgFilterTabel">
+                  <option value="">Semua Tabel Keuangan</option>
+                  <option value="anggaran_pos">Pos Anggaran</option>
+                  <option value="transaksi_keuangan">Transaksi</option>
+                  <option value="rekonsiliasi_kas">Rekonsiliasi Kas</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; margin-bottom:14px;">
+              <button type="button" class="btn-primary" onclick="muatAuditK1('keuangan')">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportAuditK1Csv('keuangan')">⬇️ Export CSV</button>
+            </div>
+            <div class="k1-stat-grid">
+              <div class="k1-stat-card"><div class="label">Total Perubahan</div><div class="value" id="auKgStatTotal">0</div></div>
+              <div class="k1-stat-card" style="--accent:#16865c;"><div class="label">Tambah</div><div class="value" id="auKgStatInsert">0</div></div>
+              <div class="k1-stat-card" style="--accent:#b77900;"><div class="label">Ubah</div><div class="value" id="auKgStatUpdate">0</div></div>
+              <div class="k1-stat-card" style="--accent:#c62836;"><div class="label">Hapus</div><div class="value" id="auKgStatDelete">0</div></div>
+            </div>
+            <table>
+              <thead><tr><th>Waktu</th><th>Tabel</th><th>Aksi</th><th>Petugas</th><th>Ringkasan</th><th></th></tr></thead>
+              <tbody id="auKgTabelLog"><tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== LOG AKSES DATA KEPEGAWAIAN ===== -->
+        <div id="auPanel-kepegawaian" style="display:none;">
+          <div class="card" style="--accent:#6a4c93;">
+            <h2><span class="card-num" style="background:#6a4c93;">▤</span> Log Akses Data Kepegawaian</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Jejak siapa ubah akun, role, klaster, hak akses, diklat, dan penilaian kinerja pegawai — jaga kerahasiaan data pribadi staff.</p>
+            <div class="grid-3" style="margin-bottom:14px;">
+              <div><label>Dari Tanggal</label><input type="date" id="auKpDari"></div>
+              <div><label>Sampai Tanggal</label><input type="date" id="auKpSampai"></div>
+              <div>
+                <label>Tabel</label>
+                <select id="auKpFilterTabel">
+                  <option value="">Semua Tabel Kepegawaian</option>
+                  <option value="profil_pegawai">Akun / Profil Pegawai</option>
+                  <option value="hak_akses">Hak Akses (RBAC)</option>
+                  <option value="pegawai_klaster">Klaster Tambahan</option>
+                  <option value="riwayat_diklat_pegawai">Riwayat Diklat</option>
+                  <option value="penilaian_kinerja_pegawai">Penilaian Kinerja</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; margin-bottom:14px;">
+              <button type="button" class="btn-primary" onclick="muatAuditK1('kepegawaian')">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportAuditK1Csv('kepegawaian')">⬇️ Export CSV</button>
+            </div>
+            <div class="k1-stat-grid">
+              <div class="k1-stat-card"><div class="label">Total Perubahan</div><div class="value" id="auKpStatTotal">0</div></div>
+              <div class="k1-stat-card" style="--accent:#16865c;"><div class="label">Tambah</div><div class="value" id="auKpStatInsert">0</div></div>
+              <div class="k1-stat-card" style="--accent:#b77900;"><div class="label">Ubah</div><div class="value" id="auKpStatUpdate">0</div></div>
+              <div class="k1-stat-card" style="--accent:#c62836;"><div class="label">Hapus</div><div class="value" id="auKpStatDelete">0</div></div>
+            </div>
+            <table>
+              <thead><tr><th>Waktu</th><th>Tabel</th><th>Aksi</th><th>Petugas</th><th>Ringkasan</th><th></th></tr></thead>
+              <tbody id="auKpTabelLog"><tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== MONITORING KEPATUHAN DOKUMENTASI MUTU ===== -->
+        <div id="auPanel-mutu" style="display:none;">
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">✓</span> Monitoring Kepatuhan Dokumentasi Mutu</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Memastikan tiap indikator mutu (INM/lokal) dan monitoring PPI &amp; K3 rutin diisi tiap bulan — bukan cuma dibuat lalu dilupakan.</p>
+            <div class="grid-3" style="max-width:460px; margin-bottom:14px;">
+              <div><label>Bulan</label>
+                <select id="auMuBulan">
+                  <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                  <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                  <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                  <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+              </div>
+              <div><label>Tahun</label><input type="number" id="auMuTahun"></div>
+              <div style="display:flex; align-items:flex-end;"><button type="button" class="btn-primary" onclick="muatKepatuhanMutuK1()" style="margin-bottom:12px;">Tampilkan</button></div>
+            </div>
+            <div class="k1-stat-grid">
+              <div class="k1-stat-card"><div class="label">Total Item Wajib</div><div class="value" id="auMuStatTotal">0</div></div>
+              <div class="k1-stat-card" style="--accent:#16865c;"><div class="label">Sudah Diisi</div><div class="value" id="auMuStatSudah">0</div></div>
+              <div class="k1-stat-card" style="--accent:#c62836;"><div class="label">Belum Diisi</div><div class="value" id="auMuStatBelum">0</div></div>
+            </div>
+            <table>
+              <thead><tr><th>Kategori</th><th>Item</th><th>Status</th></tr></thead>
+              <tbody id="tabelKepatuhanMutuK1"><tr><td colspan="3">Pilih periode lalu klik Tampilkan.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
     </div>
@@ -1391,6 +1513,19 @@ let pegawaiEdit = null;
   await muatJadwalPembinaan();
   await muatLaporanPembinaan();
   await muatKinerjaJejaring();
+
+  const dari30HariLalu = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  const hariIni = new Date().toISOString().slice(0, 10);
+  document.getElementById("auKgDari").value = dari30HariLalu;
+  document.getElementById("auKgSampai").value = hariIni;
+  document.getElementById("auKpDari").value = dari30HariLalu;
+  document.getElementById("auKpSampai").value = hariIni;
+  document.getElementById("auMuTahun").value = tahunIni;
+  document.getElementById("auMuBulan").value = bulanIni;
+  await muatLogAktivitasK1();
+  await muatAuditK1("keuangan");
+  await muatAuditK1("kepegawaian");
+  await muatKepatuhanMutuK1();
 })();
 
 function gantiSubtabK1(tab) {
@@ -3468,6 +3603,188 @@ async function tandaiKirimDinas(jenis, tahun, bulan) {
   const { error } = await supabaseClient.from("laporan_kirim_dinas").upsert(payload, { onConflict: "jenis_laporan,tahun,bulan" });
   if (error) { alert("Gagal simpan: " + error.message); return; }
   await muatStatusKirimDinas(tahun, bulan);
+}
+
+// ============================================================
+// ===================== AUDIT / KEAMANAN ======================
+// ============================================================
+
+function gantiSubAudit(sub) {
+  ["aktivitas", "keuangan", "kepegawaian", "mutu"].forEach(s => {
+    document.getElementById("auPanel-" + s).style.display = (s === sub) ? "block" : "none";
+    document.getElementById("auSub-" + s).classList.toggle("active", s === sub);
+  });
+}
+
+// ---------- Log Aktivitas User (sesi login) ----------
+async function muatLogAktivitasK1() {
+  const tbody = document.getElementById("tabelAuditAktivitas");
+  const { data, error } = await supabaseClient
+    .from("sesi_aktif")
+    .select("*, profil_pegawai(nama, role)")
+    .order("last_active", { ascending: false })
+    .limit(100);
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data || !data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada sesi tercatat.</td></tr>`; return; }
+  tbody.innerHTML = data.map(s => `
+    <tr>
+      <td>${s.profil_pegawai?.nama || "-"}</td>
+      <td>${s.profil_pegawai?.role || "-"}</td>
+      <td>${s.perangkat || "-"}</td>
+      <td>${new Date(s.login_at).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${new Date(s.last_active).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${s.dicabut ? `<span class="badge badge-batal">Dicabut</span>` : `<span class="badge badge-selesai">Aktif</span>`}</td>
+    </tr>
+  `).join("");
+}
+
+// ---------- Log Akses Data Keuangan / Kepegawaian (audit_log) ----------
+const TABEL_AUDIT_K1_KEUANGAN = ["anggaran_pos", "transaksi_keuangan", "rekonsiliasi_kas"];
+const TABEL_AUDIT_K1_KEPEGAWAIAN = ["profil_pegawai", "hak_akses", "pegawai_klaster", "riwayat_diklat_pegawai", "penilaian_kinerja_pegawai"];
+
+const LABEL_TABEL_AUDIT_K1 = {
+  anggaran_pos: "Pos Anggaran", transaksi_keuangan: "Transaksi", rekonsiliasi_kas: "Rekonsiliasi Kas",
+  profil_pegawai: "Akun / Profil Pegawai", hak_akses: "Hak Akses (RBAC)", pegawai_klaster: "Klaster Tambahan",
+  riwayat_diklat_pegawai: "Riwayat Diklat", penilaian_kinerja_pegawai: "Penilaian Kinerja"
+};
+const LABEL_AKSI_AUDIT_K1 = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
+const BADGE_AKSI_AUDIT_K1 = { insert: "badge-selesai", update: "badge-menunggu", delete: "badge-batal" };
+
+let auditK1Cache = { keuangan: [], kepegawaian: [] };
+
+function ringkasBarisAuditK1(row) {
+  const data = row.data_baru || row.data_lama || {};
+  if (row.tabel === "profil_pegawai") return `${data.nama || "#" + (row.record_id || "").slice(0, 8)}${data.role ? " — " + data.role : ""}${data.aktif === false ? " (nonaktif)" : ""}`;
+  if (row.tabel === "transaksi_keuangan") return `${data.uraian || "#" + (row.record_id || "").slice(0, 8)}${data.jumlah ? " — Rp " + Number(data.jumlah).toLocaleString("id-ID") : ""}`;
+  if (row.tabel === "anggaran_pos") return `${data.nama_pos || "#" + (row.record_id || "").slice(0, 8)}`;
+  return `#${(row.record_id || "").slice(0, 8)}`;
+}
+
+async function muatAuditK1(jenis) {
+  const prefix = jenis === "keuangan" ? "auKg" : "auKp";
+  const daftarTabel = jenis === "keuangan" ? TABEL_AUDIT_K1_KEUANGAN : TABEL_AUDIT_K1_KEPEGAWAIAN;
+  const dari = document.getElementById(prefix + "Dari").value;
+  const sampai = document.getElementById(prefix + "Sampai").value;
+  const filterTabel = document.getElementById(prefix + "FilterTabel").value;
+  const tbody = document.getElementById(prefix + "TabelLog");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  let q = supabaseClient
+    .from("audit_log")
+    .select("*, profil_pegawai(nama)")
+    .in("tabel", filterTabel ? [filterTabel] : daftarTabel)
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (dari) q = q.gte("created_at", `${dari}T00:00:00`);
+  if (sampai) q = q.lte("created_at", `${sampai}T23:59:59`);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  auditK1Cache[jenis] = data || [];
+  const cache = auditK1Cache[jenis];
+
+  document.getElementById(prefix + "StatTotal").textContent = cache.length;
+  document.getElementById(prefix + "StatInsert").textContent = cache.filter(r => r.aksi === "insert").length;
+  document.getElementById(prefix + "StatUpdate").textContent = cache.filter(r => r.aksi === "update").length;
+  document.getElementById(prefix + "StatDelete").textContent = cache.filter(r => r.aksi === "delete").length;
+
+  tbody.innerHTML = cache.length ? cache.map((r, i) => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${LABEL_TABEL_AUDIT_K1[r.tabel] || r.tabel}</td>
+      <td><span class="badge ${BADGE_AKSI_AUDIT_K1[r.aksi] || ""}">${LABEL_AKSI_AUDIT_K1[r.aksi] || r.aksi}</span></td>
+      <td>${r.profil_pegawai ? r.profil_pegawai.nama : "-"}</td>
+      <td>${ringkasBarisAuditK1(r)}</td>
+      <td><button type="button" class="btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="toggleDetailAuditK1('${jenis}', ${i})">Detail</button></td>
+    </tr>
+    <tr id="${prefix}Detail${i}" style="display:none;">
+      <td colspan="6">
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sebelum</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_lama ? JSON.stringify(r.data_lama, null, 2) : "(tidak ada — baris baru)"}</pre>
+          </div>
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sesudah</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_baru ? JSON.stringify(r.data_baru, null, 2) : "(tidak ada — baris dihapus)"}</pre>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Gak ada perubahan pada rentang &amp; filter ini.</td></tr>`;
+}
+
+function toggleDetailAuditK1(jenis, i) {
+  const prefix = jenis === "keuangan" ? "auKg" : "auKp";
+  const row = document.getElementById(`${prefix}Detail${i}`);
+  if (row) row.style.display = row.style.display === "none" ? "table-row" : "none";
+}
+
+function exportAuditK1Csv(jenis) {
+  const cache = auditK1Cache[jenis];
+  if (!cache || !cache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const prefix = jenis === "keuangan" ? "auKg" : "auKp";
+  const header = ["Waktu", "Tabel", "Aksi", "Petugas", "Ringkasan", "Record ID"];
+  const rows = cache.map(r => [
+    new Date(r.created_at).toLocaleString("id-ID"),
+    LABEL_TABEL_AUDIT_K1[r.tabel] || r.tabel,
+    LABEL_AKSI_AUDIT_K1[r.aksi] || r.aksi,
+    r.profil_pegawai ? r.profil_pegawai.nama : "-",
+    ringkasBarisAuditK1(r),
+    r.record_id || "-"
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById(prefix + "Dari").value || "semua";
+  const sampaiInput = document.getElementById(prefix + "Sampai").value || "semua";
+  a.href = url;
+  a.download = `Audit_Log_${jenis}_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ---------- Monitoring Kepatuhan Dokumentasi Mutu ----------
+async function muatKepatuhanMutuK1() {
+  const tahun = parseInt(document.getElementById("auMuTahun").value, 10);
+  const bulan = parseInt(document.getElementById("auMuBulan").value, 10);
+  const tbody = document.getElementById("tabelKepatuhanMutuK1");
+  tbody.innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+
+  const [{ data: indikator }, { data: capaian }, { data: ppiK3 }] = await Promise.all([
+    supabaseClient.from("indikator_mutu").select("id, nama_indikator, jenis").eq("aktif", true),
+    supabaseClient.from("capaian_indikator_mutu").select("indikator_id").eq("tahun", tahun).eq("bulan", bulan),
+    supabaseClient.from("monitoring_ppi_k3").select("kategori").eq("tahun", tahun).eq("bulan", bulan),
+  ]);
+
+  const idSudahIsi = new Set((capaian || []).map(c => c.indikator_id));
+  const kategoriPpiK3Sudah = new Set((ppiK3 || []).map(p => p.kategori));
+
+  const barisIndikator = (indikator || []).map(ind => ({
+    kategori: ind.jenis === "inm" ? "INM" : "Indikator Lokal",
+    item: ind.nama_indikator,
+    sudah: idSudahIsi.has(ind.id)
+  }));
+  const barisPpiK3 = [
+    { kategori: "PPI", item: "Monitoring PPI Bulan Ini", sudah: kategoriPpiK3Sudah.has("ppi") },
+    { kategori: "K3", item: "Monitoring K3 Bulan Ini", sudah: kategoriPpiK3Sudah.has("k3") },
+  ];
+  const semua = [...barisIndikator, ...barisPpiK3];
+
+  document.getElementById("auMuStatTotal").textContent = semua.length;
+  document.getElementById("auMuStatSudah").textContent = semua.filter(b => b.sudah).length;
+  document.getElementById("auMuStatBelum").textContent = semua.filter(b => !b.sudah).length;
+
+  tbody.innerHTML = semua.length ? semua.map(b => `
+    <tr>
+      <td>${b.kategori}</td>
+      <td>${b.item}</td>
+      <td>${b.sudah ? `<span class="badge badge-selesai">Sudah Diisi</span>` : `<span class="badge badge-batal">Belum Diisi</span>`}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="3">Belum ada indikator mutu aktif buat dipantau.</td></tr>`;
 }
 </script>
 </body>

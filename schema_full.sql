@@ -3777,3 +3777,29 @@ create trigger trg_audit_laporan_kirim_dinas after insert or update or delete on
 -- ============================================================
 -- SELESAI section 85. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 86. AUDIT TRIGGER — DATA KEPEGAWAIAN (Klaster 1)
+--     profil_pegawai, hak_akses, pegawai_klaster belum kecatat
+--     di audit_log sama sekali. Ini dasar buat fitur "Log Akses
+--     Data Kepegawaian" di Audit/Keamanan Klaster 1 — supaya
+--     siapa ubah role/klaster/status akun/hak akses staff lain
+--     kecatat, termasuk data sensitif kayak status STR/SIP kalau
+--     nanti ditambah ke tabel ini.
+-- ============================================================
+
+drop trigger if exists trg_audit_profil_pegawai on profil_pegawai;
+create trigger trg_audit_profil_pegawai after insert or update or delete on profil_pegawai
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_hak_akses on hak_akses;
+create trigger trg_audit_hak_akses after insert or update or delete on hak_akses
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_pegawai_klaster on pegawai_klaster;
+create trigger trg_audit_pegawai_klaster after insert or update or delete on pegawai_klaster
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 86. Idempotent, aman diulang.
+-- ============================================================
