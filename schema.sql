@@ -2856,6 +2856,60 @@ create trigger trg_audit_tindakan_gigi after insert or update or delete on tinda
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 72. POLI GIGI & MULUT — FASE 2: Promotif & Preventif (UKGS,
+--     sikat gigi massal, topikal fluor), Rujukan & Permintaan Lab
+-- ============================================================
+
+-- ---------- Kegiatan Promotif & Preventif (berbasis sekolah/kelompok, bukan pasien) ----------
+create table if not exists kegiatan_promotif_gigi (
+  id uuid primary key default gen_random_uuid(),
+  tanggal date not null default current_date,
+  jenis_kegiatan text not null check (jenis_kegiatan in ('UKGS - Penyuluhan', 'UKGS - Pemeriksaan Gigi', 'Sikat Gigi Massal', 'Topikal Fluor')),
+  nama_sekolah text not null,
+  jumlah_siswa_sasaran int not null default 0,
+  jumlah_siswa_diperiksa int not null default 0,
+  jumlah_siswa_bermasalah int not null default 0,
+  catatan text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kegiatan_promotif_gigi_jenis on kegiatan_promotif_gigi(jenis_kegiatan);
+create index if not exists idx_kegiatan_promotif_gigi_tanggal on kegiatan_promotif_gigi(tanggal);
+
+alter table kegiatan_promotif_gigi enable row level security;
+create policy "authenticated_all_kegiatan_promotif_gigi" on kegiatan_promotif_gigi for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kegiatan_promotif_gigi on kegiatan_promotif_gigi;
+create trigger trg_audit_kegiatan_promotif_gigi after insert or update or delete on kegiatan_promotif_gigi
+  for each row execute function fn_audit_log();
+
+-- ---------- Rujukan & Permintaan Lab (Poli Gigi) ----------
+create table if not exists rujukan_lab_gigi (
+  id uuid primary key default gen_random_uuid(),
+  pasien_id uuid not null references pasien(id),
+  tanggal date not null default current_date,
+  jenis text not null check (jenis in ('Rujukan Internal', 'Rujukan Eksternal', 'Permintaan Lab')),
+  tujuan text,
+  diagnosa_alasan text,
+  catatan text,
+  status text not null default 'Diajukan' check (status in ('Diajukan', 'Diterima', 'Selesai', 'Batal')),
+  hasil text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_rujukan_lab_gigi_pasien on rujukan_lab_gigi(pasien_id);
+create index if not exists idx_rujukan_lab_gigi_tanggal on rujukan_lab_gigi(tanggal);
+
+alter table rujukan_lab_gigi enable row level security;
+create policy "authenticated_all_rujukan_lab_gigi" on rujukan_lab_gigi for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_rujukan_lab_gigi on rujukan_lab_gigi;
+create trigger trg_audit_rujukan_lab_gigi after insert or update or delete on rujukan_lab_gigi
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

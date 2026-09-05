@@ -280,12 +280,108 @@
 
       <!-- ============ PROMOTIF ============ -->
       <div id="panelPromotif" style="display:none;">
-        <div class="gg-segera"><div class="ic">📢</div><div class="t">Promotif &amp; Preventif</div>UKGS (Usaha Kesehatan Gigi Sekolah), sikat gigi massal &amp; topikal fluor — segera dibangun.</div>
+
+        <div class="card" style="--accent:#2f9e5c;">
+          <h2><span class="card-num" style="background:#2f9e5c;">📢</span> Catat Kegiatan Promotif &amp; Preventif</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">UKGS (Usaha Kesehatan Gigi Sekolah), sikat gigi massal, dan topikal fluor. Kegiatan berbasis sekolah/kelompok sasaran, bukan pasien perorangan.</p>
+          <div id="msgPromoGG"></div>
+          <div class="grid-3">
+            <div><label>Tanggal *</label><input type="date" id="promoTanggal" required></div>
+            <div>
+              <label>Jenis Kegiatan *</label>
+              <select id="promoJenis">
+                <option value="">-- Pilih --</option>
+                <option value="UKGS - Penyuluhan">UKGS - Penyuluhan</option>
+                <option value="UKGS - Pemeriksaan Gigi">UKGS - Pemeriksaan Gigi</option>
+                <option value="Sikat Gigi Massal">Sikat Gigi Massal</option>
+                <option value="Topikal Fluor">Topikal Fluor</option>
+              </select>
+            </div>
+            <div><label>Nama Sekolah / Lokasi *</label><input type="text" id="promoSekolah" placeholder="Contoh: SDN 01 Bekawan"></div>
+            <div><label>Jumlah Siswa Sasaran</label><input type="number" id="promoSasaran" min="0"></div>
+            <div><label>Jumlah Siswa Diperiksa/Ditangani</label><input type="number" id="promoDiperiksa" min="0"></div>
+            <div><label>Jumlah Siswa Bermasalah (karies dll)</label><input type="number" id="promoBermasalah" min="0"></div>
+          </div>
+          <label>Catatan</label>
+          <textarea id="promoCatatan" placeholder="Catatan tambahan"></textarea>
+          <button class="btn-primary" onclick="simpanPromoGG()">Simpan Kegiatan</button>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2>Riwayat Kegiatan</h2>
+          <div class="grid-3">
+            <div>
+              <label>Filter Jenis</label>
+              <select id="promoFilterJenis" onchange="muatRiwayatPromoGG()">
+                <option value="">-- Semua --</option>
+                <option value="UKGS - Penyuluhan">UKGS - Penyuluhan</option>
+                <option value="UKGS - Pemeriksaan Gigi">UKGS - Pemeriksaan Gigi</option>
+                <option value="Sikat Gigi Massal">Sikat Gigi Massal</option>
+                <option value="Topikal Fluor">Topikal Fluor</option>
+              </select>
+            </div>
+            <div><label>Dari Tanggal</label><input type="date" id="promoDari" onchange="muatRiwayatPromoGG()"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="promoSampai" onchange="muatRiwayatPromoGG()"></div>
+          </div>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Jenis</th><th>Sekolah/Lokasi</th><th>Sasaran</th><th>Diperiksa</th><th>Bermasalah</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelRiwayatPromoGG"><tr><td colspan="7">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
 
       <!-- ============ RUJUKAN ============ -->
       <div id="panelRujukan" style="display:none;">
-        <div class="gg-segera"><div class="ic">↦</div><div class="t">Rujukan &amp; Permintaan Lab</div>Permintaan lab pra-tindakan, terima hasil lab, rujuk internal &amp; eksternal — segera dibangun.</div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">↦</span> Cari Pasien</h2>
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / Nama)</label>
+              <input type="text" id="rujGGCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienRujukanGG();}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienRujukanGG()" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+          <div id="rujGGHasilCari"></div>
+        </div>
+
+        <div id="rujGGWrap" style="display:none;">
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2>Buat Rujukan / Permintaan Lab — <span id="rujGGNamaPasien"></span></h2>
+            <div id="msgRujukanGG"></div>
+            <div class="grid-3">
+              <div><label>Tanggal *</label><input type="date" id="rujGGTanggal" required></div>
+              <div>
+                <label>Jenis *</label>
+                <select id="rujGGJenis" onchange="toggleFieldRujukanGG()">
+                  <option value="">-- Pilih --</option>
+                  <option value="Rujukan Internal">Rujukan Internal (Klaster 2/3, UGD)</option>
+                  <option value="Rujukan Eksternal">Rujukan Eksternal (Drg. Spesialis/RS)</option>
+                  <option value="Permintaan Lab">Permintaan Lab (Pra-Tindakan)</option>
+                </select>
+              </div>
+              <div><label id="rujGGTujuanLabel">Tujuan</label><input type="text" id="rujGGTujuan" placeholder="Pilih jenis dulu"></div>
+            </div>
+            <label id="rujGGAlasanLabel">Diagnosa / Alasan Rujukan</label>
+            <textarea id="rujGGAlasan" placeholder="Diagnosa kerja / alasan rujukan / jenis pemeriksaan yang diminta"></textarea>
+            <label>Catatan</label>
+            <textarea id="rujGGCatatan" placeholder="Catatan tambahan"></textarea>
+            <button class="btn-primary" onclick="simpanRujukanGG()">Simpan</button>
+          </div>
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat Rujukan &amp; Permintaan Lab</h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Jenis</th><th>Tujuan</th><th>Status</th><th>Petugas</th><th>Hasil</th></tr></thead>
+              <tbody id="tabelRiwayatRujukanGG"><tr><td colspan="6">Belum ada catatan rujukan.</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
       </div>
 
       <!-- ============ RM ============ -->
@@ -349,6 +445,7 @@ function gantiSubtabGG(tab) {
   };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Poli Gigi & Mulut";
   if (tab === "dashboard") muatDashboardGG();
+  if (tab === "promotif") muatRiwayatPromoGG();
 }
 
 // ---------- DASHBOARD ----------
@@ -688,6 +785,228 @@ async function simpanTindakanGG() {
 
   document.getElementById("tindCatatan").value = "";
   await muatRiwayatTindGG();
+}
+
+// ---------- PROMOTIF & PREVENTIF ----------
+async function simpanPromoGG() {
+  const msgBox = document.getElementById("msgPromoGG");
+  const tanggal = document.getElementById("promoTanggal").value;
+  const jenis = document.getElementById("promoJenis").value;
+  const sekolah = document.getElementById("promoSekolah").value.trim();
+  if (!tanggal || !jenis || !sekolah) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal, jenis kegiatan, dan nama sekolah/lokasi dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("kegiatan_promotif_gigi").insert({
+    tanggal,
+    jenis_kegiatan: jenis,
+    nama_sekolah: sekolah,
+    jumlah_siswa_sasaran: document.getElementById("promoSasaran").value !== "" ? parseInt(document.getElementById("promoSasaran").value) : 0,
+    jumlah_siswa_diperiksa: document.getElementById("promoDiperiksa").value !== "" ? parseInt(document.getElementById("promoDiperiksa").value) : 0,
+    jumlah_siswa_bermasalah: document.getElementById("promoBermasalah").value !== "" ? parseInt(document.getElementById("promoBermasalah").value) : 0,
+    catatan: document.getElementById("promoCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Kegiatan tersimpan.</div>`;
+  document.getElementById("promoSekolah").value = "";
+  document.getElementById("promoSasaran").value = "";
+  document.getElementById("promoDiperiksa").value = "";
+  document.getElementById("promoBermasalah").value = "";
+  document.getElementById("promoCatatan").value = "";
+  await muatRiwayatPromoGG();
+}
+
+async function muatRiwayatPromoGG() {
+  const tbody = document.getElementById("tabelRiwayatPromoGG");
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+
+  const filterJenis = document.getElementById("promoFilterJenis").value;
+  const dari = document.getElementById("promoDari").value;
+  const sampai = document.getElementById("promoSampai").value;
+
+  let q = supabaseClient.from("kegiatan_promotif_gigi").select("*, profil_pegawai:petugas_id(nama)").order("tanggal", { ascending: false }).limit(200);
+  if (filterJenis) q = q.eq("jenis_kegiatan", filterJenis);
+  if (dari) q = q.gte("tanggal", dari);
+  if (sampai) q = q.lte("tanggal", sampai);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada catatan kegiatan.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.jenis_kegiatan}</td>
+      <td>${r.nama_sekolah}</td>
+      <td>${r.jumlah_siswa_sasaran}</td>
+      <td>${r.jumlah_siswa_diperiksa}</td>
+      <td>${r.jumlah_siswa_bermasalah}</td>
+      <td>${r.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+// ---------- RUJUKAN & PERMINTAAN LAB ----------
+let pasienTerpilihRujukanGG = null;
+
+function toggleFieldRujukanGG() {
+  const jenis = document.getElementById("rujGGJenis").value;
+  const labelTujuan = document.getElementById("rujGGTujuanLabel");
+  const inputTujuan = document.getElementById("rujGGTujuan");
+  const labelAlasan = document.getElementById("rujGGAlasanLabel");
+  if (jenis === "Rujukan Internal") {
+    labelTujuan.textContent = "Klaster / Unit Tujuan";
+    inputTujuan.placeholder = "mis. UGD, Klaster 3";
+    labelAlasan.textContent = "Diagnosa / Alasan Rujukan";
+  } else if (jenis === "Rujukan Eksternal") {
+    labelTujuan.textContent = "Faskes Tujuan";
+    inputTujuan.placeholder = "mis. Drg. Spesialis Bedah Mulut, RS Rujukan";
+    labelAlasan.textContent = "Diagnosa / Alasan Rujukan";
+  } else if (jenis === "Permintaan Lab") {
+    labelTujuan.textContent = "Jenis Pemeriksaan Lab";
+    inputTujuan.placeholder = "mis. Gula Darah, Waktu Perdarahan/Pembekuan";
+    labelAlasan.textContent = "Indikasi / Alasan Pemeriksaan";
+  } else {
+    labelTujuan.textContent = "Tujuan";
+    inputTujuan.placeholder = "Pilih jenis dulu";
+    labelAlasan.textContent = "Diagnosa / Alasan Rujukan";
+  }
+}
+
+async function cariPasienRujukanGG() {
+  const kunci = document.getElementById("rujGGCari").value.trim();
+  const hasilDiv = document.getElementById("rujGGHasilCari");
+  document.getElementById("rujGGWrap").style.display = "none";
+  pasienTerpilihRujukanGG = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienRujukanGG(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienRujukanGGDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienRujukanGG = data;
+  }
+}
+
+function pilihPasienRujukanGGDariHasil(i) {
+  pilihPasienRujukanGG(window._hasilCariPasienRujukanGG[i]);
+}
+
+function pilihPasienRujukanGG(pasien) {
+  pasienTerpilihRujukanGG = pasien;
+  document.getElementById("rujGGHasilCari").innerHTML = "";
+  document.getElementById("rujGGNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("rujGGWrap").style.display = "block";
+  document.getElementById("msgRujukanGG").innerHTML = "";
+  document.getElementById("rujGGTanggal").value = new Date().toISOString().split("T")[0];
+  document.getElementById("rujGGJenis").value = "";
+  document.getElementById("rujGGTujuan").value = "";
+  document.getElementById("rujGGAlasan").value = "";
+  document.getElementById("rujGGCatatan").value = "";
+  toggleFieldRujukanGG();
+
+  muatRiwayatRujukanGG();
+}
+
+async function muatRiwayatRujukanGG() {
+  const tbody = document.getElementById("tabelRiwayatRujukanGG");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("rujukan_lab_gigi")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .eq("pasien_id", pasienTerpilihRujukanGG.id)
+    .order("tanggal", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada catatan rujukan.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.jenis}</td>
+      <td>${r.tujuan || "-"}</td>
+      <td>
+        <select onchange="ubahStatusRujukanGG('${r.id}', this.value)" style="padding:4px 6px; font-size:12px;">
+          <option value="Diajukan" ${r.status === "Diajukan" ? "selected" : ""}>Diajukan</option>
+          <option value="Diterima" ${r.status === "Diterima" ? "selected" : ""}>Diterima</option>
+          <option value="Selesai" ${r.status === "Selesai" ? "selected" : ""}>Selesai</option>
+          <option value="Batal" ${r.status === "Batal" ? "selected" : ""}>Batal</option>
+        </select>
+      </td>
+      <td>${r.profil_pegawai?.nama || "-"}</td>
+      <td><button class="btn-secondary" onclick="isiHasilRujukanGG('${r.id}')" style="font-size:11px; padding:3px 8px;">${r.hasil ? "📄 Lihat/Ubah Hasil" : "Isi Hasil"}</button></td>
+    </tr>
+  `).join("");
+}
+
+async function ubahStatusRujukanGG(id, status) {
+  const { error } = await supabaseClient.from("rujukan_lab_gigi").update({ status }).eq("id", id);
+  if (error) { alert("Gagal ubah status: " + error.message); return; }
+  await muatRiwayatRujukanGG();
+}
+
+async function isiHasilRujukanGG(id) {
+  const baris = (await supabaseClient.from("rujukan_lab_gigi").select("hasil").eq("id", id).single()).data;
+  const hasilBaru = prompt("Isi hasil rujukan/pemeriksaan lab:", baris?.hasil || "");
+  if (hasilBaru === null) return;
+
+  const { error } = await supabaseClient.from("rujukan_lab_gigi").update({ hasil: hasilBaru.trim() || null }).eq("id", id);
+  if (error) { alert("Gagal simpan hasil: " + error.message); return; }
+  await muatRiwayatRujukanGG();
+}
+
+async function simpanRujukanGG() {
+  const msgBox = document.getElementById("msgRujukanGG");
+  if (!pasienTerpilihRujukanGG) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const tanggal = document.getElementById("rujGGTanggal").value;
+  const jenis = document.getElementById("rujGGJenis").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dulu.</div>`; return; }
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jenis rujukan/lab dulu.</div>`; return; }
+
+  const { error } = await supabaseClient.from("rujukan_lab_gigi").insert({
+    pasien_id: pasienTerpilihRujukanGG.id,
+    tanggal,
+    jenis,
+    tujuan: document.getElementById("rujGGTujuan").value.trim() || null,
+    diagnosa_alasan: document.getElementById("rujGGAlasan").value.trim() || null,
+    catatan: document.getElementById("rujGGCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">${jenis} tersimpan.</div>`;
+  document.getElementById("rujGGJenis").value = "";
+  document.getElementById("rujGGTujuan").value = "";
+  document.getElementById("rujGGAlasan").value = "";
+  document.getElementById("rujGGCatatan").value = "";
+  toggleFieldRujukanGG();
+  await muatRiwayatRujukanGG();
 }
 </script>
 </body>
