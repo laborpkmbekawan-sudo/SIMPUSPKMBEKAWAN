@@ -324,12 +324,118 @@ tr.ranap-row-clickable:hover td { background:#f7fafb; }
 
       </div>
 
-      <!-- ============ PLACEHOLDER FITUR LAIN (segera hadir) ============ -->
+      <!-- ============ ASUHAN KEPERAWATAN HARIAN ============ -->
       <div id="panelAsuhan" style="display:none;">
-        <div class="card"><div class="ranap-segera"><div class="ic">📝</div><div class="t">Asuhan Keperawatan Harian</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2><span class="card-num" style="background:#26a3a0;">▣</span> Pilih Pasien Rawat Inap</h2>
+          <div class="grid-2">
+            <div>
+              <label>Pasien Aktif</label>
+              <select id="asuhanPilihPasien" onchange="muatAsuhanUntukPasien()">
+                <option value="">-- Pilih Pasien --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="cardCppt" style="--accent:#1c7d7f; display:none;">
+          <h2><span class="card-num" style="background:#1c7d7f;">📝</span> CPPT (Catatan Perkembangan Pasien Terintegrasi)</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Semua profesi mencatat perkembangan pasien di alur yang sama — sekaligus jadi kajian ulang berkesinambungan.</p>
+          <div id="msgCppt"></div>
+          <div class="grid-2">
+            <div>
+              <label>Dicatat Oleh (Profesi)</label>
+              <select id="asuhanProfesi">
+                <option value="Dokter">Dokter</option>
+                <option value="Perawat">Perawat</option>
+                <option value="Bidan">Bidan</option>
+                <option value="Gizi">Gizi</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+          </div>
+          <label>Catatan Perkembangan</label>
+          <textarea id="asuhanCatatan" placeholder="Kondisi terkini, perkembangan, catatan keperawatan/medis"></textarea>
+          <button class="btn-primary" onclick="simpanCppt()">Simpan CPPT</button>
+
+          <table style="margin-top:14px;">
+            <thead><tr><th>Waktu</th><th>Profesi</th><th>Catatan</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelCpptRanap"><tr><td colspan="4">Pilih pasien dulu.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" id="cardVitalRanap" style="--accent:#e0793c; display:none;">
+          <h2><span class="card-num" style="background:#e0793c;">💓</span> Tanda Vital Berkala</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Dicatat tiap kali pemeriksaan berkala — tren dilihat dari tabel di bawah.</p>
+          <div id="msgVitalRanap"></div>
+          <div class="grid-2">
+            <div><label>Tekanan Darah</label><input type="text" id="vitalTd" placeholder="mis. 120/80"></div>
+            <div><label>Nadi</label><input type="text" id="vitalNadi" placeholder="mis. 80x/menit"></div>
+            <div><label>Respirasi</label><input type="text" id="vitalRespirasi" placeholder="mis. 20x/menit"></div>
+            <div><label>Suhu</label><input type="text" id="vitalSuhu" placeholder="mis. 36.8°C"></div>
+            <div><label>Saturasi O2</label><input type="text" id="vitalSaturasi" placeholder="mis. 98%"></div>
+            <div><label>Kesadaran</label><input type="text" id="vitalKesadaran" placeholder="mis. Compos mentis"></div>
+          </div>
+          <label>Keterangan</label>
+          <textarea id="vitalKeterangan" placeholder="Catatan tambahan (opsional)"></textarea>
+          <button class="btn-primary" onclick="simpanVitalRanap()">Simpan Tanda Vital</button>
+
+          <table style="margin-top:14px;">
+            <thead><tr><th>Waktu</th><th>TD</th><th>Nadi</th><th>Respirasi</th><th>Suhu</th><th>SpO2</th><th>Kesadaran</th></tr></thead>
+            <tbody id="tabelVitalRanap"><tr><td colspan="7">Pilih pasien dulu.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="ranap-segera"><div class="ic">💊</div><div class="t">Pemberian Obat &amp; Tindakan Terjadwal</div><p>Checklist jadwal harian nyusul di fase Rekam Medis &amp; Resep — butuh link ke jadwal resep dulu.</p></div>
+        </div>
       </div>
+
+      <!-- ============ VISITE DOKTER ============ -->
       <div id="panelVisite" style="display:none;">
-        <div class="card"><div class="ranap-segera"><div class="ic">👨‍⚕️</div><div class="t">Visite Dokter</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▣</span> Pilih Pasien Rawat Inap</h2>
+          <div class="grid-2">
+            <div>
+              <label>Pasien Aktif</label>
+              <select id="visitePilihPasien" onchange="muatVisiteUntukPasien()">
+                <option value="">-- Pilih Pasien --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="cardVisite" style="--accent:#26a3a0; display:none;">
+          <h2><span class="card-num" style="background:#26a3a0;">👨‍⚕️</span> Catatan Visite Harian (DPJP)</h2>
+          <div id="msgVisiteRanap"></div>
+
+          <label>Catatan Visite</label>
+          <textarea id="visiteCatatan" placeholder="Hasil pemeriksaan &amp; evaluasi DPJP saat visite"></textarea>
+
+          <label>Instruksi Lanjutan</label>
+          <textarea id="visiteInstruksi" placeholder="mis. perubahan dosis obat, tambahan pemeriksaan, tindakan baru"></textarea>
+
+          <div class="grid-2">
+            <div>
+              <label>Evaluasi &amp; Rencana Selanjutnya</label>
+              <select id="visiteEvaluasi">
+                <option value="Lanjut Rawat">Lanjut Rawat</option>
+                <option value="Siap Discharge">Siap Discharge (Rencana Pulang)</option>
+                <option value="Perlu Dirujuk">Perlu Dirujuk</option>
+              </select>
+            </div>
+          </div>
+          <p style="font-size:11.5px; color:var(--muted); margin:0 0 12px;">Pilih "Siap Discharge" otomatis mengubah status pasien jadi Rencana Pulang di Dashboard.</p>
+
+          <button class="btn-primary" onclick="simpanVisiteRanap()">Simpan Catatan Visite</button>
+
+          <table style="margin-top:14px;">
+            <thead><tr><th>Waktu</th><th>Catatan Visite</th><th>Instruksi Lanjutan</th><th>Evaluasi</th><th>DPJP</th></tr></thead>
+            <tbody id="tabelVisiteRanap"><tr><td colspan="5">Pilih pasien dulu.</td></tr></tbody>
+          </table>
+        </div>
       </div>
       <div id="panelDischarge" style="display:none;">
         <div class="card"><div class="ranap-segera"><div class="ic">🚪</div><div class="t">Discharge Planning</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
@@ -398,6 +504,8 @@ function gantiSubtabRanap(tab) {
   document.querySelector(".topbar h1").textContent = judul[tab] || "Rawat Inap";
   if (tab === "dashboard") muatDashboardRanap();
   if (tab === "admisi") muatFormAdmisi();
+  if (tab === "asuhan") muatSelectorAsuhan();
+  if (tab === "visite") muatSelectorVisite();
 }
 
 function jamSingkatRanap(iso) {
@@ -786,6 +894,176 @@ async function simpanAdmisiRanap() {
   pasienTerpilihAdmisi = null;
 
   await muatOpsiBedKosong();
+}
+
+// ---------- ASUHAN KEPERAWATAN HARIAN ----------
+async function muatOpsiPasienAktifRanap(selectId) {
+  const select = document.getElementById(selectId);
+  const { data, error } = await supabaseClient
+    .from("kunjungan_ranap")
+    .select("id, pasien(nama, no_rm), bed_rawat(ruang, nomor_bed)")
+    .in("status_ranap", ["baru", "dirawat", "rencana_pulang"])
+    .order("tanggal_masuk", { ascending: true });
+
+  if (error) {
+    select.innerHTML = `<option value="">Gagal muat pasien</option>`;
+    return;
+  }
+  if (!data.length) {
+    select.innerHTML = `<option value="">Tidak ada pasien rawat inap aktif</option>`;
+    return;
+  }
+  select.innerHTML = `<option value="">-- Pilih Pasien --</option>` +
+    data.map(k => `<option value="${k.id}">${k.pasien?.nama || "-"} (${k.pasien?.no_rm || "-"}) — ${k.bed_rawat ? k.bed_rawat.ruang + "/" + k.bed_rawat.nomor_bed : "-"}</option>`).join("");
+}
+
+async function muatSelectorAsuhan() {
+  await muatOpsiPasienAktifRanap("asuhanPilihPasien");
+  document.getElementById("cardCppt").style.display = "none";
+  document.getElementById("cardVitalRanap").style.display = "none";
+}
+
+function muatAsuhanUntukPasien() {
+  const id = document.getElementById("asuhanPilihPasien").value;
+  document.getElementById("cardCppt").style.display = id ? "block" : "none";
+  document.getElementById("cardVitalRanap").style.display = id ? "block" : "none";
+  if (id) {
+    muatRiwayatCppt(id);
+    muatRiwayatVitalRanap(id);
+  }
+}
+
+async function muatRiwayatCppt(kunjunganRanapId) {
+  const tbody = document.getElementById("tabelCpptRanap");
+  const { data, error } = await supabaseClient
+    .from("asuhan_ranap")
+    .select("waktu, profesi, catatan, profil_pegawai:petugas_id(nama)")
+    .eq("kunjungan_ranap_id", kunjunganRanapId)
+    .order("waktu", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  tbody.innerHTML = !data.length
+    ? `<tr><td colspan="4">Belum ada catatan CPPT.</td></tr>`
+    : data.map(c => `<tr><td>${jamSingkatRanap(c.waktu)}</td><td>${c.profesi}</td><td>${c.catatan}</td><td>${c.profil_pegawai?.nama || "-"}</td></tr>`).join("");
+}
+
+async function simpanCppt() {
+  const msgBox = document.getElementById("msgCppt");
+  const kunjunganRanapId = document.getElementById("asuhanPilihPasien").value;
+  const catatan = document.getElementById("asuhanCatatan").value.trim();
+
+  if (!kunjunganRanapId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!catatan) { msgBox.innerHTML = `<div class="msg msg-error">Isi catatan perkembangan dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { error } = await supabaseClient.from("asuhan_ranap").insert({
+    kunjungan_ranap_id: kunjunganRanapId,
+    profesi: document.getElementById("asuhanProfesi").value,
+    catatan: catatan,
+    petugas_id: user.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">CPPT tersimpan.</div>`;
+  document.getElementById("asuhanCatatan").value = "";
+  await muatRiwayatCppt(kunjunganRanapId);
+}
+
+async function muatRiwayatVitalRanap(kunjunganRanapId) {
+  const tbody = document.getElementById("tabelVitalRanap");
+  const { data, error } = await supabaseClient
+    .from("observasi_ranap")
+    .select("waktu, tekanan_darah, nadi, respirasi, suhu, saturasi_o2, kesadaran")
+    .eq("kunjungan_ranap_id", kunjunganRanapId)
+    .order("waktu", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  tbody.innerHTML = !data.length
+    ? `<tr><td colspan="7">Belum ada catatan tanda vital.</td></tr>`
+    : data.map(v => `<tr><td>${jamSingkatRanap(v.waktu)}</td><td>${v.tekanan_darah || "-"}</td><td>${v.nadi || "-"}</td><td>${v.respirasi || "-"}</td><td>${v.suhu || "-"}</td><td>${v.saturasi_o2 || "-"}</td><td>${v.kesadaran || "-"}</td></tr>`).join("");
+}
+
+async function simpanVitalRanap() {
+  const msgBox = document.getElementById("msgVitalRanap");
+  const kunjunganRanapId = document.getElementById("asuhanPilihPasien").value;
+  if (!kunjunganRanapId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { error } = await supabaseClient.from("observasi_ranap").insert({
+    kunjungan_ranap_id: kunjunganRanapId,
+    tekanan_darah: document.getElementById("vitalTd").value.trim() || null,
+    nadi: document.getElementById("vitalNadi").value.trim() || null,
+    respirasi: document.getElementById("vitalRespirasi").value.trim() || null,
+    suhu: document.getElementById("vitalSuhu").value.trim() || null,
+    saturasi_o2: document.getElementById("vitalSaturasi").value.trim() || null,
+    kesadaran: document.getElementById("vitalKesadaran").value.trim() || null,
+    keterangan: document.getElementById("vitalKeterangan").value.trim() || null,
+    petugas_id: user.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Tanda vital tersimpan.</div>`;
+  ["vitalTd", "vitalNadi", "vitalRespirasi", "vitalSuhu", "vitalSaturasi", "vitalKesadaran", "vitalKeterangan"].forEach(id => document.getElementById(id).value = "");
+  await muatRiwayatVitalRanap(kunjunganRanapId);
+}
+
+// ---------- VISITE DOKTER ----------
+async function muatSelectorVisite() {
+  await muatOpsiPasienAktifRanap("visitePilihPasien");
+  document.getElementById("cardVisite").style.display = "none";
+}
+
+function muatVisiteUntukPasien() {
+  const id = document.getElementById("visitePilihPasien").value;
+  document.getElementById("cardVisite").style.display = id ? "block" : "none";
+  if (id) muatRiwayatVisite(id);
+}
+
+async function muatRiwayatVisite(kunjunganRanapId) {
+  const tbody = document.getElementById("tabelVisiteRanap");
+  const { data, error } = await supabaseClient
+    .from("visite_ranap")
+    .select("waktu, catatan_visite, instruksi_lanjutan, evaluasi_rencana, profil_pegawai:dpjp_id(nama)")
+    .eq("kunjungan_ranap_id", kunjunganRanapId)
+    .order("waktu", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  tbody.innerHTML = !data.length
+    ? `<tr><td colspan="5">Belum ada catatan visite.</td></tr>`
+    : data.map(v => `<tr><td>${jamSingkatRanap(v.waktu)}</td><td>${v.catatan_visite}</td><td>${v.instruksi_lanjutan || "-"}</td><td>${v.evaluasi_rencana || "-"}</td><td>${v.profil_pegawai?.nama || "-"}</td></tr>`).join("");
+}
+
+async function simpanVisiteRanap() {
+  const msgBox = document.getElementById("msgVisiteRanap");
+  const kunjunganRanapId = document.getElementById("visitePilihPasien").value;
+  const catatan = document.getElementById("visiteCatatan").value.trim();
+
+  if (!kunjunganRanapId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!catatan) { msgBox.innerHTML = `<div class="msg msg-error">Isi catatan visite dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const evaluasi = document.getElementById("visiteEvaluasi").value;
+
+  const { error } = await supabaseClient.from("visite_ranap").insert({
+    kunjungan_ranap_id: kunjunganRanapId,
+    catatan_visite: catatan,
+    instruksi_lanjutan: document.getElementById("visiteInstruksi").value.trim() || null,
+    evaluasi_rencana: evaluasi,
+    dpjp_id: user.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  if (evaluasi === "Siap Discharge") {
+    await supabaseClient.from("kunjungan_ranap").update({ status_ranap: "rencana_pulang" }).eq("id", kunjunganRanapId);
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Catatan visite tersimpan.${evaluasi === "Siap Discharge" ? " Status pasien diubah jadi Rencana Pulang." : ""}</div>`;
+  document.getElementById("visiteCatatan").value = "";
+  document.getElementById("visiteInstruksi").value = "";
+  await muatRiwayatVisite(kunjunganRanapId);
 }
 </script>
 </body>

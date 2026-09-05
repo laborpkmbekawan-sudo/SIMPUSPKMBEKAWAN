@@ -2967,6 +2967,79 @@ create trigger trg_audit_bed_rawat after insert or update or delete on bed_rawat
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 74. MODUL RAWAT INAP — FASE 2: Asuhan Keperawatan Harian
+--     (CPPT + kajian ulang jadi satu catatan berkala; tanda vital
+--     berkala pola sama observasi_ugd) & Visite Dokter.
+--     "Pemberian obat & tindakan terjadwal" nyusul di fase RM &
+--     Resep (perlu link ke jadwal resep, belum dibangun).
+-- ============================================================
+create table if not exists asuhan_ranap (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_ranap_id uuid not null references kunjungan_ranap(id),
+  waktu timestamptz not null default now(),
+  profesi text not null check (profesi in ('Dokter', 'Perawat', 'Bidan', 'Gizi', 'Lainnya')),
+  catatan text not null,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_asuhan_ranap_kunjungan on asuhan_ranap(kunjungan_ranap_id);
+create index if not exists idx_asuhan_ranap_waktu on asuhan_ranap(waktu);
+
+alter table asuhan_ranap enable row level security;
+create policy "authenticated_all_asuhan_ranap" on asuhan_ranap for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_asuhan_ranap on asuhan_ranap;
+create trigger trg_audit_asuhan_ranap after insert or update or delete on asuhan_ranap
+  for each row execute function fn_audit_log();
+
+create table if not exists observasi_ranap (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_ranap_id uuid not null references kunjungan_ranap(id),
+  waktu timestamptz not null default now(),
+  kesadaran text,
+  tekanan_darah text,
+  nadi text,
+  respirasi text,
+  suhu text,
+  saturasi_o2 text,
+  keterangan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_observasi_ranap_kunjungan on observasi_ranap(kunjungan_ranap_id);
+create index if not exists idx_observasi_ranap_waktu on observasi_ranap(waktu);
+
+alter table observasi_ranap enable row level security;
+create policy "authenticated_all_observasi_ranap" on observasi_ranap for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_observasi_ranap on observasi_ranap;
+create trigger trg_audit_observasi_ranap after insert or update or delete on observasi_ranap
+  for each row execute function fn_audit_log();
+
+create table if not exists visite_ranap (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_ranap_id uuid not null references kunjungan_ranap(id),
+  waktu timestamptz not null default now(),
+  catatan_visite text not null,
+  instruksi_lanjutan text,
+  evaluasi_rencana text check (evaluasi_rencana in ('Lanjut Rawat', 'Siap Discharge', 'Perlu Dirujuk')),
+  dpjp_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_visite_ranap_kunjungan on visite_ranap(kunjungan_ranap_id);
+create index if not exists idx_visite_ranap_waktu on visite_ranap(waktu);
+
+alter table visite_ranap enable row level security;
+create policy "authenticated_all_visite_ranap" on visite_ranap for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_visite_ranap on visite_ranap;
+create trigger trg_audit_visite_ranap after insert or update or delete on visite_ranap
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
