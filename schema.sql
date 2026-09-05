@@ -3071,6 +3071,74 @@ create trigger trg_audit_discharge_ranap after insert or update or delete on dis
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 76. MODUL RAWAT INAP — FASE 4: Pemberian Obat & Tindakan
+--     Terjadwal (MAR — Medication Administration Record).
+--     Jadwal diisi manual per obat/tindakan + jam, lalu dicentang
+--     saat diberikan. Terpisah dari resep (resep = order dokter,
+--     jadwal_obat_ranap = pelaksanaan harian oleh perawat).
+-- ============================================================
+create table if not exists jadwal_obat_ranap (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_ranap_id uuid not null references kunjungan_ranap(id),
+  jenis text not null default 'Obat' check (jenis in ('Obat', 'Tindakan')),
+  nama text not null,
+  dosis text,
+  jam_jadwal text not null,
+  tanggal date not null default current_date,
+  status text not null default 'belum' check (status in ('belum', 'diberikan', 'ditunda', 'ditolak')),
+  waktu_pelaksanaan timestamptz,
+  petugas_id uuid references profil_pegawai(id),
+  catatan text,
+  created_at timestamptz not null default now(),
+  created_by uuid references profil_pegawai(id)
+);
+
+create index if not exists idx_jadwal_obat_ranap_kunjungan on jadwal_obat_ranap(kunjungan_ranap_id);
+create index if not exists idx_jadwal_obat_ranap_tanggal on jadwal_obat_ranap(tanggal);
+
+alter table jadwal_obat_ranap enable row level security;
+create policy "authenticated_all_jadwal_obat_ranap" on jadwal_obat_ranap for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_jadwal_obat_ranap on jadwal_obat_ranap;
+create trigger trg_audit_jadwal_obat_ranap after insert or update or delete on jadwal_obat_ranap
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- 77. MODUL RAWAT INAP — FASE 5: Kelengkapan Berkas Klaim BPJS.
+--     Satu checklist per admisi (kunjungan_ranap), dicentang manual
+--     oleh petugas admin/perawat sebelum berkas dikirim ke tim
+--     klaim BPJS Puskesmas. Kolom boolean tetap (bukan jsonb) biar
+--     gampang direkap di laporan (mis. hitung berapa berkas belum
+--     lengkap bulan ini).
+-- ============================================================
+create table if not exists berkas_klaim_bpjs_ranap (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_ranap_id uuid not null unique references kunjungan_ranap(id),
+  sep_ada boolean not null default false,
+  rujukan_ada boolean not null default false,
+  resume_medis_ada boolean not null default false,
+  asuhan_keperawatan_ada boolean not null default false,
+  penunjang_ada boolean not null default false,
+  tindakan_ada boolean not null default false,
+  discharge_planning_ada boolean not null default false,
+  identitas_ada boolean not null default false,
+  catatan text,
+  diverifikasi_oleh uuid references profil_pegawai(id),
+  diverifikasi_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_berkas_klaim_bpjs_ranap_kunjungan on berkas_klaim_bpjs_ranap(kunjungan_ranap_id);
+
+alter table berkas_klaim_bpjs_ranap enable row level security;
+create policy "authenticated_all_berkas_klaim_bpjs_ranap" on berkas_klaim_bpjs_ranap for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_berkas_klaim_bpjs_ranap on berkas_klaim_bpjs_ranap;
+create trigger trg_audit_berkas_klaim_bpjs_ranap after insert or update or delete on berkas_klaim_bpjs_ranap
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

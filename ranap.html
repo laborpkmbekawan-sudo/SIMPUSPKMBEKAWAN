@@ -637,9 +637,41 @@ tr.ranap-row-clickable:hover td { background:#f7fafb; }
           </table>
         </div>
 
-        <div class="card">
-          <div class="ranap-segera"><div class="ic">💊</div><div class="t">Pemberian Obat &amp; Tindakan Terjadwal</div><p>Checklist jadwal harian menyusul — butuh desain jadwal pemberian per waktu dari resep di atas.</p></div>
+        <div class="card" id="cardRmRanapJadwal" style="--accent:#6a4c93; display:none;">
+          <h2><span class="card-num" style="background:#6a4c93;">💊</span> Pemberian Obat &amp; Tindakan Terjadwal</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Checklist harian (MAR) — jadwal manual per obat/tindakan, dicentang saat sudah dilaksanakan. Terpisah dari resep di atas (resep = order dokter, ini pelaksanaan harian perawat).</p>
+          <div id="msgRmRanapJadwal"></div>
+
+          <div class="grid-2">
+            <div><label>Jenis</label>
+              <select id="jadwalRanapJenis" onchange="toggleJenisJadwalRanap()">
+                <option value="Obat">Obat (dari resep)</option>
+                <option value="Tindakan">Tindakan</option>
+              </select>
+            </div>
+            <div><label>Tanggal</label><input type="date" id="jadwalRanapTanggal"></div>
+          </div>
+          <div class="grid-2">
+            <div id="wrapJadwalRanapObat">
+              <label>Obat</label>
+              <select id="jadwalRanapObatSelect"><option value="">-- Belum ada resep untuk pasien ini --</option></select>
+            </div>
+            <div id="wrapJadwalRanapTindakan" style="display:none;">
+              <label>Nama Tindakan</label>
+              <input type="text" id="jadwalRanapTindakanNama" placeholder="mis. Ganti Infus, Injeksi IV">
+            </div>
+            <div><label>Jam Jadwal</label><input type="time" id="jadwalRanapJam"></div>
+          </div>
+          <label>Catatan (opsional)</label>
+          <input type="text" id="jadwalRanapCatatan" placeholder="mis. dosis khusus, kondisi tertentu">
+          <button class="btn-secondary" onclick="tambahJadwalObatRanap()" style="margin-top:8px;">+ Tambah ke Jadwal</button>
+
+          <table style="margin-top:14px;">
+            <thead><tr><th>Jam</th><th>Jenis</th><th>Nama</th><th>Status</th><th>Petugas</th><th></th></tr></thead>
+            <tbody id="tabelJadwalObatRanap"><tr><td colspan="6">Pilih pasien dulu.</td></tr></tbody>
+          </table>
         </div>
+
       </div>
       <!-- ============ LAPORAN INTERNAL ============ -->
       <div id="panelLaporanInternal" style="display:none;">
@@ -758,7 +790,35 @@ tr.ranap-row-clickable:hover td { background:#f7fafb; }
       </div>
 
       <div id="panelBpjs" style="display:none;">
-        <div class="card"><div class="ranap-segera"><div class="ic">📄</div><div class="t">Kelengkapan Berkas Klaim BPJS</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▣</span> Pilih Pasien Rawat Inap (BPJS)</h2>
+          <div class="grid-2">
+            <div>
+              <label>Pasien Rawat Inap (Jenis Bayar BPJS)</label>
+              <select id="bpjsRanapPilihPasien" onchange="muatBerkasBpjsRanapUntukPasien()">
+                <option value="">-- Pilih Pasien --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="cardBpjsRanapChecklist" style="--accent:#e0793c; display:none;">
+          <h2><span class="card-num" style="background:#e0793c;">📄</span> Kelengkapan Berkas Klaim BPJS</h2>
+          <div id="msgBpjsRanapChecklist"></div>
+          <div id="bpjsRanapChecklistWrap"></div>
+          <label>Catatan</label>
+          <textarea id="bpjsRanapCatatan" placeholder="Catatan tambahan (mis. berkas menyusul, dsb)"></textarea>
+          <button class="btn-primary" onclick="simpanBerkasBpjsRanap()">Simpan Checklist</button>
+          <p id="bpjsRanapInfoVerifikasi" style="font-size:11px; color:var(--muted); margin-top:8px;"></p>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">!</span> Rekap Kelengkapan Berkas — Pasien BPJS Aktif &amp; Baru Pulang</h2>
+          <table>
+            <thead><tr><th>Pasien</th><th>Status Rawat</th><th>Kelengkapan</th><th>Verifikasi</th></tr></thead>
+            <tbody id="tabelRekapBpjsRanap"><tr><td colspan="4">Memuat...</td></tr></tbody>
+          </table>
+        </div>
       </div>
 
       <!-- ============ AUDIT / KEAMANAN ============ -->
@@ -865,6 +925,7 @@ function gantiSubtabRanap(tab) {
   if (tab === "discharge") muatSelectorDischarge();
   if (tab === "rujukan") muatSelectorRujukan();
   if (tab === "rm") muatSelectorRm();
+  if (tab === "bpjs") muatSelectorBpjsRanap();
 }
 
 function jamSingkatRanap(iso) {
@@ -1753,13 +1814,18 @@ function muatRmRanapUntukPasien() {
   const id = document.getElementById("rmRanapPilihPasien").value;
   document.getElementById("cardRmRanapSoap").style.display = id ? "block" : "none";
   document.getElementById("cardRmRanapResep").style.display = id ? "block" : "none";
+  document.getElementById("cardRmRanapJadwal").style.display = id ? "block" : "none";
   document.getElementById("msgRmRanapSoap").innerHTML = "";
   document.getElementById("msgRmRanapResep").innerHTML = "";
+  document.getElementById("msgRmRanapJadwal").innerHTML = "";
   daftarResepRanapBaru = [];
   renderListResepRanapBaru();
   if (id) {
     muatRiwayatSoapRanap(id);
     muatRiwayatResepRanap(id);
+    document.getElementById("jadwalRanapTanggal").value = new Date().toISOString().slice(0, 10);
+    muatObatUntukJadwalRanap(id);
+    muatJadwalObatRanap(id);
   }
 }
 
@@ -2144,6 +2210,237 @@ function exportAuditLogRanapCsv() {
   a.download = `Audit_Log_RawatInap_${dariInput}_${sampaiInput}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+// ---------- PEMBERIAN OBAT & TINDAKAN TERJADWAL (MAR) ----------
+function toggleJenisJadwalRanap() {
+  const jenis = document.getElementById("jadwalRanapJenis").value;
+  document.getElementById("wrapJadwalRanapObat").style.display = jenis === "Obat" ? "block" : "none";
+  document.getElementById("wrapJadwalRanapTindakan").style.display = jenis === "Tindakan" ? "block" : "none";
+}
+
+async function muatObatUntukJadwalRanap(kunjunganRanapId) {
+  const p = pasienAktifCacheRmRanap.find(x => x.id === kunjunganRanapId);
+  const select = document.getElementById("jadwalRanapObatSelect");
+  if (!p) { select.innerHTML = `<option value="">-- Pilih pasien dulu --</option>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("resep").select("daftar_obat").eq("kunjungan_id", p.kunjungan_id);
+  if (error || !data || !data.length) {
+    select.innerHTML = `<option value="">-- Belum ada resep untuk pasien ini --</option>`;
+    return;
+  }
+
+  const semuaObat = [];
+  const seen = new Set();
+  data.forEach(r => (r.daftar_obat || []).forEach(o => {
+    const key = `${o.nama_obat}|||${o.dosis || ""}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    semuaObat.push(o);
+  }));
+
+  select.innerHTML = !semuaObat.length
+    ? `<option value="">-- Belum ada resep untuk pasien ini --</option>`
+    : `<option value="">-- Pilih obat --</option>` +
+      semuaObat.map(o => `<option value="${o.nama_obat}|||${o.dosis || ""}">${o.nama_obat}${o.dosis ? " — " + o.dosis : ""}</option>`).join("");
+}
+
+async function tambahJadwalObatRanap() {
+  const msgBox = document.getElementById("msgRmRanapJadwal");
+  const kunjunganRanapId = document.getElementById("rmRanapPilihPasien").value;
+  const p = pasienAktifCacheRmRanap.find(x => x.id === kunjunganRanapId);
+  if (!p) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const jenis = document.getElementById("jadwalRanapJenis").value;
+  const tanggal = document.getElementById("jadwalRanapTanggal").value;
+  const jam = document.getElementById("jadwalRanapJam").value;
+  const catatan = document.getElementById("jadwalRanapCatatan").value.trim() || null;
+
+  if (!tanggal || !jam) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal & jam jadwal dulu.</div>`; return; }
+
+  let nama, dosis = null;
+  if (jenis === "Obat") {
+    const val = document.getElementById("jadwalRanapObatSelect").value;
+    if (!val) { msgBox.innerHTML = `<div class="msg msg-error">Pilih obat dulu.</div>`; return; }
+    [nama, dosis] = val.split("|||");
+  } else {
+    nama = document.getElementById("jadwalRanapTindakanNama").value.trim();
+    if (!nama) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama tindakan dulu.</div>`; return; }
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { error } = await supabaseClient.from("jadwal_obat_ranap").insert({
+    kunjungan_ranap_id: kunjunganRanapId,
+    jenis, nama, dosis: dosis || null,
+    jam_jadwal: jam, tanggal, catatan,
+    created_by: user.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal tambah jadwal: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Jadwal ditambahkan.</div>`;
+  document.getElementById("jadwalRanapJam").value = "";
+  document.getElementById("jadwalRanapCatatan").value = "";
+  document.getElementById("jadwalRanapTindakanNama").value = "";
+  document.getElementById("jadwalRanapObatSelect").value = "";
+  await muatJadwalObatRanap(kunjunganRanapId);
+}
+
+const BADGE_STATUS_JADWAL_RANAP = { belum: "baru", diberikan: "pulang", ditunda: "dirujuk", ditolak: "meninggal" };
+const LABEL_STATUS_JADWAL_RANAP = { belum: "Belum", diberikan: "Diberikan", ditunda: "Ditunda", ditolak: "Ditolak" };
+
+async function muatJadwalObatRanap(kunjunganRanapId) {
+  const tbody = document.getElementById("tabelJadwalObatRanap");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("jadwal_obat_ranap")
+    .select("id, jenis, nama, dosis, jam_jadwal, tanggal, status, catatan, profil_pegawai:petugas_id(nama)")
+    .eq("kunjungan_ranap_id", kunjunganRanapId)
+    .order("tanggal", { ascending: false })
+    .order("jam_jadwal", { ascending: true });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  tbody.innerHTML = !data.length
+    ? `<tr><td colspan="6">Belum ada jadwal pemberian.</td></tr>`
+    : data.map(j => `<tr>
+        <td>${j.tanggal} ${j.jam_jadwal}</td>
+        <td>${j.jenis}</td>
+        <td>${j.nama}${j.dosis ? " — " + j.dosis : ""}${j.catatan ? `<div style="font-size:11px; color:var(--muted);">${j.catatan}</div>` : ""}</td>
+        <td><span class="badge-status-ranap ${BADGE_STATUS_JADWAL_RANAP[j.status]}">${LABEL_STATUS_JADWAL_RANAP[j.status]}</span></td>
+        <td>${j.profil_pegawai?.nama || "-"}</td>
+        <td>${j.status === "belum" ? `
+          <button type="button" class="btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="tandaiJadwalObatRanap('${j.id}', 'diberikan')">✓ Beri</button>
+          <button type="button" class="btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="tandaiJadwalObatRanap('${j.id}', 'ditunda')">Tunda</button>
+          <button type="button" class="btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="tandaiJadwalObatRanap('${j.id}', 'ditolak')">Tolak</button>
+        ` : "-"}</td>
+      </tr>`).join("");
+}
+
+async function tandaiJadwalObatRanap(id, status) {
+  let catatan = null;
+  if (status === "ditunda" || status === "ditolak") {
+    catatan = prompt(status === "ditunda" ? "Alasan ditunda (opsional):" : "Alasan ditolak/tidak diberikan (opsional):") || null;
+  }
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { error } = await supabaseClient.from("jadwal_obat_ranap").update({
+    status, waktu_pelaksanaan: new Date().toISOString(), petugas_id: user.id,
+    catatan: catatan || undefined
+  }).eq("id", id);
+
+  const kunjunganRanapId = document.getElementById("rmRanapPilihPasien").value;
+  if (error) { alert("Gagal update status: " + error.message); return; }
+  await muatJadwalObatRanap(kunjunganRanapId);
+}
+
+// ---------- KELENGKAPAN BERKAS KLAIM BPJS ----------
+let pasienAktifCacheBpjsRanap = [];
+const ITEM_BERKAS_BPJS_RANAP = [
+  { field: "sep_ada", label: "SEP (Surat Eligibilitas Peserta)" },
+  { field: "rujukan_ada", label: "Surat Rujukan / Rujukan Internal" },
+  { field: "identitas_ada", label: "Fotokopi KTP/KK & Kartu BPJS" },
+  { field: "asuhan_keperawatan_ada", label: "Catatan Asuhan Keperawatan Harian" },
+  { field: "penunjang_ada", label: "Hasil Pemeriksaan Penunjang (Lab/Radiologi)" },
+  { field: "tindakan_ada", label: "Bukti Tindakan / Prosedur" },
+  { field: "discharge_planning_ada", label: "Formulir Discharge Planning" },
+  { field: "resume_medis_ada", label: "Resume Medis / Ringkasan Pulang" }
+];
+
+async function muatSelectorBpjsRanap() {
+  const select = document.getElementById("bpjsRanapPilihPasien");
+  const { data, error } = await supabaseClient
+    .from("kunjungan_ranap")
+    .select("id, kunjungan_id, status_ranap, pasien(nama, no_rm), bed_rawat(ruang, nomor_bed), kunjungan(jenis_bayar)")
+    .order("tanggal_masuk", { ascending: false });
+
+  if (error) { select.innerHTML = `<option value="">Gagal muat pasien</option>`; return; }
+
+  pasienAktifCacheBpjsRanap = (data || []).filter(k => k.kunjungan?.jenis_bayar === "BPJS");
+  select.innerHTML = !pasienAktifCacheBpjsRanap.length
+    ? `<option value="">Tidak ada pasien BPJS</option>`
+    : `<option value="">-- Pilih Pasien --</option>` +
+      pasienAktifCacheBpjsRanap.map(k => `<option value="${k.id}">${k.pasien?.nama || "-"} (${k.pasien?.no_rm || "-"}) — ${labelStatusRanap(k.status_ranap)}</option>`).join("");
+
+  document.getElementById("cardBpjsRanapChecklist").style.display = "none";
+  await muatRekapBpjsRanap();
+}
+
+function renderChecklistBpjsRanap(existing) {
+  const wrap = document.getElementById("bpjsRanapChecklistWrap");
+  wrap.innerHTML = ITEM_BERKAS_BPJS_RANAP.map(it => `
+    <label style="display:flex; align-items:center; gap:8px; font-weight:400; padding:6px 0; border-bottom:1px dashed var(--border);">
+      <input type="checkbox" id="chkBpjsRanap_${it.field}" style="width:auto;" ${existing && existing[it.field] ? "checked" : ""}>
+      ${it.label}
+    </label>
+  `).join("");
+}
+
+async function muatBerkasBpjsRanapUntukPasien() {
+  const id = document.getElementById("bpjsRanapPilihPasien").value;
+  const card = document.getElementById("cardBpjsRanapChecklist");
+  document.getElementById("msgBpjsRanapChecklist").innerHTML = "";
+  if (!id) { card.style.display = "none"; return; }
+  card.style.display = "block";
+
+  const { data, error } = await supabaseClient
+    .from("berkas_klaim_bpjs_ranap")
+    .select("*, profil_pegawai:diverifikasi_oleh(nama)")
+    .eq("kunjungan_ranap_id", id)
+    .maybeSingle();
+
+  if (error) { document.getElementById("msgBpjsRanapChecklist").innerHTML = `<div class="msg msg-error">Gagal muat: ${error.message}</div>`; return; }
+
+  renderChecklistBpjsRanap(data);
+  document.getElementById("bpjsRanapCatatan").value = data?.catatan || "";
+  document.getElementById("bpjsRanapInfoVerifikasi").textContent = data?.diverifikasi_at
+    ? `Terakhir disimpan oleh ${data.profil_pegawai?.nama || "-"} pada ${new Date(data.diverifikasi_at).toLocaleString("id-ID")}`
+    : "Belum pernah disimpan.";
+}
+
+async function simpanBerkasBpjsRanap() {
+  const msgBox = document.getElementById("msgBpjsRanapChecklist");
+  const kunjunganRanapId = document.getElementById("bpjsRanapPilihPasien").value;
+  if (!kunjunganRanapId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const payload = { kunjungan_ranap_id: kunjunganRanapId, catatan: document.getElementById("bpjsRanapCatatan").value.trim() || null, diverifikasi_oleh: user.id, diverifikasi_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+  ITEM_BERKAS_BPJS_RANAP.forEach(it => { payload[it.field] = document.getElementById(`chkBpjsRanap_${it.field}`).checked; });
+
+  const { error } = await supabaseClient.from("berkas_klaim_bpjs_ranap").upsert(payload, { onConflict: "kunjungan_ranap_id" });
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Checklist tersimpan.</div>`;
+  await muatBerkasBpjsRanapUntukPasien();
+  await muatRekapBpjsRanap();
+}
+
+async function muatRekapBpjsRanap() {
+  const tbody = document.getElementById("tabelRekapBpjsRanap");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+  if (!pasienAktifCacheBpjsRanap.length) { tbody.innerHTML = `<tr><td colspan="4">Tidak ada pasien BPJS.</td></tr>`; return; }
+
+  const ids = pasienAktifCacheBpjsRanap.map(k => k.id);
+  const { data, error } = await supabaseClient
+    .from("berkas_klaim_bpjs_ranap")
+    .select("*, profil_pegawai:diverifikasi_oleh(nama)")
+    .in("kunjungan_ranap_id", ids);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  const byId = {};
+  (data || []).forEach(b => byId[b.kunjungan_ranap_id] = b);
+
+  tbody.innerHTML = pasienAktifCacheBpjsRanap.map(k => {
+    const b = byId[k.id];
+    const totalItem = ITEM_BERKAS_BPJS_RANAP.length;
+    const jumlahAda = b ? ITEM_BERKAS_BPJS_RANAP.filter(it => b[it.field]).length : 0;
+    const lengkap = jumlahAda === totalItem;
+    return `<tr>
+      <td>${k.pasien?.nama || "-"} (${k.pasien?.no_rm || "-"})</td>
+      <td><span class="badge-status-ranap ${k.status_ranap}">${labelStatusRanap(k.status_ranap)}</span></td>
+      <td><span class="badge-status-ranap ${lengkap ? "pulang" : "baru"}">${jumlahAda}/${totalItem} — ${lengkap ? "Lengkap" : "Belum Lengkap"}</span></td>
+      <td>${b?.diverifikasi_at ? `${b.profil_pegawai?.nama || "-"} · ${new Date(b.diverifikasi_at).toLocaleDateString("id-ID")}` : "-"}</td>
+    </tr>`;
+  }).join("");
 }
 </script>
 </body>
