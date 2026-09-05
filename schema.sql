@@ -3040,6 +3040,37 @@ create trigger trg_audit_visite_ranap after insert or update or delete on visite
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 75. MODUL RAWAT INAP — FASE 3: Discharge Planning.
+--     Rujukan & Permintaan Lab TIDAK butuh tabel baru — reuse
+--     rujukan & rujukan_lab yang sudah ada (pola sama UGD),
+--     kunjungan_asal_id/kunjungan_tujuan_id tetap kunjungan.id
+--     (bukan kunjungan_ranap.id).
+-- ============================================================
+create table if not exists discharge_ranap (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_ranap_id uuid not null references kunjungan_ranap(id),
+  waktu timestamptz not null default now(),
+  resume_medis text,
+  instruksi_pulang text,
+  edukasi_pulang text,
+  rencana_kontrol text,
+  status_pemulangan text not null default 'Rencana' check (status_pemulangan in ('Rencana', 'Pulang Sembuh', 'Pulang Membaik', 'Pulang Atas Permintaan Sendiri', 'Dirujuk', 'Meninggal')),
+  is_final boolean not null default false,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_discharge_ranap_kunjungan on discharge_ranap(kunjungan_ranap_id);
+create index if not exists idx_discharge_ranap_waktu on discharge_ranap(waktu);
+
+alter table discharge_ranap enable row level security;
+create policy "authenticated_all_discharge_ranap" on discharge_ranap for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_discharge_ranap on discharge_ranap;
+create trigger trg_audit_discharge_ranap after insert or update or delete on discharge_ranap
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

@@ -437,11 +437,136 @@ tr.ranap-row-clickable:hover td { background:#f7fafb; }
           </table>
         </div>
       </div>
+      <!-- ============ DISCHARGE PLANNING ============ -->
       <div id="panelDischarge" style="display:none;">
-        <div class="card"><div class="ranap-segera"><div class="ic">🚪</div><div class="t">Discharge Planning</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▣</span> Pilih Pasien Rawat Inap</h2>
+          <div class="grid-2">
+            <div>
+              <label>Pasien Aktif</label>
+              <select id="dischargePilihPasien" onchange="muatDischargeUntukPasien()">
+                <option value="">-- Pilih Pasien --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="cardDischarge" style="--accent:#2f9e5c; display:none;">
+          <h2><span class="card-num" style="background:#2f9e5c;">🚪</span> Discharge Planning</h2>
+          <div id="msgDischargeRanap"></div>
+
+          <label>Resume Medis</label>
+          <textarea id="dischargeResume" placeholder="Ringkasan kondisi &amp; tindakan selama rawat inap"></textarea>
+
+          <label>Instruksi Pulang</label>
+          <textarea id="dischargeInstruksi" placeholder="Obat pulang, aktivitas, diet, perawatan lanjutan di rumah"></textarea>
+
+          <label>Edukasi Pulang</label>
+          <textarea id="dischargeEdukasi" placeholder="Edukasi yang diberikan ke pasien/keluarga"></textarea>
+
+          <div class="grid-2">
+            <div>
+              <label>Rencana Kontrol Ulang</label>
+              <input type="text" id="dischargeKontrol" placeholder="mis. Poli Umum, 3 hari lagi">
+            </div>
+            <div>
+              <label>Status Pemulangan</label>
+              <select id="dischargeStatus">
+                <option value="Rencana">Rencana (belum pulang)</option>
+                <option value="Pulang Sembuh">Pulang Sembuh</option>
+                <option value="Pulang Membaik">Pulang Membaik</option>
+                <option value="Pulang Atas Permintaan Sendiri">Pulang Atas Permintaan Sendiri</option>
+                <option value="Dirujuk">Dirujuk</option>
+                <option value="Meninggal">Meninggal</option>
+              </select>
+            </div>
+          </div>
+          <p style="font-size:11.5px; color:var(--muted); margin:0 0 12px;">Pilih status selain "Rencana" langsung memulangkan pasien — bed otomatis dikosongkan &amp; pasien hilang dari daftar aktif.</p>
+
+          <button class="btn-primary" onclick="simpanDischargeRanap()">Simpan Discharge Planning</button>
+
+          <table style="margin-top:14px;">
+            <thead><tr><th>Waktu</th><th>Status</th><th>Resume</th><th>Rencana Kontrol</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelDischargeRanap"><tr><td colspan="5">Pilih pasien dulu.</td></tr></tbody>
+          </table>
+        </div>
       </div>
+
+      <!-- ============ RUJUKAN & PERMINTAAN LAB ============ -->
       <div id="panelRujukan" style="display:none;">
-        <div class="card"><div class="ranap-segera"><div class="ic">↦</div><div class="t">Rujukan &amp; Permintaan Lab</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2><span class="card-num" style="background:#26a3a0;">▣</span> Pilih Pasien Rawat Inap</h2>
+          <div class="grid-2">
+            <div>
+              <label>Pasien Aktif</label>
+              <select id="rjkRanapPilihPasien" onchange="muatRujukanRanapUntukPasien()">
+                <option value="">-- Pilih Pasien --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="cardLabRanap" style="--accent:#e0793c; display:none;">
+          <h2><span class="card-num" style="background:#e0793c;">🧪</span> Permintaan Pemeriksaan Lab</h2>
+          <div id="msgLabRanap"></div>
+          <div class="grid-2">
+            <div>
+              <label>Jenis Pemeriksaan</label>
+              <input type="text" id="rjkRanapJenisLab" placeholder="mis. Darah Rutin, Gula Darah, Urinalisa">
+            </div>
+            <div style="display:flex; align-items:flex-end; padding-bottom:8px;">
+              <label style="display:flex; align-items:center; gap:6px; font-weight:400;"><input type="checkbox" id="rjkRanapLabCito" style="width:auto;"> Prioritas / Cito</label>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="simpanLabRanap()">Ajukan Permintaan Lab</button>
+
+          <table style="margin-top:14px;">
+            <thead><tr><th>Waktu</th><th>Jenis Pemeriksaan</th><th>Prioritas</th><th>Status</th></tr></thead>
+            <tbody id="tabelLabRanap"><tr><td colspan="4">Pilih pasien dulu.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" id="cardRujukanRanap" style="--accent:#c0503f; display:none;">
+          <h2><span class="card-num" style="background:#c0503f;">↦</span> Rujukan Internal / FKRTL</h2>
+          <div id="msgRujukanRanap"></div>
+
+          <div class="grid-2">
+            <div>
+              <label>Jenis Rujukan</label>
+              <select id="rjkRanapJenis" onchange="toggleJenisRujukanRanap()">
+                <option value="">-- Pilih --</option>
+                <option value="internal">Internal (klaster lain di Puskesmas)</option>
+                <option value="fkrtl">FKRTL (Rumah Sakit / Faskes Lanjutan)</option>
+              </select>
+            </div>
+            <div id="rjkRanapWrapKlaster" style="display:none;">
+              <label>Klaster Tujuan</label>
+              <select id="rjkRanapKlasterTujuan"></select>
+            </div>
+            <div id="rjkRanapWrapFaskes" style="display:none;">
+              <label>Faskes Tujuan</label>
+              <input type="text" id="rjkRanapFaskesTujuan" placeholder="mis. RSUD Puri Husada Tembilahan">
+            </div>
+          </div>
+
+          <label>Diagnosa Rujukan</label>
+          <input type="text" id="rjkRanapDiagnosa" placeholder="Diagnosa kerja/utama">
+
+          <label>Alasan Rujukan</label>
+          <textarea id="rjkRanapAlasan" placeholder="Alasan medis rujukan"></textarea>
+
+          <label>Catatan</label>
+          <textarea id="rjkRanapCatatan" placeholder="Catatan tambahan (opsional)"></textarea>
+
+          <button class="btn-primary" onclick="simpanRujukanRanap()">Simpan Rujukan</button>
+
+          <table style="margin-top:14px;">
+            <thead><tr><th>Waktu</th><th>Jenis</th><th>Tujuan</th><th>Alasan</th><th>Status</th></tr></thead>
+            <tbody id="tabelRujukanRanap"><tr><td colspan="5">Pilih pasien dulu.</td></tr></tbody>
+          </table>
+        </div>
       </div>
       <div id="panelRm" style="display:none;">
         <div class="card"><div class="ranap-segera"><div class="ic">▤</div><div class="t">Rekam Medis &amp; Resep</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
@@ -506,6 +631,8 @@ function gantiSubtabRanap(tab) {
   if (tab === "admisi") muatFormAdmisi();
   if (tab === "asuhan") muatSelectorAsuhan();
   if (tab === "visite") muatSelectorVisite();
+  if (tab === "discharge") muatSelectorDischarge();
+  if (tab === "rujukan") muatSelectorRujukan();
 }
 
 function jamSingkatRanap(iso) {
@@ -1064,6 +1191,290 @@ async function simpanVisiteRanap() {
   document.getElementById("visiteCatatan").value = "";
   document.getElementById("visiteInstruksi").value = "";
   await muatRiwayatVisite(kunjunganRanapId);
+}
+
+// ---------- DISCHARGE PLANNING ----------
+async function muatSelectorDischarge() {
+  await muatOpsiPasienAktifRanap("dischargePilihPasien");
+  document.getElementById("cardDischarge").style.display = "none";
+}
+
+function muatDischargeUntukPasien() {
+  const id = document.getElementById("dischargePilihPasien").value;
+  document.getElementById("cardDischarge").style.display = id ? "block" : "none";
+  document.getElementById("msgDischargeRanap").innerHTML = "";
+  if (id) muatRiwayatDischarge(id);
+}
+
+async function muatRiwayatDischarge(kunjunganRanapId) {
+  const tbody = document.getElementById("tabelDischargeRanap");
+  const { data, error } = await supabaseClient
+    .from("discharge_ranap")
+    .select("waktu, status_pemulangan, resume_medis, rencana_kontrol, profil_pegawai:petugas_id(nama)")
+    .eq("kunjungan_ranap_id", kunjunganRanapId)
+    .order("waktu", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  tbody.innerHTML = !data.length
+    ? `<tr><td colspan="5">Belum ada catatan discharge planning.</td></tr>`
+    : data.map(d => `<tr><td>${jamSingkatRanap(d.waktu)}</td><td>${d.status_pemulangan}</td><td>${d.resume_medis || "-"}</td><td>${d.rencana_kontrol || "-"}</td><td>${d.profil_pegawai?.nama || "-"}</td></tr>`).join("");
+}
+
+async function simpanDischargeRanap() {
+  const msgBox = document.getElementById("msgDischargeRanap");
+  const kunjunganRanapId = document.getElementById("dischargePilihPasien").value;
+  if (!kunjunganRanapId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const statusPemulangan = document.getElementById("dischargeStatus").value;
+  const isFinal = statusPemulangan !== "Rencana";
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  const { error } = await supabaseClient.from("discharge_ranap").insert({
+    kunjungan_ranap_id: kunjunganRanapId,
+    resume_medis: document.getElementById("dischargeResume").value.trim() || null,
+    instruksi_pulang: document.getElementById("dischargeInstruksi").value.trim() || null,
+    edukasi_pulang: document.getElementById("dischargeEdukasi").value.trim() || null,
+    rencana_kontrol: document.getElementById("dischargeKontrol").value.trim() || null,
+    status_pemulangan: statusPemulangan,
+    is_final: isFinal,
+    petugas_id: user.id
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  if (isFinal) {
+    const petaStatus = { "Pulang Sembuh": "pulang", "Pulang Membaik": "pulang", "Pulang Atas Permintaan Sendiri": "pulang", "Dirujuk": "dirujuk", "Meninggal": "meninggal" };
+    const statusRanapBaru = petaStatus[statusPemulangan] || "pulang";
+
+    const { data: kr } = await supabaseClient.from("kunjungan_ranap").select("bed_id, kunjungan_id").eq("id", kunjunganRanapId).single();
+
+    await supabaseClient.from("kunjungan_ranap").update({ status_ranap: statusRanapBaru, tanggal_keluar: new Date().toISOString() }).eq("id", kunjunganRanapId);
+
+    if (kr?.bed_id) await supabaseClient.from("bed_rawat").update({ status: "kosong" }).eq("id", kr.bed_id);
+    if (kr?.kunjungan_id) await supabaseClient.from("kunjungan").update({ status: "selesai" }).eq("id", kr.kunjungan_id);
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Discharge planning tersimpan.${isFinal ? " Pasien telah dipulangkan & bed dikosongkan." : ""}</div>`;
+  document.getElementById("dischargeResume").value = "";
+  document.getElementById("dischargeInstruksi").value = "";
+  document.getElementById("dischargeEdukasi").value = "";
+  document.getElementById("dischargeKontrol").value = "";
+  document.getElementById("dischargeStatus").value = "Rencana";
+
+  if (isFinal) {
+    await muatSelectorDischarge();
+  } else {
+    await muatRiwayatDischarge(kunjunganRanapId);
+  }
+}
+
+// ---------- RUJUKAN & PERMINTAAN LAB ----------
+let pasienAktifCacheRjkRanap = [];
+let rjkRanapDaftarKlaster = [];
+
+async function muatSelectorRujukan() {
+  const select = document.getElementById("rjkRanapPilihPasien");
+  const { data, error } = await supabaseClient
+    .from("kunjungan_ranap")
+    .select("id, kunjungan_id, pasien_id, pasien(nama, no_rm), bed_rawat(ruang, nomor_bed), kunjungan(jenis_bayar)")
+    .in("status_ranap", ["baru", "dirawat", "rencana_pulang"])
+    .order("tanggal_masuk", { ascending: true });
+
+  if (error) { select.innerHTML = `<option value="">Gagal muat pasien</option>`; return; }
+
+  pasienAktifCacheRjkRanap = data || [];
+  select.innerHTML = !pasienAktifCacheRjkRanap.length
+    ? `<option value="">Tidak ada pasien rawat inap aktif</option>`
+    : `<option value="">-- Pilih Pasien --</option>` +
+      pasienAktifCacheRjkRanap.map(k => `<option value="${k.id}">${k.pasien?.nama || "-"} (${k.pasien?.no_rm || "-"}) — ${k.bed_rawat ? k.bed_rawat.ruang + "/" + k.bed_rawat.nomor_bed : "-"}</option>`).join("");
+
+  document.getElementById("cardLabRanap").style.display = "none";
+  document.getElementById("cardRujukanRanap").style.display = "none";
+}
+
+function muatRujukanRanapUntukPasien() {
+  const id = document.getElementById("rjkRanapPilihPasien").value;
+  document.getElementById("cardLabRanap").style.display = id ? "block" : "none";
+  document.getElementById("cardRujukanRanap").style.display = id ? "block" : "none";
+  document.getElementById("msgLabRanap").innerHTML = "";
+  document.getElementById("msgRujukanRanap").innerHTML = "";
+  if (id) {
+    muatRiwayatLabRanap(id);
+    muatRiwayatRujukanRanapPasien(id);
+    if (!rjkRanapDaftarKlaster.length) {
+      supabaseClient.from("klaster").select("*").order("id").then(({ data }) => {
+        rjkRanapDaftarKlaster = (data || []).filter(kl => kl.kode !== "LK");
+        document.getElementById("rjkRanapKlasterTujuan").innerHTML =
+          rjkRanapDaftarKlaster.map(kl => `<option value="${kl.id}">${kl.kode} — ${kl.nama}</option>`).join("");
+      });
+    }
+  }
+}
+
+function toggleJenisRujukanRanap() {
+  const jenis = document.getElementById("rjkRanapJenis").value;
+  document.getElementById("rjkRanapWrapKlaster").style.display = jenis === "internal" ? "block" : "none";
+  document.getElementById("rjkRanapWrapFaskes").style.display = jenis === "fkrtl" ? "block" : "none";
+}
+
+async function muatRiwayatLabRanap(kunjunganRanapId) {
+  const p = pasienAktifCacheRjkRanap.find(x => x.id === kunjunganRanapId);
+  const tbody = document.getElementById("tabelLabRanap");
+  if (!p) { tbody.innerHTML = `<tr><td colspan="4">Data pasien tidak ditemukan.</td></tr>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("rujukan_lab")
+    .select("jenis_pemeriksaan, is_cito, status, created_at")
+    .eq("kunjungan_asal_id", p.kunjungan_id)
+    .order("created_at", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  tbody.innerHTML = !data.length
+    ? `<tr><td colspan="4">Belum ada permintaan lab.</td></tr>`
+    : data.map(l => `<tr><td>${jamSingkatRanap(l.created_at)}</td><td>${l.jenis_pemeriksaan}</td><td>${l.is_cito ? "Cito" : "Reguler"}</td><td><span class="badge-status-ranap ${l.status === "selesai" ? "pulang" : "baru"}">${l.status === "selesai" ? "Selesai" : "Menunggu"}</span></td></tr>`).join("");
+}
+
+async function simpanLabRanap() {
+  const msgBox = document.getElementById("msgLabRanap");
+  const kunjunganRanapId = document.getElementById("rjkRanapPilihPasien").value;
+  const p = pasienAktifCacheRjkRanap.find(x => x.id === kunjunganRanapId);
+  if (!p) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const jenis = document.getElementById("rjkRanapJenisLab").value.trim();
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Isi jenis pemeriksaan dulu.</div>`; return; }
+  const isCito = document.getElementById("rjkRanapLabCito").checked;
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { data: klasterLk, error: errKlaster } = await supabaseClient.from("klaster").select("id").eq("kode", "LK").single();
+  if (errKlaster || !klasterLk) { msgBox.innerHTML = `<div class="msg msg-error">Klaster LK tidak ditemukan.</div>`; return; }
+
+  const { data: noKunjungan, error: errNo } = await supabaseClient.rpc("generate_no_kunjungan");
+  const { data: noAntrian, error: errAntrian } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: klasterLk.id });
+  if (errNo || errAntrian) { msgBox.innerHTML = `<div class="msg msg-error">Gagal generate nomor: ${(errNo || errAntrian).message}</div>`; return; }
+
+  const { data: kunjunganLab, error: errKLab } = await supabaseClient.from("kunjungan").insert({
+    no_kunjungan: noKunjungan,
+    pasien_id: p.pasien_id,
+    klaster_id: klasterLk.id,
+    tipe_layanan: "lab",
+    jenis_bayar: p.kunjungan?.jenis_bayar || "Umum",
+    no_antrian: noAntrian,
+    status: "menunggu",
+    is_prioritas: isCito,
+    keterangan_prioritas: isCito ? "Cito dari Rawat Inap" : "Permintaan dari Rawat Inap",
+    keluhan_awal: `Rawat Inap: ${jenis}`,
+    created_by: user.id
+  }).select("id").single();
+
+  if (errKLab) { msgBox.innerHTML = `<div class="msg msg-error">Gagal buat antrian lab: ${errKLab.message}</div>`; return; }
+
+  const { error: errRl } = await supabaseClient.from("rujukan_lab").insert({
+    kunjungan_asal_id: p.kunjungan_id,
+    kunjungan_tujuan_id: kunjunganLab.id,
+    jenis_pemeriksaan: jenis,
+    is_cito: isCito,
+    status: "menunggu",
+    dibuat_oleh: user.id
+  });
+
+  if (errRl) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan permintaan lab: ${errRl.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Permintaan lab diajukan — antrian No. ${noAntrian} di Laboratorium.</div>`;
+  document.getElementById("rjkRanapJenisLab").value = "";
+  document.getElementById("rjkRanapLabCito").checked = false;
+  await muatRiwayatLabRanap(kunjunganRanapId);
+}
+
+async function muatRiwayatRujukanRanapPasien(kunjunganRanapId) {
+  const p = pasienAktifCacheRjkRanap.find(x => x.id === kunjunganRanapId);
+  const tbody = document.getElementById("tabelRujukanRanap");
+  if (!p) { tbody.innerHTML = `<tr><td colspan="5">Data pasien tidak ditemukan.</td></tr>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("rujukan")
+    .select("jenis, faskes_tujuan, alasan_rujukan, status, created_at, klaster_tujuan:klaster_tujuan_id(nama, kode)")
+    .eq("kunjungan_asal_id", p.kunjungan_id)
+    .order("created_at", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  tbody.innerHTML = !data.length
+    ? `<tr><td colspan="5">Belum ada rujukan.</td></tr>`
+    : data.map(r => `<tr>
+        <td>${jamSingkatRanap(r.created_at)}</td>
+        <td>${r.jenis === "internal" ? "Internal" : "FKRTL"}</td>
+        <td>${r.jenis === "internal" ? (r.klaster_tujuan ? `${r.klaster_tujuan.kode} — ${r.klaster_tujuan.nama}` : "-") : (r.faskes_tujuan || "-")}</td>
+        <td>${r.alasan_rujukan}</td>
+        <td><span class="badge-status-ranap ${r.status === "diterima" ? "dirawat" : (r.status === "batal" ? "meninggal" : "baru")}">${r.status}</span></td>
+      </tr>`).join("");
+}
+
+async function simpanRujukanRanap() {
+  const msgBox = document.getElementById("msgRujukanRanap");
+  const kunjunganRanapId = document.getElementById("rjkRanapPilihPasien").value;
+  const p = pasienAktifCacheRjkRanap.find(x => x.id === kunjunganRanapId);
+  if (!p) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+
+  const jenis = document.getElementById("rjkRanapJenis").value;
+  const alasan = document.getElementById("rjkRanapAlasan").value.trim();
+  if (!jenis) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jenis rujukan dulu.</div>`; return; }
+  if (!alasan) { msgBox.innerHTML = `<div class="msg msg-error">Isi alasan rujukan dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  let klasterTujuanId = null;
+  let faskesTujuan = null;
+  let kunjunganTujuanId = null;
+
+  if (jenis === "internal") {
+    klasterTujuanId = parseInt(document.getElementById("rjkRanapKlasterTujuan").value);
+    if (!klasterTujuanId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih klaster tujuan dulu.</div>`; return; }
+
+    const { data: noKunjungan, error: errNo } = await supabaseClient.rpc("generate_no_kunjungan");
+    const { data: noAntrian, error: errAntrian } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: klasterTujuanId });
+    if (errNo || errAntrian) { msgBox.innerHTML = `<div class="msg msg-error">Gagal generate nomor: ${(errNo || errAntrian).message}</div>`; return; }
+
+    const { data: kunjunganBaru, error: errKunjungan } = await supabaseClient.from("kunjungan").insert({
+      no_kunjungan: noKunjungan,
+      pasien_id: p.pasien_id,
+      klaster_id: klasterTujuanId,
+      jenis_bayar: p.kunjungan?.jenis_bayar || "Umum",
+      no_antrian: noAntrian,
+      keluhan_awal: alasan,
+      is_prioritas: true,
+      keterangan_prioritas: "Rujukan dari Rawat Inap",
+      status: "menunggu",
+      created_by: user.id
+    }).select("id").single();
+
+    if (errKunjungan) { msgBox.innerHTML = `<div class="msg msg-error">Gagal buat kunjungan tujuan: ${errKunjungan.message}</div>`; return; }
+    kunjunganTujuanId = kunjunganBaru.id;
+  } else if (jenis === "fkrtl") {
+    faskesTujuan = document.getElementById("rjkRanapFaskesTujuan").value.trim();
+    if (!faskesTujuan) { msgBox.innerHTML = `<div class="msg msg-error">Isi faskes tujuan dulu.</div>`; return; }
+  }
+
+  const { error: errRj } = await supabaseClient.from("rujukan").insert({
+    kunjungan_asal_id: p.kunjungan_id,
+    kunjungan_tujuan_id: kunjunganTujuanId,
+    jenis: jenis,
+    klaster_tujuan_id: klasterTujuanId,
+    faskes_tujuan: faskesTujuan,
+    diagnosa_rujukan: document.getElementById("rjkRanapDiagnosa").value.trim() || null,
+    alasan_rujukan: alasan,
+    catatan: document.getElementById("rjkRanapCatatan").value.trim() || null,
+    status: jenis === "internal" ? "diterima" : "diajukan",
+    petugas_id: user.id
+  });
+
+  if (errRj) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan rujukan: ${errRj.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Rujukan berhasil disimpan${jenis === "internal" ? " — antrian baru sudah dibuat di klaster tujuan." : "."}</div>`;
+  document.getElementById("rjkRanapDiagnosa").value = "";
+  document.getElementById("rjkRanapAlasan").value = "";
+  document.getElementById("rjkRanapCatatan").value = "";
+  document.getElementById("rjkRanapFaskesTujuan").value = "";
+  document.getElementById("rjkRanapJenis").value = "";
+  toggleJenisRujukanRanap();
+  await muatRiwayatRujukanRanapPasien(kunjunganRanapId);
 }
 </script>
 </body>
