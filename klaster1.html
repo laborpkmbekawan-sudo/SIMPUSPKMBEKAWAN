@@ -28,9 +28,13 @@
 .k1-stat-card .label { font-size:11.5px; color:var(--muted); margin-bottom:6px; }
 .k1-stat-card .value { font-size:24px; font-weight:700; color:#111827; }
 
+.ph-info-grid { display:flex; flex-direction:column; gap:4px; }
+.ph-info-row { display:flex; justify-content:space-between; font-size:12.5px; padding:3px 0; border-bottom:1px dashed var(--border); }
+.ph-info-row span:first-child { color:var(--muted); }
+
 .card-num { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:7px; color:#fff; font-size:13px; }
 @media print {
-  .sidebar, .topbar, .card button, .btn-primary, .btn-secondary, .lap-tab-row { display:none !important; }
+  .sidebar, .topbar, .card button, .btn-primary, .btn-secondary, .lap-tab-row, #liPrintHide, #ldPrintHide { display:none !important; }
   .dash-content { margin:0 !important; }
   .card { border:none !important; box-shadow:none !important; }
 }
@@ -1165,14 +1169,140 @@
 
       </div>
 
-      <!-- ============ LAPORAN INTERNAL (segera) ============ -->
+      <!-- ============ LAPORAN INTERNAL ============ -->
       <div id="panelLaporanInternal" style="display:none;">
-        <div class="k1-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div>Rekap realisasi anggaran, rekap kepegawaian, rekap sarpras/ASPAK, rekap indikator mutu — segera dibangun.</div>
+
+        <div class="card" style="--accent:#173b5e;" id="liPrintHide">
+          <h2><span class="card-num" style="background:#173b5e;">▦</span> Laporan Internal — Rekap Manajemen</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Rekap realisasi anggaran &amp; indikator mutu ngikut periode dipilih. Kepegawaian &amp; sarpras berupa snapshot kondisi terkini.</p>
+          <div class="grid-3">
+            <div><label>Bulan</label>
+              <select id="liBulan">
+                <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div><label>Tahun</label><input type="number" id="liTahun"></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanInternal()" style="margin-bottom:12px;">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="window.print()" style="margin-bottom:12px;">🖨 Cetak</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="liHasil" style="display:none;">
+          <div class="card" style="--accent:#173b5e;">
+            <div class="ph-info-grid">
+              <div class="ph-info-row"><span>Puskesmas</span><span>UPTD Puskesmas Bekawan</span></div>
+              <div class="ph-info-row"><span>Periode</span><span id="liPeriode">-</span></div>
+              <div class="ph-info-row"><span>Tanggal Cetak</span><span id="liTglCetak">-</span></div>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2>Rekap Realisasi Anggaran</h2>
+            <table>
+              <thead><tr><th>Pos Anggaran</th><th>Sumber Dana</th><th>Pagu</th><th>Realisasi Penerimaan</th><th>Realisasi Pengeluaran</th></tr></thead>
+              <tbody id="tabelLiAnggaran"><tr><td colspan="5">Belum ditampilkan.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2>Rekap Kepegawaian (snapshot terkini)</h2>
+            <table>
+              <thead><tr><th>Klaster / Unit</th><th>Jumlah Pegawai Aktif</th></tr></thead>
+              <tbody id="tabelLiKepegawaian"><tr><td colspan="2">Belum ditampilkan.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2>Rekap Sarpras / ASPAK (snapshot terkini)</h2>
+            <div class="k1-stat-grid" id="liStatSarpras"></div>
+          </div>
+
+          <div class="card" style="--accent:#6a4c93;">
+            <h2>Rekap Indikator Mutu — Periode Terpilih</h2>
+            <table>
+              <thead><tr><th>Indikator</th><th>Target</th><th>Capaian</th><th>Status</th></tr></thead>
+              <tbody id="tabelLiMutu"><tr><td colspan="4">Belum ditampilkan.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
-      <!-- ============ LAPORAN KE DINAS KESEHATAN (segera) ============ -->
+      <!-- ============ LAPORAN KE DINAS KESEHATAN ============ -->
       <div id="panelLaporanDinas" style="display:none;">
-        <div class="k1-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div>Laporan Kinerja Puskesmas (PKP), Laporan INM, Laporan IKP, Rekap Gabungan LB1–LB4 (SP2TP), Laporan Realisasi Anggaran — segera dibangun.</div>
+
+        <div class="card" style="--accent:#c0503f;" id="ldPrintHide">
+          <h2><span class="card-num" style="background:#c0503f;">📤</span> Laporan ke Dinas Kesehatan</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Laporan Kinerja Puskesmas (PKP), INM, IKP, Realisasi Anggaran per periode. Rekap Gabungan LB1–LB4 (SP2TP) masih perlu agregasi lintas modul (Pendaftaran/Rekam Medis/Klaster 2-4) — menyusul.</p>
+          <div class="grid-3">
+            <div><label>Bulan</label>
+              <select id="ldBulan">
+                <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div><label>Tahun</label><input type="number" id="ldTahun"></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatLaporanDinas()" style="margin-bottom:12px;">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="window.print()" style="margin-bottom:12px;">🖨 Cetak</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="ldHasil" style="display:none;">
+          <div class="card" style="--accent:#173b5e;">
+            <div class="ph-info-grid">
+              <div class="ph-info-row"><span>Puskesmas</span><span>UPTD Puskesmas Bekawan</span></div>
+              <div class="ph-info-row"><span>Periode</span><span id="ldPeriode">-</span></div>
+              <div class="ph-info-row"><span>Tanggal Cetak</span><span id="ldTglCetak">-</span></div>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2>Ringkasan Kinerja Puskesmas (PKP)</h2>
+            <div class="k1-stat-grid" id="ldStatPkp"></div>
+          </div>
+
+          <div class="card" style="--accent:#6a4c93;">
+            <h2>Indikator Nasional Mutu (INM)</h2>
+            <table>
+              <thead><tr><th>Indikator</th><th>Target</th><th>Capaian</th><th>Status</th></tr></thead>
+              <tbody id="tabelLdInm"><tr><td colspan="4">Belum ditampilkan.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2>Insiden Keselamatan Pasien (IKP)</h2>
+            <table>
+              <thead><tr><th>Jenis Insiden</th><th>Jumlah</th><th>Grading Merah/Kuning</th></tr></thead>
+              <tbody id="tabelLdIkp"><tr><td colspan="3">Belum ditampilkan.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2>Realisasi Anggaran</h2>
+            <table>
+              <thead><tr><th>Sumber Dana</th><th>Realisasi Penerimaan</th><th>Realisasi Pengeluaran</th></tr></thead>
+              <tbody id="tabelLdAnggaran"><tr><td colspan="3">Belum ditampilkan.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#1c7d7f;" id="ldPrintHide2">
+            <h2>Status Pengiriman ke Dinas Kesehatan</h2>
+            <table>
+              <thead><tr><th>Jenis Laporan</th><th>Status</th><th>Tanggal Kirim</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelLdStatusKirim"><tr><td colspan="4">Belum ditampilkan.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- ============ AUDIT / KEAMANAN (segera) ============ -->
@@ -1242,6 +1372,10 @@ let pegawaiEdit = null;
   document.getElementById("ciTahun").value = tahunIni;
   document.getElementById("pkTahun").value = tahunIni;
   document.getElementById("kjTahun").value = tahunIni;
+  document.getElementById("liTahun").value = tahunIni;
+  document.getElementById("liBulan").value = bulanIni;
+  document.getElementById("ldTahun").value = tahunIni;
+  document.getElementById("ldBulan").value = bulanIni;
   document.getElementById("ikpTanggalKejadian").value = new Date().toISOString().slice(0, 10);
   document.getElementById("jpTanggal").value = new Date().toISOString().slice(0, 10);
   document.getElementById("lpTanggal").value = new Date().toISOString().slice(0, 10);
@@ -3184,6 +3318,156 @@ async function muatKinerjaJejaring() {
       <td>${k.jumlah_imunisasi}</td>
     </tr>
   `).join("");
+}
+
+// ============================================================
+// ===================== LAPORAN INTERNAL ======================
+// ============================================================
+
+async function muatLaporanInternal() {
+  const tahun = parseInt(document.getElementById("liTahun").value, 10);
+  const bulan = parseInt(document.getElementById("liBulan").value, 10);
+  const NAMA_BULAN = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  document.getElementById("liPeriode").textContent = `${NAMA_BULAN[bulan]} ${tahun}`;
+  document.getElementById("liTglCetak").textContent = formatTanggalID(new Date().toISOString().slice(0, 10));
+  document.getElementById("liHasil").style.display = "block";
+
+  // ---- Realisasi Anggaran ----
+  const awal = `${tahun}-${String(bulan).padStart(2, "0")}-01`;
+  const akhir = new Date(tahun, bulan, 0).toISOString().slice(0, 10);
+  const { data: pos } = await supabaseClient.from("anggaran_pos").select("*").eq("tahun", tahun);
+  const { data: trx } = await supabaseClient.from("transaksi_keuangan").select("*").gte("tanggal", awal).lte("tanggal", akhir);
+  const tbodyAnggaran = document.getElementById("tabelLiAnggaran");
+  if (!pos || !pos.length) {
+    tbodyAnggaran.innerHTML = `<tr><td colspan="5">Belum ada pos anggaran tahun ${tahun}.</td></tr>`;
+  } else {
+    tbodyAnggaran.innerHTML = pos.map(p => {
+      const trxPos = (trx || []).filter(t => t.anggaran_pos_id === p.id);
+      const penerimaan = trxPos.filter(t => t.jenis === "penerimaan").reduce((a, b) => a + Number(b.jumlah), 0);
+      const pengeluaran = trxPos.filter(t => t.jenis === "pengeluaran").reduce((a, b) => a + Number(b.jumlah), 0);
+      return `<tr><td>${p.nama_pos}</td><td>${p.sumber_dana}</td><td>${formatRupiahK1(p.jumlah_anggaran)}</td><td>${formatRupiahK1(penerimaan)}</td><td>${formatRupiahK1(pengeluaran)}</td></tr>`;
+    }).join("");
+  }
+
+  // ---- Kepegawaian ----
+  const { data: pegawai } = await supabaseClient.from("profil_pegawai").select("aktif, klaster(kode, nama)").eq("aktif", true);
+  const tbodyPeg = document.getElementById("tabelLiKepegawaian");
+  const sebaran = {};
+  (pegawai || []).forEach(p => {
+    const label = p.klaster ? `${p.klaster.kode} — ${p.klaster.nama}` : "Tanpa klaster utama";
+    sebaran[label] = (sebaran[label] || 0) + 1;
+  });
+  const barisPeg = Object.entries(sebaran).sort((a, b) => b[1] - a[1]);
+  tbodyPeg.innerHTML = barisPeg.map(([label, jml]) => `<tr><td>${label}</td><td>${jml}</td></tr>`).join("") || `<tr><td colspan="2">Belum ada data pegawai aktif.</td></tr>`;
+
+  // ---- Sarpras ----
+  const { data: alat } = await supabaseClient.from("alat_kesehatan").select("kondisi");
+  const { data: kalibrasiJatuhTempo } = await supabaseClient.from("kalibrasi_alat").select("id").lte("tanggal_jatuh_tempo", new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10));
+  const jmlBaik = (alat || []).filter(a => a.kondisi === "baik").length;
+  const jmlRusakRingan = (alat || []).filter(a => a.kondisi === "rusak_ringan").length;
+  const jmlRusakBerat = (alat || []).filter(a => a.kondisi === "rusak_berat").length;
+  document.getElementById("liStatSarpras").innerHTML = `
+    <div class="k1-stat-card" style="--accent:#2f9e5c;"><div class="label">Alat Kondisi Baik</div><div class="value">${jmlBaik}</div></div>
+    <div class="k1-stat-card" style="--accent:#e0793c;"><div class="label">Rusak Ringan</div><div class="value">${jmlRusakRingan}</div></div>
+    <div class="k1-stat-card" style="--accent:#c0503f;"><div class="label">Rusak Berat</div><div class="value">${jmlRusakBerat}</div></div>
+    <div class="k1-stat-card" style="--accent:#173b5e;"><div class="label">Jatuh Tempo Kalibrasi ≤60 Hari</div><div class="value">${(kalibrasiJatuhTempo || []).length}</div></div>
+  `;
+
+  // ---- Indikator Mutu ----
+  const { data: capaian } = await supabaseClient.from("capaian_indikator_mutu").select("*, indikator_mutu(nama_indikator, target, satuan)").eq("tahun", tahun).eq("bulan", bulan);
+  const tbodyMutu = document.getElementById("tabelLiMutu");
+  tbodyMutu.innerHTML = (capaian || []).map(c => {
+    const tercapai = c.capaian >= (c.indikator_mutu?.target || 100);
+    return `<tr><td>${c.indikator_mutu?.nama_indikator || "-"}</td><td>${c.indikator_mutu?.target || "-"}${c.indikator_mutu?.satuan || ""}</td><td>${c.capaian}${c.indikator_mutu?.satuan || ""}</td><td><span class="badge ${tercapai ? 'badge-selesai' : 'badge-batal'}">${tercapai ? "Tercapai" : "Belum Tercapai"}</span></td></tr>`;
+  }).join("") || `<tr><td colspan="4">Belum ada capaian indikator mutu periode ini.</td></tr>`;
+}
+
+// ============================================================
+// ================= LAPORAN KE DINAS KESEHATAN ================
+// ============================================================
+
+const LABEL_JENIS_LAPORAN_DINAS = { pkp: "Laporan Kinerja Puskesmas (PKP)", inm: "Indikator Nasional Mutu (INM)", ikp: "Insiden Keselamatan Pasien (IKP)", lb_sp2tp: "Rekap Gabungan LB1–LB4 (SP2TP)", realisasi_anggaran: "Realisasi Anggaran" };
+
+async function muatLaporanDinas() {
+  const tahun = parseInt(document.getElementById("ldTahun").value, 10);
+  const bulan = parseInt(document.getElementById("ldBulan").value, 10);
+  const NAMA_BULAN = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  document.getElementById("ldPeriode").textContent = `${NAMA_BULAN[bulan]} ${tahun}`;
+  document.getElementById("ldTglCetak").textContent = formatTanggalID(new Date().toISOString().slice(0, 10));
+  document.getElementById("ldHasil").style.display = "block";
+
+  const awal = `${tahun}-${String(bulan).padStart(2, "0")}-01`;
+  const akhir = new Date(tahun, bulan, 0).toISOString().slice(0, 10);
+
+  // ---- INM ----
+  const { data: capaian } = await supabaseClient.from("capaian_indikator_mutu").select("*, indikator_mutu(nama_indikator, target, satuan, jenis)").eq("tahun", tahun).eq("bulan", bulan);
+  const capaianInm = (capaian || []).filter(c => c.indikator_mutu?.jenis === "inm");
+  document.getElementById("tabelLdInm").innerHTML = capaianInm.map(c => {
+    const tercapai = c.capaian >= (c.indikator_mutu?.target || 100);
+    return `<tr><td>${c.indikator_mutu?.nama_indikator || "-"}</td><td>${c.indikator_mutu?.target || "-"}${c.indikator_mutu?.satuan || ""}</td><td>${c.capaian}${c.indikator_mutu?.satuan || ""}</td><td><span class="badge ${tercapai ? 'badge-selesai' : 'badge-batal'}">${tercapai ? "Tercapai" : "Belum Tercapai"}</span></td></tr>`;
+  }).join("") || `<tr><td colspan="4">Belum ada capaian INM periode ini.</td></tr>`;
+  const rataCapaianInm = capaianInm.length ? (capaianInm.reduce((a, b) => a + Number(b.capaian), 0) / capaianInm.length).toFixed(1) : "-";
+
+  // ---- IKP ----
+  const { data: ikp } = await supabaseClient.from("insiden_keselamatan_pasien").select("jenis_insiden, grading").gte("tanggal_kejadian", awal).lte("tanggal_kejadian", akhir);
+  const jenisList = ["kpc", "knc", "ktc", "ktd", "sentinel"];
+  document.getElementById("tabelLdIkp").innerHTML = jenisList.map(j => {
+    const items = (ikp || []).filter(i => i.jenis_insiden === j);
+    const beratJumlah = items.filter(i => i.grading === "merah" || i.grading === "kuning").length;
+    return `<tr><td>${LABEL_JENIS_IKP[j]}</td><td>${items.length}</td><td>${beratJumlah}</td></tr>`;
+  }).join("");
+  const totalIkp = (ikp || []).length;
+
+  // ---- Realisasi Anggaran ----
+  const { data: trx } = await supabaseClient.from("transaksi_keuangan").select("*").gte("tanggal", awal).lte("tanggal", akhir);
+  const sumberDanaSet = [...new Set((trx || []).map(t => t.sumber_dana))];
+  document.getElementById("tabelLdAnggaran").innerHTML = sumberDanaSet.map(sd => {
+    const trxSd = (trx || []).filter(t => t.sumber_dana === sd);
+    const penerimaan = trxSd.filter(t => t.jenis === "penerimaan").reduce((a, b) => a + Number(b.jumlah), 0);
+    const pengeluaran = trxSd.filter(t => t.jenis === "pengeluaran").reduce((a, b) => a + Number(b.jumlah), 0);
+    return `<tr><td>${sd}</td><td>${formatRupiahK1(penerimaan)}</td><td>${formatRupiahK1(pengeluaran)}</td></tr>`;
+  }).join("") || `<tr><td colspan="3">Belum ada transaksi keuangan periode ini.</td></tr>`;
+  const totalPengeluaran = (trx || []).filter(t => t.jenis === "pengeluaran").reduce((a, b) => a + Number(b.jumlah), 0);
+
+  // ---- Ringkasan PKP ----
+  const { data: pegawaiAktif } = await supabaseClient.from("profil_pegawai").select("id").eq("aktif", true);
+  document.getElementById("ldStatPkp").innerHTML = `
+    <div class="k1-stat-card" style="--accent:#173b5e;"><div class="label">Pegawai Aktif</div><div class="value">${(pegawaiAktif || []).length}</div></div>
+    <div class="k1-stat-card" style="--accent:#6a4c93;"><div class="label">Rata² Capaian INM</div><div class="value">${rataCapaianInm}${rataCapaianInm !== "-" ? "%" : ""}</div></div>
+    <div class="k1-stat-card" style="--accent:#c0503f;"><div class="label">Insiden IKP Bulan Ini</div><div class="value">${totalIkp}</div></div>
+    <div class="k1-stat-card" style="--accent:#e0793c;"><div class="label">Total Pengeluaran</div><div class="value" style="font-size:16px;">${formatRupiahK1(totalPengeluaran)}</div></div>
+  `;
+
+  await muatStatusKirimDinas(tahun, bulan);
+}
+
+async function muatStatusKirimDinas(tahun, bulan) {
+  const jenisList = ["pkp", "inm", "ikp", "lb_sp2tp", "realisasi_anggaran"];
+  const { data } = await supabaseClient.from("laporan_kirim_dinas").select("*").eq("tahun", tahun).eq("bulan", bulan);
+  const tbody = document.getElementById("tabelLdStatusKirim");
+  tbody.innerHTML = jenisList.map(j => {
+    const rec = (data || []).find(d => d.jenis_laporan === j);
+    const status = rec ? rec.status : "draft";
+    return `
+    <tr>
+      <td>${LABEL_JENIS_LAPORAN_DINAS[j]}</td>
+      <td><span class="badge ${status === 'terkirim' ? 'badge-selesai' : 'badge-menunggu'}">${status}</span></td>
+      <td>${rec && rec.tanggal_kirim ? formatTanggalID(rec.tanggal_kirim) : "-"}</td>
+      <td>${status === "draft" ? `<button class="btn-secondary" onclick="tandaiKirimDinas('${j}', ${tahun}, ${bulan})">Tandai Terkirim</button>` : "-"}</td>
+    </tr>
+  `; }).join("");
+}
+
+async function tandaiKirimDinas(jenis, tahun, bulan) {
+  const payload = {
+    jenis_laporan: jenis, tahun, bulan,
+    status: "terkirim",
+    tanggal_kirim: new Date().toISOString().slice(0, 10),
+    dikirim_oleh: profilSaya.id,
+  };
+  const { error } = await supabaseClient.from("laporan_kirim_dinas").upsert(payload, { onConflict: "jenis_laporan,tahun,bulan" });
+  if (error) { alert("Gagal simpan: " + error.message); return; }
+  await muatStatusKirimDinas(tahun, bulan);
 }
 </script>
 </body>

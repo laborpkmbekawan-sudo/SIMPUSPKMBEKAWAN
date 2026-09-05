@@ -3739,3 +3739,41 @@ on conflict do nothing;
 -- Editor (bisa langsung tempel semuanya, idempotent & aman
 -- diulang). Setelah jalan, gabungkan ke schema_full.sql lokal.
 -- ============================================================
+-- ============================================================
+-- 85. LOG PENGIRIMAN LAPORAN KE DINAS KESEHATAN (Klaster 1)
+--     Nemenin fitur "Laporan ke Dinas Kesehatan" — nyatet status
+--     draft/terkirim per jenis laporan per periode (bulan/tahun).
+--     Data laporan itu sendiri dihitung on-the-fly dari tabel yang
+--     udah ada (anggaran, indikator mutu, IKP, dll), tabel ini
+--     cuma nyatet histori pengiriman resminya.
+-- ============================================================
+
+create table if not exists laporan_kirim_dinas (
+  id uuid primary key default gen_random_uuid(),
+  jenis_laporan text not null check (jenis_laporan in ('pkp','inm','ikp','lb_sp2tp','realisasi_anggaran')),
+  tahun int not null,
+  bulan int not null check (bulan between 1 and 12),
+  status text not null default 'draft' check (status in ('draft','terkirim')),
+  tanggal_kirim date,
+  file_url text,
+  catatan text,
+  dikirim_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (jenis_laporan, tahun, bulan)
+);
+
+create index if not exists idx_laporan_kirim_dinas_periode on laporan_kirim_dinas(tahun, bulan);
+
+alter table laporan_kirim_dinas enable row level security;
+
+drop policy if exists "authenticated_all_laporan_kirim_dinas" on laporan_kirim_dinas;
+create policy "authenticated_all_laporan_kirim_dinas" on laporan_kirim_dinas for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_laporan_kirim_dinas on laporan_kirim_dinas;
+create trigger trg_audit_laporan_kirim_dinas after insert or update or delete on laporan_kirim_dinas
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 85. Idempotent, aman diulang.
+-- ============================================================
