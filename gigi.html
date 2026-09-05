@@ -476,12 +476,116 @@
 
       <!-- ============ LAPORAN DINAS ============ -->
       <div id="panelLaporanDinas" style="display:none;">
-        <div class="gg-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div>Laporan bulanan kesehatan gigi &amp; mulut, laporan UKGS, kontribusi data LB1 — segera dibangun.</div>
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">📤</span> Laporan Bulanan Gigi &amp; Mulut</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Rekap diagnosis &amp; tindakan buat kontribusi data LB1 — format Puskesmas, bukan langsung upload ke sistem Dinkes.</p>
+          <div class="grid-3">
+            <div><label>Dari Tanggal</label><input type="date" id="dinasGGDari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="dinasGGSampai"></div>
+            <div style="display:flex; align-items:flex-end;"><button class="btn-primary" onclick="muatRekapDinasGG()" style="margin-bottom:12px;">Tampilkan Rekap</button></div>
+          </div>
+        </div>
+
+        <div id="dinasGGHasil" style="display:none;">
+          <div class="card" style="--accent:#173b5e;">
+            <h2>Rekap Diagnosis (10 Besar)</h2>
+            <table>
+              <thead><tr><th>Diagnosis</th><th>Jumlah Kasus</th></tr></thead>
+              <tbody id="tabelRekapDinasGGDiagnosis"><tr><td colspan="2">Belum ada data.</td></tr></tbody>
+            </table>
+            <h2 style="margin-top:16px;">Rekap Tindakan</h2>
+            <table>
+              <thead><tr><th>Jenis Tindakan</th><th>Jumlah</th></tr></thead>
+              <tbody id="tabelRekapDinasGGTindakan"><tr><td colspan="2">Belum ada data.</td></tr></tbody>
+            </table>
+            <p style="font-size:12px; color:var(--muted); margin-top:8px;">Total pemeriksaan: <strong id="dinasGGTotalPeriksa">0</strong> · Total tindakan: <strong id="dinasGGTotalTindakan">0</strong></p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn-secondary" onclick="exportDinasGGCsv()">⬇️ Export CSV</button>
+              <button class="btn-primary" onclick="tandaiKirimDinasGG('Laporan Bulanan Gigi & Mulut')">Tandai Terkirim ke Dinas</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#2f9e5c;">
+          <h2><span class="card-num" style="background:#2f9e5c;">📢</span> Laporan UKGS</h2>
+          <div class="grid-3">
+            <div><label>Dari Tanggal</label><input type="date" id="dinasUkgsDari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="dinasUkgsSampai"></div>
+            <div style="display:flex; align-items:flex-end;"><button class="btn-primary" onclick="muatRekapDinasUkgs()" style="margin-bottom:12px;">Tampilkan Rekap</button></div>
+          </div>
+          <div id="dinasUkgsHasil" style="display:none;">
+            <table>
+              <thead><tr><th>Sekolah/Lokasi</th><th>Jenis Kegiatan</th><th>Sasaran</th><th>Diperiksa</th><th>Bermasalah</th></tr></thead>
+              <tbody id="tabelRekapDinasUkgs"><tr><td colspan="5">Belum ada data.</td></tr></tbody>
+            </table>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+              <button class="btn-secondary" onclick="exportDinasUkgsCsv()">⬇️ Export CSV</button>
+              <button class="btn-primary" onclick="tandaiKirimDinasGG('Laporan UKGS')">Tandai Terkirim ke Dinas</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2>Riwayat Pengiriman ke Dinas</h2>
+          <table>
+            <thead><tr><th>Tanggal Kirim</th><th>Jenis Laporan</th><th>Periode</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelRiwayatKirimGG"><tr><td colspan="4">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
 
       <!-- ============ AUDIT ============ -->
       <div id="panelAudit" style="display:none;">
-        <div class="gg-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div>Log input/edit data klinis &amp; log akses rekam medis — segera dibangun.</div>
+        <div class="card" style="--accent:#6a4c93;">
+          <h2><span class="card-num" style="background:#6a4c93;">🛡</span> Audit Trail — Poli Gigi &amp; Mulut</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Jejak otomatis semua perubahan (tambah/ubah/hapus) pada seluruh catatan Poli Gigi &amp; Mulut. Dicatat langsung oleh database lewat trigger, gak bisa dipalsu/dihapus manual.</p>
+
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div><label>Dari Tanggal</label><input type="date" id="audGGDari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="audGGSampai"></div>
+            <div>
+              <label>Tabel</label>
+              <select id="audGGFilterTabel">
+                <option value="">Semua Tabel Poli Gigi</option>
+                <option value="odontogram_gigi">Odontogram</option>
+                <option value="pemeriksaan_gigi">Pemeriksaan Gigi</option>
+                <option value="tindakan_gigi">Tindakan Gigi</option>
+                <option value="kegiatan_promotif_gigi">Kegiatan Promotif</option>
+                <option value="rujukan_lab_gigi">Rujukan &amp; Permintaan Lab</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-3" style="margin-bottom:14px;">
+            <div>
+              <label>Aksi</label>
+              <select id="audGGFilterAksi">
+                <option value="">Semua Aksi</option>
+                <option value="insert">Tambah (Insert)</option>
+                <option value="update">Ubah (Update)</option>
+                <option value="delete">Hapus (Delete)</option>
+              </select>
+            </div>
+            <div></div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button type="button" class="btn-primary" onclick="muatAuditLogGG()" style="margin-bottom:12px;">Tampilkan</button>
+              <button type="button" class="btn-secondary" onclick="exportAuditLogGGCsv()" style="margin-bottom:12px;">⬇️ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="gg-stat-grid">
+            <div class="gg-stat-card"><div class="label">Total Perubahan</div><div class="value" id="audGGStatTotal">0</div></div>
+            <div class="gg-stat-card" style="--accent:#16865c;"><div class="label">Tambah</div><div class="value" id="audGGStatInsert">0</div></div>
+            <div class="gg-stat-card" style="--accent:#b77900;"><div class="label">Ubah</div><div class="value" id="audGGStatUpdate">0</div></div>
+          </div>
+
+          <table>
+            <thead><tr><th>Waktu</th><th>Tabel</th><th>Aksi</th><th>Petugas</th><th>Ringkasan</th><th></th></tr></thead>
+            <tbody id="audGGTabelLog"><tr><td colspan="6">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+          </table>
+          <p style="font-size:11px; color:var(--muted); margin-top:8px;">Menampilkan maksimal 500 baris terbaru sesuai filter. Persempit rentang tanggal kalau butuh data lebih lama.</p>
+        </div>
       </div>
 
     </div>
@@ -526,6 +630,7 @@ function gantiSubtabGG(tab) {
   document.querySelector(".topbar h1").textContent = judul[tab] || "Poli Gigi & Mulut";
   if (tab === "dashboard") muatDashboardGG();
   if (tab === "promotif") muatRiwayatPromoGG();
+  if (tab === "laporan-dinas") muatRiwayatKirimGG();
 }
 
 // ---------- DASHBOARD ----------
@@ -1230,6 +1335,240 @@ async function muatLaporanInternalGG() {
   } catch (e) {
     tbodyTindakan.innerHTML = `<tr><td colspan="2">Gagal muat: ${e.message}</td></tr>`;
   }
+}
+
+// ---------- LAPORAN KE DINAS KESEHATAN ----------
+let dinasGGCache = { dari: null, sampai: null, diagnosis: [], tindakan: [], totalPeriksa: 0, totalTindakan: 0 };
+let dinasUkgsCache = { dari: null, sampai: null, rekap: [] };
+
+async function muatRekapDinasGG() {
+  const dari = document.getElementById("dinasGGDari").value;
+  const sampai = document.getElementById("dinasGGSampai").value;
+  if (!dari || !sampai) { alert("Isi rentang tanggal dulu."); return; }
+
+  let qPeriksa = supabaseClient.from("pemeriksaan_gigi").select("nama_diagnosis").gte("tanggal", dari).lte("tanggal", sampai);
+  let qTindakan = supabaseClient.from("tindakan_gigi").select("jenis_tindakan").gte("tanggal", dari).lte("tanggal", sampai);
+
+  const [{ data: dataPeriksa, error: errP }, { data: dataTindakan, error: errT }] = await Promise.all([qPeriksa, qTindakan]);
+  if (errP || errT) { alert("Gagal muat: " + (errP?.message || errT?.message)); return; }
+
+  const kelompokDiagnosis = {};
+  (dataPeriksa || []).forEach(r => {
+    const label = r.nama_diagnosis || "Tidak Diisi";
+    kelompokDiagnosis[label] = (kelompokDiagnosis[label] || 0) + 1;
+  });
+  const diagnosis = Object.entries(kelompokDiagnosis).map(([label, jumlah]) => ({ label, jumlah })).sort((a, b) => b.jumlah - a.jumlah).slice(0, 10);
+
+  const kelompokTindakan = {};
+  (dataTindakan || []).forEach(r => { kelompokTindakan[r.jenis_tindakan] = (kelompokTindakan[r.jenis_tindakan] || 0) + 1; });
+  const tindakan = Object.entries(kelompokTindakan).map(([label, jumlah]) => ({ label, jumlah }));
+
+  dinasGGCache = { dari, sampai, diagnosis, tindakan, totalPeriksa: (dataPeriksa || []).length, totalTindakan: (dataTindakan || []).length };
+
+  document.getElementById("dinasGGHasil").style.display = "block";
+  document.getElementById("dinasGGTotalPeriksa").textContent = dinasGGCache.totalPeriksa;
+  document.getElementById("dinasGGTotalTindakan").textContent = dinasGGCache.totalTindakan;
+
+  document.getElementById("tabelRekapDinasGGDiagnosis").innerHTML = diagnosis.length
+    ? diagnosis.map(d => `<tr><td>${d.label}</td><td>${d.jumlah}</td></tr>`).join("")
+    : `<tr><td colspan="2">Tidak ada diagnosis pada periode ini.</td></tr>`;
+
+  document.getElementById("tabelRekapDinasGGTindakan").innerHTML = tindakan.length
+    ? tindakan.map(t => `<tr><td>${t.label}</td><td>${t.jumlah}</td></tr>`).join("")
+    : `<tr><td colspan="2">Tidak ada tindakan pada periode ini.</td></tr>`;
+}
+
+function exportDinasGGCsv() {
+  if (!dinasGGCache.diagnosis.length && !dinasGGCache.tindakan.length) { alert("Belum ada data buat diexport. Klik Tampilkan Rekap dulu."); return; }
+  const rows = [
+    ["Rekap Diagnosis", ""],
+    ["Diagnosis", "Jumlah Kasus"],
+    ...dinasGGCache.diagnosis.map(d => [d.label, d.jumlah]),
+    ["", ""],
+    ["Rekap Tindakan", ""],
+    ["Jenis Tindakan", "Jumlah"],
+    ...dinasGGCache.tindakan.map(t => [t.label, t.jumlah])
+  ];
+  const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `laporan_bulanan_gigi_${dinasGGCache.dari}_${dinasGGCache.sampai}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function muatRekapDinasUkgs() {
+  const dari = document.getElementById("dinasUkgsDari").value;
+  const sampai = document.getElementById("dinasUkgsSampai").value;
+  if (!dari || !sampai) { alert("Isi rentang tanggal dulu."); return; }
+
+  const { data, error } = await supabaseClient
+    .from("kegiatan_promotif_gigi")
+    .select("*")
+    .gte("tanggal", dari)
+    .lte("tanggal", sampai)
+    .order("tanggal", { ascending: false });
+
+  if (error) { alert("Gagal muat: " + error.message); return; }
+
+  dinasUkgsCache = { dari, sampai, rekap: data || [] };
+  document.getElementById("dinasUkgsHasil").style.display = "block";
+  const tbody = document.getElementById("tabelRekapDinasUkgs");
+  tbody.innerHTML = data.length ? data.map(r => `
+    <tr><td>${r.nama_sekolah}</td><td>${r.jenis_kegiatan}</td><td>${r.jumlah_siswa_sasaran}</td><td>${r.jumlah_siswa_diperiksa}</td><td>${r.jumlah_siswa_bermasalah}</td></tr>
+  `).join("") : `<tr><td colspan="5">Tidak ada kegiatan promotif pada periode ini.</td></tr>`;
+}
+
+function exportDinasUkgsCsv() {
+  if (!dinasUkgsCache.rekap.length) { alert("Belum ada data buat diexport. Klik Tampilkan Rekap dulu."); return; }
+  const header = ["Sekolah/Lokasi", "Jenis Kegiatan", "Sasaran", "Diperiksa", "Bermasalah"];
+  const rows = dinasUkgsCache.rekap.map(r => [r.nama_sekolah, r.jenis_kegiatan, r.jumlah_siswa_sasaran, r.jumlah_siswa_diperiksa, r.jumlah_siswa_bermasalah]);
+  const csv = [header, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `laporan_ukgs_${dinasUkgsCache.dari}_${dinasUkgsCache.sampai}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function tandaiKirimDinasGG(jenisLaporan) {
+  const cache = jenisLaporan === "Laporan UKGS" ? dinasUkgsCache : dinasGGCache;
+  if (!cache.dari || !cache.sampai) { alert("Tampilkan rekap dulu sebelum tandai terkirim."); return; }
+
+  const periodeLabel = `${cache.dari} s.d. ${cache.sampai}`;
+  const { error } = await supabaseClient.from("laporan_dinas_kirim").insert({
+    jenis_laporan: jenisLaporan,
+    periode_label: periodeLabel,
+    petugas_id: profilSaya.id
+  });
+  if (error) { alert("Gagal tandai terkirim: " + error.message); return; }
+  alert(`${jenisLaporan} ditandai terkirim ke Dinas.`);
+  await muatRiwayatKirimGG();
+}
+
+async function muatRiwayatKirimGG() {
+  const tbody = document.getElementById("tabelRiwayatKirimGG");
+  tbody.innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("laporan_dinas_kirim")
+    .select("*, profil_pegawai:petugas_id(nama)")
+    .in("jenis_laporan", ["Laporan Bulanan Gigi & Mulut", "Laporan UKGS"])
+    .order("tanggal_kirim", { ascending: false })
+    .limit(50);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada riwayat pengiriman.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal_kirim).toLocaleDateString("id-ID")}</td>
+      <td>${r.jenis_laporan}</td>
+      <td>${r.periode_label || "-"}</td>
+      <td>${r.profil_pegawai?.nama || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+// ---------- AUDIT / KEAMANAN ----------
+const TABEL_GG_ALL = ["odontogram_gigi", "pemeriksaan_gigi", "tindakan_gigi", "kegiatan_promotif_gigi", "rujukan_lab_gigi"];
+const LABEL_TABEL_AUDIT_GG = {
+  odontogram_gigi: "Odontogram", pemeriksaan_gigi: "Pemeriksaan Gigi", tindakan_gigi: "Tindakan Gigi",
+  kegiatan_promotif_gigi: "Kegiatan Promotif", rujukan_lab_gigi: "Rujukan & Permintaan Lab"
+};
+const LABEL_AKSI_AUDIT_GG = { insert: "Tambah", update: "Ubah", delete: "Hapus" };
+const BADGE_AKSI_AUDIT_GG = { insert: "badge-selesai", update: "badge-menunggu", delete: "badge-batal" };
+let auditLogGGCache = [];
+
+function ringkasBarisAuditGG(row) {
+  const data = row.data_baru || row.data_lama || {};
+  return `Tgl ${data.tanggal || "-"} — #${(row.record_id || "").slice(0, 8)}`;
+}
+
+async function muatAuditLogGG() {
+  const dari = document.getElementById("audGGDari").value;
+  const sampai = document.getElementById("audGGSampai").value;
+  const filterTabel = document.getElementById("audGGFilterTabel").value;
+  const filterAksi = document.getElementById("audGGFilterAksi").value;
+  const tbody = document.getElementById("audGGTabelLog");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  let q = supabaseClient
+    .from("audit_log")
+    .select("*, profil_pegawai(nama)")
+    .in("tabel", filterTabel ? [filterTabel] : TABEL_GG_ALL)
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (dari) q = q.gte("created_at", `${dari}T00:00:00`);
+  if (sampai) q = q.lte("created_at", `${sampai}T23:59:59`);
+  if (filterAksi) q = q.eq("aksi", filterAksi);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  auditLogGGCache = data || [];
+
+  document.getElementById("audGGStatTotal").textContent = auditLogGGCache.length;
+  document.getElementById("audGGStatInsert").textContent = auditLogGGCache.filter(r => r.aksi === "insert").length;
+  document.getElementById("audGGStatUpdate").textContent = auditLogGGCache.filter(r => r.aksi === "update").length;
+
+  tbody.innerHTML = auditLogGGCache.length ? auditLogGGCache.map((r, i) => `
+    <tr>
+      <td>${new Date(r.created_at).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${LABEL_TABEL_AUDIT_GG[r.tabel] || r.tabel}</td>
+      <td><span class="badge ${BADGE_AKSI_AUDIT_GG[r.aksi] || ""}">${LABEL_AKSI_AUDIT_GG[r.aksi] || r.aksi}</span></td>
+      <td>${r.profil_pegawai ? r.profil_pegawai.nama : "-"}</td>
+      <td>${ringkasBarisAuditGG(r)}</td>
+      <td><button type="button" class="btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="toggleDetailAuditGG(${i})">Detail</button></td>
+    </tr>
+    <tr id="audGGDetail${i}" style="display:none;">
+      <td colspan="6">
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sebelum</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_lama ? JSON.stringify(r.data_lama, null, 2) : "(tidak ada — baris baru)"}</pre>
+          </div>
+          <div style="flex:1; min-width:220px;">
+            <strong style="font-size:12px; color:var(--muted);">Sesudah</strong>
+            <pre style="font-size:11px; background:#f7f8fa; padding:8px; border-radius:6px; overflow:auto; max-height:220px;">${r.data_baru ? JSON.stringify(r.data_baru, null, 2) : "(tidak ada — baris dihapus)"}</pre>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">Gak ada perubahan pada rentang &amp; filter ini.</td></tr>`;
+}
+
+function toggleDetailAuditGG(i) {
+  const row = document.getElementById(`audGGDetail${i}`);
+  if (row) row.style.display = row.style.display === "none" ? "table-row" : "none";
+}
+
+function exportAuditLogGGCsv() {
+  if (!auditLogGGCache.length) { alert("Belum ada data buat diexport. Klik Tampilkan dulu."); return; }
+  const header = ["Waktu", "Tabel", "Aksi", "Petugas", "Ringkasan", "Record ID"];
+  const rows = auditLogGGCache.map(r => [
+    new Date(r.created_at).toLocaleString("id-ID"),
+    LABEL_TABEL_AUDIT_GG[r.tabel] || r.tabel,
+    LABEL_AKSI_AUDIT_GG[r.aksi] || r.aksi,
+    r.profil_pegawai ? r.profil_pegawai.nama : "-",
+    ringkasBarisAuditGG(r),
+    r.record_id || "-"
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dariInput = document.getElementById("audGGDari").value;
+  const sampaiInput = document.getElementById("audGGSampai").value;
+  a.href = url;
+  a.download = `Audit_Log_Gigi_${dariInput}_${sampaiInput}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
