@@ -386,12 +386,92 @@
 
       <!-- ============ RM ============ -->
       <div id="panelRm" style="display:none;">
-        <div class="gg-segera"><div class="ic">▤</div><div class="t">Rekam Medis &amp; Resep</div>Input resep pasca tindakan, terhubung otomatis ke akun Farmasi — segera dibangun.</div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▤</span> Cari Pasien</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Lihat riwayat SOAP &amp; resep pasien dari semua kunjungan (lintas klaster). Pengisian SOAP/resep baru dilakukan lewat menu Rekam Medis utama.</p>
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / Nama)</label>
+              <input type="text" id="rmGGCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienRmGG();}">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button class="btn-primary" onclick="cariPasienRmGG()" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+          <div id="rmGGHasilCari"></div>
+        </div>
+
+        <div id="rmGGWrap" style="display:none;">
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat Rekam Medis &amp; Resep — <span id="rmGGNamaPasien"></span></h2>
+            <div style="margin-bottom:10px;">
+              <a href="rekam-medis.html" target="_blank" class="btn-secondary" style="text-decoration:none; display:inline-block;">Buka Rekam Medis Lengkap (isi SOAP/resep baru) →</a>
+            </div>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Klaster</th><th>Keluhan</th><th>Diagnosa (ICD10)</th><th>Plan</th><th>Resep</th></tr></thead>
+              <tbody id="tabelRmGG"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- ============ LAPORAN INTERNAL ============ -->
       <div id="panelLaporanInternal" style="display:none;">
-        <div class="gg-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div>Rekap kunjungan &amp; jenis tindakan, rekap capaian UKGS — segera dibangun.</div>
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">▦</span> Laporan Internal Poli Gigi &amp; Mulut</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Rekap kegiatan internal per periode — dipakai buat evaluasi bulanan Puskesmas, bukan format baku Dinas Kesehatan.</p>
+          <div class="grid-3">
+            <div><label>Dari Tanggal</label><input type="date" id="lapIntGGDari"></div>
+            <div><label>Sampai Tanggal</label><input type="date" id="lapIntGGSampai"></div>
+            <div style="display:flex; align-items:flex-end;"><button class="btn-primary" onclick="muatLaporanInternalGG()" style="margin-bottom:12px;">Tampilkan</button></div>
+          </div>
+        </div>
+
+        <div id="lapIntGGHasil" style="display:none;">
+
+          <div class="gg-stat-grid">
+            <div class="gg-stat-card" style="--accent:#1a7fa0;">
+              <div class="label">Total Pemeriksaan</div>
+              <div class="value" id="lapIntGGTotalPeriksa">0</div>
+            </div>
+            <div class="gg-stat-card" style="--accent:#e0793c;">
+              <div class="label">Total Tindakan</div>
+              <div class="value" id="lapIntGGTotalTindakan">0</div>
+            </div>
+            <div class="gg-stat-card" style="--accent:#2f9e5c;">
+              <div class="label">Pasien Unik</div>
+              <div class="value" id="lapIntGGPasienUnik">0</div>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2>Rekap Tindakan per Jenis</h2>
+            <table>
+              <thead><tr><th>Jenis Tindakan</th><th>Jumlah</th></tr></thead>
+              <tbody id="tabelLapIntGGTindakan"><tr><td colspan="2">Belum ada data.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2>Rekap Kegiatan Promotif &amp; Preventif</h2>
+            <table>
+              <thead><tr><th>Jenis Kegiatan</th><th>Jumlah Kegiatan</th><th>Total Sasaran</th><th>Total Diperiksa</th><th>Total Bermasalah</th></tr></thead>
+              <tbody id="tabelLapIntGGPromo"><tr><td colspan="5">Belum ada data.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#c0503f;">
+            <h2>Rekap Rujukan &amp; Permintaan Lab per Jenis</h2>
+            <table>
+              <thead><tr><th>Jenis</th><th>Jumlah</th></tr></thead>
+              <tbody id="tabelLapIntGGRujukan"><tr><td colspan="2">Belum ada data.</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
       </div>
 
       <!-- ============ LAPORAN DINAS ============ -->
@@ -1007,6 +1087,149 @@ async function simpanRujukanGG() {
   document.getElementById("rujGGCatatan").value = "";
   toggleFieldRujukanGG();
   await muatRiwayatRujukanGG();
+}
+
+// ---------- REKAM MEDIS & RESEP (read-only, lintas klaster) ----------
+let pasienTerpilihRmGG = null;
+
+async function cariPasienRmGG() {
+  const kunci = document.getElementById("rmGGCari").value.trim();
+  const hasilDiv = document.getElementById("rmGGHasilCari");
+  document.getElementById("rmGGWrap").style.display = "none";
+  pasienTerpilihRmGG = null;
+  hasilDiv.innerHTML = "";
+
+  if (!kunci) { hasilDiv.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Daftarkan dulu lewat menu Pendaftaran.</div>`; return; }
+
+  if (data.length === 1) {
+    pilihPasienRmGG(data[0]);
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>Tgl Lahir</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${new Date(p.tanggal_lahir).toLocaleDateString("id-ID")}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienRmGGDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienRmGG = data;
+  }
+}
+
+function pilihPasienRmGGDariHasil(i) {
+  pilihPasienRmGG(window._hasilCariPasienRmGG[i]);
+}
+
+function pilihPasienRmGG(pasien) {
+  pasienTerpilihRmGG = pasien;
+  document.getElementById("rmGGHasilCari").innerHTML = "";
+  document.getElementById("rmGGNamaPasien").textContent = `${pasien.nama} (No. RM ${pasien.no_rm || "-"})`;
+  document.getElementById("rmGGWrap").style.display = "block";
+  muatRiwayatRmGG();
+}
+
+async function muatRiwayatRmGG() {
+  const tbody = document.getElementById("tabelRmGG");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("id, tanggal, keluhan_awal, klaster(nama, kode), rekam_medis(assessment, kode_icd10, plan, created_at), resep(daftar_obat)")
+    .eq("pasien_id", pasienTerpilihRmGG.id)
+    .order("tanggal", { ascending: false })
+    .limit(30);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada riwayat kunjungan / rekam medis.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(k => {
+    const rm = (k.rekam_medis && k.rekam_medis[0]) || null;
+    const resepList = k.resep || [];
+    const obatRingkas = resepList.length
+      ? resepList.map(r => (r.daftar_obat || []).map(o => o.nama_obat).join(", ")).filter(Boolean).join(" | ")
+      : "-";
+    return `
+      <tr>
+        <td>${new Date(k.tanggal).toLocaleDateString("id-ID")}</td>
+        <td>${k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "-"}</td>
+        <td>${k.keluhan_awal || "-"}</td>
+        <td>${rm ? `${rm.assessment || "-"} ${rm.kode_icd10 ? "(" + rm.kode_icd10 + ")" : ""}` : "-"}</td>
+        <td>${rm?.plan || "-"}</td>
+        <td>${obatRingkas || "-"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// ---------- LAPORAN INTERNAL ----------
+async function muatLaporanInternalGG() {
+  const wrap = document.getElementById("lapIntGGHasil");
+  wrap.style.display = "block";
+  const dari = document.getElementById("lapIntGGDari").value;
+  const sampai = document.getElementById("lapIntGGSampai").value;
+
+  const tbodyTindakan = document.getElementById("tabelLapIntGGTindakan");
+  const tbodyPromo = document.getElementById("tabelLapIntGGPromo");
+  const tbodyRujukan = document.getElementById("tabelLapIntGGRujukan");
+  tbodyTindakan.innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+  tbodyPromo.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  tbodyRujukan.innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+
+  try {
+    let qPeriksa = supabaseClient.from("pemeriksaan_gigi").select("pasien_id, tanggal");
+    let qTindakan = supabaseClient.from("tindakan_gigi").select("pasien_id, tanggal, jenis_tindakan");
+    let qPromo = supabaseClient.from("kegiatan_promotif_gigi").select("jenis_kegiatan, jumlah_siswa_sasaran, jumlah_siswa_diperiksa, jumlah_siswa_bermasalah, tanggal");
+    let qRujukan = supabaseClient.from("rujukan_lab_gigi").select("jenis, tanggal");
+
+    if (dari) { qPeriksa = qPeriksa.gte("tanggal", dari); qTindakan = qTindakan.gte("tanggal", dari); qPromo = qPromo.gte("tanggal", dari); qRujukan = qRujukan.gte("tanggal", dari); }
+    if (sampai) { qPeriksa = qPeriksa.lte("tanggal", sampai); qTindakan = qTindakan.lte("tanggal", sampai); qPromo = qPromo.lte("tanggal", sampai); qRujukan = qRujukan.lte("tanggal", sampai); }
+
+    const [{ data: dataPeriksa }, { data: dataTindakan }, { data: dataPromo }, { data: dataRujukan }] = await Promise.all([qPeriksa, qTindakan, qPromo, qRujukan]);
+
+    document.getElementById("lapIntGGTotalPeriksa").textContent = (dataPeriksa || []).length;
+    document.getElementById("lapIntGGTotalTindakan").textContent = (dataTindakan || []).length;
+
+    const pasienUnik = new Set([...(dataPeriksa || []).map(r => r.pasien_id), ...(dataTindakan || []).map(r => r.pasien_id)]);
+    document.getElementById("lapIntGGPasienUnik").textContent = pasienUnik.size;
+
+    const kelompokTindakan = {};
+    (dataTindakan || []).forEach(r => { kelompokTindakan[r.jenis_tindakan] = (kelompokTindakan[r.jenis_tindakan] || 0) + 1; });
+    const rekapTindakan = Object.entries(kelompokTindakan);
+    tbodyTindakan.innerHTML = rekapTindakan.length ? rekapTindakan.map(([label, jumlah]) => `<tr><td>${label}</td><td>${jumlah}</td></tr>`).join("") : `<tr><td colspan="2">Belum ada tindakan pada periode ini.</td></tr>`;
+
+    const kelompokPromo = {};
+    (dataPromo || []).forEach(r => {
+      if (!kelompokPromo[r.jenis_kegiatan]) kelompokPromo[r.jenis_kegiatan] = { jumlah: 0, sasaran: 0, diperiksa: 0, bermasalah: 0 };
+      kelompokPromo[r.jenis_kegiatan].jumlah++;
+      kelompokPromo[r.jenis_kegiatan].sasaran += r.jumlah_siswa_sasaran || 0;
+      kelompokPromo[r.jenis_kegiatan].diperiksa += r.jumlah_siswa_diperiksa || 0;
+      kelompokPromo[r.jenis_kegiatan].bermasalah += r.jumlah_siswa_bermasalah || 0;
+    });
+    const rekapPromo = Object.entries(kelompokPromo);
+    tbodyPromo.innerHTML = rekapPromo.length ? rekapPromo.map(([label, r]) => `
+      <tr><td>${label}</td><td>${r.jumlah}</td><td>${r.sasaran}</td><td>${r.diperiksa}</td><td>${r.bermasalah}</td></tr>
+    `).join("") : `<tr><td colspan="5">Belum ada kegiatan promotif pada periode ini.</td></tr>`;
+
+    const kelompokRujukan = {};
+    (dataRujukan || []).forEach(r => { kelompokRujukan[r.jenis] = (kelompokRujukan[r.jenis] || 0) + 1; });
+    const rekapRujukan = Object.entries(kelompokRujukan);
+    tbodyRujukan.innerHTML = rekapRujukan.length ? rekapRujukan.map(([label, jumlah]) => `<tr><td>${label}</td><td>${jumlah}</td></tr>`).join("") : `<tr><td colspan="2">Belum ada rujukan pada periode ini.</td></tr>`;
+  } catch (e) {
+    tbodyTindakan.innerHTML = `<tr><td colspan="2">Gagal muat: ${e.message}</td></tr>`;
+  }
 }
 </script>
 </body>
