@@ -206,7 +206,7 @@ async function panggilAdmin(action, payload) {
 // akses ke rekam-medis.html, walau role dasarnya bukan dokter/perawat/bidan.
 // ============================================================
 const AKSES_HALAMAN = {
-  admin: ["index.html", "rekam-medis.html", "apotek.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "kasir.html"],
+  admin: ["index.html", "rekam-medis.html", "apotek.html", "ugd.html", "ranap.html", "klaster1.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "kasir.html"],
   petugas: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html"],
   staff: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html"],
   dokter: ["rekam-medis.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html"],
@@ -223,6 +223,10 @@ function halamanIzinUntuk(profil) {
 
   const izin = new Set(AKSES_HALAMAN[profil.role] || []);
   if (punyaAksesModul(profil, "rekam_medis")) izin.add("rekam-medis.html");
+  // Kapus/KTU/Bendahara BOK dkk yang bukan admin tapi dikasih hak_akses
+  // modul_kode "manajemen" (lewat Klaster 1 > Edit Pegawai) ikut bisa buka
+  // halaman Klaster 1 (liat dashboard; kelola akun tetap dibatasi admin di UI).
+  if (punyaAksesModul(profil, "manajemen")) izin.add("klaster1.html");
   return Array.from(izin);
 }
 

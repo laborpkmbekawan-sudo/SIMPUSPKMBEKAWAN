@@ -25,6 +25,7 @@
     <a href="apotek.html">Apotek</a>
     <a href="ugd.html">UGD</a>
     <a href="ranap.html">Rawat Inap</a>
+    <a href="klaster1.html">Klaster 1</a>
     <a href="klaster2.html">Klaster 2</a>
     <a href="klaster3.html">Klaster 3</a>
     <a href="klaster4.html">Klaster 4</a>
@@ -45,114 +46,9 @@
     </form>
   </div>
 
-  <div class="card" id="cardAdmin" style="display:none;">
-    <h2>Kelola Pegawai <span style="font-weight:400; font-size:12px; color:#6b7280;">(khusus admin — master data akun, akses, & password semua pegawai)</span></h2>
-    <div id="msgBoxAdmin"></div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Nama</th><th>Email</th><th>Role</th><th>Klaster Utama</th><th>Status</th><th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="tabelPegawai"><tr><td colspan="6">Memuat...</td></tr></tbody>
-    </table>
-
-    <h2 style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">Tambah Pegawai Baru</h2>
-    <form id="formPegawaiBaru">
-      <div class="grid-2">
-        <div><label>Nama *</label><input type="text" id="npNama" required></div>
-        <div><label>NIP</label><input type="text" id="npNip"></div>
-      </div>
-      <div class="grid-2">
-        <div><label>Email *</label><input type="email" id="npEmail" required></div>
-        <div><label>Password Awal *</label><input type="password" id="npPassword" required minlength="6"></div>
-      </div>
-      <div class="grid-2">
-        <div>
-          <label>Role *</label>
-          <select id="npRole" required>
-            <option value="petugas">Petugas (Pendaftaran)</option>
-            <option value="staff">Staff (Pendaftaran)</option>
-            <option value="dokter">Dokter</option>
-            <option value="perawat">Perawat</option>
-            <option value="bidan">Bidan</option>
-            <option value="farmasi">Farmasi (Apotek)</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <div>
-          <label>Klaster Utama</label>
-          <select id="npKlaster"><option value="">- Tidak ada -</option></select>
-        </div>
-      </div>
-      <button type="submit" class="btn-primary">Tambah Pegawai</button>
-    </form>
-  </div>
-
-  <!-- Modal sederhana buat edit satu pegawai (akun, role, klaster, hak akses) -->
-  <div class="card" id="cardEditPegawai" style="display:none;">
-    <h2>Edit Pegawai: <span id="editNamaLabel"></span></h2>
-    <div id="msgBoxEdit"></div>
-
-    <h3 style="font-size:14px; color:#0f2942; margin:12px 0 8px;">Akun</h3>
-    <div class="grid-2">
-      <div>
-        <label>Email</label>
-        <div style="display:flex; gap:8px;">
-          <input type="email" id="editEmail" style="margin-bottom:0;">
-          <button type="button" class="btn-secondary" onclick="simpanEmail()">Simpan</button>
-        </div>
-      </div>
-      <div>
-        <label>Reset Password</label>
-        <div style="display:flex; gap:8px;">
-          <input type="password" id="editPasswordBaru" placeholder="Password baru" minlength="6" style="margin-bottom:0;">
-          <button type="button" class="btn-secondary" onclick="resetPasswordPegawai()">Reset</button>
-        </div>
-      </div>
-    </div>
-
-    <h3 style="font-size:14px; color:#0f2942; margin:16px 0 8px;">Role & Klaster Utama</h3>
-    <div class="grid-3">
-      <div>
-        <label>Role</label>
-        <select id="editRole">
-          <option value="petugas">Petugas</option>
-          <option value="staff">Staff</option>
-          <option value="dokter">Dokter</option>
-          <option value="perawat">Perawat</option>
-          <option value="bidan">Bidan</option>
-          <option value="farmasi">Farmasi</option>
-          <option value="admin">Admin</option>
-        </select>
-      </div>
-      <div>
-        <label>Klaster Utama</label>
-        <select id="editKlaster"><option value="">- Tidak ada -</option></select>
-      </div>
-      <div>
-        <label>Status Akun</label>
-        <select id="editAktif">
-          <option value="true">Aktif</option>
-          <option value="false">Nonaktif</option>
-        </select>
-      </div>
-    </div>
-    <button type="button" class="btn-primary" onclick="simpanProfilPegawai()">Simpan Role/Klaster/Status</button>
-
-    <h3 style="font-size:14px; color:#0f2942; margin:20px 0 8px;">Klaster Tambahan (akses lintas klaster)</h3>
-    <div id="daftarKlasterTambahan"></div>
-    <button type="button" class="btn-secondary" onclick="tambahBarisKlaster()">+ Klaster Tambahan</button>
-
-    <h3 style="font-size:14px; color:#0f2942; margin:20px 0 8px;">Hak Akses Modul (opsional, misal buat Kapus/KTU lintas peran)</h3>
-    <div id="daftarHakAkses"></div>
-    <button type="button" class="btn-secondary" onclick="tambahBarisHakAkses()">+ Hak Akses</button>
-
-    <div style="margin-top:16px;">
-      <button type="button" class="btn-primary" onclick="simpanAkses()">Simpan Klaster Tambahan & Hak Akses</button>
-      <button type="button" class="btn-secondary" onclick="tutupEdit()">Tutup</button>
-    </div>
+  <div class="card" id="cardAdminPindah" style="display:none;">
+    <h2>Kelola Pegawai</h2>
+    <p style="font-size:13px; color:#6b7280;">Kelola akun, role, klaster, hak akses (RBAC), dan reset password pegawai sekarang ada di <a href="klaster1.html">Klaster 1 → Manajemen User &amp; Akses</a>.</p>
   </div>
 
   <!-- ============ MASTER TARIF (admin only) ============ -->
@@ -213,9 +109,6 @@
 <script src="js/supabaseClient.js"></script>
 <script>
 let profilSaya = null;
-let daftarKlasterGlobal = [];
-let daftarPegawaiGlobal = [];
-let pegawaiEdit = null;
 
 (async () => {
   const session = await wajibLogin();
@@ -228,9 +121,7 @@ let pegawaiEdit = null;
   if (profil) document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;
 
   if (profil && profil.role === "admin") {
-    document.getElementById("cardAdmin").style.display = "block";
-    await muatKlasterUntukSelect();
-    await muatDaftarPegawai();
+    document.getElementById("cardAdminPindah").style.display = "block";
     document.getElementById("cardTarif").style.display = "block";
     await muatMasterTarif();
   }
@@ -256,198 +147,6 @@ document.getElementById("formGantiPasswordSendiri").addEventListener("submit", a
   msgBox.innerHTML = `<div class="msg msg-success">Password berhasil diganti.</div>`;
   e.target.reset();
 });
-
-// ---------- Kelola pegawai (admin) ----------
-async function muatKlasterUntukSelect() {
-  const { data, error } = await supabaseClient.from("klaster").select("*").order("id");
-  if (error) return;
-  daftarKlasterGlobal = data;
-  const opsi = data.map(k => `<option value="${k.id}">${k.kode} — ${k.nama}</option>`).join("");
-  document.getElementById("npKlaster").innerHTML = '<option value="">- Tidak ada -</option>' + opsi;
-  document.getElementById("editKlaster").innerHTML = '<option value="">- Tidak ada -</option>' + opsi;
-}
-
-async function muatDaftarPegawai() {
-  const tbody = document.getElementById("tabelPegawai");
-  const { data, error } = await panggilAdmin("daftar_pegawai", {});
-  if (error) {
-    tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error}</td></tr>`;
-    return;
-  }
-  daftarPegawaiGlobal = data;
-  tbody.innerHTML = data.map((p, i) => `
-    <tr>
-      <td>${p.nama}</td>
-      <td>${p.email || "-"}</td>
-      <td>${p.role}</td>
-      <td>${p.klaster ? `${p.klaster.kode} — ${p.klaster.nama}` : "-"}</td>
-      <td>${p.aktif ? '<span class="badge badge-selesai">Aktif</span>' : '<span class="badge badge-batal">Nonaktif</span>'}</td>
-      <td><button class="btn-secondary" onclick="bukaEditPegawai(${i})">Edit</button></td>
-    </tr>
-  `).join("") || `<tr><td colspan="6">Belum ada pegawai.</td></tr>`;
-}
-
-document.getElementById("formPegawaiBaru").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const msgBox = document.getElementById("msgBoxAdmin");
-  const payload = {
-    nama: document.getElementById("npNama").value.trim(),
-    nip: document.getElementById("npNip").value.trim(),
-    email: document.getElementById("npEmail").value.trim(),
-    password: document.getElementById("npPassword").value,
-    role: document.getElementById("npRole").value,
-    klaster_id: document.getElementById("npKlaster").value ? parseInt(document.getElementById("npKlaster").value) : null,
-  };
-
-  const { error } = await panggilAdmin("buat_pegawai", payload);
-  if (error) {
-    msgBox.innerHTML = `<div class="msg msg-error">Gagal tambah pegawai: ${error}</div>`;
-    return;
-  }
-  msgBox.innerHTML = `<div class="msg msg-success">Pegawai ${payload.nama} berhasil dibuat.</div>`;
-  e.target.reset();
-  await muatDaftarPegawai();
-});
-
-// ---------- Edit satu pegawai ----------
-function bukaEditPegawai(index) {
-  pegawaiEdit = daftarPegawaiGlobal[index];
-  document.getElementById("cardEditPegawai").style.display = "block";
-  document.getElementById("editNamaLabel").textContent = pegawaiEdit.nama;
-  document.getElementById("editEmail").value = pegawaiEdit.email || "";
-  document.getElementById("editPasswordBaru").value = "";
-  document.getElementById("editRole").value = pegawaiEdit.role;
-  document.getElementById("editKlaster").value = pegawaiEdit.klaster_id || "";
-  document.getElementById("editAktif").value = String(!!pegawaiEdit.aktif);
-  document.getElementById("msgBoxEdit").innerHTML = "";
-
-  const klasterTambahan = (pegawaiEdit.pegawai_klaster || []).map(pk => ({ klaster_id: pk.klaster_id, keterangan: pk.keterangan || "" }));
-  const hakAkses = (pegawaiEdit.hak_akses || []).map(h => ({ modul_kode: h.modul_kode, klaster_id: h.klaster_id, level: h.level }));
-
-  renderBarisKlaster(klasterTambahan);
-  renderBarisHakAkses(hakAkses);
-
-  document.getElementById("cardEditPegawai").scrollIntoView({ behavior: "smooth" });
-}
-
-function tutupEdit() {
-  document.getElementById("cardEditPegawai").style.display = "none";
-  pegawaiEdit = null;
-}
-
-function opsiKlaster(selectedId) {
-  return daftarKlasterGlobal.map(k => `<option value="${k.id}" ${String(k.id) === String(selectedId) ? "selected" : ""}>${k.kode} — ${k.nama}</option>`).join("");
-}
-
-function renderBarisKlaster(list) {
-  const el = document.getElementById("daftarKlasterTambahan");
-  el.innerHTML = list.map((row, i) => `
-    <div class="grid-2" data-idx-klaster="${i}">
-      <select onchange="daftarKlasterTambahanState[${i}].klaster_id=parseInt(this.value)">${opsiKlaster(row.klaster_id)}</select>
-      <div style="display:flex; gap:8px;">
-        <input type="text" placeholder="Keterangan (opsional)" value="${row.keterangan || ""}" oninput="daftarKlasterTambahanState[${i}].keterangan=this.value" style="margin-bottom:0;">
-        <button type="button" class="btn-secondary" onclick="hapusBarisKlaster(${i})">Hapus</button>
-      </div>
-    </div>
-  `).join("") || `<p style="font-size:13px; color:#6b7280; margin-bottom:10px;">Belum ada klaster tambahan.</p>`;
-  window.daftarKlasterTambahanState = list;
-}
-
-function tambahBarisKlaster() {
-  const list = window.daftarKlasterTambahanState || [];
-  list.push({ klaster_id: daftarKlasterGlobal[0]?.id || null, keterangan: "" });
-  renderBarisKlaster(list);
-}
-
-function hapusBarisKlaster(i) {
-  const list = window.daftarKlasterTambahanState || [];
-  list.splice(i, 1);
-  renderBarisKlaster(list);
-}
-
-function renderBarisHakAkses(list) {
-  const el = document.getElementById("daftarHakAkses");
-  el.innerHTML = list.map((row, i) => `
-    <div class="grid-3" data-idx-hak="${i}">
-      <input type="text" placeholder="modul_kode (mis. rekam_medis)" value="${row.modul_kode || ""}" oninput="daftarHakAksesState[${i}].modul_kode=this.value">
-      <select onchange="daftarHakAksesState[${i}].klaster_id=this.value?parseInt(this.value):null"><option value="">Semua klaster</option>${opsiKlaster(row.klaster_id)}</select>
-      <div style="display:flex; gap:8px;">
-        <select onchange="daftarHakAksesState[${i}].level=this.value" style="margin-bottom:0;">
-          <option value="lihat" ${row.level === "lihat" ? "selected" : ""}>Lihat</option>
-          <option value="layani" ${row.level === "layani" ? "selected" : ""}>Layani</option>
-          <option value="penuh" ${row.level === "penuh" ? "selected" : ""}>Penuh</option>
-        </select>
-        <button type="button" class="btn-secondary" onclick="hapusBarisHakAkses(${i})">Hapus</button>
-      </div>
-    </div>
-  `).join("") || `<p style="font-size:13px; color:#6b7280; margin-bottom:10px;">Belum ada hak akses tambahan.</p>`;
-  window.daftarHakAksesState = list;
-}
-
-function tambahBarisHakAkses() {
-  const list = window.daftarHakAksesState || [];
-  list.push({ modul_kode: "", klaster_id: null, level: "lihat" });
-  renderBarisHakAkses(list);
-}
-
-function hapusBarisHakAkses(i) {
-  const list = window.daftarHakAksesState || [];
-  list.splice(i, 1);
-  renderBarisHakAkses(list);
-}
-
-async function simpanEmail() {
-  const msgBox = document.getElementById("msgBoxEdit");
-  const emailBaru = document.getElementById("editEmail").value.trim();
-  const { error } = await panggilAdmin("ubah_email", { pegawai_id: pegawaiEdit.id, email_baru: emailBaru });
-  msgBox.innerHTML = error
-    ? `<div class="msg msg-error">Gagal ubah email: ${error}</div>`
-    : `<div class="msg msg-success">Email berhasil diubah.</div>`;
-  if (!error) await muatDaftarPegawai();
-}
-
-async function resetPasswordPegawai() {
-  const msgBox = document.getElementById("msgBoxEdit");
-  const passwordBaru = document.getElementById("editPasswordBaru").value;
-  if (!passwordBaru || passwordBaru.length < 6) {
-    msgBox.innerHTML = `<div class="msg msg-error">Password minimal 6 karakter.</div>`;
-    return;
-  }
-  const { error } = await panggilAdmin("reset_password", { pegawai_id: pegawaiEdit.id, password_baru: passwordBaru });
-  msgBox.innerHTML = error
-    ? `<div class="msg msg-error">Gagal reset password: ${error}</div>`
-    : `<div class="msg msg-success">Password berhasil direset.</div>`;
-  if (!error) document.getElementById("editPasswordBaru").value = "";
-}
-
-async function simpanProfilPegawai() {
-  const msgBox = document.getElementById("msgBoxEdit");
-  const payload = {
-    pegawai_id: pegawaiEdit.id,
-    role: document.getElementById("editRole").value,
-    klaster_id: document.getElementById("editKlaster").value ? parseInt(document.getElementById("editKlaster").value) : null,
-    aktif: document.getElementById("editAktif").value === "true",
-  };
-  const { error } = await panggilAdmin("update_profil", payload);
-  msgBox.innerHTML = error
-    ? `<div class="msg msg-error">Gagal simpan: ${error}</div>`
-    : `<div class="msg msg-success">Role/klaster/status berhasil disimpan.</div>`;
-  if (!error) await muatDaftarPegawai();
-}
-
-async function simpanAkses() {
-  const msgBox = document.getElementById("msgBoxEdit");
-  const payload = {
-    pegawai_id: pegawaiEdit.id,
-    klaster_tambahan: (window.daftarKlasterTambahanState || []).filter(r => r.klaster_id),
-    hak_akses: (window.daftarHakAksesState || []).filter(r => r.modul_kode),
-  };
-  const { error } = await panggilAdmin("set_akses", payload);
-  msgBox.innerHTML = error
-    ? `<div class="msg msg-error">Gagal simpan akses: ${error}</div>`
-    : `<div class="msg msg-success">Klaster tambahan & hak akses berhasil disimpan.</div>`;
-  if (!error) await muatDaftarPegawai();
-}
 
 // ---------- MASTER TARIF ----------
 let daftarTarifGlobal = [];
