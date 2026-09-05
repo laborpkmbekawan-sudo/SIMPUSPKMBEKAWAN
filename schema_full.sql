@@ -3803,3 +3803,50 @@ create trigger trg_audit_pegawai_klaster after insert or update or delete on peg
 -- ============================================================
 -- SELESAI section 86. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 87. MUTU — MFK & AUDIT INTERNAL (Klaster 1)
+--     a) Tambah kategori 'mfk' (Manajemen Fasilitas & Keselamatan)
+--        ke monitoring_ppi_k3 — dipakai bareng form PPI & K3 yang
+--        udah ada, cuma nambah 1 opsi kategori.
+--     b) Tabel baru audit_internal_mutu — jadwal audit internal
+--        mutu, temuan, kategori temuan, rencana tindak lanjut,
+--        penanggung jawab, batas waktu, dan status tindak lanjut.
+-- ============================================================
+
+alter table monitoring_ppi_k3 drop constraint if exists monitoring_ppi_k3_kategori_check;
+alter table monitoring_ppi_k3 add constraint monitoring_ppi_k3_kategori_check check (kategori in ('ppi','k3','mfk'));
+
+create table if not exists audit_internal_mutu (
+  id uuid primary key default gen_random_uuid(),
+  tanggal_audit date not null default current_date,
+  klaster_id int references klaster(id),
+  unit_lain text,
+  auditor_id uuid references profil_pegawai(id),
+  area_audit text not null,
+  temuan text not null,
+  kategori_temuan text not null default 'minor' check (kategori_temuan in ('mayor','minor','observasi')),
+  rencana_tindak_lanjut text,
+  penanggung_jawab_id uuid references profil_pegawai(id),
+  batas_waktu date,
+  status text not null default 'terbuka' check (status in ('terbuka','proses','selesai')),
+  tanggal_selesai date,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_audit_internal_mutu_tanggal on audit_internal_mutu(tanggal_audit);
+create index if not exists idx_audit_internal_mutu_status on audit_internal_mutu(status);
+
+alter table audit_internal_mutu enable row level security;
+
+drop policy if exists "authenticated_all_audit_internal_mutu" on audit_internal_mutu;
+create policy "authenticated_all_audit_internal_mutu" on audit_internal_mutu for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_audit_internal_mutu on audit_internal_mutu;
+create trigger trg_audit_audit_internal_mutu after insert or update or delete on audit_internal_mutu
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 87. Idempotent, aman diulang.
+-- ============================================================

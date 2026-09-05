@@ -808,7 +808,8 @@
             <button type="button" class="lap-tab active" id="muSub-indikator" onclick="gantiSubMutu('indikator')">Indikator Mutu (INM)</button>
             <button type="button" class="lap-tab" id="muSub-ikp" onclick="gantiSubMutu('ikp')">Insiden Keselamatan Pasien</button>
             <button type="button" class="lap-tab" id="muSub-risiko" onclick="gantiSubMutu('risiko')">Manajemen Risiko</button>
-            <button type="button" class="lap-tab" id="muSub-ppik3" onclick="gantiSubMutu('ppik3')">PPI &amp; K3</button>
+            <button type="button" class="lap-tab" id="muSub-ppik3" onclick="gantiSubMutu('ppik3')">PPI, K3 &amp; MFK</button>
+            <button type="button" class="lap-tab" id="muSub-auditmutu" onclick="gantiSubMutu('auditmutu')">Audit Internal</button>
           </div>
           <p style="font-size:12px; color:var(--muted); margin:8px 2px 0;">Medication error/FMEA farmasi sudah tercatat terpisah di Apotek → Laporan → Keselamatan Pasien.</p>
         </div>
@@ -973,10 +974,10 @@
           <div id="detailRisiko"></div>
         </div>
 
-        <!-- ===== PPI & K3 ===== -->
+        <!-- ===== PPI, K3 & MFK ===== -->
         <div id="muPanel-ppik3" style="display:none;">
           <div class="card" style="--accent:#26a3a0;">
-            <h2><span class="card-num" style="background:#26a3a0;">＋</span> Input Monitoring Bulanan</h2>
+            <h2><span class="card-num" style="background:#26a3a0;">＋</span> Input Monitoring Bulanan (PPI / K3 / MFK)</h2>
             <div id="msgPpiK3"></div>
             <div class="grid-3">
               <div>
@@ -984,6 +985,7 @@
                 <select id="pkKategori">
                   <option value="ppi">PPI — Pencegahan &amp; Pengendalian Infeksi</option>
                   <option value="k3">K3 — Kesehatan &amp; Keselamatan Kerja</option>
+                  <option value="mfk">MFK — Manajemen Fasilitas &amp; Keselamatan</option>
                 </select>
               </div>
               <div><label>Tahun</label><input type="number" id="pkTahun"></div>
@@ -1008,12 +1010,65 @@
           </div>
 
           <div class="card" style="--accent:#173b5e;">
-            <h2><span class="card-num" style="background:#173b5e;">▦</span> Riwayat Monitoring PPI &amp; K3</h2>
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Riwayat Monitoring PPI, K3 &amp; MFK</h2>
             <table>
               <thead><tr><th>Kategori</th><th>Periode</th><th>Item</th><th>Target</th><th>Capaian</th><th>Status</th></tr></thead>
               <tbody id="tabelPpiK3"><tr><td colspan="6">Memuat...</td></tr></tbody>
             </table>
           </div>
+        </div>
+
+        <!-- ===== AUDIT INTERNAL MUTU ===== -->
+        <div id="muPanel-auditmutu" style="display:none;">
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">＋</span> Jadwalkan / Catat Audit Internal</h2>
+            <div id="msgAuditMutu"></div>
+            <div class="grid-3">
+              <div><label>Tanggal Audit *</label><input type="date" id="amTanggal" required></div>
+              <div><label>Klaster / Unit Diaudit</label><select id="amKlaster"><option value="">- Lintas klaster / manajemen -</option></select></div>
+              <div><label>Unit Lain (kalau bukan klaster)</label><input type="text" id="amUnitLain" placeholder="mis. Loket, Apotek"></div>
+            </div>
+            <div class="grid-2">
+              <div><label>Auditor</label><select id="amAuditor"><option value="">- Belum ditentukan -</option></select></div>
+              <div><label>Area/Standar Diaudit *</label><input type="text" id="amArea" required placeholder="mis. Kepatuhan SOP Triase UGD"></div>
+            </div>
+            <label>Temuan *</label>
+            <textarea id="amTemuan" rows="3" placeholder="Uraikan temuan ketidaksesuaian"></textarea>
+            <div class="grid-3">
+              <div>
+                <label>Kategori Temuan</label>
+                <select id="amKategoriTemuan">
+                  <option value="observasi">Observasi</option>
+                  <option value="minor">Minor</option>
+                  <option value="mayor">Mayor</option>
+                </select>
+              </div>
+              <div><label>Penanggung Jawab Tindak Lanjut</label><select id="amPenanggungJawab"><option value="">- Belum ditentukan -</option></select></div>
+              <div><label>Batas Waktu Tindak Lanjut</label><input type="date" id="amBatasWaktu"></div>
+            </div>
+            <label>Rencana Tindak Lanjut</label>
+            <input type="text" id="amRtl">
+            <button type="button" class="btn-primary" onclick="simpanAuditMutu()">Simpan Audit Internal</button>
+          </div>
+
+          <div class="card" style="padding:10px 14px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="lap-tab active" id="amFilter-semua" onclick="filterAuditMutu('semua')">Semua</button>
+              <button type="button" class="lap-tab" id="amFilter-terbuka" onclick="filterAuditMutu('terbuka')">Terbuka</button>
+              <button type="button" class="lap-tab" id="amFilter-proses" onclick="filterAuditMutu('proses')">Proses</button>
+              <button type="button" class="lap-tab" id="amFilter-selesai" onclick="filterAuditMutu('selesai')">Selesai</button>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Daftar Audit Internal Mutu</h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Unit</th><th>Area</th><th>Kategori</th><th>Batas TL</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelAuditMutu"><tr><td colspan="7">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+          <div id="detailAuditMutu"></div>
         </div>
 
       </div>
@@ -1491,6 +1546,7 @@ let pegawaiEdit = null;
   await muatAlat();
   await muatAsetNonAlkes();
 
+  document.getElementById("amTanggal").value = new Date().toISOString().slice(0, 10);
   document.getElementById("ciTahun").value = tahunIni;
   document.getElementById("pkTahun").value = tahunIni;
   document.getElementById("kjTahun").value = tahunIni;
@@ -1508,6 +1564,7 @@ let pegawaiEdit = null;
   await muatIkp();
   await muatRisiko();
   await muatPpiK3();
+  await muatAuditMutu();
   await muatJejaringUntukSelect();
   await muatJejaring();
   await muatJadwalPembinaan();
@@ -1603,6 +1660,7 @@ async function muatKlasterUntukSelect() {
   document.getElementById("imKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
   document.getElementById("ikpKlaster").innerHTML = '<option value="">- Pilih klaster -</option>' + opsi;
   document.getElementById("mrKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
+  document.getElementById("amKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
 }
 
 // ---------- Pegawai ringan buat select (PJ/petugas), semua role bisa baca ----------
@@ -1610,7 +1668,7 @@ async function muatPegawaiUntukSelect() {
   const { data, error } = await supabaseClient.from("profil_pegawai").select("id, nama").eq("aktif", true).order("nama");
   if (error) return;
   const opsi = (data || []).map(p => `<option value="${p.id}">${p.nama}</option>`).join("");
-  ["mrPenanggungJawab", "jjPenanggungJawab", "jpPetugas"].forEach(id => {
+  ["mrPenanggungJawab", "jjPenanggungJawab", "jpPetugas", "amAuditor", "amPenanggungJawab"].forEach(id => {
     document.getElementById(id).innerHTML = '<option value="">- Belum ditentukan -</option>' + opsi;
   });
 }
@@ -2897,7 +2955,7 @@ async function muatAsetNonAlkes() {
 // ============================================================
 
 function gantiSubMutu(sub) {
-  ["indikator", "ikp", "risiko", "ppik3"].forEach(s => {
+  ["indikator", "ikp", "risiko", "ppik3", "auditmutu"].forEach(s => {
     document.getElementById(`muPanel-${s}`).style.display = s === sub ? "block" : "none";
     document.getElementById(`muSub-${s}`).classList.toggle("active", s === sub);
   });
@@ -3205,6 +3263,104 @@ async function muatPpiK3() {
       <td><span class="badge ${tercapai ? 'badge-selesai' : 'badge-batal'}">${tercapai ? "Tercapai" : "Belum Tercapai"}</span></td>
     </tr>
   `; }).join("");
+}
+
+// ---------- Audit Internal Mutu ----------
+let daftarAuditMutuGlobal = [];
+let filterAuditMutuAktif = "semua";
+
+async function simpanAuditMutu() {
+  const msgBox = document.getElementById("msgAuditMutu");
+  const area = document.getElementById("amArea").value.trim();
+  const temuan = document.getElementById("amTemuan").value.trim();
+  if (!area || !temuan) { msgBox.innerHTML = `<div class="msg msg-error">Isi area audit dan temuan dulu.</div>`; return; }
+
+  const payload = {
+    tanggal_audit: document.getElementById("amTanggal").value || new Date().toISOString().slice(0, 10),
+    klaster_id: document.getElementById("amKlaster").value || null,
+    unit_lain: document.getElementById("amUnitLain").value.trim() || null,
+    auditor_id: document.getElementById("amAuditor").value || null,
+    area_audit: area,
+    temuan: temuan,
+    kategori_temuan: document.getElementById("amKategoriTemuan").value,
+    penanggung_jawab_id: document.getElementById("amPenanggungJawab").value || null,
+    batas_waktu: document.getElementById("amBatasWaktu").value || null,
+    rencana_tindak_lanjut: document.getElementById("amRtl").value.trim() || null,
+  };
+  const { error } = await supabaseClient.from("audit_internal_mutu").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Audit internal tersimpan.</div>`;
+  ["amUnitLain", "amArea", "amTemuan", "amRtl"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("amBatasWaktu").value = "";
+  await muatAuditMutu();
+}
+
+function filterAuditMutu(f) {
+  filterAuditMutuAktif = f;
+  ["semua", "terbuka", "proses", "selesai"].forEach(s => document.getElementById("amFilter-" + s).classList.toggle("active", s === f));
+  renderTabelAuditMutu();
+}
+
+async function muatAuditMutu() {
+  const { data, error } = await supabaseClient.from("audit_internal_mutu").select("*, klaster(kode, nama)").order("tanggal_audit", { ascending: false });
+  if (error) { document.getElementById("tabelAuditMutu").innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  daftarAuditMutuGlobal = data || [];
+  renderTabelAuditMutu();
+}
+
+function renderTabelAuditMutu() {
+  const tbody = document.getElementById("tabelAuditMutu");
+  const list = filterAuditMutuAktif === "semua" ? daftarAuditMutuGlobal : daftarAuditMutuGlobal.filter(a => a.status === filterAuditMutuAktif);
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada audit internal pada filter ini.</td></tr>`; return; }
+  const BADGE_STATUS_AM = { terbuka: "badge-dipanggil", proses: "badge-menunggu", selesai: "badge-selesai" };
+  tbody.innerHTML = list.map(a => `
+    <tr>
+      <td>${formatTanggalID(a.tanggal_audit)}</td>
+      <td>${a.klaster ? a.klaster.kode + " — " + a.klaster.nama : (a.unit_lain || "-")}</td>
+      <td>${a.area_audit}</td>
+      <td>${a.kategori_temuan}</td>
+      <td>${a.batas_waktu ? formatTanggalID(a.batas_waktu) : "-"}</td>
+      <td><span class="badge ${BADGE_STATUS_AM[a.status]}">${a.status}</span></td>
+      <td><button class="btn-secondary" onclick="lihatDetailAuditMutu('${a.id}')">Kelola</button></td>
+    </tr>
+  `).join("");
+}
+
+function lihatDetailAuditMutu(id) {
+  const a = daftarAuditMutuGlobal.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById("detailAuditMutu").innerHTML = `
+    <div class="card" style="--accent:#e0793c;">
+      <h2><span class="card-num" style="background:#e0793c;">🛠</span> Kelola Temuan — ${a.area_audit}</h2>
+      <div class="info-row"><label>Temuan</label><span>${a.temuan}</span></div>
+      <label>Rencana Tindak Lanjut</label>
+      <textarea id="amRtlEdit" rows="2">${a.rencana_tindak_lanjut || ""}</textarea>
+      <label>Status</label>
+      <select id="amStatusBaru">
+        <option value="terbuka" ${a.status === "terbuka" ? "selected" : ""}>Terbuka</option>
+        <option value="proses" ${a.status === "proses" ? "selected" : ""}>Proses</option>
+        <option value="selesai" ${a.status === "selesai" ? "selected" : ""}>Selesai</option>
+      </select>
+      <div style="margin-top:10px;">
+        <button class="btn-primary" onclick="simpanKelolaAuditMutu('${a.id}')">Simpan</button>
+        <button class="btn-secondary" onclick="document.getElementById('detailAuditMutu').innerHTML=''">Tutup</button>
+      </div>
+    </div>
+  `;
+}
+
+async function simpanKelolaAuditMutu(id) {
+  const statusBaru = document.getElementById("amStatusBaru").value;
+  const payload = {
+    rencana_tindak_lanjut: document.getElementById("amRtlEdit").value.trim() || null,
+    status: statusBaru,
+    tanggal_selesai: statusBaru === "selesai" ? new Date().toISOString().slice(0, 10) : null,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabaseClient.from("audit_internal_mutu").update(payload).eq("id", id);
+  if (error) { alert("Gagal simpan: " + error.message); return; }
+  document.getElementById("detailAuditMutu").innerHTML = "";
+  await muatAuditMutu();
 }
 
 // ============================================================
