@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rawat Inap - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ================= RAWAT INAP (skema Teal/Green, beda dari modul lain) ================= */
+.dash-content, .topbar { --navy:#0f2942; --navy-2:#173b5e; --teal-a:#1c7d7f; --teal-2:#26a3a0; --green:#2f9e5c; --orange:#e0793c; --red:#c0503f; }
+
+.sidebar { background: linear-gradient(180deg, #0f3d3a 0%, #1c7d7f 100%) !important; }
+.sidebar nav a.active { border-left: 3px solid #2f9e5c !important; background: rgba(255,255,255,.09) !important; }
+.sidebar nav a:hover { background: rgba(255,255,255,.06) !important; }
+.topbar h1 { color: var(--navy); }
+.ph-group-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.5); text-transform: uppercase; padding: 14px 18px 4px; }
+
+.dash-content .card { border-left: 4px solid var(--accent, var(--teal-2)); }
+.dash-content .card h2 { display: flex; align-items: center; gap: 8px; }
+
+.ranap-segera { text-align: center; padding: 50px 20px; color: var(--muted); }
+.ranap-segera .ic { font-size: 32px; margin-bottom: 10px; }
+.ranap-segera .t { font-size: 14px; font-weight: 700; color: var(--navy-2); margin-bottom: 6px; }
+
+.ranap-stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+.ranap-stat-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; border-left:4px solid var(--accent,#999); }
+.ranap-stat-card .label { font-size:11.5px; color:var(--muted); margin-bottom:6px; }
+.ranap-stat-card .value { font-size:24px; font-weight:700; color:#111827; }
+
+.bed-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:8px; }
+.bed { border-radius:8px; padding:10px 8px; text-align:center; font-size:10.5px; color:#fff; }
+.bed.terisi { background:var(--red); }
+.bed.kosong { background:var(--green); }
+.bed.maintenance { background:#8a8a8a; }
+.bed .bnum { font-size:12.5px; font-weight:700; }
+.bed .bruang { font-size:9.5px; opacity:.9; }
+
+.badge-status-ranap { display:inline-flex; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600; }
+.badge-status-ranap.baru { background:#fff4d6; color:#b77900; }
+.badge-status-ranap.dirawat { background:#e8f1ff; color:#216ac5; }
+.badge-status-ranap.rencana_pulang { background:#ede9fe; color:#5b21b6; }
+.badge-status-ranap.pulang { background:#e5f7ef; color:#16865c; }
+.badge-status-ranap.dirujuk { background:#fdf1e8; color:#e0793c; }
+.badge-status-ranap.meninggal { background:#333; color:#fff; }
+
+.tag-risiko-tinggi { font-size:9.5px; padding:2px 7px; border-radius:5px; font-weight:700; background:#fbeaea; color:var(--red); margin-left:4px; }
+
+tr.ranap-row-clickable { cursor:pointer; }
+tr.ranap-row-clickable:hover td { background:#f7fafb; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+    </div>
+
+    <nav>
+    <div class="ph-group-title">Rawat Inap</div>
+    <a class="active" id="navDashboard" onclick="gantiSubtabRanap('dashboard')">Dashboard</a>
+    <a id="navAdmisi" onclick="gantiSubtabRanap('admisi')">Admisi Rawat Inap</a>
+    <a id="navAsuhan" onclick="gantiSubtabRanap('asuhan')">Asuhan Keperawatan Harian</a>
+    <a id="navVisite" onclick="gantiSubtabRanap('visite')">Visite Dokter</a>
+    <a id="navDischarge" onclick="gantiSubtabRanap('discharge')">Discharge Planning</a>
+    <a id="navRujukan" onclick="gantiSubtabRanap('rujukan')">Rujukan &amp; Permintaan Lab</a>
+    <a id="navRm" onclick="gantiSubtabRanap('rm')">Rekam Medis &amp; Resep</a>
+
+    <div class="ph-group-title">Laporan &amp; Audit</div>
+    <a id="navLaporanInternal" onclick="gantiSubtabRanap('laporan-internal')">Laporan Internal</a>
+    <a id="navLaporanDinas" onclick="gantiSubtabRanap('laporan-dinas')">Laporan ke Dinas Kesehatan</a>
+    <a id="navBpjs" onclick="gantiSubtabRanap('bpjs')">Kelengkapan Berkas Klaim BPJS</a>
+    <a id="navAudit" onclick="gantiSubtabRanap('audit')">Audit / Keamanan</a>
+
+    <div class="ph-group-title">Modul Lain</div>
+    <a href="index.html">Pendaftaran</a>
+    <a href="rekam-medis.html">Rekam Medis</a>
+    <a href="apotek.html">Apotek</a>
+    <a href="ugd.html">UGD</a>
+    <a href="klaster2.html">Klaster 2</a>
+    <a href="klaster3.html">Klaster 3</a>
+    <a href="klaster4.html">Klaster 4</a>
+    <a href="gigi.html">Poli Gigi</a>
+    <a href="pengaturan.html">Pengaturan</a>
+    <a href="kasir.html">Kasir</a>
+    </nav>
+  </aside>
+
+  <div class="main-wrap">
+
+    <div class="topbar">
+      <h1>Dashboard Rawat Inap</h1>
+      <div class="user-info">
+        <span id="namaUser">Memuat...</span>
+        <button onclick="logout()">Keluar</button>
+      </div>
+    </div>
+
+    <div class="dash-content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <div id="panelDashboard">
+
+        <div class="ranap-stat-grid">
+          <div class="ranap-stat-card" style="--accent:#173b5e;">
+            <div class="label">Pasien Rawat Inap Aktif</div>
+            <div class="value" id="statAktifRanap">0</div>
+          </div>
+          <div class="ranap-stat-card" style="--accent:#c0503f;">
+            <div class="label">Bed Terisi</div>
+            <div class="value" id="statBedTerisi">0</div>
+          </div>
+          <div class="ranap-stat-card" style="--accent:#2f9e5c;">
+            <div class="label">Bed Kosong</div>
+            <div class="value" id="statBedKosong">0</div>
+          </div>
+          <div class="ranap-stat-card" style="--accent:#e0793c;">
+            <div class="label">Alert Risiko Tinggi</div>
+            <div class="value" id="statAlertRisiko">0</div>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2><span class="card-num" style="background:#26a3a0;">🛏</span> Okupansi Tempat Tidur</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Real-time — hijau kosong, merah terisi, abu-abu maintenance.</p>
+          <div class="bed-grid" id="bedGridDashboard"><p style="color:var(--muted); font-size:13px;">Memuat...</p></div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;" id="cardAlertRisikoRanap">
+          <h2><span class="card-num" style="background:#c0503f;">!</span> Alert Pasien Risiko Tinggi</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Risiko jatuh tinggi, nyeri berat, atau risiko gizi buruk yang butuh perhatian ekstra.</p>
+          <div id="listAlertRisikoRanap"><p style="color:var(--muted); font-size:13px;">Memuat...</p></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▣</span> Pasien Rawat Inap Aktif</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Per ruang/bed — klik baris buat ubah status.</p>
+          <table>
+            <thead><tr><th>Nama</th><th>No. RM</th><th>Ruang / Bed</th><th>Sumber Masuk</th><th>Status</th><th>Masuk Sejak</th></tr></thead>
+            <tbody id="tabelPasienAktifRanap"><tr><td colspan="6">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" id="cardUbahStatusRanap" style="--accent:#26a3a0; display:none;">
+          <h2>Ubah Status: <span id="ubahStatusNamaPasien"></span></h2>
+          <div id="msgUbahStatusRanap"></div>
+          <div class="grid-2">
+            <div>
+              <label>Status Rawat Inap</label>
+              <select id="ubahStatusSelect">
+                <option value="baru">Baru Masuk</option>
+                <option value="dirawat">Dalam Perawatan</option>
+                <option value="rencana_pulang">Rencana Pulang</option>
+                <option value="pulang">Pulang</option>
+                <option value="dirujuk">Dirujuk</option>
+                <option value="meninggal">Meninggal</option>
+              </select>
+            </div>
+          </div>
+          <p style="font-size:11.5px; color:var(--muted); margin:6px 0 12px;">Pilih "Pulang", "Dirujuk", atau "Meninggal" otomatis mengosongkan bed pasien ini.</p>
+          <button class="btn-primary" onclick="simpanUbahStatusRanap()">Simpan</button>
+          <button class="btn-secondary" onclick="batalUbahStatusRanap()">Batal</button>
+        </div>
+
+      </div>
+
+      <!-- ============ ADMISI ============ -->
+      <div id="panelAdmisi" style="display:none;">
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">🧑‍⚕️</span> Cari / Terima Pasien</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Dari UGD, Klaster, atau rujukan internal lain.</p>
+          <div id="msgAdmisiRanap"></div>
+
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / Nama)</label>
+              <input type="text" id="admisiCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienAdmisi();}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienAdmisi()" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+
+          <div id="admisiHasilCari"></div>
+          <div id="admisiDaftarHasilCari"></div>
+
+          <form id="formAdmisiPasienBaru" style="display:none; margin-top:16px; border-top:1px solid #e5e7eb; padding-top:16px;">
+            <h2>Data Pasien Baru</h2>
+            <div class="grid-2">
+              <div>
+                <label>NIK *</label>
+                <input type="text" id="admisiNik" maxlength="16" required>
+              </div>
+              <div>
+                <label>Nama Lengkap *</label>
+                <input type="text" id="admisiNama" required>
+              </div>
+              <div>
+                <label>Tanggal Lahir *</label>
+                <input type="date" id="admisiTglLahir" required>
+              </div>
+              <div>
+                <label>Jenis Kelamin *</label>
+                <select id="admisiJk" required>
+                  <option value="">-- Pilih --</option>
+                  <option value="L">Laki-laki</option>
+                  <option value="P">Perempuan</option>
+                </select>
+              </div>
+              <div>
+                <label>No. HP</label>
+                <input type="text" id="admisiHp">
+              </div>
+              <div>
+                <label>Alamat</label>
+                <input type="text" id="admisiAlamat">
+              </div>
+            </div>
+            <button type="submit" class="btn-primary">Simpan Pasien Baru</button>
+            <button type="button" class="btn-secondary" onclick="document.getElementById('formAdmisiPasienBaru').style.display='none';">Batal</button>
+          </form>
+        </div>
+
+        <div class="card" id="cardFormAdmisi" style="--accent:#26a3a0; display:none;">
+          <h2><span class="card-num" style="background:#26a3a0;">🛏</span> Admisi: <span id="admisiNamaPasien"></span></h2>
+          <div id="msgFormAdmisi"></div>
+
+          <div class="info-block" style="margin-bottom:14px;">
+            <div class="info-row"><label>Nama</label><span id="admisiKNama"></span></div>
+            <div class="info-row"><label>No. RM</label><span id="admisiKNoRm"></span></div>
+            <div class="info-row"><label>NIK</label><span id="admisiKNik"></span></div>
+          </div>
+
+          <h2>Terima Pasien</h2>
+          <div class="grid-2">
+            <div>
+              <label>Sumber Masuk *</label>
+              <select id="admisiSumberMasuk" required>
+                <option value="">-- Pilih --</option>
+                <option value="UGD">UGD</option>
+                <option value="Klaster">Klaster</option>
+                <option value="Rujukan Internal">Rujukan Internal</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+            <div>
+              <label>Penempatan Bed *</label>
+              <select id="admisiBed" required>
+                <option value="">Memuat bed kosong...</option>
+              </select>
+            </div>
+          </div>
+
+          <details style="margin:6px 0 14px;">
+            <summary class="btn-secondary" style="display:inline-block; cursor:pointer;">+ Tambah Bed Baru</summary>
+            <div class="grid-2" style="margin-top:10px;">
+              <div>
+                <label>Nama Ruang</label>
+                <input type="text" id="bedBaruRuang" placeholder="mis. Ruang Rawat Inap Pria">
+              </div>
+              <div>
+                <label>Nomor Bed</label>
+                <input type="text" id="bedBaruNomor" placeholder="mis. B7">
+              </div>
+            </div>
+            <button type="button" class="btn-secondary" onclick="tambahBedBaru()">Tambah Bed</button>
+            <span id="msgBedBaru"></span>
+          </details>
+
+          <h2>Kajian Awal (Initial Assessment)</h2>
+          <div class="grid-2">
+            <div>
+              <label>Status Fisik</label>
+              <textarea id="kajianStatusFisik" placeholder="Keadaan umum, kesadaran, dsb."></textarea>
+            </div>
+            <div>
+              <label>Riwayat Kesehatan &amp; Alergi</label>
+              <textarea id="kajianAlergi" placeholder="Riwayat penyakit, alergi obat/makanan"></textarea>
+            </div>
+            <div>
+              <label>Asesmen Nyeri</label>
+              <select id="kajianNyeri">
+                <option value="Tidak ada nyeri">Tidak ada nyeri</option>
+                <option value="Nyeri ringan">Nyeri ringan</option>
+                <option value="Nyeri sedang">Nyeri sedang</option>
+                <option value="Nyeri berat">Nyeri berat</option>
+              </select>
+            </div>
+            <div>
+              <label>Asesmen Risiko Jatuh (Skala Morse/Humpty Dumpty)</label>
+              <select id="kajianRisikoJatuh">
+                <option value="Risiko rendah">Risiko rendah</option>
+                <option value="Risiko sedang">Risiko sedang</option>
+                <option value="Risiko tinggi">Risiko tinggi</option>
+              </select>
+            </div>
+            <div>
+              <label>Asesmen Risiko Gizi</label>
+              <select id="kajianRisikoGizi">
+                <option value="Gizi baik">Gizi baik</option>
+                <option value="Risiko gizi kurang">Risiko gizi kurang</option>
+                <option value="Risiko gizi buruk">Risiko gizi buruk</option>
+              </select>
+            </div>
+            <div>
+              <label>Kebutuhan Edukasi</label>
+              <textarea id="kajianEdukasi" placeholder="mis. edukasi diet, perawatan luka, dsb."></textarea>
+            </div>
+          </div>
+
+          <h2 style="margin-top:14px;">Rencana Asuhan Awal</h2>
+          <textarea id="rencanaAsuhanAwal" placeholder="Disusun berdasarkan hasil kajian awal, jadi acuan asuhan selama pasien dirawat."></textarea>
+
+          <div style="margin-top:14px;">
+            <button class="btn-primary" onclick="simpanAdmisiRanap()">Admisi Pasien ke Rawat Inap</button>
+            <button class="btn-secondary" onclick="batalkanAdmisi()">Batal</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============ PLACEHOLDER FITUR LAIN (segera hadir) ============ -->
+      <div id="panelAsuhan" style="display:none;">
+        <div class="card"><div class="ranap-segera"><div class="ic">📝</div><div class="t">Asuhan Keperawatan Harian</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+      </div>
+      <div id="panelVisite" style="display:none;">
+        <div class="card"><div class="ranap-segera"><div class="ic">👨‍⚕️</div><div class="t">Visite Dokter</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+      </div>
+      <div id="panelDischarge" style="display:none;">
+        <div class="card"><div class="ranap-segera"><div class="ic">🚪</div><div class="t">Discharge Planning</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+      </div>
+      <div id="panelRujukan" style="display:none;">
+        <div class="card"><div class="ranap-segera"><div class="ic">↦</div><div class="t">Rujukan &amp; Permintaan Lab</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+      </div>
+      <div id="panelRm" style="display:none;">
+        <div class="card"><div class="ranap-segera"><div class="ic">▤</div><div class="t">Rekam Medis &amp; Resep</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+      </div>
+      <div id="panelLaporanInternal" style="display:none;">
+        <div class="card"><div class="ranap-segera"><div class="ic">▦</div><div class="t">Laporan Internal</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+      </div>
+      <div id="panelLaporanDinas" style="display:none;">
+        <div class="card"><div class="ranap-segera"><div class="ic">📤</div><div class="t">Laporan ke Dinas Kesehatan</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+      </div>
+      <div id="panelBpjs" style="display:none;">
+        <div class="card"><div class="ranap-segera"><div class="ic">📄</div><div class="t">Kelengkapan Berkas Klaim BPJS</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+      </div>
+      <div id="panelAudit" style="display:none;">
+        <div class="card"><div class="ranap-segera"><div class="ic">🛡</div><div class="t">Audit / Keamanan</div><p>Fitur ini sedang dibangun — nyusul sesi berikutnya.</p></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+let profilSaya = null;
+let pasienTerpilihAdmisi = null;
+let kunjunganRanapTerpilihUbahStatus = null;
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  profilSaya = await getProfilSaya();
+  cekAksesHalaman(profilSaya, "ranap.html");
+  if (profilSaya) {
+    document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+  }
+
+  await muatDashboardRanap();
+})();
+
+// ---------- Sub-tab nav ----------
+const SUBTAB_RANAP = ["dashboard", "admisi", "asuhan", "visite", "discharge", "rujukan", "rm", "laporan-internal", "laporan-dinas", "bpjs", "audit"];
+function idPartRanap(tab) {
+  return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
+}
+function gantiSubtabRanap(tab) {
+  SUBTAB_RANAP.forEach(t => {
+    const idPart = idPartRanap(t);
+    const panel = document.getElementById("panel" + idPart);
+    if (panel) panel.style.display = (t === tab) ? "block" : "none";
+    const nav = document.getElementById("nav" + idPart);
+    if (nav) nav.classList.toggle("active", t === tab);
+  });
+  const judul = {
+    "dashboard": "Dashboard Rawat Inap", "admisi": "Admisi Rawat Inap", "asuhan": "Asuhan Keperawatan Harian",
+    "visite": "Visite Dokter", "discharge": "Discharge Planning", "rujukan": "Rujukan & Permintaan Lab",
+    "rm": "Rekam Medis & Resep", "laporan-internal": "Laporan Internal", "laporan-dinas": "Laporan ke Dinas Kesehatan",
+    "bpjs": "Kelengkapan Berkas Klaim BPJS", "audit": "Audit / Keamanan"
+  };
+  document.querySelector(".topbar h1").textContent = judul[tab] || "Rawat Inap";
+  if (tab === "dashboard") muatDashboardRanap();
+  if (tab === "admisi") muatFormAdmisi();
+}
+
+function jamSingkatRanap(iso) {
+  return new Date(iso).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+function labelStatusRanap(s) {
+  const map = { baru: "Baru Masuk", dirawat: "Dalam Perawatan", rencana_pulang: "Rencana Pulang", pulang: "Pulang", dirujuk: "Dirujuk", meninggal: "Meninggal" };
+  return map[s] || s;
+}
+
+function risikoTinggiFlags(k) {
+  const flags = [];
+  if ((k.kajian_risiko_jatuh || "").toLowerCase().includes("tinggi")) flags.push("Risiko Jatuh Tinggi");
+  if ((k.kajian_skor_nyeri || "").toLowerCase().includes("berat")) flags.push("Nyeri Berat");
+  if ((k.kajian_risiko_gizi || "").toLowerCase().includes("buruk")) flags.push("Risiko Gizi Buruk");
+  return flags;
+}
+
+// ---------- DASHBOARD ----------
+async function muatDashboardRanap() {
+  const { data: beds, error: errBed } = await supabaseClient
+    .from("bed_rawat").select("*").order("ruang").order("nomor_bed");
+
+  const bedGrid = document.getElementById("bedGridDashboard");
+  if (errBed) {
+    bedGrid.innerHTML = `<p style="color:var(--muted); font-size:13px;">Gagal muat bed: ${errBed.message}</p>`;
+  } else if (!beds || !beds.length) {
+    bedGrid.innerHTML = `<p style="color:var(--muted); font-size:13px;">Belum ada data bed. Tambahkan lewat menu Admisi Rawat Inap.</p>`;
+  } else {
+    bedGrid.innerHTML = beds.map(b => `
+      <div class="bed ${b.status}">
+        <div class="bnum">${b.nomor_bed}</div>
+        <div class="bruang">${b.ruang}</div>
+        ${labelBedStatus(b.status)}
+      </div>
+    `).join("");
+    document.getElementById("statBedTerisi").textContent = beds.filter(b => b.status === "terisi").length;
+    document.getElementById("statBedKosong").textContent = beds.filter(b => b.status === "kosong").length;
+  }
+
+  const { data: aktif, error: errAktif } = await supabaseClient
+    .from("kunjungan_ranap")
+    .select("id, status_ranap, sumber_masuk, tanggal_masuk, kajian_risiko_jatuh, kajian_skor_nyeri, kajian_risiko_gizi, pasien(nama, no_rm), bed_rawat(ruang, nomor_bed)")
+    .in("status_ranap", ["baru", "dirawat", "rencana_pulang"])
+    .order("tanggal_masuk", { ascending: true });
+
+  const tbodyAktif = document.getElementById("tabelPasienAktifRanap");
+  const listAlert = document.getElementById("listAlertRisikoRanap");
+
+  if (errAktif) {
+    tbodyAktif.innerHTML = `<tr><td colspan="6">Gagal muat: ${errAktif.message}</td></tr>`;
+    listAlert.innerHTML = `<p style="color:var(--muted); font-size:13px;">Gagal muat data.</p>`;
+    return;
+  }
+
+  document.getElementById("statAktifRanap").textContent = aktif.length;
+
+  tbodyAktif.innerHTML = !aktif.length
+    ? `<tr><td colspan="6">Tidak ada pasien rawat inap aktif.</td></tr>`
+    : aktif.map(k => `
+        <tr class="ranap-row-clickable" onclick="bukaUbahStatusRanap('${k.id}')">
+          <td>${k.pasien?.nama || "-"}</td>
+          <td>${k.pasien?.no_rm || "-"}</td>
+          <td>${k.bed_rawat ? `${k.bed_rawat.ruang} / ${k.bed_rawat.nomor_bed}` : "-"}</td>
+          <td>${k.sumber_masuk || "-"}</td>
+          <td><span class="badge-status-ranap ${k.status_ranap}">${labelStatusRanap(k.status_ranap)}</span></td>
+          <td>${jamSingkatRanap(k.tanggal_masuk)}</td>
+        </tr>
+      `).join("");
+
+  const berisiko = aktif.map(k => ({ ...k, flags: risikoTinggiFlags(k) })).filter(k => k.flags.length);
+  document.getElementById("statAlertRisiko").textContent = berisiko.length;
+  listAlert.innerHTML = !berisiko.length
+    ? `<p style="color:var(--muted); font-size:13px;">Tidak ada pasien dengan alert risiko tinggi saat ini.</p>`
+    : berisiko.map(k => `
+        <div class="ugd-alert-row">
+          <div style="flex:1;">
+            <strong>${k.pasien?.nama || "-"}</strong>
+            <div class="sub">${k.bed_rawat ? `${k.bed_rawat.ruang} / ${k.bed_rawat.nomor_bed}` : "-"} ${k.flags.map(f => `<span class="tag-risiko-tinggi">${f}</span>`).join("")}</div>
+          </div>
+        </div>
+      `).join("");
+}
+
+function labelBedStatus(s) {
+  const map = { kosong: "Kosong", terisi: "Terisi", maintenance: "Maintenance" };
+  return map[s] || s;
+}
+
+function bukaUbahStatusRanap(id) {
+  const kartu = document.getElementById("cardUbahStatusRanap");
+  kunjunganRanapTerpilihUbahStatus = id;
+  kartu.style.display = "block";
+  document.getElementById("msgUbahStatusRanap").innerHTML = "";
+  kartu.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  supabaseClient.from("kunjungan_ranap").select("status_ranap, pasien(nama)").eq("id", id).single().then(({ data }) => {
+    if (data) {
+      document.getElementById("ubahStatusNamaPasien").textContent = data.pasien?.nama || "-";
+      document.getElementById("ubahStatusSelect").value = data.status_ranap;
+    }
+  });
+}
+
+function batalUbahStatusRanap() {
+  kunjunganRanapTerpilihUbahStatus = null;
+  document.getElementById("cardUbahStatusRanap").style.display = "none";
+}
+
+async function simpanUbahStatusRanap() {
+  const msgBox = document.getElementById("msgUbahStatusRanap");
+  if (!kunjunganRanapTerpilihUbahStatus) return;
+
+  const statusBaru = document.getElementById("ubahStatusSelect").value;
+  const selesai = ["pulang", "dirujuk", "meninggal"].includes(statusBaru);
+
+  const { data: kr, error: errGet } = await supabaseClient
+    .from("kunjungan_ranap").select("bed_id, kunjungan_id").eq("id", kunjunganRanapTerpilihUbahStatus).single();
+
+  if (errGet) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal ambil data: ${errGet.message}</div>`;
+    return;
+  }
+
+  const payload = { status_ranap: statusBaru };
+  if (selesai) payload.tanggal_keluar = new Date().toISOString();
+
+  const { error: errUpdate } = await supabaseClient.from("kunjungan_ranap").update(payload).eq("id", kunjunganRanapTerpilihUbahStatus);
+  if (errUpdate) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${errUpdate.message}</div>`;
+    return;
+  }
+
+  if (selesai && kr.bed_id) {
+    await supabaseClient.from("bed_rawat").update({ status: "kosong" }).eq("id", kr.bed_id);
+    await supabaseClient.from("kunjungan").update({ status: "selesai" }).eq("id", kr.kunjungan_id);
+  }
+
+  batalUbahStatusRanap();
+  await muatDashboardRanap();
+}
+
+// ---------- ADMISI ----------
+async function muatFormAdmisi() {
+  await muatOpsiBedKosong();
+}
+
+async function muatOpsiBedKosong() {
+  const select = document.getElementById("admisiBed");
+  const { data, error } = await supabaseClient.from("bed_rawat").select("*").eq("status", "kosong").order("ruang").order("nomor_bed");
+  if (error) {
+    select.innerHTML = `<option value="">Gagal muat bed</option>`;
+    return;
+  }
+  if (!data.length) {
+    select.innerHTML = `<option value="">Tidak ada bed kosong — tambah dulu</option>`;
+    return;
+  }
+  select.innerHTML = `<option value="">-- Pilih Bed --</option>` +
+    data.map(b => `<option value="${b.id}">${b.ruang} / ${b.nomor_bed}</option>`).join("");
+}
+
+async function tambahBedBaru() {
+  const msgBox = document.getElementById("msgBedBaru");
+  const ruang = document.getElementById("bedBaruRuang").value.trim();
+  const nomor = document.getElementById("bedBaruNomor").value.trim();
+  if (!ruang || !nomor) {
+    msgBox.innerHTML = `<span style="color:#991b1b; font-size:12px;"> Isi nama ruang &amp; nomor bed dulu.</span>`;
+    return;
+  }
+  const { error } = await supabaseClient.from("bed_rawat").insert({ ruang, nomor_bed: nomor, status: "kosong" });
+  if (error) {
+    msgBox.innerHTML = `<span style="color:#991b1b; font-size:12px;"> Gagal: ${error.message}</span>`;
+    return;
+  }
+  msgBox.innerHTML = `<span style="color:#065f46; font-size:12px;"> Bed ditambahkan.</span>`;
+  document.getElementById("bedBaruRuang").value = "";
+  document.getElementById("bedBaruNomor").value = "";
+  await muatOpsiBedKosong();
+}
+
+async function cariPasienAdmisi() {
+  const kunci = document.getElementById("admisiCari").value.trim();
+  const msgBox = document.getElementById("msgAdmisiRanap");
+  const hasilDiv = document.getElementById("admisiHasilCari");
+  const daftarDiv = document.getElementById("admisiDaftarHasilCari");
+  msgBox.innerHTML = "";
+  hasilDiv.innerHTML = "";
+  daftarDiv.innerHTML = "";
+  document.getElementById("formAdmisiPasienBaru").style.display = "none";
+  document.getElementById("cardFormAdmisi").style.display = "none";
+  pasienTerpilihAdmisi = null;
+
+  if (!kunci) {
+    msgBox.innerHTML = `<div class="msg msg-error">Isi NIK, No. RM, atau nama dulu.</div>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`;
+    return;
+  }
+
+  if (data.length === 1) {
+    pilihPasienAdmisi(data[0]);
+  } else if (data.length > 1) {
+    daftarDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+      `<table><thead><tr><th>Nama</th><th>No. RM</th><th>NIK</th><th></th></tr></thead><tbody>` +
+      data.map((p, i) => `
+        <tr>
+          <td>${p.nama}</td>
+          <td>${p.no_rm || "-"}</td>
+          <td>${p.nik}</td>
+          <td><button class="btn-secondary" onclick="pilihPasienAdmisiDariHasil(${i})">Pilih</button></td>
+        </tr>
+      `).join("") + `</tbody></table>`;
+    window._hasilCariPasienAdmisi = data;
+  } else {
+    hasilDiv.innerHTML = `<div class="msg msg-error">Pasien belum terdaftar. Isi form di bawah untuk mendaftarkan pasien baru (No. RM baru otomatis dibuat).</div>`;
+    if (/^\d{16}$/.test(kunci)) {
+      document.getElementById("admisiNik").value = kunci;
+    } else {
+      document.getElementById("admisiNama").value = kunci;
+    }
+    document.getElementById("formAdmisiPasienBaru").style.display = "block";
+  }
+}
+
+function pilihPasienAdmisiDariHasil(i) {
+  pilihPasienAdmisi(window._hasilCariPasienAdmisi[i]);
+}
+
+async function pilihPasienAdmisi(data) {
+  pasienTerpilihAdmisi = data;
+  document.getElementById("admisiDaftarHasilCari").innerHTML = "";
+  document.getElementById("admisiHasilCari").innerHTML = `<div class="msg msg-success">Pasien dipilih: <strong>${data.nama}</strong> — No. RM ${data.no_rm || "-"}</div>`;
+  document.getElementById("admisiNamaPasien").textContent = data.nama;
+  document.getElementById("admisiKNama").textContent = data.nama;
+  document.getElementById("admisiKNoRm").textContent = data.no_rm || "-";
+  document.getElementById("admisiKNik").textContent = data.nik;
+  document.getElementById("admisiSumberMasuk").value = "";
+  document.getElementById("kajianStatusFisik").value = "";
+  document.getElementById("kajianAlergi").value = data.alergi_obat || "";
+  document.getElementById("kajianNyeri").value = "Tidak ada nyeri";
+  document.getElementById("kajianRisikoJatuh").value = "Risiko rendah";
+  document.getElementById("kajianRisikoGizi").value = "Gizi baik";
+  document.getElementById("kajianEdukasi").value = "";
+  document.getElementById("rencanaAsuhanAwal").value = "";
+  document.getElementById("msgFormAdmisi").innerHTML = "";
+  document.getElementById("cardFormAdmisi").style.display = "block";
+  await muatOpsiBedKosong();
+  document.getElementById("cardFormAdmisi").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function batalkanAdmisi() {
+  pasienTerpilihAdmisi = null;
+  document.getElementById("cardFormAdmisi").style.display = "none";
+  document.getElementById("admisiHasilCari").innerHTML = "";
+}
+
+document.getElementById("formAdmisiPasienBaru").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msgBox = document.getElementById("msgAdmisiRanap");
+  const nik = document.getElementById("admisiNik").value.trim();
+
+  if (!/^\d{16}$/.test(nik)) {
+    msgBox.innerHTML = `<div class="msg msg-error">NIK harus 16 digit angka.</div>`;
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  const payload = {
+    nik: nik,
+    nama: document.getElementById("admisiNama").value.trim(),
+    tanggal_lahir: document.getElementById("admisiTglLahir").value,
+    jenis_kelamin: document.getElementById("admisiJk").value,
+    no_hp: document.getElementById("admisiHp").value.trim() || null,
+    alamat: document.getElementById("admisiAlamat").value.trim() || null,
+    created_by: user.id
+  };
+
+  const { data: pasienBaru, error } = await supabaseClient.from("pasien").insert(payload).select("*").single();
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan pasien baru: ${error.message}</div>`;
+    return;
+  }
+
+  document.getElementById("formAdmisiPasienBaru").reset();
+  document.getElementById("formAdmisiPasienBaru").style.display = "none";
+  msgBox.innerHTML = "";
+  await pilihPasienAdmisi(pasienBaru);
+});
+
+async function simpanAdmisiRanap() {
+  const msgBox = document.getElementById("msgFormAdmisi");
+  if (!pasienTerpilihAdmisi) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih atau daftarkan pasien dulu.</div>`;
+    return;
+  }
+
+  const sumberMasuk = document.getElementById("admisiSumberMasuk").value;
+  const bedId = document.getElementById("admisiBed").value;
+
+  if (!sumberMasuk) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih sumber masuk dulu.</div>`;
+    return;
+  }
+  if (!bedId) {
+    msgBox.innerHTML = `<div class="msg msg-error">Pilih bed dulu (atau tambah bed baru kalau belum ada yang kosong).</div>`;
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  const { data: klasterLk, error: errKlaster } = await supabaseClient
+    .from("klaster").select("id").eq("kode", "LK").single();
+
+  if (errKlaster || !klasterLk) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal ambil data klaster LK: ${errKlaster ? errKlaster.message : "tidak ditemukan"}</div>`;
+    return;
+  }
+
+  const { data: noKunjunganData, error: errNo } = await supabaseClient.rpc("generate_no_kunjungan");
+  const { data: noAntrianData, error: errAntrian } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: klasterLk.id });
+
+  if (errNo || errAntrian) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal generate nomor: ${(errNo || errAntrian).message}</div>`;
+    return;
+  }
+
+  const { data: kunjunganBaru, error: errKunjungan } = await supabaseClient.from("kunjungan").insert({
+    no_kunjungan: noKunjunganData,
+    pasien_id: pasienTerpilihAdmisi.id,
+    klaster_id: klasterLk.id,
+    jenis_bayar: pasienTerpilihAdmisi.status_bpjs === "aktif" ? "BPJS" : "Umum",
+    no_antrian: noAntrianData,
+    keluhan_awal: document.getElementById("kajianStatusFisik").value.trim() || null,
+    status: "diperiksa",
+    created_by: user.id
+  }).select("id").single();
+
+  if (errKunjungan) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal buat kunjungan: ${errKunjungan.message}</div>`;
+    return;
+  }
+
+  const { error: errRanap } = await supabaseClient.from("kunjungan_ranap").insert({
+    kunjungan_id: kunjunganBaru.id,
+    pasien_id: pasienTerpilihAdmisi.id,
+    bed_id: bedId,
+    status_ranap: "dirawat",
+    sumber_masuk: sumberMasuk,
+    kajian_status_fisik: document.getElementById("kajianStatusFisik").value.trim() || null,
+    kajian_riwayat_alergi: document.getElementById("kajianAlergi").value.trim() || null,
+    kajian_skor_nyeri: document.getElementById("kajianNyeri").value,
+    kajian_risiko_jatuh: document.getElementById("kajianRisikoJatuh").value,
+    kajian_risiko_gizi: document.getElementById("kajianRisikoGizi").value,
+    kajian_kebutuhan_edukasi: document.getElementById("kajianEdukasi").value.trim() || null,
+    rencana_asuhan_awal: document.getElementById("rencanaAsuhanAwal").value.trim() || null,
+    petugas_admisi_id: user.id,
+    created_by: user.id
+  });
+
+  if (errRanap) {
+    msgBox.innerHTML = `<div class="msg msg-error">Gagal catat admisi rawat inap: ${errRanap.message}</div>`;
+    return;
+  }
+
+  await supabaseClient.from("bed_rawat").update({ status: "terisi" }).eq("id", bedId);
+
+  msgBox.innerHTML = `<div class="msg msg-success">Pasien ${pasienTerpilihAdmisi.nama} berhasil diadmisi ke Rawat Inap.</div>`;
+  document.getElementById("cardFormAdmisi").style.display = "none";
+  document.getElementById("admisiCari").value = "";
+  document.getElementById("admisiHasilCari").innerHTML = "";
+  pasienTerpilihAdmisi = null;
+
+  await muatOpsiBedKosong();
+}
+</script>
+</body>
+</html>

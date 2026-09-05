@@ -2910,6 +2910,63 @@ create trigger trg_audit_rujukan_lab_gigi after insert or update or delete on ru
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 73. MODUL RAWAT INAP — FASE 1: Master Bed & Admisi
+--     Sama pola sama UGD: kunjungan_ranap adalah EKSTENSI dari
+--     kunjungan (klaster_id = LK), bukan tabel terpisah dari nol.
+--     bed_rawat = master data ruang/bed, dipakai Dashboard (okupansi)
+--     & Admisi (pilih bed kosong). Field klinis (SOAP, resep, dll)
+--     tetap reuse rekam_medis/resep/rujukan yang sudah ada, nanti
+--     dipakai di fase RM & Resep / Rujukan.
+-- ============================================================
+create table if not exists bed_rawat (
+  id uuid primary key default gen_random_uuid(),
+  ruang text not null,
+  nomor_bed text not null,
+  status text not null default 'kosong' check (status in ('kosong', 'terisi', 'maintenance')),
+  created_at timestamptz not null default now(),
+  unique (ruang, nomor_bed)
+);
+
+alter table bed_rawat enable row level security;
+create policy "authenticated_all_bed_rawat" on bed_rawat for all to authenticated using (true) with check (true);
+
+create table if not exists kunjungan_ranap (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_id uuid not null unique references kunjungan(id),
+  pasien_id uuid not null references pasien(id),
+  bed_id uuid references bed_rawat(id),
+  status_ranap text not null default 'baru' check (status_ranap in ('baru', 'dirawat', 'rencana_pulang', 'pulang', 'dirujuk', 'meninggal')),
+  sumber_masuk text check (sumber_masuk in ('UGD', 'Klaster', 'Rujukan Internal', 'Lainnya')),
+  tanggal_masuk timestamptz not null default now(),
+  tanggal_keluar timestamptz,
+  kajian_status_fisik text,
+  kajian_riwayat_alergi text,
+  kajian_skor_nyeri text,
+  kajian_risiko_jatuh text,
+  kajian_risiko_gizi text,
+  kajian_kebutuhan_edukasi text,
+  rencana_asuhan_awal text,
+  petugas_admisi_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  created_by uuid references profil_pegawai(id)
+);
+
+create index if not exists idx_kunjungan_ranap_status on kunjungan_ranap(status_ranap);
+create index if not exists idx_kunjungan_ranap_pasien on kunjungan_ranap(pasien_id);
+create index if not exists idx_kunjungan_ranap_bed on kunjungan_ranap(bed_id);
+
+alter table kunjungan_ranap enable row level security;
+create policy "authenticated_all_kunjungan_ranap" on kunjungan_ranap for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kunjungan_ranap on kunjungan_ranap;
+create trigger trg_audit_kunjungan_ranap after insert or update or delete on kunjungan_ranap
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_bed_rawat on bed_rawat;
+create trigger trg_audit_bed_rawat after insert or update or delete on bed_rawat
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
