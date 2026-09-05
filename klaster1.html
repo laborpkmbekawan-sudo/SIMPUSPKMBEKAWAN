@@ -796,14 +796,373 @@
 
       </div>
 
-      <!-- ============ MUTU & KESELAMATAN PASIEN (segera) ============ -->
+      <!-- ============ MUTU & KESELAMATAN PASIEN ============ -->
       <div id="panelMutu" style="display:none;">
-        <div class="k1-segera"><div class="ic">✚</div><div class="t">Mutu &amp; Keselamatan Pasien</div>Indikator Mutu (INM), Insiden Keselamatan Pasien (IKP), PPI, K3, MFK, audit internal, manajemen risiko — segera dibangun di level manajemen. Sebagian (medication error/FMEA) sudah ada di Apotek → Laporan → Keselamatan Pasien.</div>
+
+        <div class="card" style="padding:10px 14px; --accent:#6a4c93;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="muSub-indikator" onclick="gantiSubMutu('indikator')">Indikator Mutu (INM)</button>
+            <button type="button" class="lap-tab" id="muSub-ikp" onclick="gantiSubMutu('ikp')">Insiden Keselamatan Pasien</button>
+            <button type="button" class="lap-tab" id="muSub-risiko" onclick="gantiSubMutu('risiko')">Manajemen Risiko</button>
+            <button type="button" class="lap-tab" id="muSub-ppik3" onclick="gantiSubMutu('ppik3')">PPI &amp; K3</button>
+          </div>
+          <p style="font-size:12px; color:var(--muted); margin:8px 2px 0;">Medication error/FMEA farmasi sudah tercatat terpisah di Apotek → Laporan → Keselamatan Pasien.</p>
+        </div>
+
+        <!-- ===== INDIKATOR MUTU ===== -->
+        <div id="muPanel-indikator">
+          <div class="card" style="--accent:#6a4c93;">
+            <h2><span class="card-num" style="background:#6a4c93;">＋</span> Tambah Indikator Baru</h2>
+            <div id="msgIndikatorMutu"></div>
+            <div class="grid-2">
+              <div><label>Nama Indikator *</label><input type="text" id="imNama" required placeholder="mis. Kepatuhan Cuci Tangan"></div>
+              <div>
+                <label>Jenis</label>
+                <select id="imJenis">
+                  <option value="lokal">Indikator Lokal</option>
+                  <option value="inm">INM (Nasional)</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-3">
+              <div><label>Target</label><input type="number" step="0.01" id="imTarget" value="100"></div>
+              <div><label>Satuan</label><input type="text" id="imSatuan" value="%"></div>
+              <div><label>Klaster Terkait</label><select id="imKlaster"><option value="">- Lintas klaster / manajemen -</option></select></div>
+            </div>
+            <label>Definisi Operasional</label>
+            <input type="text" id="imDefinisi">
+            <button type="button" class="btn-primary" onclick="simpanIndikatorMutu()">Simpan Indikator</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Input Capaian Bulanan</h2>
+            <div id="msgCapaianMutu"></div>
+            <div class="grid-3">
+              <div><label>Indikator *</label><select id="ciIndikator"></select></div>
+              <div><label>Tahun</label><input type="number" id="ciTahun"></div>
+              <div><label>Bulan</label>
+                <select id="ciBulan">
+                  <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                  <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                  <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                  <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div><label>Numerator</label><input type="number" step="0.01" id="ciNumerator" value="0"></div>
+              <div><label>Denominator</label><input type="number" step="0.01" id="ciDenominator" value="0"></div>
+            </div>
+            <label>Analisis</label>
+            <input type="text" id="ciAnalisis" placeholder="Analisis singkat capaian bulan ini">
+            <label>Rencana Tindak Lanjut</label>
+            <input type="text" id="ciRtl">
+            <button type="button" class="btn-primary" onclick="simpanCapaianMutu()">Simpan Capaian</button>
+          </div>
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2><span class="card-num" style="background:#2f9e5c;">📊</span> Rekap Capaian Indikator Mutu</h2>
+            <table>
+              <thead><tr><th>Indikator</th><th>Periode</th><th>Target</th><th>Capaian</th><th>Status</th><th>RTL</th></tr></thead>
+              <tbody id="tabelCapaianMutu"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== INSIDEN KESELAMATAN PASIEN ===== -->
+        <div id="muPanel-ikp" style="display:none;">
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">＋</span> Lapor Insiden Baru</h2>
+            <div id="msgIkp"></div>
+            <div class="grid-3">
+              <div><label>Tanggal Kejadian *</label><input type="date" id="ikpTanggalKejadian" required></div>
+              <div>
+                <label>Jenis Insiden *</label>
+                <select id="ikpJenis">
+                  <option value="kpc">KPC — Kondisi Potensial Cedera</option>
+                  <option value="knc">KNC — Nyaris Cedera</option>
+                  <option value="ktc">KTC — Tidak Cedera</option>
+                  <option value="ktd">KTD — Tidak Diharapkan</option>
+                  <option value="sentinel">Sentinel</option>
+                </select>
+              </div>
+              <div>
+                <label>Grading</label>
+                <select id="ikpGrading">
+                  <option value="biru">Biru — Risiko Rendah</option>
+                  <option value="hijau">Hijau — Risiko Sedang</option>
+                  <option value="kuning">Kuning — Risiko Tinggi</option>
+                  <option value="merah">Merah — Risiko Ekstrem</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-3">
+              <div><label>Klaster / Unit</label><select id="ikpKlaster"><option value="">- Pilih klaster -</option></select></div>
+              <div><label>Unit Lain (kalau bukan klaster)</label><input type="text" id="ikpUnitLain" placeholder="mis. Loket, Ambulans"></div>
+              <div style="display:flex; align-items:flex-end; gap:6px; padding-bottom:8px;"><input type="checkbox" id="ikpPasienTerdampak" style="width:auto;"> <label style="margin:0;">Pasien terdampak</label></div>
+            </div>
+            <label>Kronologi *</label>
+            <textarea id="ikpKronologi" rows="3" placeholder="Uraikan kronologi kejadian"></textarea>
+            <label>Tindakan Segera</label>
+            <input type="text" id="ikpTindakanSegera">
+            <button type="button" class="btn-primary" onclick="simpanIkp()">Simpan Laporan</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Daftar Insiden Keselamatan Pasien</h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Jenis</th><th>Grading</th><th>Unit</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelIkp"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+          <div id="detailIkp"></div>
+        </div>
+
+        <!-- ===== MANAJEMEN RISIKO ===== -->
+        <div id="muPanel-risiko" style="display:none;">
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">＋</span> Tambah Risiko Baru</h2>
+            <div id="msgRisiko"></div>
+            <div class="grid-3">
+              <div>
+                <label>Kategori</label>
+                <select id="mrKategori">
+                  <option value="klinis">Klinis</option>
+                  <option value="non_klinis">Non-Klinis</option>
+                  <option value="ppi">PPI</option>
+                  <option value="k3">K3</option>
+                </select>
+              </div>
+              <div><label>Klaster / Unit Terkait</label><select id="mrKlaster"><option value="">- Lintas klaster / manajemen -</option></select></div>
+              <div><label>Penanggung Jawab</label><select id="mrPenanggungJawab"><option value="">- Belum ditentukan -</option></select></div>
+            </div>
+            <label>Deskripsi Risiko *</label>
+            <input type="text" id="mrDeskripsi" required>
+            <div class="grid-2">
+              <div><label>Penyebab</label><input type="text" id="mrPenyebab"></div>
+              <div><label>Dampak</label><input type="text" id="mrDampak"></div>
+            </div>
+            <div class="grid-2">
+              <div>
+                <label>Probabilitas (1-5)</label>
+                <select id="mrProbabilitas"><option value="1">1 — Sangat Jarang</option><option value="2">2 — Jarang</option><option value="3">3 — Kadang</option><option value="4">4 — Sering</option><option value="5">5 — Sangat Sering</option></select>
+              </div>
+              <div>
+                <label>Tingkat Dampak (1-5)</label>
+                <select id="mrTingkatDampak"><option value="1">1 — Minimal</option><option value="2">2 — Minor</option><option value="3">3 — Moderat</option><option value="4">4 — Mayor</option><option value="5">5 — Katastropik</option></select>
+              </div>
+            </div>
+            <label>Rencana Mitigasi</label>
+            <input type="text" id="mrMitigasi">
+            <button type="button" class="btn-primary" onclick="simpanRisiko()">Simpan Risiko</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Register Risiko (urut skor tertinggi)</h2>
+            <table>
+              <thead><tr><th>Kategori</th><th>Deskripsi</th><th>Skor</th><th>Level</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelRisiko"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+          <div id="detailRisiko"></div>
+        </div>
+
+        <!-- ===== PPI & K3 ===== -->
+        <div id="muPanel-ppik3" style="display:none;">
+          <div class="card" style="--accent:#26a3a0;">
+            <h2><span class="card-num" style="background:#26a3a0;">＋</span> Input Monitoring Bulanan</h2>
+            <div id="msgPpiK3"></div>
+            <div class="grid-3">
+              <div>
+                <label>Kategori</label>
+                <select id="pkKategori">
+                  <option value="ppi">PPI — Pencegahan &amp; Pengendalian Infeksi</option>
+                  <option value="k3">K3 — Kesehatan &amp; Keselamatan Kerja</option>
+                </select>
+              </div>
+              <div><label>Tahun</label><input type="number" id="pkTahun"></div>
+              <div><label>Bulan</label>
+                <select id="pkBulan">
+                  <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                  <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                  <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                  <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+              </div>
+            </div>
+            <label>Item Monitoring *</label>
+            <input type="text" id="pkItem" placeholder="mis. Kepatuhan pengelolaan limbah medis">
+            <div class="grid-2">
+              <div><label>Target (%)</label><input type="number" step="0.01" id="pkTarget" value="100"></div>
+              <div><label>Capaian (%)</label><input type="number" step="0.01" id="pkCapaian" value="0"></div>
+            </div>
+            <label>Keterangan</label>
+            <input type="text" id="pkKeterangan">
+            <button type="button" class="btn-primary" onclick="simpanPpiK3()">Simpan Monitoring</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Riwayat Monitoring PPI &amp; K3</h2>
+            <table>
+              <thead><tr><th>Kategori</th><th>Periode</th><th>Item</th><th>Target</th><th>Capaian</th><th>Status</th></tr></thead>
+              <tbody id="tabelPpiK3"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
-      <!-- ============ JEJARING & JARINGAN (segera) ============ -->
+      <!-- ============ JEJARING & JARINGAN ============ -->
       <div id="panelJejaring" style="display:none;">
-        <div class="k1-segera"><div class="ic">🌐</div><div class="t">Jejaring &amp; Jaringan</div>Data Pustu/Poskesdes/Posyandu, jadwal pembinaan teknis, laporan hasil pembinaan, kinerja jejaring — segera dibangun.</div>
+
+        <div class="card" style="padding:10px 14px; --accent:#1c7d7f;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="jjSub-data" onclick="gantiSubJejaring('data')">Data Jejaring</button>
+            <button type="button" class="lap-tab" id="jjSub-jadwal" onclick="gantiSubJejaring('jadwal')">Jadwal Pembinaan</button>
+            <button type="button" class="lap-tab" id="jjSub-laporan" onclick="gantiSubJejaring('laporan')">Laporan Hasil Pembinaan</button>
+            <button type="button" class="lap-tab" id="jjSub-kinerja" onclick="gantiSubJejaring('kinerja')">Kinerja Jejaring</button>
+          </div>
+        </div>
+
+        <!-- ===== DATA JEJARING ===== -->
+        <div id="jjPanel-data">
+          <div class="card" style="--accent:#1c7d7f;">
+            <h2><span class="card-num" style="background:#1c7d7f;">＋</span> Tambah Jejaring (Pustu/Poskesdes/Polindes)</h2>
+            <div id="msgJejaring"></div>
+            <div class="grid-3">
+              <div><label>Nama *</label><input type="text" id="jjNama" required placeholder="mis. Pustu Cahaya Baru"></div>
+              <div>
+                <label>Tipe</label>
+                <select id="jjTipe">
+                  <option value="pustu">Pustu</option>
+                  <option value="poskesdes">Poskesdes</option>
+                  <option value="polindes">Polindes</option>
+                </select>
+              </div>
+              <div><label>Wilayah</label><input type="text" id="jjWilayah"></div>
+            </div>
+            <label>Alamat</label>
+            <input type="text" id="jjAlamat">
+            <div class="grid-3">
+              <div><label>Penanggung Jawab</label><select id="jjPenanggungJawab"><option value="">- Belum ditentukan -</option></select></div>
+              <div><label>No. HP</label><input type="text" id="jjNoHp"></div>
+              <div><label>Jumlah Pegawai</label><input type="number" id="jjJumlahPegawai" value="0"></div>
+            </div>
+            <button type="button" class="btn-primary" onclick="simpanJejaring()">Simpan Jejaring</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Daftar Jejaring</h2>
+            <table>
+              <thead><tr><th>Nama</th><th>Tipe</th><th>Wilayah</th><th>Penanggung Jawab</th><th>No. HP</th><th>Pegawai</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelJejaring"><tr><td colspan="7">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== JADWAL PEMBINAAN ===== -->
+        <div id="jjPanel-jadwal" style="display:none;">
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">＋</span> Jadwalkan Pembinaan Teknis</h2>
+            <div id="msgJadwal"></div>
+            <div class="grid-3">
+              <div><label>Jejaring *</label><select id="jpPustu"></select></div>
+              <div><label>Tanggal Rencana *</label><input type="date" id="jpTanggal" required></div>
+              <div>
+                <label>Jenis Pembinaan</label>
+                <select id="jpJenis">
+                  <option value="rutin">Rutin</option>
+                  <option value="khusus">Khusus</option>
+                  <option value="monev">Monev</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div><label>Materi</label><input type="text" id="jpMateri"></div>
+              <div><label>Petugas Pembina</label><select id="jpPetugas"><option value="">- Belum ditentukan -</option></select></div>
+            </div>
+            <label>Catatan</label>
+            <input type="text" id="jpCatatan">
+            <button type="button" class="btn-primary" onclick="simpanJadwalPembinaan()">Simpan Jadwal</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Daftar Jadwal Pembinaan</h2>
+            <table>
+              <thead><tr><th>Jejaring</th><th>Tanggal</th><th>Jenis</th><th>Petugas</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelJadwalPembinaan"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== LAPORAN HASIL PEMBINAAN ===== -->
+        <div id="jjPanel-laporan" style="display:none;">
+          <div class="card" style="--accent:#6a4c93;">
+            <h2><span class="card-num" style="background:#6a4c93;">＋</span> Catat Hasil Pembinaan</h2>
+            <div id="msgLaporanPembinaan"></div>
+            <div class="grid-3">
+              <div><label>Jejaring *</label><select id="lpPustu"></select></div>
+              <div><label>Dari Jadwal (opsional)</label><select id="lpJadwal"><option value="">- Tanpa jadwal -</option></select></div>
+              <div><label>Tanggal Pelaksanaan *</label><input type="date" id="lpTanggal" required></div>
+            </div>
+            <label>Hasil Temuan *</label>
+            <textarea id="lpTemuan" rows="3"></textarea>
+            <div class="grid-2">
+              <div><label>Rekomendasi</label><input type="text" id="lpRekomendasi"></div>
+              <div><label>Tindak Lanjut</label><input type="text" id="lpTindakLanjut"></div>
+            </div>
+            <button type="button" class="btn-primary" onclick="simpanLaporanPembinaan()">Simpan Laporan</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Riwayat Laporan Pembinaan</h2>
+            <table>
+              <thead><tr><th>Jejaring</th><th>Tanggal</th><th>Temuan</th><th>Rekomendasi</th><th>Tindak Lanjut</th></tr></thead>
+              <tbody id="tabelLaporanPembinaan"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== KINERJA JEJARING ===== -->
+        <div id="jjPanel-kinerja" style="display:none;">
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2><span class="card-num" style="background:#2f9e5c;">＋</span> Input Kinerja Bulanan</h2>
+            <div id="msgKinerja"></div>
+            <div class="grid-3">
+              <div><label>Jejaring *</label><select id="kjPustu"></select></div>
+              <div><label>Tahun</label><input type="number" id="kjTahun"></div>
+              <div><label>Bulan</label>
+                <select id="kjBulan">
+                  <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                  <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                  <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                  <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-3">
+              <div><label>Jumlah Kunjungan</label><input type="number" id="kjKunjungan" value="0"></div>
+              <div><label>Jumlah Rujukan</label><input type="number" id="kjRujukan" value="0"></div>
+              <div><label>Kasus KIA</label><input type="number" id="kjKia" value="0"></div>
+            </div>
+            <div class="grid-2">
+              <div><label>Jumlah Imunisasi</label><input type="number" id="kjImunisasi" value="0"></div>
+              <div><label>Keterangan</label><input type="text" id="kjKeterangan"></div>
+            </div>
+            <button type="button" class="btn-primary" onclick="simpanKinerjaJejaring()">Simpan Kinerja</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Rekap Kinerja Jejaring</h2>
+            <table>
+              <thead><tr><th>Jejaring</th><th>Periode</th><th>Kunjungan</th><th>Rujukan</th><th>KIA</th><th>Imunisasi</th></tr></thead>
+              <tbody id="tabelKinerjaJejaring"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- ============ LAPORAN INTERNAL (segera) ============ -->
@@ -879,6 +1238,25 @@ let pegawaiEdit = null;
   await muatKepegawaian();
   await muatAlat();
   await muatAsetNonAlkes();
+
+  document.getElementById("ciTahun").value = tahunIni;
+  document.getElementById("pkTahun").value = tahunIni;
+  document.getElementById("kjTahun").value = tahunIni;
+  document.getElementById("ikpTanggalKejadian").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("jpTanggal").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("lpTanggal").value = new Date().toISOString().slice(0, 10);
+
+  await muatPegawaiUntukSelect();
+  await muatIndikatorMutu();
+  await muatCapaianMutu();
+  await muatIkp();
+  await muatRisiko();
+  await muatPpiK3();
+  await muatJejaringUntukSelect();
+  await muatJejaring();
+  await muatJadwalPembinaan();
+  await muatLaporanPembinaan();
+  await muatKinerjaJejaring();
 })();
 
 function gantiSubtabK1(tab) {
@@ -953,6 +1331,19 @@ async function muatKlasterUntukSelect() {
   document.getElementById("rkKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
   document.getElementById("dkKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
   document.getElementById("akKlaster").innerHTML = '<option value="">- Umum / Manajemen -</option>' + opsi;
+  document.getElementById("imKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
+  document.getElementById("ikpKlaster").innerHTML = '<option value="">- Pilih klaster -</option>' + opsi;
+  document.getElementById("mrKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
+}
+
+// ---------- Pegawai ringan buat select (PJ/petugas), semua role bisa baca ----------
+async function muatPegawaiUntukSelect() {
+  const { data, error } = await supabaseClient.from("profil_pegawai").select("id, nama").eq("aktif", true).order("nama");
+  if (error) return;
+  const opsi = (data || []).map(p => `<option value="${p.id}">${p.nama}</option>`).join("");
+  ["mrPenanggungJawab", "jjPenanggungJawab", "jpPetugas"].forEach(id => {
+    document.getElementById(id).innerHTML = '<option value="">- Belum ditentukan -</option>' + opsi;
+  });
 }
 
 async function muatDaftarPegawai() {
@@ -2228,6 +2619,569 @@ async function muatAsetNonAlkes() {
       <td><span class="badge ${BADGE_KONDISI[a.kondisi]}">${LABEL_KONDISI[a.kondisi]}</span></td>
       <td>${a.lokasi || "-"}</td>
       <td>${a.tahun_perolehan || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+// ============================================================
+// ================= MUTU & KESELAMATAN PASIEN ================
+// ============================================================
+
+function gantiSubMutu(sub) {
+  ["indikator", "ikp", "risiko", "ppik3"].forEach(s => {
+    document.getElementById(`muPanel-${s}`).style.display = s === sub ? "block" : "none";
+    document.getElementById(`muSub-${s}`).classList.toggle("active", s === sub);
+  });
+}
+
+let daftarIndikatorMutuGlobal = [];
+let daftarIkpGlobal = [];
+let daftarRisikoGlobal = [];
+
+// ---------- Indikator Mutu ----------
+async function simpanIndikatorMutu() {
+  const msgBox = document.getElementById("msgIndikatorMutu");
+  const nama = document.getElementById("imNama").value.trim();
+  if (!nama) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama indikator dulu.</div>`; return; }
+
+  const payload = {
+    nama_indikator: nama,
+    jenis: document.getElementById("imJenis").value,
+    target: parseFloat(document.getElementById("imTarget").value) || 100,
+    satuan: document.getElementById("imSatuan").value.trim() || "%",
+    klaster_id: document.getElementById("imKlaster").value ? parseInt(document.getElementById("imKlaster").value) : null,
+    definisi_operasional: document.getElementById("imDefinisi").value.trim() || null,
+  };
+  const { error } = await supabaseClient.from("indikator_mutu").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Indikator "${nama}" tersimpan.</div>`;
+  ["imNama", "imDefinisi"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("imTarget").value = "100";
+  document.getElementById("imSatuan").value = "%";
+  document.getElementById("imKlaster").value = "";
+  await muatIndikatorMutu();
+}
+
+async function muatIndikatorMutu() {
+  const { data, error } = await supabaseClient.from("indikator_mutu").select("*").eq("aktif", true).order("nama_indikator");
+  if (error) return;
+  daftarIndikatorMutuGlobal = data || [];
+  document.getElementById("ciIndikator").innerHTML = daftarIndikatorMutuGlobal.map(i => `<option value="${i.id}">${i.nama_indikator} (target ${i.target}${i.satuan})</option>`).join("") || `<option value="">- Belum ada indikator -</option>`;
+}
+
+async function simpanCapaianMutu() {
+  const msgBox = document.getElementById("msgCapaianMutu");
+  const indikatorId = document.getElementById("ciIndikator").value;
+  if (!indikatorId) { msgBox.innerHTML = `<div class="msg msg-error">Tambah indikator dulu sebelum input capaian.</div>`; return; }
+
+  const payload = {
+    indikator_id: indikatorId,
+    tahun: parseInt(document.getElementById("ciTahun").value, 10),
+    bulan: parseInt(document.getElementById("ciBulan").value, 10),
+    numerator: parseFloat(document.getElementById("ciNumerator").value) || 0,
+    denominator: parseFloat(document.getElementById("ciDenominator").value) || 0,
+    analisis: document.getElementById("ciAnalisis").value.trim() || null,
+    rencana_tindak_lanjut: document.getElementById("ciRtl").value.trim() || null,
+    dibuat_oleh: profilSaya.id,
+  };
+  const { error } = await supabaseClient.from("capaian_indikator_mutu").upsert(payload, { onConflict: "indikator_id,tahun,bulan" });
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Capaian tersimpan.</div>`;
+  ["ciNumerator", "ciDenominator"].forEach(id => document.getElementById(id).value = "0");
+  ["ciAnalisis", "ciRtl"].forEach(id => document.getElementById(id).value = "");
+  await muatCapaianMutu();
+}
+
+async function muatCapaianMutu() {
+  const tbody = document.getElementById("tabelCapaianMutu");
+  const { data, error } = await supabaseClient.from("capaian_indikator_mutu")
+    .select("*, indikator_mutu(nama_indikator, target, satuan)")
+    .order("tahun", { ascending: false }).order("bulan", { ascending: false })
+    .limit(50);
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada data capaian.</td></tr>`; return; }
+  const NAMA_BULAN = ["", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+  tbody.innerHTML = data.map(c => {
+    const tercapai = c.capaian >= (c.indikator_mutu?.target || 100);
+    return `
+    <tr>
+      <td>${c.indikator_mutu?.nama_indikator || "-"}</td>
+      <td>${NAMA_BULAN[c.bulan]} ${c.tahun}</td>
+      <td>${c.indikator_mutu?.target || "-"}${c.indikator_mutu?.satuan || ""}</td>
+      <td>${c.capaian}${c.indikator_mutu?.satuan || ""}</td>
+      <td><span class="badge ${tercapai ? 'badge-selesai' : 'badge-batal'}">${tercapai ? "Tercapai" : "Belum Tercapai"}</span></td>
+      <td>${c.rencana_tindak_lanjut || "-"}</td>
+    </tr>
+  `; }).join("");
+}
+
+// ---------- Insiden Keselamatan Pasien (IKP) ----------
+async function simpanIkp() {
+  const msgBox = document.getElementById("msgIkp");
+  const kronologi = document.getElementById("ikpKronologi").value.trim();
+  if (!kronologi) { msgBox.innerHTML = `<div class="msg msg-error">Isi kronologi kejadian dulu.</div>`; return; }
+
+  const payload = {
+    tanggal_kejadian: document.getElementById("ikpTanggalKejadian").value,
+    jenis_insiden: document.getElementById("ikpJenis").value,
+    grading: document.getElementById("ikpGrading").value,
+    klaster_id: document.getElementById("ikpKlaster").value ? parseInt(document.getElementById("ikpKlaster").value) : null,
+    unit_lain: document.getElementById("ikpUnitLain").value.trim() || null,
+    pasien_terdampak: document.getElementById("ikpPasienTerdampak").checked,
+    kronologi: kronologi,
+    tindakan_segera: document.getElementById("ikpTindakanSegera").value.trim() || null,
+    dilaporkan_oleh: profilSaya.id,
+  };
+  const { error } = await supabaseClient.from("insiden_keselamatan_pasien").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Laporan insiden tersimpan.</div>`;
+  ["ikpUnitLain", "ikpKronologi", "ikpTindakanSegera"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("ikpPasienTerdampak").checked = false;
+  document.getElementById("ikpKlaster").value = "";
+  await muatIkp();
+}
+
+const BADGE_GRADING = { biru: "badge-dipanggil", hijau: "badge-selesai", kuning: "badge-menunggu", merah: "badge-batal" };
+const LABEL_JENIS_IKP = { kpc: "KPC", knc: "KNC", ktc: "KTC", ktd: "KTD", sentinel: "Sentinel" };
+const LABEL_STATUS_IKP = { dilaporkan: "Dilaporkan", investigasi: "Investigasi", selesai: "Selesai" };
+
+async function muatIkp() {
+  const tbody = document.getElementById("tabelIkp");
+  const { data, error } = await supabaseClient.from("insiden_keselamatan_pasien").select("*, klaster(kode)").order("tanggal_kejadian", { ascending: false });
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  daftarIkpGlobal = data || [];
+  if (!daftarIkpGlobal.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada insiden dilaporkan.</td></tr>`; return; }
+  tbody.innerHTML = daftarIkpGlobal.map(i => `
+    <tr>
+      <td>${formatTanggalID(i.tanggal_kejadian)}</td>
+      <td>${LABEL_JENIS_IKP[i.jenis_insiden]}</td>
+      <td><span class="badge ${BADGE_GRADING[i.grading]}">${i.grading}</span></td>
+      <td>${i.klaster ? i.klaster.kode : (i.unit_lain || "-")}</td>
+      <td><span class="badge ${i.status === 'selesai' ? 'badge-selesai' : i.status === 'investigasi' ? 'badge-menunggu' : 'badge-dipanggil'}">${LABEL_STATUS_IKP[i.status]}</span></td>
+      <td><button class="btn-secondary" onclick="lihatDetailIkp('${i.id}')">Kelola</button></td>
+    </tr>
+  `).join("");
+}
+
+function lihatDetailIkp(id) {
+  const i = daftarIkpGlobal.find(x => x.id === id);
+  if (!i) return;
+  document.getElementById("detailIkp").innerHTML = `
+    <div class="card" style="--accent:#c0503f;">
+      <h2><span class="card-num" style="background:#c0503f;">🔎</span> Investigasi — ${LABEL_JENIS_IKP[i.jenis_insiden]} (${formatTanggalID(i.tanggal_kejadian)})</h2>
+      <div class="info-row"><label>Kronologi</label><span>${i.kronologi}</span></div>
+      <div class="info-row"><label>Tindakan Segera</label><span>${i.tindakan_segera || "-"}</span></div>
+      <label>Akar Masalah</label>
+      <textarea id="ikpAkarMasalah" rows="2">${i.akar_masalah || ""}</textarea>
+      <label>Rekomendasi</label>
+      <textarea id="ikpRekomendasi" rows="2">${i.rekomendasi || ""}</textarea>
+      <label>Tindak Lanjut</label>
+      <textarea id="ikpTindakLanjut" rows="2">${i.tindak_lanjut || ""}</textarea>
+      <label>Status</label>
+      <select id="ikpStatusBaru">
+        <option value="dilaporkan" ${i.status === "dilaporkan" ? "selected" : ""}>Dilaporkan</option>
+        <option value="investigasi" ${i.status === "investigasi" ? "selected" : ""}>Investigasi</option>
+        <option value="selesai" ${i.status === "selesai" ? "selected" : ""}>Selesai</option>
+      </select>
+      <div style="margin-top:10px; display:flex; gap:8px;">
+        <button class="btn-primary" onclick="simpanInvestigasiIkp('${i.id}')">Simpan</button>
+        <button class="btn-secondary" onclick="document.getElementById('detailIkp').innerHTML=''">Tutup</button>
+      </div>
+    </div>
+  `;
+}
+
+async function simpanInvestigasiIkp(id) {
+  const statusBaru = document.getElementById("ikpStatusBaru").value;
+  const payload = {
+    akar_masalah: document.getElementById("ikpAkarMasalah").value.trim() || null,
+    rekomendasi: document.getElementById("ikpRekomendasi").value.trim() || null,
+    tindak_lanjut: document.getElementById("ikpTindakLanjut").value.trim() || null,
+    status: statusBaru,
+    tanggal_selesai: statusBaru === "selesai" ? new Date().toISOString().slice(0, 10) : null,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabaseClient.from("insiden_keselamatan_pasien").update(payload).eq("id", id);
+  if (error) { alert("Gagal simpan: " + error.message); return; }
+  document.getElementById("detailIkp").innerHTML = "";
+  await muatIkp();
+}
+
+// ---------- Manajemen Risiko ----------
+async function simpanRisiko() {
+  const msgBox = document.getElementById("msgRisiko");
+  const deskripsi = document.getElementById("mrDeskripsi").value.trim();
+  if (!deskripsi) { msgBox.innerHTML = `<div class="msg msg-error">Isi deskripsi risiko dulu.</div>`; return; }
+
+  const payload = {
+    kategori: document.getElementById("mrKategori").value,
+    klaster_id: document.getElementById("mrKlaster").value ? parseInt(document.getElementById("mrKlaster").value) : null,
+    penanggung_jawab_id: document.getElementById("mrPenanggungJawab").value || null,
+    deskripsi_risiko: deskripsi,
+    penyebab: document.getElementById("mrPenyebab").value.trim() || null,
+    dampak: document.getElementById("mrDampak").value.trim() || null,
+    probabilitas: parseInt(document.getElementById("mrProbabilitas").value, 10),
+    tingkat_dampak: parseInt(document.getElementById("mrTingkatDampak").value, 10),
+    rencana_mitigasi: document.getElementById("mrMitigasi").value.trim() || null,
+  };
+  const { error } = await supabaseClient.from("manajemen_risiko").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Risiko tersimpan.</div>`;
+  ["mrDeskripsi", "mrPenyebab", "mrDampak", "mrMitigasi"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("mrKlaster").value = "";
+  document.getElementById("mrPenanggungJawab").value = "";
+  await muatRisiko();
+}
+
+function levelRisiko(skor) {
+  if (skor >= 15) return { label: "Ekstrem", badge: "badge-batal" };
+  if (skor >= 8) return { label: "Tinggi", badge: "badge-batal" };
+  if (skor >= 4) return { label: "Sedang", badge: "badge-menunggu" };
+  return { label: "Rendah", badge: "badge-selesai" };
+}
+
+async function muatRisiko() {
+  const tbody = document.getElementById("tabelRisiko");
+  const { data, error } = await supabaseClient.from("manajemen_risiko").select("*").order("skor_risiko", { ascending: false });
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  daftarRisikoGlobal = data || [];
+  if (!daftarRisikoGlobal.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada risiko tercatat.</td></tr>`; return; }
+  tbody.innerHTML = daftarRisikoGlobal.map(r => {
+    const lvl = levelRisiko(r.skor_risiko);
+    return `
+    <tr>
+      <td>${r.kategori.replace(/_/g, " ")}</td>
+      <td>${r.deskripsi_risiko}</td>
+      <td>${r.skor_risiko}</td>
+      <td><span class="badge ${lvl.badge}">${lvl.label}</span></td>
+      <td><span class="badge ${r.status === 'terkendali' ? 'badge-selesai' : r.status === 'mitigasi' ? 'badge-menunggu' : 'badge-dipanggil'}">${r.status.replace(/_/g, " ")}</span></td>
+      <td><button class="btn-secondary" onclick="lihatDetailRisiko('${r.id}')">Kelola</button></td>
+    </tr>
+  `; }).join("");
+}
+
+function lihatDetailRisiko(id) {
+  const r = daftarRisikoGlobal.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById("detailRisiko").innerHTML = `
+    <div class="card" style="--accent:#e0793c;">
+      <h2><span class="card-num" style="background:#e0793c;">🛠</span> Kelola Risiko — ${r.deskripsi_risiko}</h2>
+      <label>Rencana Mitigasi</label>
+      <textarea id="mrMitigasiEdit" rows="2">${r.rencana_mitigasi || ""}</textarea>
+      <label>Status</label>
+      <select id="mrStatusBaru">
+        <option value="teridentifikasi" ${r.status === "teridentifikasi" ? "selected" : ""}>Teridentifikasi</option>
+        <option value="mitigasi" ${r.status === "mitigasi" ? "selected" : ""}>Mitigasi</option>
+        <option value="terkendali" ${r.status === "terkendali" ? "selected" : ""}>Terkendali</option>
+      </select>
+      <div style="margin-top:10px; display:flex; gap:8px;">
+        <button class="btn-primary" onclick="simpanKelolaRisiko('${r.id}')">Simpan</button>
+        <button class="btn-secondary" onclick="document.getElementById('detailRisiko').innerHTML=''">Tutup</button>
+      </div>
+    </div>
+  `;
+}
+
+async function simpanKelolaRisiko(id) {
+  const payload = {
+    rencana_mitigasi: document.getElementById("mrMitigasiEdit").value.trim() || null,
+    status: document.getElementById("mrStatusBaru").value,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabaseClient.from("manajemen_risiko").update(payload).eq("id", id);
+  if (error) { alert("Gagal simpan: " + error.message); return; }
+  document.getElementById("detailRisiko").innerHTML = "";
+  await muatRisiko();
+}
+
+// ---------- PPI & K3 ----------
+async function simpanPpiK3() {
+  const msgBox = document.getElementById("msgPpiK3");
+  const item = document.getElementById("pkItem").value.trim();
+  if (!item) { msgBox.innerHTML = `<div class="msg msg-error">Isi item monitoring dulu.</div>`; return; }
+
+  const payload = {
+    kategori: document.getElementById("pkKategori").value,
+    tahun: parseInt(document.getElementById("pkTahun").value, 10),
+    bulan: parseInt(document.getElementById("pkBulan").value, 10),
+    item_monitoring: item,
+    target: parseFloat(document.getElementById("pkTarget").value) || 100,
+    capaian: parseFloat(document.getElementById("pkCapaian").value) || 0,
+    keterangan: document.getElementById("pkKeterangan").value.trim() || null,
+    dicatat_oleh: profilSaya.id,
+  };
+  const { error } = await supabaseClient.from("monitoring_ppi_k3").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Monitoring tersimpan.</div>`;
+  ["pkItem", "pkKeterangan"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("pkCapaian").value = "0";
+  await muatPpiK3();
+}
+
+async function muatPpiK3() {
+  const tbody = document.getElementById("tabelPpiK3");
+  const { data, error } = await supabaseClient.from("monitoring_ppi_k3").select("*").order("tahun", { ascending: false }).order("bulan", { ascending: false }).limit(50);
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada data monitoring.</td></tr>`; return; }
+  const NAMA_BULAN = ["", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+  tbody.innerHTML = data.map(p => {
+    const tercapai = p.capaian >= p.target;
+    return `
+    <tr>
+      <td>${p.kategori.toUpperCase()}</td>
+      <td>${NAMA_BULAN[p.bulan]} ${p.tahun}</td>
+      <td>${p.item_monitoring}</td>
+      <td>${p.target}%</td>
+      <td>${p.capaian}%</td>
+      <td><span class="badge ${tercapai ? 'badge-selesai' : 'badge-batal'}">${tercapai ? "Tercapai" : "Belum Tercapai"}</span></td>
+    </tr>
+  `; }).join("");
+}
+
+// ============================================================
+// ===================== JEJARING & JARINGAN ===================
+// ============================================================
+
+function gantiSubJejaring(sub) {
+  ["data", "jadwal", "laporan", "kinerja"].forEach(s => {
+    document.getElementById(`jjPanel-${s}`).style.display = s === sub ? "block" : "none";
+    document.getElementById(`jjSub-${s}`).classList.toggle("active", s === sub);
+  });
+}
+
+let daftarJejaringGlobal = [];
+const LABEL_TIPE_JEJARING = { pustu: "Pustu", poskesdes: "Poskesdes", polindes: "Polindes" };
+
+async function muatJejaringUntukSelect() {
+  const { data, error } = await supabaseClient.from("pustu").select("id, nama").eq("aktif", true).order("nama");
+  if (error) return;
+  const opsi = (data || []).map(p => `<option value="${p.id}">${p.nama}</option>`).join("");
+  ["jpPustu", "lpPustu", "kjPustu"].forEach(id => document.getElementById(id).innerHTML = opsi || `<option value="">- Belum ada jejaring -</option>`);
+}
+
+// ---------- Data Jejaring ----------
+async function simpanJejaring() {
+  const msgBox = document.getElementById("msgJejaring");
+  const nama = document.getElementById("jjNama").value.trim();
+  if (!nama) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama jejaring dulu.</div>`; return; }
+
+  const payload = {
+    nama: nama,
+    tipe: document.getElementById("jjTipe").value,
+    wilayah: document.getElementById("jjWilayah").value.trim() || null,
+    alamat: document.getElementById("jjAlamat").value.trim() || null,
+    penanggung_jawab_id: document.getElementById("jjPenanggungJawab").value || null,
+    no_hp: document.getElementById("jjNoHp").value.trim() || null,
+    jumlah_pegawai: parseInt(document.getElementById("jjJumlahPegawai").value, 10) || 0,
+  };
+  const { error } = await supabaseClient.from("pustu").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Jejaring "${nama}" tersimpan.</div>`;
+  ["jjNama", "jjWilayah", "jjAlamat", "jjNoHp"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("jjPenanggungJawab").value = "";
+  document.getElementById("jjJumlahPegawai").value = "0";
+  await muatJejaring();
+  await muatJejaringUntukSelect();
+}
+
+async function muatJejaring() {
+  const tbody = document.getElementById("tabelJejaring");
+  const { data, error } = await supabaseClient.from("pustu").select("*, penanggung_jawab:penanggung_jawab_id(nama)").eq("aktif", true).order("nama");
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  daftarJejaringGlobal = data || [];
+  if (!daftarJejaringGlobal.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada jejaring tercatat.</td></tr>`; return; }
+  tbody.innerHTML = daftarJejaringGlobal.map(j => `
+    <tr>
+      <td>${j.nama}</td>
+      <td>${LABEL_TIPE_JEJARING[j.tipe] || j.tipe}</td>
+      <td>${j.wilayah || "-"}</td>
+      <td>${j.penanggung_jawab ? j.penanggung_jawab.nama : "-"}</td>
+      <td>${j.no_hp || "-"}</td>
+      <td>${j.jumlah_pegawai}</td>
+      <td><button class="btn-secondary" onclick="editJejaring('${j.id}')">Edit</button></td>
+    </tr>
+  `).join("");
+}
+
+function editJejaring(id) {
+  const j = daftarJejaringGlobal.find(x => x.id == id);
+  if (!j) return;
+  document.getElementById("jjNama").value = j.nama;
+  document.getElementById("jjTipe").value = j.tipe;
+  document.getElementById("jjWilayah").value = j.wilayah || "";
+  document.getElementById("jjAlamat").value = j.alamat || "";
+  document.getElementById("jjPenanggungJawab").value = j.penanggung_jawab_id || "";
+  document.getElementById("jjNoHp").value = j.no_hp || "";
+  document.getElementById("jjJumlahPegawai").value = j.jumlah_pegawai || 0;
+  const tombol = document.querySelector('#jjPanel-data .btn-primary');
+  tombol.textContent = "Update Jejaring";
+  tombol.setAttribute("onclick", `updateJejaring('${j.id}')`);
+  window.scrollTo(0, 0);
+}
+
+async function updateJejaring(id) {
+  const msgBox = document.getElementById("msgJejaring");
+  const payload = {
+    nama: document.getElementById("jjNama").value.trim(),
+    tipe: document.getElementById("jjTipe").value,
+    wilayah: document.getElementById("jjWilayah").value.trim() || null,
+    alamat: document.getElementById("jjAlamat").value.trim() || null,
+    penanggung_jawab_id: document.getElementById("jjPenanggungJawab").value || null,
+    no_hp: document.getElementById("jjNoHp").value.trim() || null,
+    jumlah_pegawai: parseInt(document.getElementById("jjJumlahPegawai").value, 10) || 0,
+  };
+  const { error } = await supabaseClient.from("pustu").update(payload).eq("id", id);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal update: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Jejaring diperbarui.</div>`;
+  ["jjNama", "jjWilayah", "jjAlamat", "jjNoHp"].forEach(id2 => document.getElementById(id2).value = "");
+  document.getElementById("jjPenanggungJawab").value = "";
+  document.getElementById("jjJumlahPegawai").value = "0";
+  const tombol = document.querySelector('#jjPanel-data .btn-primary');
+  tombol.textContent = "Simpan Jejaring";
+  tombol.setAttribute("onclick", "simpanJejaring()");
+  await muatJejaring();
+  await muatJejaringUntukSelect();
+}
+
+// ---------- Jadwal Pembinaan ----------
+async function simpanJadwalPembinaan() {
+  const msgBox = document.getElementById("msgJadwal");
+  const pustuId = document.getElementById("jpPustu").value;
+  const tanggal = document.getElementById("jpTanggal").value;
+  if (!pustuId || !tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jejaring dan tanggal rencana dulu.</div>`; return; }
+
+  const payload = {
+    pustu_id: parseInt(pustuId),
+    tanggal_rencana: tanggal,
+    jenis_pembinaan: document.getElementById("jpJenis").value,
+    materi: document.getElementById("jpMateri").value.trim() || null,
+    petugas_pembina_id: document.getElementById("jpPetugas").value || null,
+    catatan: document.getElementById("jpCatatan").value.trim() || null,
+  };
+  const { error } = await supabaseClient.from("jadwal_pembinaan_jejaring").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Jadwal pembinaan tersimpan.</div>`;
+  ["jpMateri", "jpCatatan"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("jpPetugas").value = "";
+  await muatJadwalPembinaan();
+  await muatJadwalUntukSelectLaporan();
+}
+
+async function muatJadwalPembinaan() {
+  const tbody = document.getElementById("tabelJadwalPembinaan");
+  const { data, error } = await supabaseClient.from("jadwal_pembinaan_jejaring").select("*, pustu(nama), petugas_pembina:petugas_pembina_id(nama)").order("tanggal_rencana", { ascending: false });
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada jadwal pembinaan.</td></tr>`; return; }
+  tbody.innerHTML = data.map(j => `
+    <tr>
+      <td>${j.pustu?.nama || "-"}</td>
+      <td>${formatTanggalID(j.tanggal_rencana)}</td>
+      <td>${j.jenis_pembinaan}</td>
+      <td>${j.petugas_pembina ? j.petugas_pembina.nama : "-"}</td>
+      <td><span class="badge ${j.status === 'selesai' ? 'badge-selesai' : j.status === 'batal' ? 'badge-batal' : 'badge-menunggu'}">${j.status}</span></td>
+      <td>
+        ${j.status === "direncanakan" ? `
+          <button class="btn-secondary" onclick="ubahStatusJadwal('${j.id}', 'selesai')">Tandai Selesai</button>
+          <button class="btn-secondary" onclick="ubahStatusJadwal('${j.id}', 'batal')">Batal</button>
+        ` : "-"}
+      </td>
+    </tr>
+  `).join("");
+  await muatJadwalUntukSelectLaporan();
+}
+
+async function ubahStatusJadwal(id, status) {
+  const { error } = await supabaseClient.from("jadwal_pembinaan_jejaring").update({ status }).eq("id", id);
+  if (error) { alert("Gagal update: " + error.message); return; }
+  await muatJadwalPembinaan();
+}
+
+// ---------- Laporan Hasil Pembinaan ----------
+async function muatJadwalUntukSelectLaporan() {
+  const { data, error } = await supabaseClient.from("jadwal_pembinaan_jejaring").select("id, tanggal_rencana, pustu(nama)").eq("status", "selesai").order("tanggal_rencana", { ascending: false });
+  if (error) return;
+  const opsi = (data || []).map(j => `<option value="${j.id}">${j.pustu?.nama || "-"} — ${formatTanggalID(j.tanggal_rencana)}</option>`).join("");
+  document.getElementById("lpJadwal").innerHTML = '<option value="">- Tanpa jadwal -</option>' + opsi;
+}
+
+async function simpanLaporanPembinaan() {
+  const msgBox = document.getElementById("msgLaporanPembinaan");
+  const pustuId = document.getElementById("lpPustu").value;
+  const temuan = document.getElementById("lpTemuan").value.trim();
+  if (!pustuId || !temuan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jejaring dan isi hasil temuan dulu.</div>`; return; }
+
+  const payload = {
+    pustu_id: parseInt(pustuId),
+    jadwal_id: document.getElementById("lpJadwal").value || null,
+    tanggal_pelaksanaan: document.getElementById("lpTanggal").value,
+    hasil_temuan: temuan,
+    rekomendasi: document.getElementById("lpRekomendasi").value.trim() || null,
+    tindak_lanjut: document.getElementById("lpTindakLanjut").value.trim() || null,
+    dilaporkan_oleh: profilSaya.id,
+  };
+  const { error } = await supabaseClient.from("laporan_pembinaan_jejaring").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Laporan pembinaan tersimpan.</div>`;
+  ["lpTemuan", "lpRekomendasi", "lpTindakLanjut"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("lpJadwal").value = "";
+  await muatLaporanPembinaan();
+}
+
+async function muatLaporanPembinaan() {
+  const tbody = document.getElementById("tabelLaporanPembinaan");
+  const { data, error } = await supabaseClient.from("laporan_pembinaan_jejaring").select("*, pustu(nama)").order("tanggal_pelaksanaan", { ascending: false }).limit(50);
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada laporan pembinaan.</td></tr>`; return; }
+  tbody.innerHTML = data.map(l => `
+    <tr>
+      <td>${l.pustu?.nama || "-"}</td>
+      <td>${formatTanggalID(l.tanggal_pelaksanaan)}</td>
+      <td>${l.hasil_temuan}</td>
+      <td>${l.rekomendasi || "-"}</td>
+      <td>${l.tindak_lanjut || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+// ---------- Kinerja Jejaring ----------
+async function simpanKinerjaJejaring() {
+  const msgBox = document.getElementById("msgKinerja");
+  const pustuId = document.getElementById("kjPustu").value;
+  if (!pustuId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih jejaring dulu.</div>`; return; }
+
+  const payload = {
+    pustu_id: parseInt(pustuId),
+    tahun: parseInt(document.getElementById("kjTahun").value, 10),
+    bulan: parseInt(document.getElementById("kjBulan").value, 10),
+    jumlah_kunjungan: parseInt(document.getElementById("kjKunjungan").value, 10) || 0,
+    jumlah_rujukan: parseInt(document.getElementById("kjRujukan").value, 10) || 0,
+    jumlah_kasus_kia: parseInt(document.getElementById("kjKia").value, 10) || 0,
+    jumlah_imunisasi: parseInt(document.getElementById("kjImunisasi").value, 10) || 0,
+    keterangan: document.getElementById("kjKeterangan").value.trim() || null,
+    dicatat_oleh: profilSaya.id,
+  };
+  const { error } = await supabaseClient.from("kinerja_jejaring").upsert(payload, { onConflict: "pustu_id,tahun,bulan" });
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Kinerja jejaring tersimpan.</div>`;
+  ["kjKunjungan", "kjRujukan", "kjKia", "kjImunisasi"].forEach(id => document.getElementById(id).value = "0");
+  document.getElementById("kjKeterangan").value = "";
+  await muatKinerjaJejaring();
+}
+
+async function muatKinerjaJejaring() {
+  const tbody = document.getElementById("tabelKinerjaJejaring");
+  const { data, error } = await supabaseClient.from("kinerja_jejaring").select("*, pustu(nama)").order("tahun", { ascending: false }).order("bulan", { ascending: false }).limit(50);
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada data kinerja.</td></tr>`; return; }
+  const NAMA_BULAN = ["", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${k.pustu?.nama || "-"}</td>
+      <td>${NAMA_BULAN[k.bulan]} ${k.tahun}</td>
+      <td>${k.jumlah_kunjungan}</td>
+      <td>${k.jumlah_rujukan}</td>
+      <td>${k.jumlah_kasus_kia}</td>
+      <td>${k.jumlah_imunisasi}</td>
     </tr>
   `).join("");
 }

@@ -3506,3 +3506,236 @@ create trigger trg_audit_aset_non_alkes after insert or update or delete on aset
 -- 3. Kalau ini update dari database yang sudah jalan, cukup jalankan
 --    bagian yang belum pernah dijalankan (nomor terbaru) — aman, idempotent
 -- ============================================================
+-- ============================================================
+-- 83. MUTU & KESELAMATAN PASIEN (Klaster 1 - level manajemen)
+--     Indikator Mutu (INM/lokal + capaian bulanan), Insiden
+--     Keselamatan Pasien (IKP) dgn grading & tindak lanjut,
+--     Manajemen Risiko (register skor probabilitas x dampak),
+--     Monitoring PPI & K3 (checklist bulanan).
+-- ============================================================
+
+create table if not exists indikator_mutu (
+  id uuid primary key default gen_random_uuid(),
+  nama_indikator text not null,
+  jenis text not null default 'lokal' check (jenis in ('inm','lokal')),
+  klaster_id int references klaster(id),
+  target numeric(6,2) not null default 100,
+  satuan text not null default '%',
+  definisi_operasional text,
+  aktif boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists capaian_indikator_mutu (
+  id uuid primary key default gen_random_uuid(),
+  indikator_id uuid not null references indikator_mutu(id) on delete cascade,
+  tahun int not null,
+  bulan int not null check (bulan between 1 and 12),
+  numerator numeric(10,2) not null default 0,
+  denominator numeric(10,2) not null default 0,
+  capaian numeric(6,2) generated always as (
+    case when denominator > 0 then round((numerator / denominator) * 100, 2) else 0 end
+  ) stored,
+  analisis text,
+  rencana_tindak_lanjut text,
+  dibuat_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  unique (indikator_id, tahun, bulan)
+);
+
+create table if not exists insiden_keselamatan_pasien (
+  id uuid primary key default gen_random_uuid(),
+  tanggal_kejadian date not null default current_date,
+  tanggal_lapor date not null default current_date,
+  klaster_id int references klaster(id),
+  unit_lain text,
+  jenis_insiden text not null check (jenis_insiden in ('kpc','knc','ktc','ktd','sentinel')),
+  grading text not null default 'biru' check (grading in ('biru','hijau','kuning','merah')),
+  pasien_terdampak boolean not null default false,
+  kronologi text not null,
+  tindakan_segera text,
+  akar_masalah text,
+  rekomendasi text,
+  tindak_lanjut text,
+  status text not null default 'dilaporkan' check (status in ('dilaporkan','investigasi','selesai')),
+  tanggal_selesai date,
+  dilaporkan_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists manajemen_risiko (
+  id uuid primary key default gen_random_uuid(),
+  kategori text not null default 'klinis' check (kategori in ('klinis','non_klinis','ppi','k3')),
+  klaster_id int references klaster(id),
+  deskripsi_risiko text not null,
+  penyebab text,
+  dampak text,
+  probabilitas int not null default 1 check (probabilitas between 1 and 5),
+  tingkat_dampak int not null default 1 check (tingkat_dampak between 1 and 5),
+  skor_risiko int generated always as (probabilitas * tingkat_dampak) stored,
+  rencana_mitigasi text,
+  penanggung_jawab_id uuid references profil_pegawai(id),
+  status text not null default 'teridentifikasi' check (status in ('teridentifikasi','mitigasi','terkendali')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists monitoring_ppi_k3 (
+  id uuid primary key default gen_random_uuid(),
+  kategori text not null default 'ppi' check (kategori in ('ppi','k3')),
+  tahun int not null,
+  bulan int not null check (bulan between 1 and 12),
+  item_monitoring text not null,
+  target numeric(6,2) not null default 100,
+  capaian numeric(6,2) not null default 0,
+  keterangan text,
+  dicatat_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_capaian_indikator_mutu_periode on capaian_indikator_mutu(tahun, bulan);
+create index if not exists idx_ikp_tanggal on insiden_keselamatan_pasien(tanggal_kejadian);
+create index if not exists idx_ikp_grading on insiden_keselamatan_pasien(grading);
+create index if not exists idx_manajemen_risiko_skor on manajemen_risiko(skor_risiko desc);
+create index if not exists idx_monitoring_ppi_k3_periode on monitoring_ppi_k3(kategori, tahun, bulan);
+
+alter table indikator_mutu enable row level security;
+alter table capaian_indikator_mutu enable row level security;
+alter table insiden_keselamatan_pasien enable row level security;
+alter table manajemen_risiko enable row level security;
+alter table monitoring_ppi_k3 enable row level security;
+
+drop policy if exists "authenticated_all_indikator_mutu" on indikator_mutu;
+create policy "authenticated_all_indikator_mutu" on indikator_mutu for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_capaian_indikator_mutu" on capaian_indikator_mutu;
+create policy "authenticated_all_capaian_indikator_mutu" on capaian_indikator_mutu for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_insiden_keselamatan_pasien" on insiden_keselamatan_pasien;
+create policy "authenticated_all_insiden_keselamatan_pasien" on insiden_keselamatan_pasien for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_manajemen_risiko" on manajemen_risiko;
+create policy "authenticated_all_manajemen_risiko" on manajemen_risiko for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_monitoring_ppi_k3" on monitoring_ppi_k3;
+create policy "authenticated_all_monitoring_ppi_k3" on monitoring_ppi_k3 for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_indikator_mutu on indikator_mutu;
+create trigger trg_audit_indikator_mutu after insert or update or delete on indikator_mutu
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_capaian_indikator_mutu on capaian_indikator_mutu;
+create trigger trg_audit_capaian_indikator_mutu after insert or update or delete on capaian_indikator_mutu
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_insiden_keselamatan_pasien on insiden_keselamatan_pasien;
+create trigger trg_audit_insiden_keselamatan_pasien after insert or update or delete on insiden_keselamatan_pasien
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_manajemen_risiko on manajemen_risiko;
+create trigger trg_audit_manajemen_risiko after insert or update or delete on manajemen_risiko
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_monitoring_ppi_k3 on monitoring_ppi_k3;
+create trigger trg_audit_monitoring_ppi_k3 after insert or update or delete on monitoring_ppi_k3
+  for each row execute function fn_audit_log();
+
+insert into indikator_mutu (nama_indikator, jenis, target, satuan, definisi_operasional) values
+  ('Kepatuhan Kebersihan Tangan', 'inm', 85, '%', 'Persentase kepatuhan cuci tangan 5 momen oleh petugas'),
+  ('Kepatuhan Penggunaan APD', 'inm', 100, '%', 'Persentase kepatuhan penggunaan APD sesuai indikasi saat tindakan'),
+  ('Kepatuhan Identifikasi Pasien', 'inm', 100, '%', 'Persentase pelayanan dengan identifikasi pasien benar (min. 2 identitas)'),
+  ('Waktu Tunggu Rawat Jalan', 'inm', 80, '%', 'Persentase pasien dengan waktu tunggu pelayanan <= 60 menit'),
+  ('Kepuasan Pasien', 'inm', 76.61, '%', 'Persentase hasil survei kepuasan pasien terhadap pelayanan')
+on conflict do nothing;
+
+-- ============================================================
+-- 84. JEJARING & JARINGAN (Klaster 1 - level manajemen)
+--     Perkaya master Pustu/Poskesdes/Polindes (alamat, PJ,
+--     kontak, koordinat) + jadwal pembinaan teknis, laporan
+--     hasil pembinaan, dan rekap kinerja bulanan tiap jejaring.
+-- ============================================================
+
+alter table pustu add column if not exists alamat text;
+alter table pustu add column if not exists penanggung_jawab_id uuid references profil_pegawai(id);
+alter table pustu add column if not exists no_hp text;
+alter table pustu add column if not exists jumlah_pegawai int not null default 0;
+alter table pustu add column if not exists koordinat_lat numeric(10,7);
+alter table pustu add column if not exists koordinat_lng numeric(10,7);
+
+create table if not exists jadwal_pembinaan_jejaring (
+  id uuid primary key default gen_random_uuid(),
+  pustu_id int not null references pustu(id),
+  tanggal_rencana date not null,
+  jenis_pembinaan text not null default 'rutin' check (jenis_pembinaan in ('rutin','khusus','monev')),
+  materi text,
+  petugas_pembina_id uuid references profil_pegawai(id),
+  status text not null default 'direncanakan' check (status in ('direncanakan','selesai','batal')),
+  catatan text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists laporan_pembinaan_jejaring (
+  id uuid primary key default gen_random_uuid(),
+  jadwal_id uuid references jadwal_pembinaan_jejaring(id) on delete set null,
+  pustu_id int not null references pustu(id),
+  tanggal_pelaksanaan date not null default current_date,
+  hasil_temuan text not null,
+  rekomendasi text,
+  tindak_lanjut text,
+  file_url text,
+  dilaporkan_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists kinerja_jejaring (
+  id uuid primary key default gen_random_uuid(),
+  pustu_id int not null references pustu(id),
+  tahun int not null,
+  bulan int not null check (bulan between 1 and 12),
+  jumlah_kunjungan int not null default 0,
+  jumlah_rujukan int not null default 0,
+  jumlah_kasus_kia int not null default 0,
+  jumlah_imunisasi int not null default 0,
+  keterangan text,
+  dicatat_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  unique (pustu_id, tahun, bulan)
+);
+
+create index if not exists idx_jadwal_pembinaan_pustu on jadwal_pembinaan_jejaring(pustu_id);
+create index if not exists idx_jadwal_pembinaan_tanggal on jadwal_pembinaan_jejaring(tanggal_rencana);
+create index if not exists idx_laporan_pembinaan_pustu on laporan_pembinaan_jejaring(pustu_id);
+create index if not exists idx_kinerja_jejaring_periode on kinerja_jejaring(tahun, bulan);
+
+alter table jadwal_pembinaan_jejaring enable row level security;
+alter table laporan_pembinaan_jejaring enable row level security;
+alter table kinerja_jejaring enable row level security;
+
+drop policy if exists "authenticated_all_jadwal_pembinaan_jejaring" on jadwal_pembinaan_jejaring;
+create policy "authenticated_all_jadwal_pembinaan_jejaring" on jadwal_pembinaan_jejaring for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_laporan_pembinaan_jejaring" on laporan_pembinaan_jejaring;
+create policy "authenticated_all_laporan_pembinaan_jejaring" on laporan_pembinaan_jejaring for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_kinerja_jejaring" on kinerja_jejaring;
+create policy "authenticated_all_kinerja_jejaring" on kinerja_jejaring for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_jadwal_pembinaan_jejaring on jadwal_pembinaan_jejaring;
+create trigger trg_audit_jadwal_pembinaan_jejaring after insert or update or delete on jadwal_pembinaan_jejaring
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_laporan_pembinaan_jejaring on laporan_pembinaan_jejaring;
+create trigger trg_audit_laporan_pembinaan_jejaring after insert or update or delete on laporan_pembinaan_jejaring
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_kinerja_jejaring on kinerja_jejaring;
+create trigger trg_audit_kinerja_jejaring after insert or update or delete on kinerja_jejaring
+  for each row execute function fn_audit_log();
+
+update pustu set nama = 'Pustu Cahaya Baru', wilayah = 'Cahaya Baru' where nama = 'Pustu Contoh 1';
+update pustu set nama = 'Pustu Belaras', wilayah = 'Belaras' where nama = 'Pustu Contoh 2';
+insert into pustu (nama, tipe, wilayah) values
+  ('Pustu Batang Sari', 'pustu', 'Batang Sari'),
+  ('Pustu Bidari', 'pustu', 'Bidari')
+on conflict do nothing;
+
+-- ============================================================
+-- SELESAI section 83-84. Jalankan blok ini di Supabase SQL
+-- Editor (bisa langsung tempel semuanya, idempotent & aman
+-- diulang). Setelah jalan, gabungkan ke schema_full.sql lokal.
+-- ============================================================
