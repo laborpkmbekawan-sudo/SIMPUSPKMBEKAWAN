@@ -3848,5 +3848,44 @@ create trigger trg_audit_audit_internal_mutu after insert or update or delete on
   for each row execute function fn_audit_log();
 
 -- ============================================================
--- SELESAI section 87. Idempotent, aman diulang.
+-- 88. KASIR — Shift Kasir (Buka/Tutup Shift & Closing)
+--     shift_kasir: 1 baris per shift kasir dibuka. Kasir wajib
+--     buka shift dulu (catat cash awal) sebelum bisa proses
+--     pembayaran. Field total_* diisi snapshot pas tutup shift
+--     biar riwayat gak perlu hitung ulang tiap dibuka.
+--     tagihan_kunjungan.shift_id dipakai buat filter closing:
+--     transaksi yang lunas selama shift ini aja.
+-- ============================================================
+create table if not exists shift_kasir (
+  id uuid primary key default gen_random_uuid(),
+  petugas_id uuid not null references profil_pegawai(id),
+  waktu_buka timestamptz not null default now(),
+  cash_awal numeric(12,2) not null default 0,
+  waktu_tutup timestamptz,
+  cash_akhir_fisik numeric(12,2),
+  total_transaksi int,
+  total_pemasukan numeric(12,2),
+  total_tunai numeric(12,2),
+  total_nontunai numeric(12,2),
+  catatan_tutup text,
+  status text not null default 'aktif' check (status in ('aktif','ditutup')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_shift_kasir_status on shift_kasir(status);
+create index if not exists idx_shift_kasir_petugas on shift_kasir(petugas_id);
+
+alter table shift_kasir enable row level security;
+drop policy if exists "authenticated_all_shift_kasir" on shift_kasir;
+create policy "authenticated_all_shift_kasir" on shift_kasir for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_shift_kasir on shift_kasir;
+create trigger trg_audit_shift_kasir after insert or update or delete on shift_kasir
+  for each row execute function fn_audit_log();
+
+alter table tagihan_kunjungan add column if not exists shift_id uuid references shift_kasir(id);
+create index if not exists idx_tagihan_kunjungan_shift on tagihan_kunjungan(shift_id);
+
+-- ============================================================
+-- SELESAI section 88. Idempotent, aman diulang.
 -- ============================================================

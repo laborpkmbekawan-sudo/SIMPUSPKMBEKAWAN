@@ -34,9 +34,28 @@
     <a href="kasir.html" class="active">Kasir</a>
   </div>
 
+  <div class="card" style="padding:10px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+    <div id="shiftStatusInfo" style="font-size:13px;">Memuat status shift...</div>
+    <div id="shiftStatusAksi"></div>
+  </div>
+
+  <div class="card" id="cardBukaShift" style="display:none;">
+    <h2>Buka Shift Kasir</h2>
+    <div id="msgBukaShift"></div>
+    <div class="grid-2">
+      <div><label>Petugas</label><input type="text" id="bsPetugas" disabled></div>
+      <div><label>Waktu Buka</label><input type="text" id="bsWaktu" disabled></div>
+    </div>
+    <label>Cash Awal (Rp) *</label>
+    <input type="number" id="bsCashAwal" min="0" step="1000" value="0" required>
+    <button type="button" class="btn-primary" onclick="simpanBukaShift()">Buka Shift</button>
+    <button type="button" class="btn-secondary" onclick="document.getElementById('cardBukaShift').style.display='none'">Batal</button>
+  </div>
+
   <div class="lap-tabs">
     <div class="lap-tab active" id="kasirTab-bayar" onclick="gantiTabKasir('bayar')">Proses Pembayaran</div>
     <div class="lap-tab" id="kasirTab-riwayat" onclick="gantiTabKasir('riwayat')">Riwayat Transaksi</div>
+    <div class="lap-tab" id="kasirTab-closing" onclick="gantiTabKasir('closing')">Closing / Tutup Shift</div>
   </div>
 
   <!-- ===== PROSES PEMBAYARAN ===== -->
@@ -100,6 +119,11 @@
     </div>
   </div>
 
+  <!-- ===== CLOSING / TUTUP SHIFT ===== -->
+  <div id="panelKasirClosing" style="display:none;">
+    <div id="closingIsi"></div>
+  </div>
+
 </div>
 
 <div id="areaCetakStruk" class="kartu-cetak" style="width:340px;">
@@ -118,12 +142,33 @@
   <p class="catatan">Simpan struk ini sebagai bukti pembayaran yang sah.</p>
 </div>
 
+<div id="areaCetakRekapShift" class="kartu-cetak" style="width:340px;">
+  <h2>UPTD PUSKESMAS BEKAWAN</h2>
+  <p class="sub">Rekap Tutup Shift Kasir</p>
+  <div class="garis"></div>
+  <div class="baris"><span>Petugas</span><span id="rsPetugas"></span></div>
+  <div class="baris"><span>Waktu Buka</span><span id="rsWaktuBuka"></span></div>
+  <div class="baris"><span>Waktu Tutup</span><span id="rsWaktuTutup"></span></div>
+  <div class="garis"></div>
+  <div class="baris"><span>Cash Awal</span><span id="rsCashAwal"></span></div>
+  <div class="baris"><span>Jumlah Transaksi</span><span id="rsJmlTransaksi"></span></div>
+  <div class="baris"><span>Total Pemasukan</span><span id="rsTotalPemasukan"></span></div>
+  <div class="baris"><span>Tunai</span><span id="rsTotalTunai"></span></div>
+  <div class="baris"><span>Non-Tunai</span><span id="rsTotalNonTunai"></span></div>
+  <div class="garis"></div>
+  <div class="baris" style="font-weight:700;"><span>Cash Seharusnya</span><span id="rsCashSeharusnya"></span></div>
+  <div class="baris"><span>Cash Fisik Dihitung</span><span id="rsCashFisik"></span></div>
+  <div class="baris" style="font-weight:700;"><span>Selisih</span><span id="rsSelisih"></span></div>
+  <p class="catatan">Arsip rekap shift — cocokkan dengan uang tunai fisik di laci kasir.</p>
+</div>
+
 <script src="js/supabaseClient.js"></script>
 <script>
 let profilSaya = null;
 let hasilCariCache = [];
 let pasienTerpilihKasir = null;
 let tagihanCachePasien = [];
+let shiftAktifData = null;
 
 (async () => {
   const session = await wajibLogin();
@@ -137,14 +182,227 @@ let tagihanCachePasien = [];
   const hariIni = new Date().toISOString().split("T")[0];
   document.getElementById("riwDari").value = hariIni;
   document.getElementById("riwSampai").value = hariIni;
+
+  await cekShiftAktif();
 })();
 
 function gantiTabKasir(tab) {
   document.getElementById("kasirTab-bayar").classList.toggle("active", tab === "bayar");
   document.getElementById("kasirTab-riwayat").classList.toggle("active", tab === "riwayat");
+  document.getElementById("kasirTab-closing").classList.toggle("active", tab === "closing");
   document.getElementById("panelKasirBayar").style.display = tab === "bayar" ? "block" : "none";
   document.getElementById("panelKasirRiwayat").style.display = tab === "riwayat" ? "block" : "none";
+  document.getElementById("panelKasirClosing").style.display = tab === "closing" ? "block" : "none";
   if (tab === "riwayat") muatRiwayatTransaksi();
+  if (tab === "closing") muatClosingShift();
+}
+
+// ---------- SHIFT KASIR ----------
+async function cekShiftAktif() {
+  const { data, error } = await supabaseClient
+    .from("shift_kasir")
+    .select("*, profil_pegawai(nama)")
+    .eq("status", "aktif")
+    .order("waktu_buka", { ascending: false })
+    .limit(1);
+
+  shiftAktifData = (!error && data && data.length) ? data[0] : null;
+  renderShiftBar();
+}
+
+function renderShiftBar() {
+  const info = document.getElementById("shiftStatusInfo");
+  const aksi = document.getElementById("shiftStatusAksi");
+  if (shiftAktifData) {
+    info.innerHTML = `🟢 <strong>Shift Aktif</strong> — Kasir: ${shiftAktifData.profil_pegawai?.nama || "-"} · Buka: ${new Date(shiftAktifData.waktu_buka).toLocaleString("id-ID")} · Cash Awal: Rp ${formatRupiahKasir(shiftAktifData.cash_awal)}`;
+    aksi.innerHTML = `<button type="button" class="btn-secondary" onclick="gantiTabKasir('closing')">Closing / Tutup Shift</button>`;
+  } else {
+    info.innerHTML = `🔴 <strong>Belum ada shift aktif.</strong> Buka shift dulu sebelum proses pembayaran.`;
+    aksi.innerHTML = `<button type="button" class="btn-primary" onclick="bukaFormShift()">Buka Shift</button>`;
+  }
+}
+
+function bukaFormShift() {
+  document.getElementById("bsPetugas").value = profilSaya ? `${profilSaya.nama} (${profilSaya.role})` : "-";
+  document.getElementById("bsWaktu").value = new Date().toLocaleString("id-ID");
+  document.getElementById("bsCashAwal").value = 0;
+  document.getElementById("msgBukaShift").innerHTML = "";
+  document.getElementById("cardBukaShift").style.display = "block";
+}
+
+async function simpanBukaShift() {
+  const msgBox = document.getElementById("msgBukaShift");
+  const cashAwal = Number(document.getElementById("bsCashAwal").value) || 0;
+
+  const { data, error } = await supabaseClient
+    .from("shift_kasir")
+    .insert({ petugas_id: profilSaya.id, cash_awal: cashAwal })
+    .select("*, profil_pegawai(nama)")
+    .single();
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal buka shift: ${error.message}</div>`; return; }
+
+  shiftAktifData = data;
+  document.getElementById("cardBukaShift").style.display = "none";
+  renderShiftBar();
+}
+
+async function muatClosingShift() {
+  const isi = document.getElementById("closingIsi");
+
+  if (!shiftAktifData) {
+    isi.innerHTML = `<div class="card"><p style="font-size:13px; color:var(--muted);">Belum ada shift aktif. Buka shift dulu di atas.</p></div>` + await htmlRiwayatShift();
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("tagihan_kunjungan")
+    .select("*, pasien(nama, no_rm)")
+    .eq("shift_id", shiftAktifData.id)
+    .eq("status", "lunas")
+    .order("dibayar_at", { ascending: false });
+
+  if (error) { isi.innerHTML = `<div class="msg msg-error">Gagal muat transaksi shift: ${error.message}</div>`; return; }
+
+  const trx = data || [];
+  const totalPemasukan = trx.reduce((s, t) => s + Number(t.subtotal), 0);
+  const totalTunai = trx.filter(t => t.metode_bayar === "Tunai").reduce((s, t) => s + Number(t.subtotal), 0);
+  const totalNonTunai = totalPemasukan - totalTunai;
+  window._closingCache = { trx, totalPemasukan, totalTunai, totalNonTunai };
+
+  isi.innerHTML = `
+    <div class="card">
+      <h2>Ringkasan Shift Berjalan</h2>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Kasir: ${shiftAktifData.profil_pegawai?.nama || "-"} · Buka: ${new Date(shiftAktifData.waktu_buka).toLocaleString("id-ID")}</p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="label">Jumlah Transaksi</div><div class="value">${trx.length}</div></div>
+        <div class="stat-card"><div class="label">Total Pemasukan</div><div class="value">Rp ${formatRupiahKasir(totalPemasukan)}</div></div>
+        <div class="stat-card"><div class="label">Tunai</div><div class="value">Rp ${formatRupiahKasir(totalTunai)}</div></div>
+        <div class="stat-card"><div class="label">Non-Tunai</div><div class="value">Rp ${formatRupiahKasir(totalNonTunai)}</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Transaksi Selama Shift Ini</h2>
+      <table>
+        <thead><tr><th>Waktu Bayar</th><th>Pasien</th><th>Layanan</th><th>Subtotal</th><th>Metode</th></tr></thead>
+        <tbody>
+          ${trx.length ? trx.map(t => `
+            <tr>
+              <td>${new Date(t.dibayar_at).toLocaleString("id-ID")}</td>
+              <td>${t.pasien?.nama || "-"} (${t.pasien?.no_rm || "-"})</td>
+              <td>${t.nama_layanan}</td>
+              <td>Rp ${formatRupiahKasir(t.subtotal)}</td>
+              <td>${t.metode_bayar || "-"}</td>
+            </tr>`).join("") : `<tr><td colspan="5">Belum ada transaksi lunas di shift ini.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Tutup Shift</h2>
+      <div id="msgTutupShift"></div>
+      <div class="grid-2">
+        <div><label>Cash Awal (Rp)</label><input type="text" value="Rp ${formatRupiahKasir(shiftAktifData.cash_awal)}" disabled></div>
+        <div><label>Cash Seharusnya di Laci (Rp)</label><input type="text" value="Rp ${formatRupiahKasir(Number(shiftAktifData.cash_awal) + totalTunai)}" disabled></div>
+      </div>
+      <label>Cash Akhir Fisik Dihitung (Rp) *</label>
+      <input type="number" id="tsCashFisik" min="0" step="1000">
+      <label>Catatan (opsional)</label>
+      <input type="text" id="tsCatatan" placeholder="mis. selisih kembalian, dsb.">
+      <button type="button" class="btn-secondary" onclick="cetakRekapShift()">Cetak Rekap Shift</button>
+      <button type="button" class="btn-primary" style="background:var(--red, #c0503f);" onclick="tutupShiftSekarang()">Tutup Shift</button>
+    </div>
+
+    ${await htmlRiwayatShift()}
+  `;
+}
+
+async function htmlRiwayatShift() {
+  const { data, error } = await supabaseClient
+    .from("shift_kasir")
+    .select("*, profil_pegawai(nama)")
+    .eq("status", "ditutup")
+    .order("waktu_tutup", { ascending: false })
+    .limit(15);
+
+  if (error) return `<div class="msg msg-error">Gagal muat riwayat shift: ${error.message}</div>`;
+  if (!data.length) return `<div class="card"><h2>Riwayat Tutup Shift</h2><p style="font-size:13px; color:var(--muted);">Belum ada shift yang ditutup.</p></div>`;
+
+  return `
+    <div class="card">
+      <h2>Riwayat Tutup Shift</h2>
+      <table>
+        <thead><tr><th>Kasir</th><th>Buka</th><th>Tutup</th><th>Jml Transaksi</th><th>Total Pemasukan</th><th>Tunai</th><th>Cash Akhir Fisik</th></tr></thead>
+        <tbody>
+          ${data.map(s => `
+            <tr>
+              <td>${s.profil_pegawai?.nama || "-"}</td>
+              <td>${new Date(s.waktu_buka).toLocaleString("id-ID")}</td>
+              <td>${new Date(s.waktu_tutup).toLocaleString("id-ID")}</td>
+              <td>${s.total_transaksi ?? 0}</td>
+              <td>Rp ${formatRupiahKasir(s.total_pemasukan)}</td>
+              <td>Rp ${formatRupiahKasir(s.total_tunai)}</td>
+              <td>Rp ${formatRupiahKasir(s.cash_akhir_fisik)}</td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+async function tutupShiftSekarang() {
+  const msgBox = document.getElementById("msgTutupShift");
+  const cashFisik = document.getElementById("tsCashFisik").value;
+  if (cashFisik === "") { msgBox.innerHTML = `<div class="msg msg-error">Isi cash akhir fisik dulu (hitung uang tunai di laci).</div>`; return; }
+  if (!confirm("Tutup shift sekarang? Pastikan sudah cetak rekap shift.")) return;
+
+  const c = window._closingCache || { trx: [], totalPemasukan: 0, totalTunai: 0, totalNonTunai: 0 };
+  const catatan = document.getElementById("tsCatatan").value.trim();
+
+  const { error } = await supabaseClient
+    .from("shift_kasir")
+    .update({
+      waktu_tutup: new Date().toISOString(),
+      cash_akhir_fisik: Number(cashFisik),
+      total_transaksi: c.trx.length,
+      total_pemasukan: c.totalPemasukan,
+      total_tunai: c.totalTunai,
+      total_nontunai: c.totalNonTunai,
+      catatan_tutup: catatan || null,
+      status: "ditutup"
+    })
+    .eq("id", shiftAktifData.id);
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal tutup shift: ${error.message}</div>`; return; }
+
+  shiftAktifData = null;
+  renderShiftBar();
+  await muatClosingShift();
+  alert("Shift berhasil ditutup.");
+}
+
+function cetakRekapShift() {
+  if (!shiftAktifData) return;
+  const c = window._closingCache || { trx: [], totalPemasukan: 0, totalTunai: 0, totalNonTunai: 0 };
+  const cashFisik = Number(document.getElementById("tsCashFisik")?.value || 0);
+  const cashSeharusnya = Number(shiftAktifData.cash_awal) + c.totalTunai;
+  const selisih = cashFisik - cashSeharusnya;
+
+  document.getElementById("rsPetugas").textContent = shiftAktifData.profil_pegawai?.nama || profilSaya?.nama || "-";
+  document.getElementById("rsWaktuBuka").textContent = new Date(shiftAktifData.waktu_buka).toLocaleString("id-ID");
+  document.getElementById("rsWaktuTutup").textContent = new Date().toLocaleString("id-ID");
+  document.getElementById("rsCashAwal").textContent = `Rp ${formatRupiahKasir(shiftAktifData.cash_awal)}`;
+  document.getElementById("rsJmlTransaksi").textContent = c.trx.length;
+  document.getElementById("rsTotalPemasukan").textContent = `Rp ${formatRupiahKasir(c.totalPemasukan)}`;
+  document.getElementById("rsTotalTunai").textContent = `Rp ${formatRupiahKasir(c.totalTunai)}`;
+  document.getElementById("rsTotalNonTunai").textContent = `Rp ${formatRupiahKasir(c.totalNonTunai)}`;
+  document.getElementById("rsCashSeharusnya").textContent = `Rp ${formatRupiahKasir(cashSeharusnya)}`;
+  document.getElementById("rsCashFisik").textContent = `Rp ${formatRupiahKasir(cashFisik)}`;
+  document.getElementById("rsSelisih").textContent = `Rp ${formatRupiahKasir(selisih)}`;
+
+  document.getElementById("areaCetakRekapShift").classList.add("aktif-cetak");
+  window.print();
+  setTimeout(() => document.getElementById("areaCetakRekapShift").classList.remove("aktif-cetak"), 500);
 }
 
 function formatRupiahKasir(angka) {
@@ -158,6 +416,7 @@ async function cariPasienKasir() {
   const hasilBox = document.getElementById("hasilCariPasienKasir");
   document.getElementById("cardTagihanPasien").style.display = "none";
 
+  if (!shiftAktifData) { msgBox.innerHTML = `<div class="msg msg-error">Buka shift kasir dulu sebelum proses pembayaran.</div>`; return; }
   if (!kata) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama atau No. RM dulu.</div>`; return; }
   msgBox.innerHTML = "";
 
@@ -250,6 +509,7 @@ function hitungTotalDipilih() {
 
 async function prosesPembayaran() {
   const msgBox = document.getElementById("msgTagihan");
+  if (!shiftAktifData) { msgBox.innerHTML = `<div class="msg msg-error">Buka shift kasir dulu sebelum proses pembayaran.</div>`; return; }
   const idTerpilih = Array.from(document.querySelectorAll(".chkTagihanItem:checked")).map(cb => cb.value);
   if (!idTerpilih.length) { msgBox.innerHTML = `<div class="msg msg-error">Centang minimal 1 tagihan dulu.</div>`; return; }
 
@@ -263,7 +523,8 @@ async function prosesPembayaran() {
       status: "lunas",
       metode_bayar: metode,
       dibayar_oleh: profilSaya.id,
-      dibayar_at: new Date().toISOString()
+      dibayar_at: new Date().toISOString(),
+      shift_id: shiftAktifData.id
     })
     .in("id", idTerpilih);
 
