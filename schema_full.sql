@@ -3215,6 +3215,137 @@ create trigger trg_audit_surat_keluar after insert or update or delete on surat_
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 79. KLASTER 1 (MANAJEMEN) — Perencanaan (RUK/RPK)
+--     RUK = usulan tahunan, RPK = pelaksanaan bulanan (dibedakan kolom
+--     "jenis"). "Kalender kegiatan" cukup query rencana_kegiatan jenis
+--     RPK per bulan, gak perlu tabel terpisah. dokumen_regulasi buat
+--     upload (link) SK/SOP/pedoman terkait akreditasi.
+-- ============================================================
+create table if not exists rencana_kegiatan (
+  id uuid primary key default gen_random_uuid(),
+  jenis text not null check (jenis in ('ruk', 'rpk')),
+  tahun int not null,
+  bulan int check (bulan between 1 and 12),
+  klaster_id int references klaster(id),
+  nama_kegiatan text not null,
+  tujuan text,
+  sasaran text,
+  target_volume numeric,
+  satuan text,
+  sumber_dana text,
+  jadwal_mulai date,
+  jadwal_selesai date,
+  penanggung_jawab_id uuid references profil_pegawai(id),
+  status text not null default 'direncanakan' check (status in ('direncanakan', 'berjalan', 'selesai', 'dibatalkan')),
+  realisasi_volume numeric default 0,
+  realisasi_catatan text,
+  dicatat_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists dokumen_regulasi (
+  id uuid primary key default gen_random_uuid(),
+  jenis text not null check (jenis in ('sk', 'sop', 'pedoman', 'lainnya')),
+  judul text not null,
+  nomor_dokumen text,
+  tanggal_terbit date,
+  klaster_id int references klaster(id),
+  file_url text,
+  catatan text,
+  diunggah_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_rencana_kegiatan_tahun_bulan on rencana_kegiatan(tahun, bulan);
+create index if not exists idx_rencana_kegiatan_jenis on rencana_kegiatan(jenis);
+create index if not exists idx_rencana_kegiatan_klaster on rencana_kegiatan(klaster_id);
+create index if not exists idx_dokumen_regulasi_jenis on dokumen_regulasi(jenis);
+
+alter table rencana_kegiatan enable row level security;
+alter table dokumen_regulasi enable row level security;
+create policy "authenticated_all_rencana_kegiatan" on rencana_kegiatan for all to authenticated using (true) with check (true);
+create policy "authenticated_all_dokumen_regulasi" on dokumen_regulasi for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_rencana_kegiatan on rencana_kegiatan;
+create trigger trg_audit_rencana_kegiatan after insert or update or delete on rencana_kegiatan
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_dokumen_regulasi on dokumen_regulasi;
+create trigger trg_audit_dokumen_regulasi after insert or update or delete on dokumen_regulasi
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- 80. KLASTER 1 (MANAJEMEN) — Keuangan
+--     anggaran_pos = pagu per sumber dana per tahun. transaksi_keuangan
+--     = catatan harian, dikaitkan ke pos (opsional, dipakai buat hitung
+--     realisasi %). rekonsiliasi_kas = cocokkan saldo hitungan sistem
+--     vs kas fisik/rekening, dicatat manual per periode.
+-- ============================================================
+create table if not exists anggaran_pos (
+  id uuid primary key default gen_random_uuid(),
+  tahun int not null,
+  sumber_dana text not null,
+  nama_pos text not null,
+  jumlah_anggaran numeric not null default 0,
+  keterangan text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (tahun, sumber_dana, nama_pos)
+);
+
+create table if not exists transaksi_keuangan (
+  id uuid primary key default gen_random_uuid(),
+  tanggal date not null default current_date,
+  jenis text not null check (jenis in ('penerimaan', 'pengeluaran')),
+  sumber_dana text not null,
+  anggaran_pos_id uuid references anggaran_pos(id),
+  uraian text not null,
+  jumlah numeric not null check (jumlah > 0),
+  no_bukti text,
+  file_url text,
+  dicatat_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists rekonsiliasi_kas (
+  id uuid primary key default gen_random_uuid(),
+  tanggal date not null default current_date,
+  sumber_dana text not null,
+  saldo_sistem numeric not null default 0,
+  saldo_fisik numeric not null default 0,
+  selisih numeric not null default 0,
+  catatan text,
+  dicatat_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_anggaran_pos_tahun on anggaran_pos(tahun, sumber_dana);
+create index if not exists idx_transaksi_keuangan_tanggal on transaksi_keuangan(tanggal);
+create index if not exists idx_transaksi_keuangan_sumber on transaksi_keuangan(sumber_dana);
+create index if not exists idx_transaksi_keuangan_pos on transaksi_keuangan(anggaran_pos_id);
+create index if not exists idx_rekonsiliasi_kas_tanggal on rekonsiliasi_kas(tanggal);
+
+alter table anggaran_pos enable row level security;
+alter table transaksi_keuangan enable row level security;
+alter table rekonsiliasi_kas enable row level security;
+create policy "authenticated_all_anggaran_pos" on anggaran_pos for all to authenticated using (true) with check (true);
+create policy "authenticated_all_transaksi_keuangan" on transaksi_keuangan for all to authenticated using (true) with check (true);
+create policy "authenticated_all_rekonsiliasi_kas" on rekonsiliasi_kas for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_anggaran_pos on anggaran_pos;
+create trigger trg_audit_anggaran_pos after insert or update or delete on anggaran_pos
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_transaksi_keuangan on transaksi_keuangan;
+create trigger trg_audit_transaksi_keuangan after insert or update or delete on transaksi_keuangan
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_rekonsiliasi_kas on rekonsiliasi_kas;
+create trigger trg_audit_rekonsiliasi_kas after insert or update or delete on rekonsiliasi_kas
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat

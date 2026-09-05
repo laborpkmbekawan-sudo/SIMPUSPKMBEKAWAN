@@ -364,14 +364,288 @@
 
       </div>
 
-      <!-- ============ PERENCANAAN (segera) ============ -->
+      <!-- ============ PERENCANAAN (RUK/RPK) ============ -->
       <div id="panelPerencanaan" style="display:none;">
-        <div class="k1-segera"><div class="ic">📋</div><div class="t">Perencanaan (RUK/RPK)</div>Input RUK/RPK, tracking realisasi kegiatan, kalender kegiatan, dan upload dokumen SK/SOP — segera dibangun.</div>
+
+        <div class="card" style="padding:10px 14px; --accent:#1c7d7f;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="prSub-ruk" onclick="gantiSubPerencanaan('ruk')">RUK/RPK</button>
+            <button type="button" class="lap-tab" id="prSub-kalender" onclick="gantiSubPerencanaan('kalender')">Kalender Kegiatan</button>
+            <button type="button" class="lap-tab" id="prSub-dokumen" onclick="gantiSubPerencanaan('dokumen')">Dokumen SK/SOP</button>
+          </div>
+        </div>
+
+        <!-- ===== RUK/RPK ===== -->
+        <div id="prPanel-ruk">
+
+          <div class="card" style="--accent:#1c7d7f;">
+            <h2><span class="card-num" style="background:#1c7d7f;">＋</span> Tambah Rencana Kegiatan</h2>
+            <div id="msgRencana"></div>
+            <div class="grid-3">
+              <div>
+                <label>Jenis *</label>
+                <select id="rkJenis" onchange="toggleBulanRk()">
+                  <option value="ruk">RUK (usulan tahunan)</option>
+                  <option value="rpk">RPK (pelaksanaan bulanan)</option>
+                </select>
+              </div>
+              <div><label>Tahun *</label><input type="number" id="rkTahun" required></div>
+              <div id="rkBulanWrap" style="display:none;"><label>Bulan</label>
+                <select id="rkBulan">
+                  <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                  <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                  <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                  <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div><label>Nama Kegiatan *</label><input type="text" id="rkNama" required placeholder="mis. Posyandu Lansia"></div>
+              <div><label>Klaster Terkait</label><select id="rkKlaster"><option value="">- Lintas klaster / manajemen -</option></select></div>
+            </div>
+            <div class="grid-2">
+              <div><label>Tujuan</label><input type="text" id="rkTujuan"></div>
+              <div><label>Sasaran</label><input type="text" id="rkSasaran"></div>
+            </div>
+            <div class="grid-3">
+              <div><label>Target Volume</label><input type="number" step="0.01" id="rkTargetVolume"></div>
+              <div><label>Satuan</label><input type="text" id="rkSatuan" placeholder="mis. kali, orang"></div>
+              <div>
+                <label>Sumber Dana</label>
+                <select id="rkSumberDana">
+                  <option value="BOK">BOK</option><option value="JKN">JKN</option>
+                  <option value="APBD">APBD</option><option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-3">
+              <div><label>Jadwal Mulai</label><input type="date" id="rkJadwalMulai"></div>
+              <div><label>Jadwal Selesai</label><input type="date" id="rkJadwalSelesai"></div>
+              <div><label>Penanggung Jawab</label><select id="rkPenanggungJawab"><option value="">- Pilih -</option></select></div>
+            </div>
+            <button type="button" class="btn-primary" onclick="simpanRencana()">Simpan Rencana</button>
+          </div>
+
+          <div class="card" style="padding:10px 14px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="lap-tab active" id="rkFilter-semua" onclick="filterRencana('semua')">Semua</button>
+              <button type="button" class="lap-tab" id="rkFilter-ruk" onclick="filterRencana('ruk')">RUK</button>
+              <button type="button" class="lap-tab" id="rkFilter-rpk" onclick="filterRencana('rpk')">RPK</button>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Daftar RUK/RPK</h2>
+            <table>
+              <thead><tr><th>Kegiatan</th><th>Jenis</th><th>Periode</th><th>Klaster</th><th>Target</th><th>Realisasi</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelRencana"><tr><td colspan="8">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+          <div id="detailRencana"></div>
+
+        </div>
+
+        <!-- ===== KALENDER KEGIATAN ===== -->
+        <div id="prPanel-kalender" style="display:none;">
+          <div class="card" style="--accent:#1c7d7f;">
+            <h2><span class="card-num" style="background:#1c7d7f;">📅</span> Kalender Kegiatan (RPK per Bulan)</h2>
+            <div class="grid-2" style="max-width:400px;">
+              <div><label>Tahun</label><input type="number" id="kalTahun"></div>
+              <div>
+                <label>Bulan</label>
+                <select id="kalBulan" onchange="muatKalenderKegiatan()">
+                  <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                  <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                  <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                  <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+              </div>
+            </div>
+            <button type="button" class="btn-secondary" onclick="muatKalenderKegiatan()">Tampilkan</button>
+            <div id="daftarKalenderKegiatan" style="margin-top:14px;"></div>
+          </div>
+        </div>
+
+        <!-- ===== DOKUMEN SK/SOP/PEDOMAN ===== -->
+        <div id="prPanel-dokumen" style="display:none;">
+
+          <div class="card" style="--accent:#1c7d7f;">
+            <h2><span class="card-num" style="background:#1c7d7f;">＋</span> Unggah Dokumen Regulasi</h2>
+            <div id="msgDokumen"></div>
+            <div class="grid-3">
+              <div>
+                <label>Jenis *</label>
+                <select id="dkJenis">
+                  <option value="sk">SK (Surat Keputusan)</option>
+                  <option value="sop">SOP</option>
+                  <option value="pedoman">Pedoman</option>
+                  <option value="lainnya">Lainnya</option>
+                </select>
+              </div>
+              <div><label>Nomor Dokumen</label><input type="text" id="dkNomor"></div>
+              <div><label>Tanggal Terbit</label><input type="date" id="dkTanggal"></div>
+            </div>
+            <div class="grid-2">
+              <div><label>Judul *</label><input type="text" id="dkJudul" required></div>
+              <div><label>Klaster Terkait</label><select id="dkKlaster"><option value="">- Lintas klaster / manajemen -</option></select></div>
+            </div>
+            <label>Link Dokumen (Google Drive dsb) *</label>
+            <input type="text" id="dkFileUrl" required>
+            <label>Catatan</label>
+            <input type="text" id="dkCatatan">
+            <button type="button" class="btn-primary" onclick="simpanDokumenRegulasi()">Simpan Dokumen</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Daftar Dokumen Regulasi</h2>
+            <table>
+              <thead><tr><th>Judul</th><th>Jenis</th><th>Nomor</th><th>Tanggal Terbit</th><th>Klaster</th><th>Link</th></tr></thead>
+              <tbody id="tabelDokumen"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
+
       </div>
 
-      <!-- ============ KEUANGAN (segera) ============ -->
+      <!-- ============ KEUANGAN ============ -->
       <div id="panelKeuangan" style="display:none;">
-        <div class="k1-segera"><div class="ic">💰</div><div class="t">Keuangan</div>Input anggaran per sumber dana (BOK/JKN/APBD), transaksi harian, realisasi anggaran, rekonsiliasi kas — segera dibangun.</div>
+
+        <div class="card" style="padding:10px 14px; --accent:#2f9e5c;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="kgSub-anggaran" onclick="gantiSubKeuangan('anggaran')">Anggaran &amp; Realisasi</button>
+            <button type="button" class="lap-tab" id="kgSub-transaksi" onclick="gantiSubKeuangan('transaksi')">Transaksi</button>
+            <button type="button" class="lap-tab" id="kgSub-rekonsiliasi" onclick="gantiSubKeuangan('rekonsiliasi')">Rekonsiliasi Kas</button>
+          </div>
+        </div>
+
+        <!-- ===== ANGGARAN & REALISASI ===== -->
+        <div id="kgPanel-anggaran">
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2><span class="card-num" style="background:#2f9e5c;">＋</span> Tambah Pos Anggaran</h2>
+            <div id="msgAnggaran"></div>
+            <div class="grid-3">
+              <div><label>Tahun *</label><input type="number" id="apTahun" required></div>
+              <div>
+                <label>Sumber Dana *</label>
+                <select id="apSumberDana">
+                  <option value="BOK">BOK</option><option value="JKN">JKN</option>
+                  <option value="APBD">APBD</option><option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+              <div><label>Jumlah Anggaran (Rp) *</label><input type="number" step="1" id="apJumlah" required></div>
+            </div>
+            <label>Nama Pos *</label>
+            <input type="text" id="apNamaPos" required placeholder="mis. Transport Kader Posyandu">
+            <label>Keterangan</label>
+            <input type="text" id="apKeterangan">
+            <button type="button" class="btn-primary" onclick="simpanAnggaranPos()">Simpan Pos Anggaran</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">📊</span> Realisasi Anggaran per Pos</h2>
+            <div class="grid-2" style="max-width:300px;">
+              <div><label>Tahun</label><input type="number" id="realTahun" onchange="muatAnggaranPos()"></div>
+            </div>
+            <table>
+              <thead><tr><th>Pos</th><th>Sumber Dana</th><th>Pagu</th><th>Realisasi</th><th>%</th></tr></thead>
+              <tbody id="tabelAnggaranPos"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- ===== TRANSAKSI ===== -->
+        <div id="kgPanel-transaksi" style="display:none;">
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2><span class="card-num" style="background:#2f9e5c;">＋</span> Catat Transaksi</h2>
+            <div id="msgTransaksi"></div>
+            <div class="grid-3">
+              <div><label>Tanggal *</label><input type="date" id="tkTanggal" required></div>
+              <div>
+                <label>Jenis *</label>
+                <select id="tkJenis">
+                  <option value="penerimaan">Penerimaan</option>
+                  <option value="pengeluaran">Pengeluaran</option>
+                </select>
+              </div>
+              <div>
+                <label>Sumber Dana *</label>
+                <select id="tkSumberDana" onchange="muatPosUntukTransaksi()">
+                  <option value="BOK">BOK</option><option value="JKN">JKN</option>
+                  <option value="APBD">APBD</option><option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div><label>Pos Anggaran (opsional, kalo pengeluaran)</label><select id="tkPos"><option value="">- Tanpa pos -</option></select></div>
+              <div><label>Jumlah (Rp) *</label><input type="number" step="1" id="tkJumlah" required></div>
+            </div>
+            <label>Uraian *</label>
+            <input type="text" id="tkUraian" required>
+            <div class="grid-2">
+              <div><label>No. Bukti</label><input type="text" id="tkNoBukti"></div>
+              <div><label>Link Bukti (opsional)</label><input type="text" id="tkFileUrl"></div>
+            </div>
+            <button type="button" class="btn-primary" onclick="simpanTransaksi()">Simpan Transaksi</button>
+          </div>
+
+          <div class="card" style="padding:10px 14px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="lap-tab active" id="tkFilter-semua" onclick="filterTransaksi('semua')">Semua</button>
+              <button type="button" class="lap-tab" id="tkFilter-penerimaan" onclick="filterTransaksi('penerimaan')">Penerimaan</button>
+              <button type="button" class="lap-tab" id="tkFilter-pengeluaran" onclick="filterTransaksi('pengeluaran')">Pengeluaran</button>
+            </div>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Riwayat Transaksi</h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Jenis</th><th>Sumber Dana</th><th>Uraian</th><th>Jumlah</th><th>No. Bukti</th></tr></thead>
+              <tbody id="tabelTransaksi"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- ===== REKONSILIASI KAS ===== -->
+        <div id="kgPanel-rekonsiliasi" style="display:none;">
+
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2><span class="card-num" style="background:#2f9e5c;">＋</span> Rekonsiliasi Kas</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Saldo sistem dihitung otomatis (total penerimaan − total pengeluaran sumber dana ini s/d tanggal terpilih). Masukkan saldo fisik/rekening buat dicocokkan.</p>
+            <div id="msgRekon"></div>
+            <div class="grid-3">
+              <div><label>Tanggal *</label><input type="date" id="rkkTanggal" required></div>
+              <div>
+                <label>Sumber Dana *</label>
+                <select id="rkkSumberDana">
+                  <option value="BOK">BOK</option><option value="JKN">JKN</option>
+                  <option value="APBD">APBD</option><option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+              <div><label>Saldo Fisik/Rekening (Rp) *</label><input type="number" step="1" id="rkkSaldoFisik" required></div>
+            </div>
+            <button type="button" class="btn-secondary" onclick="hitungSaldoSistem()">Hitung Saldo Sistem</button>
+            <div id="hasilSaldoSistem" style="margin:10px 0; font-size:14px; font-weight:600;"></div>
+            <label>Catatan</label>
+            <input type="text" id="rkkCatatan">
+            <button type="button" class="btn-primary" onclick="simpanRekonsiliasi()">Simpan Rekonsiliasi</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Riwayat Rekonsiliasi</h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Sumber Dana</th><th>Saldo Sistem</th><th>Saldo Fisik</th><th>Selisih</th></tr></thead>
+              <tbody id="tabelRekon"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
+
       </div>
 
       <!-- ============ KEPEGAWAIAN / SDM (segera) ============ -->
@@ -445,6 +719,24 @@ let pegawaiEdit = null;
   await muatDaftarPegawaiUntukDisposisi();
   await muatSuratMasuk();
   await muatSuratKeluar();
+
+  const tahunIni = new Date().getFullYear();
+  const bulanIni = new Date().getMonth() + 1;
+  document.getElementById("rkTahun").value = tahunIni;
+  document.getElementById("kalTahun").value = tahunIni;
+  document.getElementById("kalBulan").value = bulanIni;
+  document.getElementById("apTahun").value = tahunIni;
+  document.getElementById("realTahun").value = tahunIni;
+  document.getElementById("tkTanggal").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("rkkTanggal").value = new Date().toISOString().slice(0, 10);
+
+  await muatRencana();
+  await muatKalenderKegiatan();
+  await muatDokumenRegulasi();
+  await muatAnggaranPos();
+  await muatPosUntukTransaksi();
+  await muatTransaksi();
+  await muatRekonsiliasi();
 })();
 
 function gantiSubtabK1(tab) {
@@ -516,6 +808,8 @@ async function muatKlasterUntukSelect() {
   const opsi = data.map(k => `<option value="${k.id}">${k.kode} — ${k.nama}</option>`).join("");
   document.getElementById("npKlaster").innerHTML = '<option value="">- Tidak ada -</option>' + opsi;
   document.getElementById("editKlaster").innerHTML = '<option value="">- Tidak ada -</option>' + opsi;
+  document.getElementById("rkKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
+  document.getElementById("dkKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
 }
 
 async function muatDaftarPegawai() {
@@ -725,7 +1019,11 @@ function gantiSubSurat(sub) {
 
 async function muatDaftarPegawaiUntukDisposisi() {
   const { data, error } = await supabaseClient.from("profil_pegawai").select("id, nama, role").eq("aktif", true).order("nama");
-  if (!error) daftarPegawaiUntukDisposisi = data || [];
+  if (!error) {
+    daftarPegawaiUntukDisposisi = data || [];
+    const opsi = daftarPegawaiUntukDisposisi.map(p => `<option value="${p.id}">${p.nama} (${p.role})</option>`).join("");
+    document.getElementById("rkPenanggungJawab").innerHTML = '<option value="">- Pilih -</option>' + opsi;
+  }
 }
 
 // ---------- Surat Masuk ----------
@@ -1011,6 +1309,419 @@ async function kirimSuratKeluar(id) {
   if (error) { alert("Gagal tandai terkirim: " + error.message); return; }
   alert(`Surat keluar terkirim dengan nomor ${nomorSurat}`);
   await muatSuratKeluar();
+}
+
+// ============================================================
+// PERENCANAAN (RUK/RPK)
+// ============================================================
+let daftarRencanaGlobal = [];
+let filterRencanaAktif = "semua";
+const NAMA_BULAN = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+const LABEL_STATUS_RENCANA = { direncanakan: "Direncanakan", berjalan: "Berjalan", selesai: "Selesai", dibatalkan: "Dibatalkan" };
+const BADGE_STATUS_RENCANA = { direncanakan: "badge-menunggu", berjalan: "badge-dipanggil", selesai: "badge-selesai", dibatalkan: "badge-batal" };
+
+function gantiSubPerencanaan(sub) {
+  ["ruk", "kalender", "dokumen"].forEach(s => {
+    document.getElementById(`prPanel-${s}`).style.display = s === sub ? "block" : "none";
+    document.getElementById(`prSub-${s}`).classList.toggle("active", s === sub);
+  });
+}
+
+function toggleBulanRk() {
+  document.getElementById("rkBulanWrap").style.display = document.getElementById("rkJenis").value === "rpk" ? "block" : "none";
+}
+
+async function simpanRencana() {
+  const msgBox = document.getElementById("msgRencana");
+  const jenis = document.getElementById("rkJenis").value;
+  const tahun = parseInt(document.getElementById("rkTahun").value, 10);
+  const nama = document.getElementById("rkNama").value.trim();
+
+  if (!tahun || !nama) { msgBox.innerHTML = `<div class="msg msg-error">Isi tahun dan nama kegiatan dulu.</div>`; return; }
+
+  const payload = {
+    jenis, tahun,
+    bulan: jenis === "rpk" ? parseInt(document.getElementById("rkBulan").value, 10) : null,
+    klaster_id: document.getElementById("rkKlaster").value ? parseInt(document.getElementById("rkKlaster").value) : null,
+    nama_kegiatan: nama,
+    tujuan: document.getElementById("rkTujuan").value.trim() || null,
+    sasaran: document.getElementById("rkSasaran").value.trim() || null,
+    target_volume: document.getElementById("rkTargetVolume").value ? parseFloat(document.getElementById("rkTargetVolume").value) : null,
+    satuan: document.getElementById("rkSatuan").value.trim() || null,
+    sumber_dana: document.getElementById("rkSumberDana").value,
+    jadwal_mulai: document.getElementById("rkJadwalMulai").value || null,
+    jadwal_selesai: document.getElementById("rkJadwalSelesai").value || null,
+    penanggung_jawab_id: document.getElementById("rkPenanggungJawab").value || null,
+    dicatat_oleh: profilSaya.id,
+  };
+
+  const { error } = await supabaseClient.from("rencana_kegiatan").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Rencana "${nama}" tersimpan.</div>`;
+  ["rkNama", "rkTujuan", "rkSasaran", "rkTargetVolume", "rkSatuan", "rkJadwalMulai", "rkJadwalSelesai"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("rkKlaster").value = "";
+  document.getElementById("rkPenanggungJawab").value = "";
+  await muatRencana();
+  await muatKalenderKegiatan();
+}
+
+function filterRencana(jenis) {
+  filterRencanaAktif = jenis;
+  ["semua", "ruk", "rpk"].forEach(j => document.getElementById(`rkFilter-${j}`).classList.toggle("active", j === jenis));
+  renderTabelRencana();
+}
+
+async function muatRencana() {
+  const { data, error } = await supabaseClient
+    .from("rencana_kegiatan")
+    .select("*, klaster(kode, nama), profil_pegawai:penanggung_jawab_id(nama)")
+    .order("tahun", { ascending: false })
+    .order("bulan", { ascending: true });
+  if (error) { document.getElementById("tabelRencana").innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
+  daftarRencanaGlobal = data || [];
+  renderTabelRencana();
+}
+
+function renderTabelRencana() {
+  const tbody = document.getElementById("tabelRencana");
+  const data = filterRencanaAktif === "semua" ? daftarRencanaGlobal : daftarRencanaGlobal.filter(r => r.jenis === filterRencanaAktif);
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="8">Belum ada rencana kegiatan.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${r.nama_kegiatan}</td>
+      <td>${r.jenis.toUpperCase()}</td>
+      <td>${r.tahun}${r.bulan ? " — " + NAMA_BULAN[r.bulan] : ""}</td>
+      <td>${r.klaster ? r.klaster.kode : "Manajemen"}</td>
+      <td>${r.target_volume != null ? `${r.target_volume} ${r.satuan || ""}` : "-"}</td>
+      <td>${r.realisasi_volume != null ? r.realisasi_volume : 0} ${r.satuan || ""}</td>
+      <td><span class="badge ${BADGE_STATUS_RENCANA[r.status]}">${LABEL_STATUS_RENCANA[r.status]}</span></td>
+      <td><button class="btn-secondary" onclick="lihatDetailRencana('${r.id}')">Buka</button></td>
+    </tr>
+  `).join("");
+}
+
+function lihatDetailRencana(id) {
+  const r = daftarRencanaGlobal.find(x => x.id === id);
+  if (!r) return;
+  const persenRealisasi = r.target_volume ? Math.round(((r.realisasi_volume || 0) / r.target_volume) * 100) : null;
+
+  document.getElementById("detailRencana").innerHTML = `
+    <div class="card" style="--accent:#1c7d7f;">
+      <h2><span class="card-num" style="background:#1c7d7f;">📋</span> Detail — ${r.nama_kegiatan}</h2>
+      <div class="info-block" style="margin-bottom:16px;">
+        <div class="info-row"><label>Jenis / Periode</label><span>${r.jenis.toUpperCase()} — ${r.tahun}${r.bulan ? " " + NAMA_BULAN[r.bulan] : ""}</span></div>
+        <div class="info-row"><label>Klaster</label><span>${r.klaster ? `${r.klaster.kode} — ${r.klaster.nama}` : "Manajemen / Lintas Klaster"}</span></div>
+        <div class="info-row"><label>Tujuan</label><span>${r.tujuan || "-"}</span></div>
+        <div class="info-row"><label>Sasaran</label><span>${r.sasaran || "-"}</span></div>
+        <div class="info-row"><label>Sumber Dana</label><span>${r.sumber_dana || "-"}</span></div>
+        <div class="info-row"><label>Jadwal</label><span>${r.jadwal_mulai ? formatTanggalID(r.jadwal_mulai) : "-"} s/d ${r.jadwal_selesai ? formatTanggalID(r.jadwal_selesai) : "-"}</span></div>
+        <div class="info-row"><label>Penanggung Jawab</label><span>${r.profil_pegawai?.nama || "-"}</span></div>
+        <div class="info-row"><label>Target</label><span>${r.target_volume != null ? `${r.target_volume} ${r.satuan || ""}` : "-"}</span></div>
+        ${persenRealisasi != null ? `<div class="info-row"><label>Capaian</label><span>${persenRealisasi}%</span></div>` : ""}
+      </div>
+
+      <h3 style="font-size:14px; color:var(--navy); margin-bottom:8px;">Update Realisasi &amp; Status</h3>
+      <div class="grid-3">
+        <div><label>Realisasi Volume</label><input type="number" step="0.01" id="editRealisasiVolume" value="${r.realisasi_volume || 0}"></div>
+        <div>
+          <label>Status</label>
+          <select id="editStatusRencana">
+            <option value="direncanakan" ${r.status === "direncanakan" ? "selected" : ""}>Direncanakan</option>
+            <option value="berjalan" ${r.status === "berjalan" ? "selected" : ""}>Berjalan</option>
+            <option value="selesai" ${r.status === "selesai" ? "selected" : ""}>Selesai</option>
+            <option value="dibatalkan" ${r.status === "dibatalkan" ? "selected" : ""}>Dibatalkan</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:flex-end;"><button class="btn-primary" onclick="simpanRealisasi('${r.id}')">Simpan</button></div>
+      </div>
+      <label>Catatan Realisasi</label>
+      <input type="text" id="editRealisasiCatatan" value="${r.realisasi_catatan || ""}">
+      <button class="btn-secondary" onclick="document.getElementById('detailRencana').innerHTML=''">Tutup</button>
+    </div>
+  `;
+}
+
+async function simpanRealisasi(id) {
+  const payload = {
+    realisasi_volume: parseFloat(document.getElementById("editRealisasiVolume").value) || 0,
+    status: document.getElementById("editStatusRencana").value,
+    realisasi_catatan: document.getElementById("editRealisasiCatatan").value.trim() || null,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabaseClient.from("rencana_kegiatan").update(payload).eq("id", id);
+  if (error) { alert("Gagal simpan realisasi: " + error.message); return; }
+  await muatRencana();
+  lihatDetailRencana(id);
+}
+
+async function muatKalenderKegiatan() {
+  const tahun = parseInt(document.getElementById("kalTahun").value, 10);
+  const bulan = parseInt(document.getElementById("kalBulan").value, 10);
+  const el = document.getElementById("daftarKalenderKegiatan");
+  if (!tahun || !bulan) { el.innerHTML = ""; return; }
+
+  const { data, error } = await supabaseClient
+    .from("rencana_kegiatan")
+    .select("*, klaster(kode, nama)")
+    .eq("jenis", "rpk").eq("tahun", tahun).eq("bulan", bulan)
+    .order("jadwal_mulai", { ascending: true, nullsFirst: false });
+
+  if (error) { el.innerHTML = `<p style="color:#c62836;">Gagal muat: ${error.message}</p>`; return; }
+  if (!data.length) { el.innerHTML = `<p style="font-size:13px; color:#6b7280;">Belum ada RPK di ${NAMA_BULAN[bulan]} ${tahun}.</p>`; return; }
+
+  el.innerHTML = data.map(r => `
+    <div class="info-row">
+      <label>${r.jadwal_mulai ? formatTanggalID(r.jadwal_mulai) : "Tanpa tanggal"}${r.jadwal_selesai && r.jadwal_selesai !== r.jadwal_mulai ? " s/d " + formatTanggalID(r.jadwal_selesai) : ""} — ${r.nama_kegiatan}</label>
+      <span>${r.klaster ? r.klaster.kode : "Manajemen"} · <span class="badge ${BADGE_STATUS_RENCANA[r.status]}">${LABEL_STATUS_RENCANA[r.status]}</span></span>
+    </div>
+  `).join("");
+}
+
+async function simpanDokumenRegulasi() {
+  const msgBox = document.getElementById("msgDokumen");
+  const judul = document.getElementById("dkJudul").value.trim();
+  const fileUrl = document.getElementById("dkFileUrl").value.trim();
+  if (!judul || !fileUrl) { msgBox.innerHTML = `<div class="msg msg-error">Isi judul dan link dokumen dulu.</div>`; return; }
+
+  const payload = {
+    jenis: document.getElementById("dkJenis").value,
+    judul,
+    nomor_dokumen: document.getElementById("dkNomor").value.trim() || null,
+    tanggal_terbit: document.getElementById("dkTanggal").value || null,
+    klaster_id: document.getElementById("dkKlaster").value ? parseInt(document.getElementById("dkKlaster").value) : null,
+    file_url: fileUrl,
+    catatan: document.getElementById("dkCatatan").value.trim() || null,
+    diunggah_oleh: profilSaya.id,
+  };
+
+  const { error } = await supabaseClient.from("dokumen_regulasi").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Dokumen "${judul}" tersimpan.</div>`;
+  ["dkNomor", "dkJudul", "dkTanggal", "dkFileUrl", "dkCatatan"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("dkKlaster").value = "";
+  await muatDokumenRegulasi();
+}
+
+async function muatDokumenRegulasi() {
+  const { data, error } = await supabaseClient.from("dokumen_regulasi").select("*, klaster(kode)").order("created_at", { ascending: false });
+  const tbody = document.getElementById("tabelDokumen");
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada dokumen.</td></tr>`; return; }
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td>${d.judul}</td>
+      <td>${d.jenis.toUpperCase()}</td>
+      <td>${d.nomor_dokumen || "-"}</td>
+      <td>${d.tanggal_terbit ? formatTanggalID(d.tanggal_terbit) : "-"}</td>
+      <td>${d.klaster ? d.klaster.kode : "Manajemen"}</td>
+      <td><a href="${d.file_url}" target="_blank" rel="noopener">Buka</a></td>
+    </tr>
+  `).join("");
+}
+
+// ============================================================
+// KEUANGAN
+// ============================================================
+let daftarAnggaranPosGlobal = [];
+let daftarTransaksiGlobal = [];
+let filterTransaksiAktif = "semua";
+
+function gantiSubKeuangan(sub) {
+  ["anggaran", "transaksi", "rekonsiliasi"].forEach(s => {
+    document.getElementById(`kgPanel-${s}`).style.display = s === sub ? "block" : "none";
+    document.getElementById(`kgSub-${s}`).classList.toggle("active", s === sub);
+  });
+}
+
+function formatRupiahK1(n) {
+  return "Rp " + Math.round(n || 0).toLocaleString("id-ID");
+}
+
+async function simpanAnggaranPos() {
+  const msgBox = document.getElementById("msgAnggaran");
+  const tahun = parseInt(document.getElementById("apTahun").value, 10);
+  const namaPos = document.getElementById("apNamaPos").value.trim();
+  const jumlah = parseFloat(document.getElementById("apJumlah").value);
+
+  if (!tahun || !namaPos || !jumlah) { msgBox.innerHTML = `<div class="msg msg-error">Isi tahun, nama pos, dan jumlah anggaran dulu.</div>`; return; }
+
+  const payload = {
+    tahun, sumber_dana: document.getElementById("apSumberDana").value,
+    nama_pos: namaPos, jumlah_anggaran: jumlah,
+    keterangan: document.getElementById("apKeterangan").value.trim() || null,
+  };
+
+  const { error } = await supabaseClient.from("anggaran_pos").insert(payload);
+  if (error) {
+    msgBox.innerHTML = error.message.includes("duplicate")
+      ? `<div class="msg msg-error">Pos "${namaPos}" udah ada buat tahun & sumber dana ini.</div>`
+      : `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`;
+    return;
+  }
+  msgBox.innerHTML = `<div class="msg msg-success">Pos anggaran "${namaPos}" tersimpan.</div>`;
+  document.getElementById("apNamaPos").value = "";
+  document.getElementById("apJumlah").value = "";
+  document.getElementById("apKeterangan").value = "";
+  await muatAnggaranPos();
+  await muatPosUntukTransaksi();
+}
+
+async function muatAnggaranPos() {
+  const tahun = parseInt(document.getElementById("realTahun").value, 10) || new Date().getFullYear();
+  const tbody = document.getElementById("tabelAnggaranPos");
+
+  const { data: posList, error: errPos } = await supabaseClient.from("anggaran_pos").select("*").eq("tahun", tahun).order("sumber_dana").order("nama_pos");
+  if (errPos) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${errPos.message}</td></tr>`; return; }
+  daftarAnggaranPosGlobal = posList || [];
+
+  const { data: transData, error: errTrans } = await supabaseClient.from("transaksi_keuangan").select("anggaran_pos_id, jumlah, jenis").eq("jenis", "pengeluaran").not("anggaran_pos_id", "is", null);
+  const realisasiPerPos = {};
+  if (!errTrans) (transData || []).forEach(t => { realisasiPerPos[t.anggaran_pos_id] = (realisasiPerPos[t.anggaran_pos_id] || 0) + parseFloat(t.jumlah); });
+
+  if (!daftarAnggaranPosGlobal.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada pos anggaran tahun ${tahun}.</td></tr>`; return; }
+
+  tbody.innerHTML = daftarAnggaranPosGlobal.map(p => {
+    const realisasi = realisasiPerPos[p.id] || 0;
+    const persen = p.jumlah_anggaran ? Math.round((realisasi / p.jumlah_anggaran) * 100) : 0;
+    return `
+      <tr>
+        <td>${p.nama_pos}</td>
+        <td>${p.sumber_dana}</td>
+        <td>${formatRupiahK1(p.jumlah_anggaran)}</td>
+        <td>${formatRupiahK1(realisasi)}</td>
+        <td>${persen}%</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function muatPosUntukTransaksi() {
+  const tahun = new Date().getFullYear();
+  const sumberDana = document.getElementById("tkSumberDana").value;
+  let list = daftarAnggaranPosGlobal;
+  if (!list.length) {
+    const { data } = await supabaseClient.from("anggaran_pos").select("*").eq("tahun", tahun);
+    list = data || [];
+  }
+  const opsi = list.filter(p => p.sumber_dana === sumberDana).map(p => `<option value="${p.id}">${p.nama_pos}</option>`).join("");
+  document.getElementById("tkPos").innerHTML = '<option value="">- Tanpa pos -</option>' + opsi;
+}
+
+async function simpanTransaksi() {
+  const msgBox = document.getElementById("msgTransaksi");
+  const tanggal = document.getElementById("tkTanggal").value;
+  const uraian = document.getElementById("tkUraian").value.trim();
+  const jumlah = parseFloat(document.getElementById("tkJumlah").value);
+
+  if (!tanggal || !uraian || !jumlah) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal, uraian, dan jumlah dulu.</div>`; return; }
+
+  const payload = {
+    tanggal, jenis: document.getElementById("tkJenis").value,
+    sumber_dana: document.getElementById("tkSumberDana").value,
+    anggaran_pos_id: document.getElementById("tkPos").value || null,
+    uraian, jumlah,
+    no_bukti: document.getElementById("tkNoBukti").value.trim() || null,
+    file_url: document.getElementById("tkFileUrl").value.trim() || null,
+    dicatat_oleh: profilSaya.id,
+  };
+
+  const { error } = await supabaseClient.from("transaksi_keuangan").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Transaksi tersimpan.</div>`;
+  document.getElementById("tkUraian").value = "";
+  document.getElementById("tkJumlah").value = "";
+  document.getElementById("tkNoBukti").value = "";
+  document.getElementById("tkFileUrl").value = "";
+  await muatTransaksi();
+  await muatAnggaranPos();
+}
+
+function filterTransaksi(jenis) {
+  filterTransaksiAktif = jenis;
+  ["semua", "penerimaan", "pengeluaran"].forEach(j => document.getElementById(`tkFilter-${j}`).classList.toggle("active", j === jenis));
+  renderTabelTransaksi();
+}
+
+async function muatTransaksi() {
+  const { data, error } = await supabaseClient.from("transaksi_keuangan").select("*").order("tanggal", { ascending: false }).order("created_at", { ascending: false }).limit(200);
+  if (error) { document.getElementById("tabelTransaksi").innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  daftarTransaksiGlobal = data || [];
+  renderTabelTransaksi();
+}
+
+function renderTabelTransaksi() {
+  const tbody = document.getElementById("tabelTransaksi");
+  const data = filterTransaksiAktif === "semua" ? daftarTransaksiGlobal : daftarTransaksiGlobal.filter(t => t.jenis === filterTransaksiAktif);
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada transaksi.</td></tr>`; return; }
+  tbody.innerHTML = data.map(t => `
+    <tr>
+      <td>${formatTanggalID(t.tanggal)}</td>
+      <td>${t.jenis === "penerimaan" ? "Penerimaan" : "Pengeluaran"}</td>
+      <td>${t.sumber_dana}</td>
+      <td>${t.uraian}</td>
+      <td>${formatRupiahK1(t.jumlah)}</td>
+      <td>${t.no_bukti || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function hitungSaldoSistem() {
+  const tanggal = document.getElementById("rkkTanggal").value;
+  const sumberDana = document.getElementById("rkkSumberDana").value;
+  const el = document.getElementById("hasilSaldoSistem");
+  if (!tanggal) { el.textContent = "Isi tanggal dulu."; return; }
+
+  const { data, error } = await supabaseClient.from("transaksi_keuangan").select("jenis, jumlah").eq("sumber_dana", sumberDana).lte("tanggal", tanggal);
+  if (error) { el.textContent = "Gagal hitung: " + error.message; return; }
+
+  const total = (data || []).reduce((s, t) => s + (t.jenis === "penerimaan" ? parseFloat(t.jumlah) : -parseFloat(t.jumlah)), 0);
+  el.dataset.saldo = total;
+  el.innerHTML = `Saldo sistem ${sumberDana} s/d ${formatTanggalID(tanggal)}: <span style="color:#173b5e;">${formatRupiahK1(total)}</span>`;
+}
+
+async function simpanRekonsiliasi() {
+  const msgBox = document.getElementById("msgRekon");
+  const tanggal = document.getElementById("rkkTanggal").value;
+  const saldoFisik = parseFloat(document.getElementById("rkkSaldoFisik").value);
+  const el = document.getElementById("hasilSaldoSistem");
+
+  if (!tanggal || isNaN(saldoFisik)) { msgBox.innerHTML = `<div class="msg msg-error">Isi tanggal dan saldo fisik dulu.</div>`; return; }
+  if (el.dataset.saldo === undefined) { msgBox.innerHTML = `<div class="msg msg-error">Klik "Hitung Saldo Sistem" dulu sebelum simpan.</div>`; return; }
+
+  const saldoSistem = parseFloat(el.dataset.saldo);
+  const payload = {
+    tanggal, sumber_dana: document.getElementById("rkkSumberDana").value,
+    saldo_sistem: saldoSistem, saldo_fisik: saldoFisik, selisih: saldoFisik - saldoSistem,
+    catatan: document.getElementById("rkkCatatan").value.trim() || null,
+    dicatat_oleh: profilSaya.id,
+  };
+
+  const { error } = await supabaseClient.from("rekonsiliasi_kas").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Rekonsiliasi tersimpan. Selisih: ${formatRupiahK1(saldoFisik - saldoSistem)}</div>`;
+  document.getElementById("rkkSaldoFisik").value = "";
+  document.getElementById("rkkCatatan").value = "";
+  delete el.dataset.saldo;
+  el.innerHTML = "";
+  await muatRekonsiliasi();
+}
+
+async function muatRekonsiliasi() {
+  const { data, error } = await supabaseClient.from("rekonsiliasi_kas").select("*").order("tanggal", { ascending: false }).limit(100);
+  const tbody = document.getElementById("tabelRekon");
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada rekonsiliasi.</td></tr>`; return; }
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${formatTanggalID(r.tanggal)}</td>
+      <td>${r.sumber_dana}</td>
+      <td>${formatRupiahK1(r.saldo_sistem)}</td>
+      <td>${formatRupiahK1(r.saldo_fisik)}</td>
+      <td style="color:${r.selisih === 0 ? '#16865c' : '#c62836'};">${formatRupiahK1(r.selisih)}</td>
+    </tr>
+  `).join("");
 }
 </script>
 </body>
