@@ -648,14 +648,152 @@
 
       </div>
 
-      <!-- ============ KEPEGAWAIAN / SDM (segera) ============ -->
+      <!-- ============ KEPEGAWAIAN (SDM) ============ -->
       <div id="panelKepegawaian" style="display:none;">
-        <div class="k1-segera"><div class="ic">🧑‍⚕️</div><div class="t">Kepegawaian (SDM)</div>Database nakes lengkap (STR/SIP), reminder jatuh tempo, riwayat diklat, penilaian kinerja — segera dibangun. Data akun dasar sudah bisa dikelola di menu Manajemen User &amp; Akses.</div>
+
+        <div class="card" style="padding:10px 14px; --accent:#6a4c93;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="kpSub-db" onclick="gantiSubKepegawaian('db')">Database Nakes</button>
+            <button type="button" class="lap-tab" id="kpSub-reminder" onclick="gantiSubKepegawaian('reminder')">Reminder STR/SIP</button>
+          </div>
+        </div>
+
+        <!-- ===== DATABASE NAKES ===== -->
+        <div id="kpPanel-db">
+          <div class="card" style="--accent:#6a4c93;">
+            <h2><span class="card-num" style="background:#6a4c93;">🧑‍⚕️</span> Database Nakes &amp; Staff</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Data akun (nama, role, klaster) dikelola di Manajemen User &amp; Akses. Di sini cuma data tambahan: jabatan, pendidikan, STR/SIP, diklat, kinerja.</p>
+            <table>
+              <thead><tr><th>Nama</th><th>Role</th><th>Klaster</th><th>Jabatan</th><th>STR s/d</th><th>SIP s/d</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelKepegawaian"><tr><td colspan="7">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+          <div id="detailKepegawaian"></div>
+        </div>
+
+        <!-- ===== REMINDER STR/SIP ===== -->
+        <div id="kpPanel-reminder" style="display:none;">
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">⏰</span> STR/SIP Segera/Sudah Kedaluwarsa</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Menampilkan STR/SIP yang sudah lewat atau akan habis masa berlaku dalam 90 hari ke depan.</p>
+            <table>
+              <thead><tr><th>Nama</th><th>Dokumen</th><th>Nomor</th><th>Berlaku Sampai</th><th>Status</th></tr></thead>
+              <tbody id="tabelReminderStrSip"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
-      <!-- ============ SARPRAS / ASPAK (segera) ============ -->
+      <!-- ============ SARPRAS & ALAT (ASPAK) ============ -->
       <div id="panelSarpras" style="display:none;">
-        <div class="k1-segera"><div class="ic">🛠</div><div class="t">Sarpras &amp; Alat (ASPAK)</div>Database alat kesehatan, jadwal kalibrasi &amp; pemeliharaan, riwayat kerusakan/perbaikan, stok sarana non-alkes — segera dibangun.</div>
+
+        <div class="card" style="padding:10px 14px; --accent:#c0503f;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="lap-tab active" id="spSub-alkes" onclick="gantiSubSarpras('alkes')">Alat Kesehatan</button>
+            <button type="button" class="lap-tab" id="spSub-kalibrasi" onclick="gantiSubSarpras('kalibrasi')">Kalibrasi &amp; Pemeliharaan</button>
+            <button type="button" class="lap-tab" id="spSub-nonalkes" onclick="gantiSubSarpras('nonalkes')">Aset Non-Alkes</button>
+          </div>
+        </div>
+
+        <!-- ===== ALAT KESEHATAN ===== -->
+        <div id="spPanel-alkes">
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">＋</span> Tambah Alat Kesehatan</h2>
+            <div id="msgAlat"></div>
+            <div class="grid-2">
+              <div><label>Nama Alat *</label><input type="text" id="akNama" required></div>
+              <div><label>Klaster Penempatan</label><select id="akKlaster"><option value="">- Umum / Manajemen -</option></select></div>
+            </div>
+            <div class="grid-3">
+              <div><label>Jumlah *</label><input type="number" id="akJumlah" value="1" required></div>
+              <div>
+                <label>Kondisi</label>
+                <select id="akKondisi">
+                  <option value="baik">Baik</option>
+                  <option value="rusak_ringan">Rusak Ringan</option>
+                  <option value="rusak_berat">Rusak Berat</option>
+                </select>
+              </div>
+              <div><label>Lokasi</label><input type="text" id="akLokasi" placeholder="mis. Ruang UGD"></div>
+            </div>
+            <div class="grid-2">
+              <div><label>Tanggal Pengadaan</label><input type="date" id="akTanggalPengadaan"></div>
+              <div><label>Sumber Dana</label><input type="text" id="akSumberDana" placeholder="mis. BOK 2025"></div>
+            </div>
+            <label>Catatan</label>
+            <input type="text" id="akCatatan">
+            <button type="button" class="btn-primary" onclick="simpanAlat()">Simpan Alat</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Daftar Alat Kesehatan</h2>
+            <table>
+              <thead><tr><th>Nama Alat</th><th>Klaster</th><th>Jumlah</th><th>Kondisi</th><th>Lokasi</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelAlat"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+
+          <div id="detailAlat"></div>
+        </div>
+
+        <!-- ===== KALIBRASI & PEMELIHARAAN ===== -->
+        <div id="spPanel-kalibrasi" style="display:none;">
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">⏰</span> Jatuh Tempo Kalibrasi (≤ 60 hari / lewat)</h2>
+            <table>
+              <thead><tr><th>Alat</th><th>Kalibrasi Terakhir</th><th>Jatuh Tempo</th><th>Status</th></tr></thead>
+              <tbody id="tabelJatuhTempoKalibrasi"><tr><td colspan="4">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== ASET NON-ALKES ===== -->
+        <div id="spPanel-nonalkes" style="display:none;">
+          <div class="card" style="--accent:#c0503f;">
+            <h2><span class="card-num" style="background:#c0503f;">＋</span> Tambah Aset Non-Alkes</h2>
+            <div id="msgAsetNonAlkes"></div>
+            <div class="grid-3">
+              <div><label>Nama Aset *</label><input type="text" id="anaNama" required placeholder="mis. Gedung Rawat Inap, Mobil Ambulans"></div>
+              <div>
+                <label>Jenis</label>
+                <select id="anaJenis">
+                  <option value="gedung">Gedung</option>
+                  <option value="kendaraan">Kendaraan</option>
+                  <option value="elektronik">Elektronik</option>
+                  <option value="mebel">Mebel</option>
+                  <option value="lainnya">Lainnya</option>
+                </select>
+              </div>
+              <div><label>Jumlah</label><input type="number" id="anaJumlah" value="1"></div>
+            </div>
+            <div class="grid-3">
+              <div>
+                <label>Kondisi</label>
+                <select id="anaKondisi">
+                  <option value="baik">Baik</option>
+                  <option value="rusak_ringan">Rusak Ringan</option>
+                  <option value="rusak_berat">Rusak Berat</option>
+                </select>
+              </div>
+              <div><label>Lokasi</label><input type="text" id="anaLokasi"></div>
+              <div><label>Tahun Perolehan</label><input type="number" id="anaTahunPerolehan"></div>
+            </div>
+            <label>Catatan</label>
+            <input type="text" id="anaCatatan">
+            <button type="button" class="btn-primary" onclick="simpanAsetNonAlkes()">Simpan Aset</button>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">▦</span> Daftar Aset Non-Alkes</h2>
+            <table>
+              <thead><tr><th>Nama Aset</th><th>Jenis</th><th>Jumlah</th><th>Kondisi</th><th>Lokasi</th><th>Th. Perolehan</th></tr></thead>
+              <tbody id="tabelAsetNonAlkes"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- ============ MUTU & KESELAMATAN PASIEN (segera) ============ -->
@@ -737,6 +875,10 @@ let pegawaiEdit = null;
   await muatPosUntukTransaksi();
   await muatTransaksi();
   await muatRekonsiliasi();
+
+  await muatKepegawaian();
+  await muatAlat();
+  await muatAsetNonAlkes();
 })();
 
 function gantiSubtabK1(tab) {
@@ -810,6 +952,7 @@ async function muatKlasterUntukSelect() {
   document.getElementById("editKlaster").innerHTML = '<option value="">- Tidak ada -</option>' + opsi;
   document.getElementById("rkKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
   document.getElementById("dkKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
+  document.getElementById("akKlaster").innerHTML = '<option value="">- Umum / Manajemen -</option>' + opsi;
 }
 
 async function muatDaftarPegawai() {
@@ -1720,6 +1863,371 @@ async function muatRekonsiliasi() {
       <td>${formatRupiahK1(r.saldo_sistem)}</td>
       <td>${formatRupiahK1(r.saldo_fisik)}</td>
       <td style="color:${r.selisih === 0 ? '#16865c' : '#c62836'};">${formatRupiahK1(r.selisih)}</td>
+    </tr>
+  `).join("");
+}
+
+// ============================================================
+// KEPEGAWAIAN (SDM)
+// ============================================================
+let daftarKepegawaianGlobal = [];
+let daftarDataKepegawaianGlobal = [];
+
+function gantiSubKepegawaian(sub) {
+  ["db", "reminder"].forEach(s => {
+    document.getElementById(`kpPanel-${s}`).style.display = s === sub ? "block" : "none";
+    document.getElementById(`kpSub-${s}`).classList.toggle("active", s === sub);
+  });
+  if (sub === "reminder") muatReminderStrSip();
+}
+
+async function muatKepegawaian() {
+  const tbody = document.getElementById("tabelKepegawaian");
+  const { data: pegawai, error: errP } = await supabaseClient.from("profil_pegawai").select("id, nama, role, aktif, klaster(kode)").eq("aktif", true).order("nama");
+  if (errP) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${errP.message}</td></tr>`; return; }
+  daftarKepegawaianGlobal = pegawai || [];
+
+  const { data: dk, error: errDk } = await supabaseClient.from("data_kepegawaian").select("*");
+  daftarDataKepegawaianGlobal = errDk ? [] : (dk || []);
+
+  tbody.innerHTML = daftarKepegawaianGlobal.map(p => {
+    const dkRow = daftarDataKepegawaianGlobal.find(d => d.pegawai_id === p.id);
+    return `
+      <tr>
+        <td>${p.nama}</td>
+        <td>${p.role}</td>
+        <td>${p.klaster ? p.klaster.kode : "-"}</td>
+        <td>${dkRow?.jabatan || "-"}</td>
+        <td>${dkRow?.str_berlaku_sampai ? formatTanggalID(dkRow.str_berlaku_sampai) : "-"}</td>
+        <td>${dkRow?.sip_berlaku_sampai ? formatTanggalID(dkRow.sip_berlaku_sampai) : "-"}</td>
+        <td><button class="btn-secondary" onclick="bukaDetailKepegawaian('${p.id}')">Kelola</button></td>
+      </tr>
+    `;
+  }).join("") || `<tr><td colspan="7">Belum ada pegawai aktif.</td></tr>`;
+}
+
+async function bukaDetailKepegawaian(pegawaiId) {
+  const p = daftarKepegawaianGlobal.find(x => x.id === pegawaiId);
+  if (!p) return;
+  const dkRow = daftarDataKepegawaianGlobal.find(d => d.pegawai_id === pegawaiId) || {};
+
+  const { data: diklat } = await supabaseClient.from("riwayat_diklat_pegawai").select("*").eq("pegawai_id", pegawaiId).order("tanggal_mulai", { ascending: false });
+  const { data: kinerja } = await supabaseClient.from("penilaian_kinerja_pegawai").select("*").eq("pegawai_id", pegawaiId).order("tanggal", { ascending: false });
+
+  const diklatHtml = (diklat || []).map(d => `
+    <div class="info-row"><label>${d.nama_diklat}${d.penyelenggara ? " — " + d.penyelenggara : ""}</label><span>${d.tanggal_mulai ? formatTanggalID(d.tanggal_mulai) : "-"}${d.file_url ? ` · <a href="${d.file_url}" target="_blank" rel="noopener">Sertifikat</a>` : ""}</span></div>
+  `).join("") || `<p style="font-size:13px; color:#6b7280;">Belum ada riwayat diklat.</p>`;
+
+  const kinerjaHtml = (kinerja || []).map(k => `
+    <div class="info-row"><label>${k.periode}</label><span><span class="badge ${k.kategori === 'sangat_baik' || k.kategori === 'baik' ? 'badge-selesai' : k.kategori === 'cukup' ? 'badge-menunggu' : 'badge-batal'}">${k.kategori.replace('_', ' ')}</span>${k.nilai != null ? ` (${k.nilai})` : ""}</span></div>
+  `).join("") || `<p style="font-size:13px; color:#6b7280;">Belum ada penilaian kinerja.</p>`;
+
+  document.getElementById("detailKepegawaian").innerHTML = `
+    <div class="card" style="--accent:#6a4c93;">
+      <h2><span class="card-num" style="background:#6a4c93;">🧑‍⚕️</span> Kelola Data — ${p.nama}</h2>
+      <div id="msgKepegawaian"></div>
+
+      <h3 style="font-size:14px; color:var(--navy); margin-bottom:8px;">Jabatan, Pendidikan, STR/SIP</h3>
+      <div class="grid-2">
+        <div><label>Jabatan</label><input type="text" id="dkJabatan" value="${dkRow.jabatan || ""}"></div>
+        <div><label>Pendidikan Terakhir</label><input type="text" id="dkPendidikan" value="${dkRow.pendidikan_terakhir || ""}"></div>
+      </div>
+      <div class="grid-3">
+        <div><label>TMT Tugas</label><input type="date" id="dkTmt" value="${dkRow.tmt_tugas || ""}"></div>
+        <div><label>No. STR</label><input type="text" id="dkNoStr" value="${dkRow.no_str || ""}"></div>
+        <div><label>STR Berlaku Sampai</label><input type="date" id="dkStrSampai" value="${dkRow.str_berlaku_sampai || ""}"></div>
+      </div>
+      <div class="grid-2">
+        <div><label>No. SIP</label><input type="text" id="dkNoSip" value="${dkRow.no_sip || ""}"></div>
+        <div><label>SIP Berlaku Sampai</label><input type="date" id="dkSipSampai" value="${dkRow.sip_berlaku_sampai || ""}"></div>
+      </div>
+      <button class="btn-primary" onclick="simpanDataKepegawaian('${pegawaiId}')">Simpan</button>
+
+      <h3 style="font-size:14px; color:var(--navy); margin:20px 0 8px;">Riwayat Pelatihan/Diklat</h3>
+      ${diklatHtml}
+      <div class="grid-3" style="margin-top:10px;">
+        <input type="text" id="dNamaDiklat" placeholder="Nama diklat">
+        <input type="date" id="dTanggalMulai">
+        <input type="text" id="dFileUrl" placeholder="Link sertifikat (opsional)">
+      </div>
+      <button class="btn-secondary" onclick="tambahDiklat('${pegawaiId}')">+ Tambah Diklat</button>
+
+      <h3 style="font-size:14px; color:var(--navy); margin:20px 0 8px;">Penilaian Kinerja</h3>
+      ${kinerjaHtml}
+      <div class="grid-3" style="margin-top:10px;">
+        <input type="text" id="kPeriode" placeholder="mis. 2026 Semester 1">
+        <select id="kKategori">
+          <option value="sangat_baik">Sangat Baik</option>
+          <option value="baik">Baik</option>
+          <option value="cukup">Cukup</option>
+          <option value="kurang">Kurang</option>
+        </select>
+        <input type="number" id="kNilai" placeholder="Nilai (opsional)">
+      </div>
+      <button class="btn-secondary" onclick="tambahPenilaianKinerja('${pegawaiId}')">+ Tambah Penilaian</button>
+
+      <div style="margin-top:16px;"><button class="btn-secondary" onclick="document.getElementById('detailKepegawaian').innerHTML=''">Tutup</button></div>
+    </div>
+  `;
+}
+
+async function simpanDataKepegawaian(pegawaiId) {
+  const msgBox = document.getElementById("msgKepegawaian");
+  const payload = {
+    pegawai_id: pegawaiId,
+    jabatan: document.getElementById("dkJabatan").value.trim() || null,
+    pendidikan_terakhir: document.getElementById("dkPendidikan").value.trim() || null,
+    tmt_tugas: document.getElementById("dkTmt").value || null,
+    no_str: document.getElementById("dkNoStr").value.trim() || null,
+    str_berlaku_sampai: document.getElementById("dkStrSampai").value || null,
+    no_sip: document.getElementById("dkNoSip").value.trim() || null,
+    sip_berlaku_sampai: document.getElementById("dkSipSampai").value || null,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabaseClient.from("data_kepegawaian").upsert(payload, { onConflict: "pegawai_id" });
+  msgBox.innerHTML = error ? `<div class="msg msg-error">Gagal simpan: ${error.message}</div>` : `<div class="msg msg-success">Data tersimpan.</div>`;
+  if (!error) await muatKepegawaian();
+}
+
+async function tambahDiklat(pegawaiId) {
+  const nama = document.getElementById("dNamaDiklat").value.trim();
+  if (!nama) { alert("Isi nama diklat dulu."); return; }
+  const { error } = await supabaseClient.from("riwayat_diklat_pegawai").insert({
+    pegawai_id: pegawaiId, nama_diklat: nama,
+    tanggal_mulai: document.getElementById("dTanggalMulai").value || null,
+    file_url: document.getElementById("dFileUrl").value.trim() || null,
+  });
+  if (error) { alert("Gagal simpan diklat: " + error.message); return; }
+  bukaDetailKepegawaian(pegawaiId);
+}
+
+async function tambahPenilaianKinerja(pegawaiId) {
+  const periode = document.getElementById("kPeriode").value.trim();
+  if (!periode) { alert("Isi periode dulu."); return; }
+  const nilaiInput = document.getElementById("kNilai").value;
+  const { error } = await supabaseClient.from("penilaian_kinerja_pegawai").insert({
+    pegawai_id: pegawaiId, periode,
+    kategori: document.getElementById("kKategori").value,
+    nilai: nilaiInput ? parseFloat(nilaiInput) : null,
+    dinilai_oleh: profilSaya.id,
+  });
+  if (error) { alert("Gagal simpan penilaian: " + error.message); return; }
+  bukaDetailKepegawaian(pegawaiId);
+}
+
+async function muatReminderStrSip() {
+  const tbody = document.getElementById("tabelReminderStrSip");
+  const batas = new Date();
+  batas.setDate(batas.getDate() + 90);
+  const batasStr = batas.toISOString().slice(0, 10);
+
+  const { data, error } = await supabaseClient.from("data_kepegawaian").select("*, profil_pegawai(nama, aktif)")
+    .or(`str_berlaku_sampai.lte.${batasStr},sip_berlaku_sampai.lte.${batasStr}`);
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  const hariIni = new Date().toISOString().slice(0, 10);
+  const baris = [];
+  (data || []).filter(d => d.profil_pegawai?.aktif).forEach(d => {
+    if (d.str_berlaku_sampai && d.str_berlaku_sampai <= batasStr) baris.push({ nama: d.profil_pegawai.nama, dok: "STR", nomor: d.no_str, sampai: d.str_berlaku_sampai });
+    if (d.sip_berlaku_sampai && d.sip_berlaku_sampai <= batasStr) baris.push({ nama: d.profil_pegawai.nama, dok: "SIP", nomor: d.no_sip, sampai: d.sip_berlaku_sampai });
+  });
+  baris.sort((a, b) => a.sampai.localeCompare(b.sampai));
+
+  if (!baris.length) { tbody.innerHTML = `<tr><td colspan="5">Gak ada STR/SIP yang mau/udah kedaluwarsa dalam 90 hari.</td></tr>`; return; }
+
+  tbody.innerHTML = baris.map(b => `
+    <tr>
+      <td>${b.nama}</td>
+      <td>${b.dok}</td>
+      <td>${b.nomor || "-"}</td>
+      <td>${formatTanggalID(b.sampai)}</td>
+      <td><span class="badge ${b.sampai < hariIni ? 'badge-batal' : 'badge-menunggu'}">${b.sampai < hariIni ? "Sudah Lewat" : "Segera Habis"}</span></td>
+    </tr>
+  `).join("");
+}
+
+// ============================================================
+// SARPRAS & ALAT (ASPAK)
+// ============================================================
+let daftarAlatGlobal = [];
+const LABEL_KONDISI = { baik: "Baik", rusak_ringan: "Rusak Ringan", rusak_berat: "Rusak Berat" };
+const BADGE_KONDISI = { baik: "badge-selesai", rusak_ringan: "badge-menunggu", rusak_berat: "badge-batal" };
+
+function gantiSubSarpras(sub) {
+  ["alkes", "kalibrasi", "nonalkes"].forEach(s => {
+    document.getElementById(`spPanel-${s}`).style.display = s === sub ? "block" : "none";
+    document.getElementById(`spSub-${s}`).classList.toggle("active", s === sub);
+  });
+  if (sub === "kalibrasi") muatJatuhTempoKalibrasi();
+}
+
+async function simpanAlat() {
+  const msgBox = document.getElementById("msgAlat");
+  const nama = document.getElementById("akNama").value.trim();
+  if (!nama) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama alat dulu.</div>`; return; }
+
+  const payload = {
+    nama_alat: nama,
+    klaster_id: document.getElementById("akKlaster").value ? parseInt(document.getElementById("akKlaster").value) : null,
+    jumlah: parseInt(document.getElementById("akJumlah").value, 10) || 1,
+    kondisi: document.getElementById("akKondisi").value,
+    lokasi: document.getElementById("akLokasi").value.trim() || null,
+    tanggal_pengadaan: document.getElementById("akTanggalPengadaan").value || null,
+    sumber_dana: document.getElementById("akSumberDana").value.trim() || null,
+    catatan: document.getElementById("akCatatan").value.trim() || null,
+  };
+  const { error } = await supabaseClient.from("alat_kesehatan").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Alat "${nama}" tersimpan.</div>`;
+  ["akNama", "akLokasi", "akTanggalPengadaan", "akSumberDana", "akCatatan"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("akKlaster").value = "";
+  document.getElementById("akJumlah").value = "1";
+  await muatAlat();
+}
+
+async function muatAlat() {
+  const { data, error } = await supabaseClient.from("alat_kesehatan").select("*, klaster(kode)").order("nama_alat");
+  const tbody = document.getElementById("tabelAlat");
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  daftarAlatGlobal = data || [];
+  if (!daftarAlatGlobal.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada alat kesehatan.</td></tr>`; return; }
+  tbody.innerHTML = daftarAlatGlobal.map(a => `
+    <tr>
+      <td>${a.nama_alat}</td>
+      <td>${a.klaster ? a.klaster.kode : "Umum"}</td>
+      <td>${a.jumlah}</td>
+      <td><span class="badge ${BADGE_KONDISI[a.kondisi]}">${LABEL_KONDISI[a.kondisi]}</span></td>
+      <td>${a.lokasi || "-"}</td>
+      <td><button class="btn-secondary" onclick="lihatDetailAlat('${a.id}')">Kelola</button></td>
+    </tr>
+  `).join("");
+}
+
+async function lihatDetailAlat(alatId) {
+  const a = daftarAlatGlobal.find(x => x.id === alatId);
+  if (!a) return;
+
+  const { data: kalibrasi } = await supabaseClient.from("kalibrasi_alat").select("*").eq("alat_id", alatId).order("tanggal_kalibrasi", { ascending: false });
+  const { data: kerusakan } = await supabaseClient.from("riwayat_kerusakan_alat").select("*").eq("alat_id", alatId).order("tanggal_lapor", { ascending: false });
+
+  const kalibrasiHtml = (kalibrasi || []).map(k => `
+    <div class="info-row"><label>${formatTanggalID(k.tanggal_kalibrasi)}${k.vendor ? " — " + k.vendor : ""}</label><span>Jatuh tempo: ${formatTanggalID(k.tanggal_jatuh_tempo)}${k.hasil ? ` · ${k.hasil}` : ""}</span></div>
+  `).join("") || `<p style="font-size:13px; color:#6b7280;">Belum ada riwayat kalibrasi.</p>`;
+
+  const kerusakanHtml = (kerusakan || []).map(k => `
+    <div class="info-row"><label>${formatTanggalID(k.tanggal_lapor)} — ${k.deskripsi_kerusakan}</label><span><span class="badge ${k.status === 'diperbaiki' ? 'badge-selesai' : k.status === 'tidak_bisa_diperbaiki' ? 'badge-batal' : 'badge-menunggu'}">${k.status.replace(/_/g, ' ')}</span></span></div>
+  `).join("") || `<p style="font-size:13px; color:#6b7280;">Belum ada riwayat kerusakan.</p>`;
+
+  document.getElementById("detailAlat").innerHTML = `
+    <div class="card" style="--accent:#c0503f;">
+      <h2><span class="card-num" style="background:#c0503f;">🛠</span> Kelola — ${a.nama_alat}</h2>
+
+      <h3 style="font-size:14px; color:var(--navy); margin-bottom:8px;">Riwayat Kalibrasi</h3>
+      ${kalibrasiHtml}
+      <div class="grid-3" style="margin-top:10px;">
+        <div><label style="font-size:11px;">Tgl Kalibrasi</label><input type="date" id="klTanggal"></div>
+        <div><label style="font-size:11px;">Jatuh Tempo Berikutnya</label><input type="date" id="klJatuhTempo"></div>
+        <div><label style="font-size:11px;">Vendor</label><input type="text" id="klVendor"></div>
+      </div>
+      <button class="btn-secondary" onclick="tambahKalibrasi('${alatId}')">+ Catat Kalibrasi</button>
+
+      <h3 style="font-size:14px; color:var(--navy); margin:20px 0 8px;">Riwayat Kerusakan/Perbaikan</h3>
+      ${kerusakanHtml}
+      <div class="grid-2" style="margin-top:10px;">
+        <input type="text" id="krDeskripsi" placeholder="Deskripsi kerusakan">
+        <select id="krStatus">
+          <option value="dilaporkan">Dilaporkan</option>
+          <option value="diperbaiki">Diperbaiki</option>
+          <option value="tidak_bisa_diperbaiki">Tidak Bisa Diperbaiki</option>
+        </select>
+      </div>
+      <button class="btn-secondary" onclick="tambahKerusakan('${alatId}')">+ Catat Kerusakan</button>
+
+      <div style="margin-top:16px;"><button class="btn-secondary" onclick="document.getElementById('detailAlat').innerHTML=''">Tutup</button></div>
+    </div>
+  `;
+}
+
+async function tambahKalibrasi(alatId) {
+  const tanggal = document.getElementById("klTanggal").value;
+  const jatuhTempo = document.getElementById("klJatuhTempo").value;
+  if (!tanggal || !jatuhTempo) { alert("Isi tanggal kalibrasi dan jatuh tempo berikutnya dulu."); return; }
+  const { error } = await supabaseClient.from("kalibrasi_alat").insert({
+    alat_id: alatId, tanggal_kalibrasi: tanggal, tanggal_jatuh_tempo: jatuhTempo,
+    vendor: document.getElementById("klVendor").value.trim() || null,
+  });
+  if (error) { alert("Gagal simpan kalibrasi: " + error.message); return; }
+  lihatDetailAlat(alatId);
+}
+
+async function tambahKerusakan(alatId) {
+  const deskripsi = document.getElementById("krDeskripsi").value.trim();
+  if (!deskripsi) { alert("Isi deskripsi kerusakan dulu."); return; }
+  const { error } = await supabaseClient.from("riwayat_kerusakan_alat").insert({
+    alat_id: alatId, deskripsi_kerusakan: deskripsi,
+    status: document.getElementById("krStatus").value,
+    dilaporkan_oleh: profilSaya.id,
+  });
+  if (error) { alert("Gagal simpan kerusakan: " + error.message); return; }
+  lihatDetailAlat(alatId);
+}
+
+async function muatJatuhTempoKalibrasi() {
+  const tbody = document.getElementById("tabelJatuhTempoKalibrasi");
+  const batas = new Date();
+  batas.setDate(batas.getDate() + 60);
+  const batasStr = batas.toISOString().slice(0, 10);
+
+  const { data, error } = await supabaseClient.from("kalibrasi_alat").select("*, alat_kesehatan(nama_alat)").lte("tanggal_jatuh_tempo", batasStr).order("tanggal_jatuh_tempo");
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4">Gak ada alat yang jatuh tempo kalibrasi dalam 60 hari.</td></tr>`; return; }
+
+  const hariIni = new Date().toISOString().slice(0, 10);
+  tbody.innerHTML = data.map(k => `
+    <tr>
+      <td>${k.alat_kesehatan?.nama_alat || "-"}</td>
+      <td>${formatTanggalID(k.tanggal_kalibrasi)}</td>
+      <td>${formatTanggalID(k.tanggal_jatuh_tempo)}</td>
+      <td><span class="badge ${k.tanggal_jatuh_tempo < hariIni ? 'badge-batal' : 'badge-menunggu'}">${k.tanggal_jatuh_tempo < hariIni ? "Sudah Lewat" : "Segera Jatuh Tempo"}</span></td>
+    </tr>
+  `).join("");
+}
+
+async function simpanAsetNonAlkes() {
+  const msgBox = document.getElementById("msgAsetNonAlkes");
+  const nama = document.getElementById("anaNama").value.trim();
+  if (!nama) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama aset dulu.</div>`; return; }
+
+  const payload = {
+    nama_aset: nama,
+    jenis: document.getElementById("anaJenis").value,
+    jumlah: parseInt(document.getElementById("anaJumlah").value, 10) || 1,
+    kondisi: document.getElementById("anaKondisi").value,
+    lokasi: document.getElementById("anaLokasi").value.trim() || null,
+    tahun_perolehan: document.getElementById("anaTahunPerolehan").value ? parseInt(document.getElementById("anaTahunPerolehan").value, 10) : null,
+    catatan: document.getElementById("anaCatatan").value.trim() || null,
+  };
+  const { error } = await supabaseClient.from("aset_non_alkes").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+  msgBox.innerHTML = `<div class="msg msg-success">Aset "${nama}" tersimpan.</div>`;
+  ["anaNama", "anaLokasi", "anaTahunPerolehan", "anaCatatan"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("anaJumlah").value = "1";
+  await muatAsetNonAlkes();
+}
+
+async function muatAsetNonAlkes() {
+  const { data, error } = await supabaseClient.from("aset_non_alkes").select("*").order("nama_aset");
+  const tbody = document.getElementById("tabelAsetNonAlkes");
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada aset non-alkes.</td></tr>`; return; }
+  tbody.innerHTML = data.map(a => `
+    <tr>
+      <td>${a.nama_aset}</td>
+      <td>${a.jenis}</td>
+      <td>${a.jumlah}</td>
+      <td><span class="badge ${BADGE_KONDISI[a.kondisi]}">${LABEL_KONDISI[a.kondisi]}</span></td>
+      <td>${a.lokasi || "-"}</td>
+      <td>${a.tahun_perolehan || "-"}</td>
     </tr>
   `).join("");
 }

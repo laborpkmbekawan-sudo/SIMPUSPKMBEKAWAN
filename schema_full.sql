@@ -3346,6 +3346,160 @@ create trigger trg_audit_rekonsiliasi_kas after insert or update or delete on re
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- 81. KLASTER 1 (MANAJEMEN) — Kepegawaian (SDM)
+--     Data tambahan nakes (STR/SIP dkk) di luar profil_pegawai, biar
+--     tabel akun (profil_pegawai) gak menggemuk dan tetap fokus ke
+--     akun/auth. 1 pegawai = 1 baris data_kepegawaian (opsional, cuma
+--     nakes yang butuh STR/SIP yang perlu diisi).
+-- ============================================================
+create table if not exists data_kepegawaian (
+  id uuid primary key default gen_random_uuid(),
+  pegawai_id uuid not null unique references profil_pegawai(id) on delete cascade,
+  jabatan text,
+  pendidikan_terakhir text,
+  tmt_tugas date,
+  no_str text,
+  str_berlaku_sampai date,
+  no_sip text,
+  sip_berlaku_sampai date,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists riwayat_diklat_pegawai (
+  id uuid primary key default gen_random_uuid(),
+  pegawai_id uuid not null references profil_pegawai(id) on delete cascade,
+  nama_diklat text not null,
+  penyelenggara text,
+  tanggal_mulai date,
+  tanggal_selesai date,
+  no_sertifikat text,
+  file_url text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists penilaian_kinerja_pegawai (
+  id uuid primary key default gen_random_uuid(),
+  pegawai_id uuid not null references profil_pegawai(id) on delete cascade,
+  periode text not null,
+  kategori text not null check (kategori in ('sangat_baik', 'baik', 'cukup', 'kurang')),
+  nilai numeric,
+  catatan text,
+  dinilai_oleh uuid references profil_pegawai(id),
+  tanggal date not null default current_date,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_riwayat_diklat_pegawai on riwayat_diklat_pegawai(pegawai_id);
+create index if not exists idx_penilaian_kinerja_pegawai on penilaian_kinerja_pegawai(pegawai_id);
+
+alter table data_kepegawaian enable row level security;
+alter table riwayat_diklat_pegawai enable row level security;
+alter table penilaian_kinerja_pegawai enable row level security;
+create policy "authenticated_all_data_kepegawaian" on data_kepegawaian for all to authenticated using (true) with check (true);
+create policy "authenticated_all_riwayat_diklat_pegawai" on riwayat_diklat_pegawai for all to authenticated using (true) with check (true);
+create policy "authenticated_all_penilaian_kinerja_pegawai" on penilaian_kinerja_pegawai for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_data_kepegawaian on data_kepegawaian;
+create trigger trg_audit_data_kepegawaian after insert or update or delete on data_kepegawaian
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_riwayat_diklat_pegawai on riwayat_diklat_pegawai;
+create trigger trg_audit_riwayat_diklat_pegawai after insert or update or delete on riwayat_diklat_pegawai
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_penilaian_kinerja_pegawai on penilaian_kinerja_pegawai;
+create trigger trg_audit_penilaian_kinerja_pegawai after insert or update or delete on penilaian_kinerja_pegawai
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- 82. KLASTER 1 (MANAJEMEN) — Sarpras & Alat (ASPAK)
+--     alat_kesehatan = master alkes. kalibrasi_alat & riwayat_kerusakan
+--     ngikutin siklus hidup 1 alat. aset_non_alkes terpisah (gedung,
+--     kendaraan, mebel dkk) karena gak butuh kalibrasi.
+-- ============================================================
+create table if not exists alat_kesehatan (
+  id uuid primary key default gen_random_uuid(),
+  nama_alat text not null,
+  jumlah int not null default 1,
+  kondisi text not null default 'baik' check (kondisi in ('baik', 'rusak_ringan', 'rusak_berat')),
+  lokasi text,
+  klaster_id int references klaster(id),
+  tanggal_pengadaan date,
+  sumber_dana text,
+  catatan text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists kalibrasi_alat (
+  id uuid primary key default gen_random_uuid(),
+  alat_id uuid not null references alat_kesehatan(id) on delete cascade,
+  tanggal_kalibrasi date not null,
+  tanggal_jatuh_tempo date not null,
+  vendor text,
+  hasil text,
+  file_url text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists riwayat_kerusakan_alat (
+  id uuid primary key default gen_random_uuid(),
+  alat_id uuid not null references alat_kesehatan(id) on delete cascade,
+  tanggal_lapor date not null default current_date,
+  deskripsi_kerusakan text not null,
+  status text not null default 'dilaporkan' check (status in ('dilaporkan', 'diperbaiki', 'tidak_bisa_diperbaiki')),
+  tanggal_selesai date,
+  diperbaiki_oleh text,
+  catatan text,
+  dilaporkan_oleh uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists aset_non_alkes (
+  id uuid primary key default gen_random_uuid(),
+  nama_aset text not null,
+  jenis text not null default 'lainnya' check (jenis in ('gedung', 'kendaraan', 'elektronik', 'mebel', 'lainnya')),
+  jumlah int not null default 1,
+  kondisi text not null default 'baik' check (kondisi in ('baik', 'rusak_ringan', 'rusak_berat')),
+  lokasi text,
+  tahun_perolehan int,
+  catatan text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_alat_kesehatan_klaster on alat_kesehatan(klaster_id);
+create index if not exists idx_kalibrasi_alat_alat on kalibrasi_alat(alat_id);
+create index if not exists idx_kalibrasi_alat_jatuh_tempo on kalibrasi_alat(tanggal_jatuh_tempo);
+create index if not exists idx_riwayat_kerusakan_alat_alat on riwayat_kerusakan_alat(alat_id);
+
+alter table alat_kesehatan enable row level security;
+alter table kalibrasi_alat enable row level security;
+alter table riwayat_kerusakan_alat enable row level security;
+alter table aset_non_alkes enable row level security;
+create policy "authenticated_all_alat_kesehatan" on alat_kesehatan for all to authenticated using (true) with check (true);
+create policy "authenticated_all_kalibrasi_alat" on kalibrasi_alat for all to authenticated using (true) with check (true);
+create policy "authenticated_all_riwayat_kerusakan_alat" on riwayat_kerusakan_alat for all to authenticated using (true) with check (true);
+create policy "authenticated_all_aset_non_alkes" on aset_non_alkes for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_alat_kesehatan on alat_kesehatan;
+create trigger trg_audit_alat_kesehatan after insert or update or delete on alat_kesehatan
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_kalibrasi_alat on kalibrasi_alat;
+create trigger trg_audit_kalibrasi_alat after insert or update or delete on kalibrasi_alat
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_riwayat_kerusakan_alat on riwayat_kerusakan_alat;
+create trigger trg_audit_riwayat_kerusakan_alat after insert or update or delete on riwayat_kerusakan_alat
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_aset_non_alkes on aset_non_alkes;
+create trigger trg_audit_aset_non_alkes after insert or update or delete on aset_non_alkes
+  for each row execute function fn_audit_log();
+
+-- ============================================================
 -- SELESAI. Setelah run schema ini:
 -- 1. Buat user pertama lewat Supabase Dashboard > Authentication > Add user
 -- 2. Insert baris ke profil_pegawai dengan id = user id yang baru dibuat
