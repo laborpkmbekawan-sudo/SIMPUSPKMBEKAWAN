@@ -159,6 +159,24 @@
           </div>
         </div>
 
+        <div class="card" style="--accent:#6a4c93;">
+          <h2><span class="card-num" style="background:#6a4c93;">📨</span> Ringkasan Permintaan Obat</h2>
+          <div class="pt-stat-grid">
+            <div class="pt-stat-card" style="--accent:#e0793c;">
+              <div class="label">Menunggu Approval</div>
+              <div class="value" id="statPmMenunggu">0</div>
+            </div>
+            <div class="pt-stat-card" style="--accent:#2f9e5c;">
+              <div class="label">Disetujui (Belum Dikirim)</div>
+              <div class="value" id="statPmDisetujui">0</div>
+            </div>
+            <div class="pt-stat-card" style="--accent:#173b5e;">
+              <div class="label">Selesai Bulan Ini</div>
+              <div class="value" id="statPmSelesai">0</div>
+            </div>
+          </div>
+        </div>
+
         <div class="card" style="--accent:#26a3a0;">
           <h2><span class="card-num" style="background:#26a3a0;">🔄</span> Status Sinkronisasi ke Induk <span class="tag-sync" id="tagStatusSync">Memuat...</span></h2>
           <table>
@@ -578,6 +596,7 @@
             <thead><tr><th>Kategori</th><th>Posyandu</th><th>Nama</th><th>NIK</th><th>Status</th><th>Aksi</th></tr></thead>
             <tbody id="tabelPosyanduSasaran"><tr><td colspan="6">Memuat...</td></tr></tbody>
           </table>
+          <button class="btn-secondary" onclick="exportSasaranPosyanduCsv()" style="margin-top:10px;">⬇ Export CSV</button>
         </div>
 
       </div>
@@ -1053,6 +1072,7 @@ async function muatDashboardPT() {
   muatJadwalDashboardPT();
   muatStokMenipisPT();
   muatStatusSyncPT();
+  muatRingkasanPermintaanDashboard();
 
   if (!hariIni.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada kunjungan Pustu hari ini.</td></tr>`; return; }
 
@@ -2141,6 +2161,7 @@ async function muatSasaranPosyandu() {
 
   const { data, error } = await query;
   if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  sasaranPosyanduListCache = data || [];
   if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada sasaran terdaftar.</td></tr>`; return; }
 
   tbody.innerHTML = data.map(s => `
@@ -2161,6 +2182,21 @@ async function toggleAktifSasaran(id, aktifBaru) {
   const { error } = await supabaseClient.from("posyandu_sasaran").update({ aktif: aktifBaru }).eq("id", id);
   if (error) { alert("Gagal update: " + error.message); return; }
   await muatSasaranPosyandu();
+}
+
+// ---------- Export CSV: Data Sasaran Posyandu ----------
+let sasaranPosyanduListCache = [];
+
+function exportSasaranPosyanduCsv() {
+  if (!sasaranPosyanduListCache.length) { alert("Belum ada data sasaran buat diexport."); return; }
+  const filterKategori = document.getElementById("psFilterKategori").value || "semua";
+  const header = ["Kategori", "Nama Posyandu", "Nama", "NIK", "Tanggal Lahir", "Nama Orang Tua", "Status", "Catatan"];
+  const rows = sasaranPosyanduListCache.map(s => [
+    s.kategori, s.nama_posyandu, s.nama, s.nik || "-",
+    s.tgl_lahir ? new Date(s.tgl_lahir).toLocaleDateString("id-ID") : "-",
+    s.nama_ortu || "-", s.aktif ? "Aktif" : "Non-Aktif", s.catatan || "-"
+  ]);
+  unduhCsv(`sasaran_posyandu_${pustuAktifNama || "pustu"}_${filterKategori}.csv`, header, rows);
 }
 
 // ---------- Jadwal Kegiatan Posyandu ----------
@@ -2516,6 +2552,30 @@ async function muatStokMenipisPT() {
       <td><span class="badge badge-stok-rendah">${s.stok === 0 ? "Habis" : "Menipis"}</span></td>
     </tr>
   `).join("");
+}
+
+// ---------- Dashboard: Ringkasan Permintaan Obat ----------
+async function muatRingkasanPermintaanDashboard() {
+  if (!pustuAktifId) return;
+
+  const now = new Date();
+  const awalBulan = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+
+  const { data, error } = await supabaseClient.from("permintaan_obat_pustu")
+    .select("status, tanggal_kirim")
+    .eq("pustu_id", pustuAktifId);
+
+  if (error) { console.error("Gagal muat ringkasan permintaan:", error.message); return; }
+
+  const menunggu = (data || []).filter(p => p.status === "diajukan").length;
+  const disetujui = (data || []).filter(p => p.status === "disetujui").length;
+  const selesaiBulanIni = (data || []).filter(p =>
+    p.status === "selesai" && p.tanggal_kirim && p.tanggal_kirim >= awalBulan
+  ).length;
+
+  document.getElementById("statPmMenunggu").textContent = menunggu;
+  document.getElementById("statPmDisetujui").textContent = disetujui;
+  document.getElementById("statPmSelesai").textContent = selesaiBulanIni;
 }
 
 // ---------- Log akses sensitif: RM Pustu & Lab Bumil ----------
