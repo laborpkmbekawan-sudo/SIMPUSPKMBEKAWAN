@@ -72,6 +72,7 @@
 
     <div class="ph-group-title">Laporan</div>
     <a id="navLaporanInternal" onclick="gantiSubtabPT('laporan-internal')">Laporan Internal</a>
+    <a id="navLaporanDinas" onclick="gantiSubtabPT('laporan-dinas')">Laporan ke Induk/Dinas</a>
 
     <div class="ph-group-title">Modul Lain</div>
     <a href="index.html">Pendaftaran</a>
@@ -570,6 +571,91 @@
 
       </div>
 
+      <!-- ============ LAPORAN KE INDUK/DINAS ============ -->
+      <div id="panelLaporanDinas" style="display:none;">
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">📤</span> Filter Periode</h2>
+          <div class="grid-2">
+            <div>
+              <label>Bulan</label>
+              <select id="ldBulan">
+                <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option>
+                <option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option>
+                <option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div><label>Tahun</label><input type="number" id="ldTahun" style="max-width:120px;"></div>
+          </div>
+          <button class="btn-primary" onclick="muatLaporanDinas()">Tampilkan Laporan</button>
+          <button class="btn-secondary" onclick="window.print()">🖨 Cetak</button>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2><span class="card-num" style="background:#26a3a0;">▦</span> Laporan Bulanan Kegiatan Pustu <span class="tag-sync">Rutin</span></h2>
+          <div class="pt-stat-grid">
+            <div class="pt-stat-card" style="--accent:#26a3a0;"><div class="label">Total Kunjungan</div><div class="value" id="ldTotalKunjungan">0</div></div>
+            <div class="pt-stat-card" style="--accent:#e0793c;"><div class="label">Rujuk ke Induk</div><div class="value" id="ldTotalRujuk">0</div></div>
+            <div class="pt-stat-card" style="--accent:#173b5e;"><div class="label">Pasien Unik</div><div class="value" id="ldTotalPasienUnik">0</div></div>
+          </div>
+          <table>
+            <thead><tr><th>Jenis Layanan</th><th>Jumlah</th></tr></thead>
+            <tbody id="tabelLdJenisLayanan"><tr><td colspan="2">Pilih periode lalu klik Tampilkan Laporan.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#c15b7a;">
+          <h2><span class="card-num" style="background:#c15b7a;">👶</span> Laporan Posyandu — SKDN <span class="tag-sync">SP2TP</span></h2>
+          <p style="font-size:11.5px; color:var(--muted); margin:-4px 0 12px;">S (Sasaran) ditetapkan manual oleh Dinas per wilayah, belum tersambung otomatis ke sistem ini. K, D dihitung dari data kader/timbang yang diinput per Posyandu.</p>
+          <table>
+            <thead><tr><th>Posyandu</th><th>K (Balita Terdaftar)</th><th>D (Ditimbang)</th><th>Dapat Vit. A</th></tr></thead>
+            <tbody id="tabelLdSkdn"><tr><td colspan="4">-</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#2f9e5c;">
+          <h2><span class="card-num" style="background:#2f9e5c;">💉</span> Laporan Imunisasi Posyandu</h2>
+          <table>
+            <thead><tr><th>Posyandu</th><th>Jenis Antigen</th><th>Jumlah</th></tr></thead>
+            <tbody id="tabelLdImunisasi"><tr><td colspan="3">-</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">📊</span> Laporan Gizi Posyandu</h2>
+          <table>
+            <thead><tr><th>Posyandu</th><th>Status Gizi</th><th>Jumlah</th></tr></thead>
+            <tbody id="tabelLdGizi"><tr><td colspan="3">-</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#5b21b6;">
+          <h2><span class="card-num" style="background:#5b21b6;">🧪</span> Laporan Tripel Eliminasi Bumil <span class="tag-sync">SP2TP</span></h2>
+          <div class="pt-stat-grid">
+            <div class="pt-stat-card" style="--accent:#5b21b6;"><div class="label">Bumil Discreening</div><div class="value" id="ldTripelTotal">0</div></div>
+            <div class="pt-stat-card" style="--accent:#c0503f;"><div class="label">Reaktif (semua jenis)</div><div class="value" id="ldTripelReaktif">0</div></div>
+            <div class="pt-stat-card" style="--accent:#26a3a0;"><div class="label">Hasil Selesai</div><div class="value" id="ldTripelSelesai">0</div></div>
+          </div>
+          <table>
+            <thead><tr><th>Pasien</th><th>NIK</th><th>Tgl Ambil Sampel</th><th>HBsAg</th><th>HIV</th><th>Sifilis</th></tr></thead>
+            <tbody id="tabelLdTripelDetail"><tr><td colspan="6">Tidak ada kasus reaktif periode ini.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">📋</span> Kontribusi ke LB1 &amp; LB3</h2>
+          <p style="font-size:12px; color:var(--text); line-height:1.6;">
+            Data kesakitan (LB1) dan data KIA/Gizi (LB3) dari kunjungan &amp; kegiatan Posyandu di Pustu ini <b>tidak dilaporkan terpisah</b> — otomatis ikut masuk ke rekap gabungan LB1/LB3 Puskesmas Induk lewat No. RM/NIK yang sama.
+          </p>
+          <div class="pt-stat-grid">
+            <div class="pt-stat-card" style="--accent:#173b5e;"><div class="label">Kunjungan Masuk ke LB1</div><div class="value" id="ldKontribLb1">0</div></div>
+            <div class="pt-stat-card" style="--accent:#c15b7a;"><div class="label">Kegiatan Posyandu Masuk ke LB3</div><div class="value" id="ldKontribLb3">0</div></div>
+          </div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </div>
@@ -647,7 +733,7 @@ function gantiPustuAktifAdmin(idBaru) {
 }
 
 // ---------- Sub-tab nav ----------
-const SUBTAB_PT = ["dashboard", "pelayanan", "rm", "stok", "posyandu-balita", "posyandu-lansia", "rujukan", "lab-bumil", "laporan-internal"];
+const SUBTAB_PT = ["dashboard", "pelayanan", "rm", "stok", "posyandu-balita", "posyandu-lansia", "rujukan", "lab-bumil", "laporan-internal", "laporan-dinas"];
 function idPartPT(tab) {
   return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
 }
@@ -1403,6 +1489,107 @@ async function muatLaporanInternal() {
     <tr><td>Reaktif HIV</td><td>${reaktifHiv}</td></tr>
     <tr><td>Reaktif Sifilis</td><td>${reaktifSifilis}</td></tr>
   `;
+}
+
+// ---------- Laporan ke Induk/Dinas ----------
+async function muatLaporanDinas() {
+  if (!pustuAktifId) return;
+  const bulan = document.getElementById("ldBulan").value;
+  const tahun = document.getElementById("ldTahun").value;
+  if (!bulan || !tahun) return;
+
+  const awal = `${tahun}-${bulan}-01`;
+  const akhirDate = new Date(parseInt(tahun), parseInt(bulan), 0);
+  const akhir = akhirDate.toISOString().split("T")[0];
+
+  const [
+    { data: kunjungan, error: errK },
+    { data: balita, error: errB },
+    { data: lansia, error: errL },
+    { data: lab, error: errLab }
+  ] = await Promise.all([
+    supabaseClient.from("kunjungan").select("pasien_id, kunjungan_pustu(jenis_layanan)").eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir),
+    supabaseClient.from("posyandu_balita").select("nama_posyandu, nama_balita, status_gizi, vitamin_a, imunisasi_diberikan").eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir),
+    supabaseClient.from("posyandu_lansia").select("nama_posyandu, tindak_lanjut").eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir),
+    supabaseClient.from("lab_bumil_pustu").select("tanggal_ambil_sampel, status, hasil_hbsag, hasil_hiv, hasil_sifilis, pasien(nama, nik)").eq("pustu_id", pustuAktifId).gte("tanggal_ambil_sampel", awal).lte("tanggal_ambil_sampel", akhir)
+  ]);
+
+  if (errK || errB || errL || errLab) {
+    console.error("Gagal muat laporan dinas:", errK || errB || errL || errLab);
+    document.getElementById("tabelLdJenisLayanan").innerHTML = `<tr><td colspan="2">Gagal muat laporan.</td></tr>`;
+    return;
+  }
+
+  // ---- Laporan Bulanan Kegiatan ----
+  document.getElementById("ldTotalKunjungan").textContent = (kunjungan || []).length;
+  const jumlahRujuk = (kunjungan || []).filter(k => (k.kunjungan_pustu[0]?.jenis_layanan) === "rujuk_ke_induk").length;
+  document.getElementById("ldTotalRujuk").textContent = jumlahRujuk;
+  document.getElementById("ldTotalPasienUnik").textContent = new Set((kunjungan || []).map(k => k.pasien_id)).size;
+
+  const perJenis = {};
+  (kunjungan || []).forEach(k => {
+    const jenis = k.kunjungan_pustu[0]?.jenis_layanan || "lainnya";
+    perJenis[jenis] = (perJenis[jenis] || 0) + 1;
+  });
+  const entriesJenis = Object.entries(perJenis);
+  document.getElementById("tabelLdJenisLayanan").innerHTML = entriesJenis.length
+    ? entriesJenis.map(([j, n]) => `<tr><td>${LABEL_JENIS_LAYANAN[j] || j}</td><td>${n}</td></tr>`).join("")
+    : `<tr><td colspan="2">Belum ada kunjungan periode ini.</td></tr>`;
+
+  // ---- SKDN per Posyandu (balita) ----
+  const grupBalita = {};
+  (balita || []).forEach(b => {
+    const nm = b.nama_posyandu || "Tanpa Nama";
+    if (!grupBalita[nm]) grupBalita[nm] = { namaSet: new Set(), ditimbang: 0, vitA: 0, gizi: {}, imunisasi: {} };
+    grupBalita[nm].namaSet.add(b.nama_balita);
+    grupBalita[nm].ditimbang++;
+    if (b.vitamin_a) grupBalita[nm].vitA++;
+    const g = b.status_gizi || "Tidak dicatat";
+    grupBalita[nm].gizi[g] = (grupBalita[nm].gizi[g] || 0) + 1;
+    (b.imunisasi_diberikan || "").split(",").map(s => s.trim()).filter(Boolean).forEach(antigen => {
+      grupBalita[nm].imunisasi[antigen] = (grupBalita[nm].imunisasi[antigen] || 0) + 1;
+    });
+  });
+  const namaPosyanduBalita = Object.keys(grupBalita);
+  document.getElementById("tabelLdSkdn").innerHTML = namaPosyanduBalita.length
+    ? namaPosyanduBalita.map(nm => {
+        const g = grupBalita[nm];
+        return `<tr><td>${nm}</td><td>${g.namaSet.size}</td><td>${g.ditimbang}</td><td>${g.vitA}</td></tr>`;
+      }).join("")
+    : `<tr><td colspan="4">Belum ada data Posyandu periode ini.</td></tr>`;
+
+  // ---- Laporan Imunisasi per Posyandu ----
+  const barisImunisasi = [];
+  namaPosyanduBalita.forEach(nm => {
+    const entries = Object.entries(grupBalita[nm].imunisasi);
+    if (!entries.length) return;
+    entries.forEach(([antigen, n]) => barisImunisasi.push(`<tr><td>${nm}</td><td>${antigen}</td><td>${n}</td></tr>`));
+  });
+  document.getElementById("tabelLdImunisasi").innerHTML = barisImunisasi.length
+    ? barisImunisasi.join("")
+    : `<tr><td colspan="3">Belum ada data imunisasi periode ini.</td></tr>`;
+
+  // ---- Laporan Gizi per Posyandu ----
+  const barisGizi = [];
+  namaPosyanduBalita.forEach(nm => {
+    Object.entries(grupBalita[nm].gizi).forEach(([status, n]) => barisGizi.push(`<tr><td>${nm}</td><td>${status}</td><td>${n}</td></tr>`));
+  });
+  document.getElementById("tabelLdGizi").innerHTML = barisGizi.length
+    ? barisGizi.join("")
+    : `<tr><td colspan="3">Belum ada data gizi periode ini.</td></tr>`;
+
+  // ---- Tripel Eliminasi Bumil ----
+  document.getElementById("ldTripelTotal").textContent = (lab || []).length;
+  document.getElementById("ldTripelSelesai").textContent = (lab || []).filter(l => l.status === "hasil_selesai").length;
+  const reaktifRows = (lab || []).filter(l => l.hasil_hbsag === "reaktif" || l.hasil_hiv === "reaktif" || l.hasil_sifilis === "reaktif");
+  document.getElementById("ldTripelReaktif").textContent = reaktifRows.length;
+  document.getElementById("tabelLdTripelDetail").innerHTML = reaktifRows.length
+    ? reaktifRows.map(l => `<tr><td>${l.pasien?.nama || "-"}</td><td>${l.pasien?.nik || "-"}</td><td>${l.tanggal_ambil_sampel || "-"}</td><td>${l.hasil_hbsag}</td><td>${l.hasil_hiv}</td><td>${l.hasil_sifilis}</td></tr>`).join("")
+    : `<tr><td colspan="6">Tidak ada kasus reaktif periode ini.</td></tr>`;
+
+  // ---- Kontribusi LB1 & LB3 ----
+  document.getElementById("ldKontribLb1").textContent = (kunjungan || []).length;
+  document.getElementById("ldKontribLb3").textContent = (balita || []).length + (lansia || []).length;
 }
 </script>
 </body>
