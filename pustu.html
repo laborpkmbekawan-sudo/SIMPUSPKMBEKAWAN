@@ -57,6 +57,16 @@
     <div class="ph-group-title">Data</div>
     <a id="navRm" onclick="gantiSubtabPT('rm')">Rekam Medis Pustu</a>
 
+    <div class="ph-group-title">Farmasi</div>
+    <a id="navStok" onclick="gantiSubtabPT('stok')">Stok Obat Pustu</a>
+
+    <div class="ph-group-title">Posyandu</div>
+    <a id="navPosyanduBalita" onclick="gantiSubtabPT('posyandu-balita')">Posyandu Balita</a>
+    <a id="navPosyanduLansia" onclick="gantiSubtabPT('posyandu-lansia')">Posyandu Lansia</a>
+
+    <div class="ph-group-title">Rujukan</div>
+    <a id="navRujukan" onclick="gantiSubtabPT('rujukan')">Rujukan ke Induk</a>
+
     <div class="ph-group-title">Modul Lain</div>
     <a href="index.html">Pendaftaran</a>
     <a href="rekam-medis.html">Rekam Medis</a>
@@ -239,6 +249,216 @@
         </div>
       </div>
 
+      <!-- ============ STOK OBAT PUSTU ============ -->
+      <div id="panelStok" style="display:none;">
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2><span class="card-num" style="background:#26a3a0;">💊</span> Stok Obat di Pustu Ini</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Saldo di sini nambah otomatis kalau Farmasi Induk kirim obat lewat Mutasi Keluar ke Pustu ini. Belum tentu sama dengan stok Apotek Induk.</p>
+          <table>
+            <thead><tr><th>Nama Obat</th><th>Kode</th><th>Satuan</th><th>Stok</th><th>Jenis</th></tr></thead>
+            <tbody id="tabelStokObatPustu"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">✎</span> Catat Pemakaian Obat</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Buat obat yang dikasih ke pasien di Pustu ini, di luar resep yang sudah pernah dicatat lewat Pelayanan Dasar Pustu.</p>
+          <div id="msgStokPemakaian"></div>
+          <div class="grid-2">
+            <div>
+              <label>Obat *</label>
+              <select id="skObat"><option value="">- Pilih obat -</option></select>
+            </div>
+            <div><label>Jumlah *</label><input type="number" id="skJumlah" min="1"></div>
+          </div>
+          <div>
+            <label>Referensi / Keterangan</label>
+            <input type="text" id="skReferensi" placeholder="Mis. nama pasien atau no. kunjungan (opsional)">
+          </div>
+          <button class="btn-primary" onclick="simpanPemakaianStokPustu()">Simpan Pemakaian</button>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▤</span> Riwayat Kartu Stok Pustu</h2>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Obat</th><th>Jenis</th><th>Jumlah</th><th>Saldo Setelah</th><th>Referensi</th></tr></thead>
+            <tbody id="tabelKartuStokPustu"><tr><td colspan="6">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- ============ POSYANDU BALITA ============ -->
+      <div id="panelPosyanduBalita" style="display:none;">
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2><span class="card-num" style="background:#26a3a0;">🧒</span> Input Kegiatan Posyandu Balita</h2>
+          <div id="msgPosyanduBalita"></div>
+
+          <div class="grid-2">
+            <div><label>Tanggal *</label><input type="date" id="pbTanggal"></div>
+            <div><label>Nama Posyandu *</label><input type="text" id="pbNamaPosyandu" placeholder="Mis. Posyandu Melati 1"></div>
+          </div>
+
+          <div class="grid-2">
+            <div><label>Nama Balita *</label><input type="text" id="pbNamaBalita"></div>
+            <div><label>NIK Balita</label><input type="text" id="pbNikBalita" placeholder="Opsional"></div>
+          </div>
+          <div class="grid-3">
+            <div><label>Tanggal Lahir</label><input type="date" id="pbTglLahir"></div>
+            <div>
+              <label>Jenis Kelamin</label>
+              <select id="pbJk"><option value="">-</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select>
+            </div>
+            <div><label>Nama Orang Tua</label><input type="text" id="pbNamaOrtu"></div>
+          </div>
+
+          <h3 style="font-size:13px; color:var(--navy); margin:14px 0 8px;">Penimbangan & Pengukuran</h3>
+          <div class="grid-3">
+            <div><label>Berat Badan (kg)</label><input type="text" id="pbBb"></div>
+            <div><label>Tinggi Badan (cm)</label><input type="text" id="pbTb"></div>
+            <div><label>Lingkar Kepala (cm)</label><input type="text" id="pbLingkarKepala"></div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label>Status Gizi (KMS)</label>
+              <select id="pbStatusGizi">
+                <option value="">- Pilih -</option>
+                <option>Baik (N)</option>
+                <option>Kurang (T)</option>
+                <option>Buruk</option>
+                <option>BGM</option>
+                <option>Lebih</option>
+              </select>
+            </div>
+            <div><label>Imunisasi Diberikan</label><input type="text" id="pbImunisasi" placeholder="Mis. BCG, Polio 1"></div>
+          </div>
+          <div class="grid-2">
+            <div><label><input type="checkbox" id="pbVitaminA"> Vitamin A diberikan</label></div>
+            <div><label><input type="checkbox" id="pbAsiEksklusif"> ASI Eksklusif (untuk bayi &lt;6 bulan)</label></div>
+          </div>
+
+          <div class="grid-2">
+            <div><label>Kader Pendamping</label><input type="text" id="pbKader"></div>
+            <div><label>Catatan</label><input type="text" id="pbCatatan"></div>
+          </div>
+
+          <button class="btn-primary" onclick="simpanPosyanduBalita()">Simpan</button>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▤</span> Riwayat Kegiatan Posyandu Balita</h2>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Posyandu</th><th>Nama Balita</th><th>BB/TB</th><th>Status Gizi</th><th>Vit. A</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelPosyanduBalita"><tr><td colspan="7">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- ============ POSYANDU LANSIA ============ -->
+      <div id="panelPosyanduLansia" style="display:none;">
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">🧓</span> Input Kegiatan Posyandu Lansia</h2>
+          <div id="msgPosyanduLansia"></div>
+
+          <div class="grid-2">
+            <div><label>Tanggal *</label><input type="date" id="plsTanggal"></div>
+            <div><label>Nama Posyandu *</label><input type="text" id="plsNamaPosyandu" placeholder="Mis. Posyandu Lansia Sejahtera"></div>
+          </div>
+
+          <div class="grid-3">
+            <div><label>Nama Lansia *</label><input type="text" id="plsNamaLansia"></div>
+            <div><label>NIK</label><input type="text" id="plsNik" placeholder="Opsional"></div>
+            <div><label>Umur (tahun)</label><input type="number" id="plsUmur"></div>
+          </div>
+          <div>
+            <label>Jenis Kelamin</label>
+            <select id="plsJk"><option value="">-</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select>
+          </div>
+
+          <h3 style="font-size:13px; color:var(--navy); margin:14px 0 8px;">Pemeriksaan</h3>
+          <div class="grid-3">
+            <div><label>Tekanan Darah</label><input type="text" id="plsTd" placeholder="120/80"></div>
+            <div><label>Gula Darah</label><input type="text" id="plsGd"></div>
+            <div><label>Asam Urat</label><input type="text" id="plsAu"></div>
+          </div>
+          <div class="grid-3">
+            <div><label>Kolesterol</label><input type="text" id="plsKol"></div>
+            <div><label>Berat Badan (kg)</label><input type="text" id="plsBb"></div>
+            <div><label>Tinggi Badan (cm)</label><input type="text" id="plsTb"></div>
+          </div>
+
+          <label>Keluhan</label>
+          <textarea id="plsKeluhan"></textarea>
+
+          <div class="grid-2">
+            <div>
+              <label>Tindak Lanjut</label>
+              <select id="plsTindakLanjut">
+                <option value="">- Pilih -</option>
+                <option>Edukasi</option>
+                <option>Diberi Obat</option>
+                <option>Rujuk ke Induk</option>
+                <option>Rujuk RS</option>
+                <option>Tidak Ada</option>
+              </select>
+            </div>
+            <div><label>Kader Pendamping</label><input type="text" id="plsKader"></div>
+          </div>
+          <label>Catatan</label>
+          <input type="text" id="plsCatatan">
+
+          <button class="btn-primary" onclick="simpanPosyanduLansia()">Simpan</button>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▤</span> Riwayat Kegiatan Posyandu Lansia</h2>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Posyandu</th><th>Nama Lansia</th><th>TD</th><th>GD</th><th>Tindak Lanjut</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelPosyanduLansia"><tr><td colspan="7">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- ============ RUJUKAN KE INDUK ============ -->
+      <div id="panelRujukan" style="display:none;">
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">↦</span> Kunjungan Perlu Dirujuk</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Ditarik dari Pelayanan Dasar Pustu yang jenis layanannya "Rujuk ke Puskesmas Induk" dan belum dibuatkan rujukan resminya.</p>
+          <div id="msgRujukanBuat"></div>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Pasien</th><th>No. RM</th><th>Catatan Pelayanan</th><th>Aksi</th></tr></thead>
+            <tbody id="tabelPerluRujukan"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div id="rjFormWrap" class="card" style="--accent:#e0793c; display:none;">
+          <h2>Buat Rujukan Resmi — <span id="rjNamaPasien"></span></h2>
+          <label>Diagnosa Rujukan</label>
+          <input type="text" id="rjDiagnosa" placeholder="Mis. Suspek DBD">
+          <label>Alasan Rujukan *</label>
+          <textarea id="rjAlasan" placeholder="Alasan pasien dirujuk ke Puskesmas Induk"></textarea>
+          <label>Catatan</label>
+          <input type="text" id="rjCatatan">
+          <button class="btn-primary" onclick="simpanRujukanResmi()">Simpan Rujukan</button>
+          <button class="btn-secondary" onclick="document.getElementById('rjFormWrap').style.display='none';">Batal</button>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▤</span> Riwayat Rujukan ke Induk dari Pustu Ini</h2>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Pasien</th><th>Diagnosa</th><th>Alasan</th><th>Status</th></tr></thead>
+            <tbody id="tabelRiwayatRujukan"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </div>
@@ -316,7 +536,7 @@ function gantiPustuAktifAdmin(idBaru) {
 }
 
 // ---------- Sub-tab nav ----------
-const SUBTAB_PT = ["dashboard", "pelayanan", "rm"];
+const SUBTAB_PT = ["dashboard", "pelayanan", "rm", "stok", "posyandu-balita", "posyandu-lansia", "rujukan"];
 function idPartPT(tab) {
   return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
 }
@@ -328,9 +548,17 @@ function gantiSubtabPT(tab) {
     const nav = document.getElementById("nav" + idPart);
     if (nav) nav.classList.toggle("active", t === tab);
   });
-  const judul = { dashboard: "Dashboard Pustu", pelayanan: "Pelayanan Dasar Pustu", rm: "Rekam Medis Pustu" };
+  const judul = {
+    dashboard: "Dashboard Pustu", pelayanan: "Pelayanan Dasar Pustu", rm: "Rekam Medis Pustu",
+    stok: "Stok Obat Pustu", "posyandu-balita": "Posyandu Balita", "posyandu-lansia": "Posyandu Lansia",
+    rujukan: "Rujukan ke Puskesmas Induk"
+  };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Pustu";
   if (tab === "dashboard") muatDashboardPT();
+  if (tab === "stok") muatStokPustu();
+  if (tab === "posyandu-balita") { document.getElementById("pbTanggal").value = document.getElementById("pbTanggal").value || new Date().toISOString().split("T")[0]; muatPosyanduBalita(); }
+  if (tab === "posyandu-lansia") { document.getElementById("plsTanggal").value = document.getElementById("plsTanggal").value || new Date().toISOString().split("T")[0]; muatPosyanduLansia(); }
+  if (tab === "rujukan") muatRujukanPT();
 }
 
 // ---------- DASHBOARD ----------
@@ -583,6 +811,329 @@ async function muatRmLengkapRM() {
       </tr>
     `;
   }).join("");
+}
+
+// ============================================================
+// ---------- STOK OBAT PUSTU ----------
+// ============================================================
+let daftarStokObatPustuCache = [];
+
+async function muatStokPustu() {
+  const tbodyStok = document.getElementById("tabelStokObatPustu");
+  const tbodyKartu = document.getElementById("tabelKartuStokPustu");
+  const selObat = document.getElementById("skObat");
+  if (!pustuAktifId) { tbodyStok.innerHTML = `<tr><td colspan="5">Belum ada Pustu aktif.</td></tr>`; return; }
+
+  tbodyStok.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  tbodyKartu.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const [{ data: stok, error: errStok }, { data: kartu, error: errKartu }] = await Promise.all([
+    supabaseClient.from("stok_obat_pustu")
+      .select("stok, obat:obat_id(id, nama_obat, kode_obat, satuan, jenis_item)")
+      .eq("pustu_id", pustuAktifId).order("stok", { ascending: false }),
+    supabaseClient.from("kartu_stok_pustu")
+      .select("jenis, jumlah, saldo_setelah, referensi, created_at, obat:obat_id(nama_obat)")
+      .eq("pustu_id", pustuAktifId).order("created_at", { ascending: false }).limit(30)
+  ]);
+
+  if (errStok) { tbodyStok.innerHTML = `<tr><td colspan="5">Gagal muat: ${errStok.message}</td></tr>`; }
+  else {
+    daftarStokObatPustuCache = (stok || []).filter(s => s.obat);
+    if (!daftarStokObatPustuCache.length) {
+      tbodyStok.innerHTML = `<tr><td colspan="5">Belum ada obat masuk ke Pustu ini. Minta Farmasi Induk kirim lewat Mutasi Keluar.</td></tr>`;
+    } else {
+      tbodyStok.innerHTML = daftarStokObatPustuCache.map(s => `
+        <tr>
+          <td>${s.obat.nama_obat}</td>
+          <td>${s.obat.kode_obat || "-"}</td>
+          <td>${s.obat.satuan}</td>
+          <td>${s.stok <= 5 ? `<span class="badge badge-stok-rendah">${s.stok}</span>` : s.stok}</td>
+          <td>${s.obat.jenis_item === "bmhp" ? "BMHP" : "Obat"}</td>
+        </tr>
+      `).join("");
+    }
+    const opsi = daftarStokObatPustuCache.filter(s => s.stok > 0)
+      .map(s => `<option value="${s.obat.id}">${s.obat.nama_obat} (stok: ${s.stok} ${s.obat.satuan})</option>`).join("");
+    selObat.innerHTML = `<option value="">- Pilih obat -</option>` + opsi;
+  }
+
+  if (errKartu) { tbodyKartu.innerHTML = `<tr><td colspan="6">Gagal muat: ${errKartu.message}</td></tr>`; }
+  else if (!kartu.length) { tbodyKartu.innerHTML = `<tr><td colspan="6">Belum ada riwayat.</td></tr>`; }
+  else {
+    const labelJenis = { mutasi_masuk: "Mutasi Masuk", pemakaian: "Pemakaian", opname_tambah: "Opname Tambah", opname_kurang: "Opname Kurang" };
+    tbodyKartu.innerHTML = kartu.map(k => `
+      <tr>
+        <td>${new Date(k.created_at).toLocaleDateString("id-ID")}</td>
+        <td>${k.obat ? k.obat.nama_obat : "-"}</td>
+        <td>${labelJenis[k.jenis] || k.jenis}</td>
+        <td>${k.jenis === "pemakaian" || k.jenis === "opname_kurang" ? "-" : "+"}${k.jumlah}</td>
+        <td>${k.saldo_setelah}</td>
+        <td>${k.referensi || "-"}</td>
+      </tr>
+    `).join("");
+  }
+}
+
+async function simpanPemakaianStokPustu() {
+  const msgBox = document.getElementById("msgStokPemakaian");
+  const obatId = document.getElementById("skObat").value;
+  const jumlah = parseInt(document.getElementById("skJumlah").value, 10);
+  const referensi = document.getElementById("skReferensi").value.trim() || null;
+
+  if (!obatId || !jumlah) { msgBox.innerHTML = `<div class="msg msg-error">Pilih obat dan isi jumlah dulu.</div>`; return; }
+  const baris = daftarStokObatPustuCache.find(s => s.obat.id === obatId);
+  if (!baris || jumlah > baris.stok) { msgBox.innerHTML = `<div class="msg msg-error">Stok cuma ${baris ? baris.stok : 0}, gak cukup buat pemakaian ${jumlah}.</div>`; return; }
+
+  const saldoBaru = baris.stok - jumlah;
+  const { error: errUpdate } = await supabaseClient.from("stok_obat_pustu").update({ stok: saldoBaru, updated_at: new Date().toISOString() })
+    .eq("pustu_id", pustuAktifId).eq("obat_id", obatId);
+  if (errUpdate) { msgBox.innerHTML = `<div class="msg msg-error">Gagal update stok: ${errUpdate.message}</div>`; return; }
+
+  const { error: errKartu } = await supabaseClient.from("kartu_stok_pustu").insert({
+    pustu_id: pustuAktifId, obat_id: obatId, jenis: "pemakaian", jumlah, saldo_setelah: saldoBaru, referensi, petugas_id: profilSaya.id
+  });
+  if (errKartu) { msgBox.innerHTML = `<div class="msg msg-error">Stok terpotong, tapi gagal catat kartu stok: ${errKartu.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Pemakaian tercatat, stok terpotong.</div>`;
+  document.getElementById("skJumlah").value = "";
+  document.getElementById("skReferensi").value = "";
+  await muatStokPustu();
+}
+
+// ============================================================
+// ---------- POSYANDU BALITA ----------
+// ============================================================
+async function muatPosyanduBalita() {
+  const tbody = document.getElementById("tabelPosyanduBalita");
+  if (!pustuAktifId) { tbody.innerHTML = `<tr><td colspan="7">Belum ada Pustu aktif.</td></tr>`; return; }
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient.from("posyandu_balita")
+    .select("tanggal, nama_posyandu, nama_balita, berat_badan, tinggi_badan, status_gizi, vitamin_a, petugas:petugas_id(nama)")
+    .eq("pustu_id", pustuAktifId).order("tanggal", { ascending: false }).limit(50);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada kegiatan Posyandu Balita tercatat.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.nama_posyandu}</td>
+      <td>${r.nama_balita}</td>
+      <td>${r.berat_badan || "-"} kg / ${r.tinggi_badan || "-"} cm</td>
+      <td>${r.status_gizi || "-"}</td>
+      <td>${r.vitamin_a ? "✔" : "-"}</td>
+      <td>${r.petugas ? r.petugas.nama : "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanPosyanduBalita() {
+  const msgBox = document.getElementById("msgPosyanduBalita");
+  if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
+
+  const tanggal = document.getElementById("pbTanggal").value;
+  const namaPosyandu = document.getElementById("pbNamaPosyandu").value.trim();
+  const namaBalita = document.getElementById("pbNamaBalita").value.trim();
+  if (!tanggal || !namaPosyandu || !namaBalita) { msgBox.innerHTML = `<div class="msg msg-error">Tanggal, Nama Posyandu, dan Nama Balita wajib diisi.</div>`; return; }
+
+  const payload = {
+    pustu_id: pustuAktifId,
+    tanggal,
+    nama_posyandu: namaPosyandu,
+    nama_balita: namaBalita,
+    nik_balita: document.getElementById("pbNikBalita").value.trim() || null,
+    tgl_lahir: document.getElementById("pbTglLahir").value || null,
+    jenis_kelamin: document.getElementById("pbJk").value || null,
+    nama_ortu: document.getElementById("pbNamaOrtu").value.trim() || null,
+    berat_badan: document.getElementById("pbBb").value.trim() || null,
+    tinggi_badan: document.getElementById("pbTb").value.trim() || null,
+    lingkar_kepala: document.getElementById("pbLingkarKepala").value.trim() || null,
+    status_gizi: document.getElementById("pbStatusGizi").value || null,
+    imunisasi_diberikan: document.getElementById("pbImunisasi").value.trim() || null,
+    vitamin_a: document.getElementById("pbVitaminA").checked,
+    asi_eksklusif: document.getElementById("pbAsiEksklusif").checked,
+    kader_pendamping: document.getElementById("pbKader").value.trim() || null,
+    catatan: document.getElementById("pbCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  };
+
+  const { error } = await supabaseClient.from("posyandu_balita").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Kegiatan Posyandu Balita tersimpan.</div>`;
+  ["pbNamaBalita", "pbNikBalita", "pbTglLahir", "pbNamaOrtu", "pbBb", "pbTb", "pbLingkarKepala", "pbImunisasi", "pbCatatan"]
+    .forEach(id => document.getElementById(id).value = "");
+  document.getElementById("pbJk").value = "";
+  document.getElementById("pbStatusGizi").value = "";
+  document.getElementById("pbVitaminA").checked = false;
+  document.getElementById("pbAsiEksklusif").checked = false;
+  await muatPosyanduBalita();
+}
+
+// ============================================================
+// ---------- POSYANDU LANSIA ----------
+// ============================================================
+async function muatPosyanduLansia() {
+  const tbody = document.getElementById("tabelPosyanduLansia");
+  if (!pustuAktifId) { tbody.innerHTML = `<tr><td colspan="7">Belum ada Pustu aktif.</td></tr>`; return; }
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient.from("posyandu_lansia")
+    .select("tanggal, nama_posyandu, nama_lansia, tekanan_darah, gula_darah, tindak_lanjut, petugas:petugas_id(nama)")
+    .eq("pustu_id", pustuAktifId).order("tanggal", { ascending: false }).limit(50);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada kegiatan Posyandu Lansia tercatat.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${r.nama_posyandu}</td>
+      <td>${r.nama_lansia}</td>
+      <td>${r.tekanan_darah || "-"}</td>
+      <td>${r.gula_darah || "-"}</td>
+      <td>${r.tindak_lanjut || "-"}</td>
+      <td>${r.petugas ? r.petugas.nama : "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function simpanPosyanduLansia() {
+  const msgBox = document.getElementById("msgPosyanduLansia");
+  if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
+
+  const tanggal = document.getElementById("plsTanggal").value;
+  const namaPosyandu = document.getElementById("plsNamaPosyandu").value.trim();
+  const namaLansia = document.getElementById("plsNamaLansia").value.trim();
+  if (!tanggal || !namaPosyandu || !namaLansia) { msgBox.innerHTML = `<div class="msg msg-error">Tanggal, Nama Posyandu, dan Nama Lansia wajib diisi.</div>`; return; }
+
+  const payload = {
+    pustu_id: pustuAktifId,
+    tanggal,
+    nama_posyandu: namaPosyandu,
+    nama_lansia: namaLansia,
+    nik: document.getElementById("plsNik").value.trim() || null,
+    umur: document.getElementById("plsUmur").value ? parseInt(document.getElementById("plsUmur").value, 10) : null,
+    jenis_kelamin: document.getElementById("plsJk").value || null,
+    tekanan_darah: document.getElementById("plsTd").value.trim() || null,
+    gula_darah: document.getElementById("plsGd").value.trim() || null,
+    asam_urat: document.getElementById("plsAu").value.trim() || null,
+    kolesterol: document.getElementById("plsKol").value.trim() || null,
+    berat_badan: document.getElementById("plsBb").value.trim() || null,
+    tinggi_badan: document.getElementById("plsTb").value.trim() || null,
+    keluhan: document.getElementById("plsKeluhan").value.trim() || null,
+    tindak_lanjut: document.getElementById("plsTindakLanjut").value || null,
+    kader_pendamping: document.getElementById("plsKader").value.trim() || null,
+    catatan: document.getElementById("plsCatatan").value.trim() || null,
+    petugas_id: profilSaya.id
+  };
+
+  const { error } = await supabaseClient.from("posyandu_lansia").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Kegiatan Posyandu Lansia tersimpan.</div>`;
+  ["plsNamaLansia", "plsNik", "plsUmur", "plsTd", "plsGd", "plsAu", "plsKol", "plsBb", "plsTb", "plsKeluhan", "plsKader", "plsCatatan"]
+    .forEach(id => document.getElementById(id).value = "");
+  document.getElementById("plsJk").value = "";
+  document.getElementById("plsTindakLanjut").value = "";
+  await muatPosyanduLansia();
+}
+
+// ============================================================
+// ---------- RUJUKAN KE INDUK ----------
+// ============================================================
+let kunjunganPerluRujukanCache = [];
+
+async function muatRujukanPT() {
+  const tbodyPerlu = document.getElementById("tabelPerluRujukan");
+  const tbodyRiwayat = document.getElementById("tabelRiwayatRujukan");
+  document.getElementById("rjFormWrap").style.display = "none";
+  if (!pustuAktifId) { tbodyPerlu.innerHTML = `<tr><td colspan="5">Belum ada Pustu aktif.</td></tr>`; return; }
+
+  tbodyPerlu.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  tbodyRiwayat.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const [{ data: kp, error: errKp }, { data: riwayat, error: errRiwayat }] = await Promise.all([
+    supabaseClient.from("kunjungan_pustu")
+      .select("kunjungan_id, catatan_pustu, kunjungan:kunjungan_id(id, tanggal, pasien:pasien_id(id, nama, no_rm))")
+      .eq("pustu_id", pustuAktifId).eq("jenis_layanan", "rujuk_ke_induk").order("created_at", { ascending: false }).limit(50),
+    supabaseClient.from("rujukan")
+      .select("kunjungan_asal_id, diagnosa_rujukan, alasan_rujukan, status, created_at, kunjungan:kunjungan_asal_id(pasien:pasien_id(nama))")
+      .eq("pustu_asal_id", pustuAktifId).order("created_at", { ascending: false }).limit(50)
+  ]);
+
+  if (errKp || errRiwayat) { tbodyPerlu.innerHTML = `<tr><td colspan="5">Gagal muat: ${(errKp || errRiwayat).message}</td></tr>`; return; }
+
+  const sudahDirujuk = new Set((riwayat || []).map(r => r.kunjungan_asal_id));
+  kunjunganPerluRujukanCache = (kp || []).filter(r => r.kunjungan && !sudahDirujuk.has(r.kunjungan.id));
+
+  if (!kunjunganPerluRujukanCache.length) {
+    tbodyPerlu.innerHTML = `<tr><td colspan="5">Gak ada kunjungan yang perlu dirujuk saat ini.</td></tr>`;
+  } else {
+    tbodyPerlu.innerHTML = kunjunganPerluRujukanCache.map((r, i) => `
+      <tr>
+        <td>${new Date(r.kunjungan.tanggal).toLocaleDateString("id-ID")}</td>
+        <td>${r.kunjungan.pasien ? r.kunjungan.pasien.nama : "-"}</td>
+        <td>${r.kunjungan.pasien && r.kunjungan.pasien.no_rm || "-"}</td>
+        <td>${r.catatan_pustu || "-"}</td>
+        <td><button class="btn-secondary" onclick="bukaFormRujukan(${i})">Buat Rujukan</button></td>
+      </tr>
+    `).join("");
+  }
+
+  if (!riwayat || !riwayat.length) {
+    tbodyRiwayat.innerHTML = `<tr><td colspan="5">Belum ada rujukan ke Induk dari Pustu ini.</td></tr>`;
+  } else {
+    const badgeStatus = { diajukan: "badge-menunggu", diterima: "badge-dipanggil", selesai: "badge-selesai", batal: "badge-batal" };
+    tbodyRiwayat.innerHTML = riwayat.map(r => `
+      <tr>
+        <td>${new Date(r.created_at).toLocaleDateString("id-ID")}</td>
+        <td>${r.kunjungan && r.kunjungan.pasien ? r.kunjungan.pasien.nama : "-"}</td>
+        <td>${r.diagnosa_rujukan || "-"}</td>
+        <td>${r.alasan_rujukan}</td>
+        <td><span class="badge ${badgeStatus[r.status] || ""}">${r.status}</span></td>
+      </tr>
+    `).join("");
+  }
+}
+
+function bukaFormRujukan(index) {
+  const r = kunjunganPerluRujukanCache[index];
+  window._rjTerpilih = r;
+  document.getElementById("rjNamaPasien").textContent = r.kunjungan.pasien ? r.kunjungan.pasien.nama : "-";
+  document.getElementById("rjDiagnosa").value = "";
+  document.getElementById("rjAlasan").value = "";
+  document.getElementById("rjCatatan").value = "";
+  document.getElementById("msgRujukanBuat").innerHTML = "";
+  document.getElementById("rjFormWrap").style.display = "block";
+  document.getElementById("rjFormWrap").scrollIntoView({ behavior: "smooth" });
+}
+
+async function simpanRujukanResmi() {
+  const msgBox = document.getElementById("msgRujukanBuat");
+  const r = window._rjTerpilih;
+  const alasan = document.getElementById("rjAlasan").value.trim();
+  if (!r) { msgBox.innerHTML = `<div class="msg msg-error">Pilih kunjungan dulu.</div>`; return; }
+  if (!alasan) { msgBox.innerHTML = `<div class="msg msg-error">Alasan rujukan wajib diisi.</div>`; return; }
+
+  const payload = {
+    kunjungan_asal_id: r.kunjungan.id,
+    jenis: "rujuk_pustu_induk",
+    pustu_asal_id: pustuAktifId,
+    faskes_tujuan: "Puskesmas Bekawan (Induk)",
+    diagnosa_rujukan: document.getElementById("rjDiagnosa").value.trim() || null,
+    alasan_rujukan: alasan,
+    catatan: document.getElementById("rjCatatan").value.trim() || null,
+    status: "diajukan",
+    petugas_id: profilSaya.id
+  };
+
+  const { error } = await supabaseClient.from("rujukan").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan rujukan: ${error.message}</div>`; return; }
+
+  document.getElementById("rjFormWrap").style.display = "none";
+  await muatRujukanPT();
 }
 </script>
 </body>

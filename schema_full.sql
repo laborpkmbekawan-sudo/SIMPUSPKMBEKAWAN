@@ -4054,3 +4054,133 @@ create trigger trg_audit_kunjungan_pustu after insert or update or delete on kun
 -- ============================================================
 -- SELESAI section 93. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 94. MODUL PUSTU LANJUTAN — Stok Obat Pustu, Rujukan ke Induk,
+--     Posyandu Balita, Posyandu Lansia.
+--     a) Stok Obat Pustu: saldo per obat per Pustu (stok_obat_pustu)
+--        + riwayat mutasi (kartu_stok_pustu). Mutasi Keluar ke Pustu
+--        di apotek.html sekarang juga nambah saldo di sini lewat
+--        catatStokMasukPustu() — non-blocking, gak gagalin mutasi utama.
+--     b) Rujukan ke Induk: reuse tabel rujukan (bukan bikin baru).
+--        Dibuat dari kunjungan_pustu yang jenis_layanan-nya udah
+--        'rujuk_ke_induk' (gak bikin kunjungan baru lagi).
+--     c/d) Posyandu Balita & Lansia: kegiatan luar gedung, sasarannya
+--        gak selalu punya RM (balita/lansia yang belum pernah berobat),
+--        jadi dicatat manual per kegiatan, terpisah dari kunjungan/RM.
+-- ============================================================
+
+create table if not exists stok_obat_pustu (
+  id uuid primary key default gen_random_uuid(),
+  pustu_id int not null references pustu(id),
+  obat_id uuid not null references obat(id),
+  stok int not null default 0,
+  updated_at timestamptz not null default now(),
+  unique(pustu_id, obat_id)
+);
+create index if not exists idx_stok_obat_pustu_pustu on stok_obat_pustu(pustu_id);
+
+create table if not exists kartu_stok_pustu (
+  id uuid primary key default gen_random_uuid(),
+  pustu_id int not null references pustu(id),
+  obat_id uuid not null references obat(id),
+  jenis text not null check (jenis in ('mutasi_masuk','pemakaian','opname_tambah','opname_kurang')),
+  jumlah int not null,
+  saldo_setelah int not null,
+  referensi text,
+  keterangan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_kartu_stok_pustu_pustu on kartu_stok_pustu(pustu_id, obat_id);
+
+alter table stok_obat_pustu enable row level security;
+alter table kartu_stok_pustu enable row level security;
+drop policy if exists "authenticated_all_stok_obat_pustu" on stok_obat_pustu;
+create policy "authenticated_all_stok_obat_pustu" on stok_obat_pustu for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_kartu_stok_pustu" on kartu_stok_pustu;
+create policy "authenticated_all_kartu_stok_pustu" on kartu_stok_pustu for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_stok_obat_pustu on stok_obat_pustu;
+create trigger trg_audit_stok_obat_pustu after insert or update or delete on stok_obat_pustu
+  for each row execute function fn_audit_log();
+drop trigger if exists trg_audit_kartu_stok_pustu on kartu_stok_pustu;
+create trigger trg_audit_kartu_stok_pustu after insert or update or delete on kartu_stok_pustu
+  for each row execute function fn_audit_log();
+
+-- ---------- Rujukan ke Induk (reuse tabel rujukan) ----------
+alter table rujukan drop constraint if exists rujukan_jenis_check;
+alter table rujukan add constraint rujukan_jenis_check
+  check (jenis in ('internal', 'fkrtl', 'rujuk_pustu_induk'));
+alter table rujukan add column if not exists pustu_asal_id int references pustu(id);
+create index if not exists idx_rujukan_pustu_asal on rujukan(pustu_asal_id);
+
+-- ---------- Posyandu Balita ----------
+create table if not exists posyandu_balita (
+  id uuid primary key default gen_random_uuid(),
+  pustu_id int not null references pustu(id),
+  tanggal date not null default current_date,
+  nama_posyandu text not null,
+  pasien_id uuid references pasien(id),
+  nama_balita text not null,
+  nik_balita text,
+  tgl_lahir date,
+  jenis_kelamin text check (jenis_kelamin in ('L','P')),
+  nama_ortu text,
+  berat_badan numeric(5,2),
+  tinggi_badan numeric(5,2),
+  lingkar_kepala numeric(5,2),
+  status_gizi text check (status_gizi in ('Baik (N)','Kurang (T)','Buruk','BGM','Lebih')),
+  imunisasi_diberikan text,
+  vitamin_a boolean not null default false,
+  asi_eksklusif boolean,
+  kader_pendamping text,
+  catatan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_posyandu_balita_pustu on posyandu_balita(pustu_id, tanggal);
+
+-- ---------- Posyandu Lansia ----------
+create table if not exists posyandu_lansia (
+  id uuid primary key default gen_random_uuid(),
+  pustu_id int not null references pustu(id),
+  tanggal date not null default current_date,
+  nama_posyandu text not null,
+  pasien_id uuid references pasien(id),
+  nama_lansia text not null,
+  nik text,
+  umur int,
+  jenis_kelamin text check (jenis_kelamin in ('L','P')),
+  tekanan_darah text,
+  gula_darah text,
+  asam_urat text,
+  kolesterol text,
+  berat_badan numeric(5,2),
+  tinggi_badan numeric(5,2),
+  keluhan text,
+  tindak_lanjut text check (tindak_lanjut in ('Edukasi','Diberi Obat','Rujuk ke Induk','Rujuk RS','Tidak Ada')),
+  kader_pendamping text,
+  catatan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_posyandu_lansia_pustu on posyandu_lansia(pustu_id, tanggal);
+
+alter table posyandu_balita enable row level security;
+alter table posyandu_lansia enable row level security;
+drop policy if exists "authenticated_all_posyandu_balita" on posyandu_balita;
+create policy "authenticated_all_posyandu_balita" on posyandu_balita for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_posyandu_lansia" on posyandu_lansia;
+create policy "authenticated_all_posyandu_lansia" on posyandu_lansia for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_posyandu_balita on posyandu_balita;
+create trigger trg_audit_posyandu_balita after insert or update or delete on posyandu_balita
+  for each row execute function fn_audit_log();
+drop trigger if exists trg_audit_posyandu_lansia on posyandu_lansia;
+create trigger trg_audit_posyandu_lansia after insert or update or delete on posyandu_lansia
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 94. Idempotent, aman diulang.
+-- ============================================================

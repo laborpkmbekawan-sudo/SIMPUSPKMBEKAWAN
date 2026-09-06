@@ -4018,6 +4018,9 @@ async function simpanMutasiKeluar() {
     const saldoSetelah = obat.stok - it.jumlah;
     await supabaseClient.from("obat").update({ stok: saldoSetelah, updated_by: profilSaya.id, updated_at: new Date().toISOString() }).eq("id", it.obat_id);
     await catatKartuStok(it.obat_id, "mutasi_keluar", it.jumlah, saldoSetelah, tujuanNama, catatan);
+    if (tujuanTipe === "pustu") {
+      await catatStokMasukPustu(tujuanPustu, it.obat_id, it.jumlah, `Mutasi dari Induk (${new Date(tanggal).toLocaleDateString("id-ID")})`);
+    }
   }
 
   msgBox.innerHTML = `<div class="msg msg-success">Mutasi keluar ke "${tujuanNama}" tersimpan, stok terpotong.</div>`;
@@ -4028,6 +4031,27 @@ async function simpanMutasiKeluar() {
   tambahBarisMutKeluar();
   await muatDaftarObat();
   await muatMutasiKeluarList();
+}
+
+// Nambah saldo Stok Obat Pustu waktu Mutasi Keluar tujuannya Pustu.
+// Non-blocking: kalau gagal, mutasi keluar utama (potong stok Induk)
+// tetap tersimpan — cuma dicatat di console, gak nge-block user.
+async function catatStokMasukPustu(pustuId, obatId, jumlah, referensi) {
+  try {
+    const { data: existing } = await supabaseClient.from("stok_obat_pustu")
+      .select("id, stok").eq("pustu_id", pustuId).eq("obat_id", obatId).maybeSingle();
+    const saldoBaru = (existing?.stok || 0) + jumlah;
+    if (existing) {
+      await supabaseClient.from("stok_obat_pustu").update({ stok: saldoBaru, updated_at: new Date().toISOString() }).eq("id", existing.id);
+    } else {
+      await supabaseClient.from("stok_obat_pustu").insert({ pustu_id: pustuId, obat_id: obatId, stok: saldoBaru });
+    }
+    await supabaseClient.from("kartu_stok_pustu").insert({
+      pustu_id: pustuId, obat_id: obatId, jenis: "mutasi_masuk", jumlah, saldo_setelah: saldoBaru, referensi, petugas_id: profilSaya.id
+    });
+  } catch (e) {
+    console.error("Gagal catat stok masuk Pustu:", e.message, { pustuId, obatId, jumlah });
+  }
 }
 
 async function muatMutasiKeluarList() {
