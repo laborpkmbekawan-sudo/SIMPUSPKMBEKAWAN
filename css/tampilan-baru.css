@@ -1,15 +1,32 @@
 /* ============================================================
-   TAMPILAN BARU — sidebar & topbar sesuai referensi
+   TAMPILAN BARU — sidebar & topbar, Design System resmi SIMPUS
+   Palet: TEAL (disetujui, gantiin navy lama).
    File ini TAMBAHAN, bukan pengganti css/style.css.
    Cara pakai: taruh 1 baris <link> ini SETELAH link style.css:
    <link rel="stylesheet" href="css/tampilan-baru.css">
    Mau balik ke tampilan lama? Hapus baris <link> itu aja.
    ============================================================ */
 
+:root {
+  --sb-primary: #0F6B68;
+  --sb-primary-dark: #0B4F4D;
+  --sb-sidebar: #073B3A;
+  --sb-active: #167A73;
+  --sb-bg: #F5F8FA;
+  --sb-card: #FFFFFF;
+  --sb-border: #E1E8EB;
+  --sb-text: #234047;
+  --sb-text-2: #6B7C85;
+  --sb-success: #22A06B;
+  --sb-warning: #F59E0B;
+  --sb-danger: #D94B6A;
+  --sb-info: #3B82C4;
+}
+
 /* ---------- Sidebar ---------- */
 .sidebar {
   width: 264px !important;
-  background: linear-gradient(180deg, #0f2942 0%, #173b5e 100%) !important;
+  background: linear-gradient(180deg, var(--sb-sidebar) 0%, #0B4F4D 100%) !important;
   padding: 0 !important;
   display: flex;
   flex-direction: column;
@@ -60,15 +77,15 @@
 }
 
 .sidebar nav a:hover {
-  background: rgba(255,255,255,0.07) !important;
+  background: rgba(255,255,255,0.08) !important;
   color: #fff !important;
 }
 
 .sidebar nav a.active {
-  background: rgba(38,163,160,0.18) !important;
+  background: var(--sb-active) !important;
   color: #fff !important;
   font-weight: 600 !important;
-  box-shadow: inset 3px 0 0 var(--teal-2, #26a3a0);
+  box-shadow: none !important;
 }
 
 .nav-icon {
@@ -79,7 +96,7 @@
   opacity: .9;
 }
 
-/* Collapsible nav groups injected by js/ui-enhance.js */
+/* Grup menu bisa dilipat, disuntik js/ui-enhance.js */
 .nav-group-title {
   width: calc(100% - 8px);
   margin: 16px 4px 4px;
@@ -104,64 +121,63 @@
 
 /* ---------- Topbar ---------- */
 .topbar {
-  background: #ffffff !important;
-  color: #1f2937 !important;
-  border-bottom: 1px solid var(--border, #e5e7eb);
+  background: var(--sb-card) !important;
+  color: var(--sb-text) !important;
+  border-bottom: 1px solid var(--sb-border) !important;
   padding: 12px 24px !important;
 }
 
 .topbar .crumbs {
   font-size: 12px;
-  color: var(--muted, #6b7280);
+  color: var(--sb-text-2);
   margin-bottom: 2px;
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.topbar .crumbs .curr { color: #1f2937; font-weight: 600; }
+.topbar .crumbs .curr { color: var(--sb-text); font-weight: 600; }
 
 .topbar h1 {
-  color: #16324f !important;
+  color: var(--sb-text) !important;
   font-size: 19px !important;
+  font-weight: 700 !important;
 }
 
-.topbar .user-info {
-  gap: 14px !important;
-}
+.topbar .user-info { gap: 14px !important; }
 
 .topbar .bell {
   position: relative;
   width: 34px; height: 34px;
   border-radius: 9px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--primary-light, #eaeff4);
-  color: var(--primary, #0f2942);
+  background: var(--sb-bg);
+  color: var(--sb-primary);
   font-size: 15px;
   cursor: pointer;
 }
 .topbar .bell .dot-red {
   position: absolute; top: 6px; right: 7px;
   width: 7px; height: 7px; border-radius: 50%;
-  background: var(--red, #dc3545);
+  background: var(--sb-danger);
 }
 
 .topbar .user-chip {
   display: flex; align-items: center; gap: 8px;
   padding: 5px 10px 5px 6px;
   border-radius: 20px;
-  background: var(--primary-light, #eaeff4);
+  background: var(--sb-bg);
 }
 .topbar .user-chip .avatar {
   width: 26px; height: 26px; border-radius: 50%;
-  background: var(--primary, #0f2942);
+  background: var(--sb-primary);
   color: #fff; font-size: 11px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
-.topbar .user-chip #namaUser { color: #16324f !important; font-weight: 600; }
+.topbar .user-chip #namaUser { color: var(--sb-text) !important; font-weight: 600; }
 
 .topbar button {
-  background: var(--primary, #0f2942) !important;
+  background: var(--sb-primary) !important;
   color: #fff !important;
   border-radius: 7px !important;
 }
-.topbar button:hover { background: var(--primary-dark, #173b5e) !important; }
+.topbar button:hover { background: var(--sb-primary-dark) !important; }
