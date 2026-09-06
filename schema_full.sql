@@ -3996,4 +3996,14 @@ create trigger trg_audit_persetujuan_tindakan after insert or update or delete o
   for each row execute function fn_audit_log();
 
 -- ============================================================
--- SELESAI section 91. Idempotent, aman diulang.
+-- 92. KASIR — TAMBAH ITEM MANUAL. Kategori 'Lain-lain' buat item
+--     yang gak masuk kategori manapun, diinput langsung sama
+--     kasir (bukan auto dari klinis).
+-- ============================================================
+
+alter table tagihan_kunjungan drop constraint if exists tagihan_kunjungan_kategori_check;
+alter table tagihan_kunjungan add constraint tagihan_kunjungan_kategori_check
+  check (kategori in ('Konsultasi', 'Pemeriksaan', 'Tindakan', 'Laboratorium', 'Obat', 'Administrasi', 'KIA & KB', 'Gigi & Mulut', 'Lain-lain'));
+
+-- ============================================================
+-- SELESAI section 92. Idempotent, aman diulang.
