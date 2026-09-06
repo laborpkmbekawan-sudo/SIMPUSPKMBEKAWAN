@@ -402,6 +402,16 @@ tr:hover td { background: #fafcfc; }
     width: 320px;
     padding: 16px;
   }
+  body.print-laporan-kasir * { visibility: hidden; }
+  body.print-laporan-kasir #panelKasirLaporan,
+  body.print-laporan-kasir #panelKasirLaporan * { visibility: visible; }
+  body.print-laporan-kasir #panelKasirLaporan {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    padding: 16px;
+  }
 }
 
 /* ================= TIMELINE RIWAYAT PELAYANAN ================= */

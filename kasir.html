@@ -6,6 +6,7 @@
 <title>Kasir - SIMPUS Bekawan</title>
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -42,6 +43,7 @@
     <div class="lap-tab" id="kasirTab-riwayat" onclick="gantiTabKasir('riwayat')">Riwayat Transaksi</div>
     <div class="lap-tab" id="kasirTab-laporan" onclick="gantiTabKasir('laporan')">Laporan Kasir</div>
     <div class="lap-tab" id="kasirTab-tutupshift" onclick="gantiTabKasir('tutupshift')">Tutup Shift</div>
+    <div class="lap-tab" id="kasirTab-riwayatshift" onclick="gantiTabKasir('riwayatshift')">Riwayat Shift</div>
   </div>
 
   <!-- ===== DATA PEMBAYARAN ===== -->
@@ -148,6 +150,8 @@
         <button type="button" class="btn-secondary" onclick="setPeriodeLaporan('harian')">Hari Ini</button>
         <button type="button" class="btn-secondary" onclick="setPeriodeLaporan('bulanan')">Bulan Ini</button>
         <button type="button" class="btn-primary" onclick="muatLaporanKasir()">Tampilkan</button>
+        <button type="button" class="btn-secondary" onclick="exportLaporanExcel()">Export Excel</button>
+        <button type="button" class="btn-secondary" onclick="cetakLaporanKasir()">Cetak / Simpan PDF</button>
       </div>
     </div>
 
@@ -183,6 +187,28 @@
     <div id="tutupShiftArea"></div>
   </div>
 
+  <!-- ===== RIWAYAT SHIFT ===== -->
+  <div id="panelKasirRiwayatShift" style="display:none;">
+    <div class="card">
+      <h2>Filter</h2>
+      <div class="grid-2">
+        <div><label>Dari Tanggal</label><input type="date" id="rsDari"></div>
+        <div><label>Sampai Tanggal</label><input type="date" id="rsSampai"></div>
+      </div>
+      <button type="button" class="btn-primary" onclick="muatRiwayatShift()">Tampilkan</button>
+    </div>
+
+    <div class="card">
+      <h2>Arsip Shift Ditutup</h2>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Kasir</th><th>Buka</th><th>Tutup</th><th>Cash Awal</th><th>Total Pemasukan</th><th>Cash Akhir Fisik</th><th>Selisih</th></tr></thead>
+        <tbody id="tabelRiwayatShift"><tr><td colspan="8">Pilih rentang tanggal lalu klik Tampilkan.</td></tr></tbody>
+      </table>
+    </div>
+
+    <div id="detailRiwayatShift"></div>
+  </div>
+
 </div>
 
 <div id="areaCetakStruk" class="kartu-cetak" style="width:340px;">
@@ -208,6 +234,7 @@ let hasilCariCache = [];
 let pasienTerpilihKasir = null;
 let tagihanCachePasien = [];
 let shiftAktif = null;
+let laporanCache = null;
 
 (async () => {
   const session = await wajibLogin();
@@ -289,9 +316,18 @@ function gantiTabKasir(tab) {
   document.getElementById("panelKasirRiwayat").style.display = tab === "riwayat" ? "block" : "none";
   document.getElementById("panelKasirLaporan").style.display = tab === "laporan" ? "block" : "none";
   document.getElementById("panelKasirTutupShift").style.display = tab === "tutupshift" ? "block" : "none";
+  document.getElementById("kasirTab-riwayatshift").classList.toggle("active", tab === "riwayatshift");
+  document.getElementById("panelKasirRiwayatShift").style.display = tab === "riwayatshift" ? "block" : "none";
   if (tab === "riwayat") muatRiwayatTransaksi();
   if (tab === "laporan" && !document.getElementById("lapDari").value) setPeriodeLaporan("bulanan");
   if (tab === "tutupshift") muatTutupShift();
+  if (tab === "riwayatshift" && !document.getElementById("rsDari").value) {
+    const now = new Date();
+    const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    document.getElementById("rsDari").value = awalBulan;
+    document.getElementById("rsSampai").value = now.toISOString().slice(0, 10);
+    muatRiwayatShift();
+  }
 }
 
 // ---------- DATA PEMBAYARAN (list harian lintas klaster) ----------
@@ -610,6 +646,8 @@ async function muatLaporanKasir() {
   const totalPendapatan = lunas.reduce((s, t) => s + Number(t.subtotal), 0);
   const totalPiutang = piutang.reduce((s, t) => s + Number(t.subtotal), 0);
 
+  laporanCache = { dari, sampai, lunas, piutang, totalPendapatan, totalPiutang };
+
   document.getElementById("lapRingkasan").innerHTML = `
     <div class="stat-card"><div class="label">Total Pendapatan</div><div class="value">Rp ${formatRupiahKasir(totalPendapatan)}</div></div>
     <div class="stat-card"><div class="label">Jumlah Transaksi Lunas</div><div class="value">${lunas.length}</div></div>
@@ -774,6 +812,131 @@ async function tutupShiftSubmit(totalTransaksi, totalPemasukan, totalTunai, tota
   shiftAktif = null;
   renderShiftBar();
   document.getElementById("tutupShiftArea").innerHTML = `<div class="card"><p class="msg msg-success">Shift berhasil ditutup. Cash awal shift berikutnya bisa dibuka lagi besok pagi.</p></div>`;
+}
+
+// ---------- EXPORT & CETAK LAPORAN KASIR ----------
+function exportLaporanExcel() {
+  if (!laporanCache) { alert("Klik Tampilkan dulu sebelum export."); return; }
+  const { dari, sampai, lunas, piutang, totalPendapatan, totalPiutang } = laporanCache;
+
+  const perSumber = {};
+  lunas.forEach(t => {
+    const nama = t.kunjungan?.klaster?.nama || "Non-Kunjungan";
+    if (!perSumber[nama]) perSumber[nama] = { jumlah: 0, total: 0 };
+    perSumber[nama].jumlah++;
+    perSumber[nama].total += Number(t.subtotal);
+  });
+  const perMetode = {};
+  lunas.forEach(t => {
+    const m = t.metode_bayar || "-";
+    if (!perMetode[m]) perMetode[m] = { jumlah: 0, total: 0 };
+    perMetode[m].jumlah++;
+    perMetode[m].total += Number(t.subtotal);
+  });
+
+  const wb = XLSX.utils.book_new();
+
+  const wsRingkasan = XLSX.utils.aoa_to_sheet([
+    ["Laporan Kasir", `${dari} s/d ${sampai}`],
+    [],
+    ["Total Pendapatan", totalPendapatan],
+    ["Jumlah Transaksi Lunas", lunas.length],
+    ["Total Piutang", totalPiutang],
+    ["Jumlah Piutang", piutang.length]
+  ]);
+  XLSX.utils.book_append_sheet(wb, wsRingkasan, "Ringkasan");
+
+  const wsSumber = XLSX.utils.json_to_sheet(
+    Object.entries(perSumber).map(([nama, v]) => ({ "Sumber/Klaster": nama, "Jumlah Transaksi": v.jumlah, "Total Pendapatan": v.total }))
+  );
+  XLSX.utils.book_append_sheet(wb, wsSumber, "Per Sumber");
+
+  const wsMetode = XLSX.utils.json_to_sheet(
+    Object.entries(perMetode).map(([m, v]) => ({ "Metode Bayar": m, "Jumlah Transaksi": v.jumlah, "Total Pendapatan": v.total }))
+  );
+  XLSX.utils.book_append_sheet(wb, wsMetode, "Per Metode");
+
+  const wsPiutang = XLSX.utils.json_to_sheet(
+    piutang.map(t => ({
+      Tanggal: new Date(t.created_at).toLocaleDateString("id-ID"),
+      Pasien: `${t.pasien?.nama || "-"} (${t.pasien?.no_rm || "-"})`,
+      Kategori: t.kategori,
+      Layanan: t.nama_layanan,
+      Subtotal: Number(t.subtotal),
+      "Jenis Bayar": t.jenis_bayar
+    }))
+  );
+  XLSX.utils.book_append_sheet(wb, wsPiutang, "Piutang");
+
+  XLSX.writeFile(wb, `Laporan_Kasir_${dari}_sd_${sampai}.xlsx`);
+}
+
+function cetakLaporanKasir() {
+  if (!laporanCache) { alert("Klik Tampilkan dulu sebelum cetak."); return; }
+  document.body.classList.add("print-laporan-kasir");
+  window.print();
+  setTimeout(() => document.body.classList.remove("print-laporan-kasir"), 500);
+}
+
+// ---------- RIWAYAT SHIFT ----------
+async function muatRiwayatShift() {
+  const dari = document.getElementById("rsDari").value;
+  const sampai = document.getElementById("rsSampai").value;
+  const tbody = document.getElementById("tabelRiwayatShift");
+  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
+  document.getElementById("detailRiwayatShift").innerHTML = "";
+
+  let q = supabaseClient
+    .from("shift_kasir")
+    .select("*, profil_pegawai(nama)")
+    .eq("status", "ditutup")
+    .order("waktu_tutup", { ascending: false });
+
+  if (dari) q = q.gte("waktu_buka", `${dari}T00:00:00`);
+  if (sampai) q = q.lte("waktu_buka", `${sampai}T23:59:59`);
+
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="8">Belum ada arsip shift ditutup di rentang ini.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(s => {
+    const selisih = Number(s.cash_akhir_fisik || 0) - (Number(s.cash_awal || 0) + Number(s.total_tunai || 0));
+    const warnaSelisih = selisih === 0 ? "" : (selisih > 0 ? "color:var(--muted);" : "color:#c62836; font-weight:700;");
+    return `
+      <tr style="cursor:pointer;" onclick="bukaDetailRiwayatShift('${s.id}')">
+        <td>${new Date(s.waktu_buka).toLocaleDateString("id-ID")}</td>
+        <td>${s.profil_pegawai?.nama || "-"}</td>
+        <td>${new Date(s.waktu_buka).toLocaleTimeString("id-ID")}</td>
+        <td>${s.waktu_tutup ? new Date(s.waktu_tutup).toLocaleTimeString("id-ID") : "-"}</td>
+        <td>Rp ${formatRupiahKasir(s.cash_awal)}</td>
+        <td>Rp ${formatRupiahKasir(s.total_pemasukan)}</td>
+        <td>Rp ${formatRupiahKasir(s.cash_akhir_fisik)}</td>
+        <td style="${warnaSelisih}">${selisih === 0 ? "Pas" : (selisih > 0 ? "+" : "") + formatRupiahKasir(selisih)}</td>
+      </tr>`;
+  }).join("");
+
+  window.riwayatShiftCache = data;
+}
+
+function bukaDetailRiwayatShift(shiftId) {
+  const s = (window.riwayatShiftCache || []).find(x => x.id === shiftId);
+  if (!s) return;
+  const selisih = Number(s.cash_akhir_fisik || 0) - (Number(s.cash_awal || 0) + Number(s.total_tunai || 0));
+
+  document.getElementById("detailRiwayatShift").innerHTML = `
+    <div class="card">
+      <h2>Detail Shift — ${s.profil_pegawai?.nama || "-"} (${new Date(s.waktu_buka).toLocaleDateString("id-ID")})</h2>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="label">Total Transaksi</div><div class="value">${s.total_transaksi ?? 0}</div></div>
+        <div class="stat-card"><div class="label">Total Pemasukan</div><div class="value">Rp ${formatRupiahKasir(s.total_pemasukan)}</div></div>
+        <div class="stat-card"><div class="label">Tunai / Non-Tunai</div><div class="value" style="font-size:16px;">Rp ${formatRupiahKasir(s.total_tunai)} / Rp ${formatRupiahKasir(s.total_nontunai)}</div></div>
+        <div class="stat-card"><div class="label">Selisih Cash</div><div class="value" style="font-size:18px;">${selisih === 0 ? "Pas" : (selisih > 0 ? "+Rp " : "-Rp ") + formatRupiahKasir(Math.abs(selisih))}</div></div>
+      </div>
+      <p style="font-size:12.5px; color:var(--muted);">Cash Awal: Rp ${formatRupiahKasir(s.cash_awal)} — Cash Akhir Fisik: Rp ${formatRupiahKasir(s.cash_akhir_fisik)}</p>
+      ${s.catatan_tutup ? `<p style="font-size:12.5px;"><strong>Catatan:</strong> ${s.catatan_tutup}</p>` : ""}
+    </div>
+  `;
 }
 </script>
 
