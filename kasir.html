@@ -32,33 +32,44 @@
     <a href="gigi.html">Poli Gigi</a>
     <a href="pengaturan.html">Pengaturan</a>
     <a href="kasir.html" class="active">Kasir</a>
-    <a href="papan-antrian.html">Papan Antrian</a>
-  </div>
-
-  <div class="card" style="padding:10px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-    <div id="shiftStatusInfo" style="font-size:13px;">Memuat status shift...</div>
-    <div id="shiftStatusAksi"></div>
-  </div>
-
-  <div class="card" id="cardBukaShift" style="display:none;">
-    <h2>Buka Shift Kasir</h2>
-    <div id="msgBukaShift"></div>
-    <div class="grid-2">
-      <div><label>Petugas</label><input type="text" id="bsPetugas" disabled></div>
-      <div><label>Waktu Buka</label><input type="text" id="bsWaktu" disabled></div>
-    </div>
-    <label>Cash Awal (Rp) *</label>
-    <input type="number" id="bsCashAwal" min="0" step="1000" value="0" required>
-    <button type="button" class="btn-primary" onclick="simpanBukaShift()">Buka Shift</button>
-    <button type="button" class="btn-secondary" onclick="document.getElementById('cardBukaShift').style.display='none'">Batal</button>
   </div>
 
   <div class="lap-tabs">
-    <div class="lap-tab active" id="kasirTab-bayar" onclick="gantiTabKasir('bayar')">Proses Pembayaran</div>
-    <div class="lap-tab" id="kasirTab-daftar" onclick="gantiTabKasir('daftar')">Daftar Pembayaran</div>
+    <div class="lap-tab active" id="kasirTab-daftar" onclick="gantiTabKasir('daftar')">Data Pembayaran</div>
+    <div class="lap-tab" id="kasirTab-bayar" onclick="gantiTabKasir('bayar')">Proses Pembayaran</div>
     <div class="lap-tab" id="kasirTab-riwayat" onclick="gantiTabKasir('riwayat')">Riwayat Transaksi</div>
-    <div class="lap-tab" id="kasirTab-closing" onclick="gantiTabKasir('closing')">Closing / Tutup Shift</div>
     <div class="lap-tab" id="kasirTab-laporan" onclick="gantiTabKasir('laporan')">Laporan Kasir</div>
+  </div>
+
+  <!-- ===== DATA PEMBAYARAN ===== -->
+  <div id="panelKasirDaftar">
+    <div class="card">
+      <h2>Filter</h2>
+      <div class="grid-2">
+        <div><label>Tanggal</label><input type="date" id="dpTanggal" onchange="muatDaftarPembayaran()"></div>
+        <div><label>Cari Nama / No. RM</label><input type="text" id="dpCari" placeholder="Ketik nama atau No. RM..." oninput="muatDaftarPembayaran()"></div>
+      </div>
+      <div class="grid-2">
+        <div><label>Penjamin</label>
+          <select id="dpPenjamin" onchange="muatDaftarPembayaran()">
+            <option value="">Semua Penjamin</option>
+            <option value="Umum">Umum</option>
+            <option value="BPJS">BPJS</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:flex-end;"><button type="button" class="btn-secondary" onclick="resetFilterDaftarPembayaran()" style="margin-bottom:12px;">Reset Filter</button></div>
+      </div>
+    </div>
+
+    <div class="stat-grid" id="dpRingkasan"></div>
+
+    <div class="card">
+      <h2>Daftar Tagihan</h2>
+      <table>
+        <thead><tr><th>No</th><th>Tanggal</th><th>No. RM</th><th>Nama Pasien</th><th>Tujuan</th><th>Penjamin</th><th>Total Tagihan</th><th>Status</th></tr></thead>
+        <tbody id="tabelDaftarPembayaran"><tr><td colspan="8">Memuat...</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- ===== PROSES PEMBAYARAN ===== -->
@@ -100,43 +111,7 @@
     </div>
   </div>
 
-  <!-- ===== DAFTAR PEMBAYARAN (ANTRIAN HARI INI) ===== -->
-  <div id="panelKasirDaftar" style="display:none;">
-    <div class="card" style="padding:14px 16px;">
-      <div class="grid-3">
-        <div><label>Tanggal</label><input type="date" id="dpTanggal" onchange="muatDaftarPembayaran()"></div>
-        <div><label>Cari Nama / No. RM</label><input type="text" id="dpCari" placeholder="Ketik nama atau No. RM..." oninput="filterDaftarPembayaran()"></div>
-        <div>
-          <label>Penjamin</label>
-          <select id="dpPenjamin" onchange="filterDaftarPembayaran()">
-            <option value="">Semua Penjamin</option>
-            <option value="Umum">Umum</option>
-            <option value="BPJS">BPJS</option>
-          </select>
-        </div>
-      </div>
-      <div class="grid-2">
-        <div>
-          <label>Status</label>
-          <select id="dpStatus" onchange="filterDaftarPembayaran()">
-            <option value="">Semua Status</option>
-            <option value="belum">Belum Bayar</option>
-            <option value="lunas">Lunas</option>
-          </select>
-        </div>
-        <div style="display:flex; align-items:flex-end;"><button type="button" class="btn-secondary" onclick="resetFilterDaftar()" style="margin-bottom:12px;">Reset Filter</button></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Daftar Pembayaran</h2>
-      <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Semua pasien dengan tagihan pada tanggal terpilih, lintas klaster/UGD/Rawat Inap. Klik baris buat langsung proses bayar.</p>
-      <table>
-        <thead><tr><th>Jam</th><th>No. RM</th><th>Nama Pasien</th><th>Tujuan</th><th>Penjamin</th><th>Total Tagihan</th><th>Status</th></tr></thead>
-        <tbody id="tabelDaftarPembayaran"><tr><td colspan="7">Memuat...</td></tr></tbody>
-      </table>
-    </div>
-  </div>
+  <!-- ===== RIWAYAT TRANSAKSI ===== -->
   <div id="panelKasirRiwayat" style="display:none;">
     <div class="card">
       <h2>Filter</h2>
@@ -158,22 +133,46 @@
     </div>
   </div>
 
-  <!-- ===== CLOSING / TUTUP SHIFT ===== -->
-  <div id="panelKasirClosing" style="display:none;">
-    <div id="closingIsi"></div>
-  </div>
-
   <!-- ===== LAPORAN KASIR ===== -->
   <div id="panelKasirLaporan" style="display:none;">
-    <div class="card" style="padding:14px 16px;">
-      <div class="grid-3">
-        <div><label>Dari Tanggal</label><input type="date" id="lkDari"></div>
-        <div><label>Sampai Tanggal</label><input type="date" id="lkSampai"></div>
-        <div style="display:flex; align-items:flex-end;"><button type="button" class="btn-primary" onclick="muatLaporanKasir()" style="margin-bottom:12px;">Tampilkan</button></div>
+    <div class="card">
+      <h2>Filter Periode</h2>
+      <div class="grid-2">
+        <div><label>Dari Tanggal</label><input type="date" id="lapDari"></div>
+        <div><label>Sampai Tanggal</label><input type="date" id="lapSampai"></div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn-secondary" onclick="setPeriodeLaporan('harian')">Hari Ini</button>
+        <button type="button" class="btn-secondary" onclick="setPeriodeLaporan('bulanan')">Bulan Ini</button>
+        <button type="button" class="btn-primary" onclick="muatLaporanKasir()">Tampilkan</button>
       </div>
     </div>
 
-    <div id="laporanKasirIsi"></div>
+    <div class="stat-grid" id="lapRingkasan"></div>
+
+    <div class="card">
+      <h2>Rekap per Sumber Layanan</h2>
+      <table>
+        <thead><tr><th>Sumber / Klaster</th><th>Jumlah Transaksi</th><th>Total Pendapatan</th></tr></thead>
+        <tbody id="tabelLapSumber"><tr><td colspan="3">Pilih periode lalu klik Tampilkan.</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Rekap per Metode Pembayaran</h2>
+      <table>
+        <thead><tr><th>Metode Bayar</th><th>Jumlah Transaksi</th><th>Total Pendapatan</th></tr></thead>
+        <tbody id="tabelLapMetode"><tr><td colspan="3">Pilih periode lalu klik Tampilkan.</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Rekap Piutang (Belum Dibayar)</h2>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Pasien</th><th>Kategori</th><th>Layanan</th><th>Subtotal</th><th>Jenis Bayar</th></tr></thead>
+        <tbody id="tabelLapPiutang"><tr><td colspan="6">Pilih periode lalu klik Tampilkan.</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
 </div>
@@ -194,33 +193,12 @@
   <p class="catatan">Simpan struk ini sebagai bukti pembayaran yang sah.</p>
 </div>
 
-<div id="areaCetakRekapShift" class="kartu-cetak" style="width:340px;">
-  <h2>UPTD PUSKESMAS BEKAWAN</h2>
-  <p class="sub">Rekap Tutup Shift Kasir</p>
-  <div class="garis"></div>
-  <div class="baris"><span>Petugas</span><span id="rsPetugas"></span></div>
-  <div class="baris"><span>Waktu Buka</span><span id="rsWaktuBuka"></span></div>
-  <div class="baris"><span>Waktu Tutup</span><span id="rsWaktuTutup"></span></div>
-  <div class="garis"></div>
-  <div class="baris"><span>Cash Awal</span><span id="rsCashAwal"></span></div>
-  <div class="baris"><span>Jumlah Transaksi</span><span id="rsJmlTransaksi"></span></div>
-  <div class="baris"><span>Total Pemasukan</span><span id="rsTotalPemasukan"></span></div>
-  <div class="baris"><span>Tunai</span><span id="rsTotalTunai"></span></div>
-  <div class="baris"><span>Non-Tunai</span><span id="rsTotalNonTunai"></span></div>
-  <div class="garis"></div>
-  <div class="baris" style="font-weight:700;"><span>Cash Seharusnya</span><span id="rsCashSeharusnya"></span></div>
-  <div class="baris"><span>Cash Fisik Dihitung</span><span id="rsCashFisik"></span></div>
-  <div class="baris" style="font-weight:700;"><span>Selisih</span><span id="rsSelisih"></span></div>
-  <p class="catatan">Arsip rekap shift — cocokkan dengan uang tunai fisik di laci kasir.</p>
-</div>
-
 <script src="js/supabaseClient.js"></script>
 <script>
 let profilSaya = null;
 let hasilCariCache = [];
 let pasienTerpilihKasir = null;
 let tagihanCachePasien = [];
-let shiftAktifData = null;
 
 (async () => {
   const session = await wajibLogin();
@@ -231,239 +209,109 @@ let shiftAktifData = null;
   sesuaikanTabNav(profilSaya);
   if (profilSaya) document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
 
+  document.getElementById("dpTanggal").value = new Date().toISOString().slice(0, 10);
+  muatDaftarPembayaran();
+
   const hariIni = new Date().toISOString().split("T")[0];
   document.getElementById("riwDari").value = hariIni;
   document.getElementById("riwSampai").value = hariIni;
-  document.getElementById("dpTanggal").value = hariIni;
-  const awalBulan = hariIni.slice(0, 8) + "01";
-  document.getElementById("lkDari").value = awalBulan;
-  document.getElementById("lkSampai").value = hariIni;
-
-  await cekShiftAktif();
 })();
 
 function gantiTabKasir(tab) {
-  document.getElementById("kasirTab-bayar").classList.toggle("active", tab === "bayar");
   document.getElementById("kasirTab-daftar").classList.toggle("active", tab === "daftar");
+  document.getElementById("kasirTab-bayar").classList.toggle("active", tab === "bayar");
   document.getElementById("kasirTab-riwayat").classList.toggle("active", tab === "riwayat");
-  document.getElementById("kasirTab-closing").classList.toggle("active", tab === "closing");
   document.getElementById("kasirTab-laporan").classList.toggle("active", tab === "laporan");
-  document.getElementById("panelKasirBayar").style.display = tab === "bayar" ? "block" : "none";
   document.getElementById("panelKasirDaftar").style.display = tab === "daftar" ? "block" : "none";
+  document.getElementById("panelKasirBayar").style.display = tab === "bayar" ? "block" : "none";
   document.getElementById("panelKasirRiwayat").style.display = tab === "riwayat" ? "block" : "none";
-  document.getElementById("panelKasirClosing").style.display = tab === "closing" ? "block" : "none";
   document.getElementById("panelKasirLaporan").style.display = tab === "laporan" ? "block" : "none";
-  if (tab === "daftar") muatDaftarPembayaran();
   if (tab === "riwayat") muatRiwayatTransaksi();
-  if (tab === "closing") muatClosingShift();
+  if (tab === "laporan" && !document.getElementById("lapDari").value) setPeriodeLaporan("bulanan");
 }
 
-// ---------- SHIFT KASIR ----------
-async function cekShiftAktif() {
-  const { data, error } = await supabaseClient
-    .from("shift_kasir")
-    .select("*, profil_pegawai(nama)")
-    .eq("status", "aktif")
-    .order("waktu_buka", { ascending: false })
-    .limit(1);
+// ---------- DATA PEMBAYARAN (list harian lintas klaster) ----------
+async function muatDaftarPembayaran() {
+  const tgl = document.getElementById("dpTanggal").value;
+  const cari = document.getElementById("dpCari").value.trim().toLowerCase();
+  const penjamin = document.getElementById("dpPenjamin").value;
+  const tbody = document.getElementById("tabelDaftarPembayaran");
+  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
 
-  shiftAktifData = (!error && data && data.length) ? data[0] : null;
-  renderShiftBar();
-}
-
-function renderShiftBar() {
-  const info = document.getElementById("shiftStatusInfo");
-  const aksi = document.getElementById("shiftStatusAksi");
-  if (shiftAktifData) {
-    info.innerHTML = `🟢 <strong>Shift Aktif</strong> — Kasir: ${shiftAktifData.profil_pegawai?.nama || "-"} · Buka: ${new Date(shiftAktifData.waktu_buka).toLocaleString("id-ID")} · Cash Awal: Rp ${formatRupiahKasir(shiftAktifData.cash_awal)}`;
-    aksi.innerHTML = `<button type="button" class="btn-secondary" onclick="gantiTabKasir('closing')">Closing / Tutup Shift</button>`;
-  } else {
-    info.innerHTML = `🔴 <strong>Belum ada shift aktif.</strong> Buka shift dulu sebelum proses pembayaran.`;
-    aksi.innerHTML = `<button type="button" class="btn-primary" onclick="bukaFormShift()">Buka Shift</button>`;
-  }
-}
-
-function bukaFormShift() {
-  document.getElementById("bsPetugas").value = profilSaya ? `${profilSaya.nama} (${profilSaya.role})` : "-";
-  document.getElementById("bsWaktu").value = new Date().toLocaleString("id-ID");
-  document.getElementById("bsCashAwal").value = 0;
-  document.getElementById("msgBukaShift").innerHTML = "";
-  document.getElementById("cardBukaShift").style.display = "block";
-}
-
-async function simpanBukaShift() {
-  const msgBox = document.getElementById("msgBukaShift");
-  const cashAwal = Number(document.getElementById("bsCashAwal").value) || 0;
-
-  const { data, error } = await supabaseClient
-    .from("shift_kasir")
-    .insert({ petugas_id: profilSaya.id, cash_awal: cashAwal })
-    .select("*, profil_pegawai(nama)")
-    .single();
-
-  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal buka shift: ${error.message}</div>`; return; }
-
-  shiftAktifData = data;
-  document.getElementById("cardBukaShift").style.display = "none";
-  renderShiftBar();
-}
-
-async function muatClosingShift() {
-  const isi = document.getElementById("closingIsi");
-
-  if (!shiftAktifData) {
-    isi.innerHTML = `<div class="card"><p style="font-size:13px; color:var(--muted);">Belum ada shift aktif. Buka shift dulu di atas.</p></div>` + await htmlRiwayatShift();
-    return;
-  }
-
-  const { data, error } = await supabaseClient
+  let q = supabaseClient
     .from("tagihan_kunjungan")
-    .select("*, pasien(nama, no_rm)")
-    .eq("shift_id", shiftAktifData.id)
-    .eq("status", "lunas")
-    .order("dibayar_at", { ascending: false });
+    .select("*, pasien(id, nama, no_rm), kunjungan(no_kunjungan, tanggal, klaster(nama))")
+    .neq("status", "batal")
+    .order("created_at", { ascending: false });
 
-  if (error) { isi.innerHTML = `<div class="msg msg-error">Gagal muat transaksi shift: ${error.message}</div>`; return; }
+  if (tgl) q = q.gte("created_at", `${tgl}T00:00:00`).lte("created_at", `${tgl}T23:59:59`);
+  if (penjamin) q = q.eq("jenis_bayar", penjamin);
 
-  const trx = data || [];
-  const totalPemasukan = trx.reduce((s, t) => s + Number(t.subtotal), 0);
-  const totalTunai = trx.filter(t => t.metode_bayar === "Tunai").reduce((s, t) => s + Number(t.subtotal), 0);
-  const totalNonTunai = totalPemasukan - totalTunai;
-  window._closingCache = { trx, totalPemasukan, totalTunai, totalNonTunai };
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
 
-  isi.innerHTML = `
-    <div class="card">
-      <h2>Ringkasan Shift Berjalan</h2>
-      <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Kasir: ${shiftAktifData.profil_pegawai?.nama || "-"} · Buka: ${new Date(shiftAktifData.waktu_buka).toLocaleString("id-ID")}</p>
-      <div class="stat-grid">
-        <div class="stat-card"><div class="label">Jumlah Transaksi</div><div class="value">${trx.length}</div></div>
-        <div class="stat-card"><div class="label">Total Pemasukan</div><div class="value">Rp ${formatRupiahKasir(totalPemasukan)}</div></div>
-        <div class="stat-card"><div class="label">Tunai</div><div class="value">Rp ${formatRupiahKasir(totalTunai)}</div></div>
-        <div class="stat-card"><div class="label">Non-Tunai</div><div class="value">Rp ${formatRupiahKasir(totalNonTunai)}</div></div>
-      </div>
-    </div>
+  // Kelompokkan per kunjungan (atau per pasien+tanggal kalau non-kunjungan) biar 1 baris = 1 kunjungan
+  const grup = {};
+  (data || []).forEach(t => {
+    if (!t.pasien) return;
+    const key = t.kunjungan_id || `nk-${t.pasien_id}-${t.created_at.slice(0, 10)}`;
+    if (!grup[key]) {
+      grup[key] = {
+        tanggal: t.created_at,
+        pasien: t.pasien,
+        tujuan: t.kunjungan?.klaster?.nama || "Non-Kunjungan",
+        penjamin: t.jenis_bayar,
+        total: 0,
+        semuaLunas: true
+      };
+    }
+    grup[key].total += Number(t.subtotal);
+    if (t.status !== "lunas") grup[key].semuaLunas = false;
+  });
 
-    <div class="card">
-      <h2>Transaksi Selama Shift Ini</h2>
-      <table>
-        <thead><tr><th>Waktu Bayar</th><th>Pasien</th><th>Layanan</th><th>Subtotal</th><th>Metode</th></tr></thead>
-        <tbody>
-          ${trx.length ? trx.map(t => `
-            <tr>
-              <td>${new Date(t.dibayar_at).toLocaleString("id-ID")}</td>
-              <td>${t.pasien?.nama || "-"} (${t.pasien?.no_rm || "-"})</td>
-              <td>${t.nama_layanan}</td>
-              <td>Rp ${formatRupiahKasir(t.subtotal)}</td>
-              <td>${t.metode_bayar || "-"}</td>
-            </tr>`).join("") : `<tr><td colspan="5">Belum ada transaksi lunas di shift ini.</td></tr>`}
-        </tbody>
-      </table>
-    </div>
+  let list = Object.values(grup);
+  if (cari) list = list.filter(g => g.pasien.nama.toLowerCase().includes(cari) || (g.pasien.no_rm || "").toLowerCase().includes(cari));
+  list.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 
-    <div class="card">
-      <h2>Tutup Shift</h2>
-      <div id="msgTutupShift"></div>
-      <div class="grid-2">
-        <div><label>Cash Awal (Rp)</label><input type="text" value="Rp ${formatRupiahKasir(shiftAktifData.cash_awal)}" disabled></div>
-        <div><label>Cash Seharusnya di Laci (Rp)</label><input type="text" value="Rp ${formatRupiahKasir(Number(shiftAktifData.cash_awal) + totalTunai)}" disabled></div>
-      </div>
-      <label>Cash Akhir Fisik Dihitung (Rp) *</label>
-      <input type="number" id="tsCashFisik" min="0" step="1000">
-      <label>Catatan (opsional)</label>
-      <input type="text" id="tsCatatan" placeholder="mis. selisih kembalian, dsb.">
-      <button type="button" class="btn-secondary" onclick="cetakRekapShift()">Cetak Rekap Shift</button>
-      <button type="button" class="btn-primary" style="background:var(--red, #c0503f);" onclick="tutupShiftSekarang()">Tutup Shift</button>
-    </div>
-
-    ${await htmlRiwayatShift()}
+  const totalTagihan = list.reduce((s, g) => s + g.total, 0);
+  const jumlahBelumBayar = list.filter(g => !g.semuaLunas).length;
+  document.getElementById("dpRingkasan").innerHTML = `
+    <div class="stat-card"><div class="label">Total Tagihan</div><div class="value">Rp ${formatRupiahKasir(totalTagihan)}</div></div>
+    <div class="stat-card"><div class="label">Jumlah Kunjungan</div><div class="value">${list.length}</div></div>
+    <div class="stat-card"><div class="label">Belum Dibayar</div><div class="value">${jumlahBelumBayar}</div></div>
   `;
+
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="8">Gak ada tagihan di rentang/filter ini.</td></tr>`; return; }
+
+  tbody.innerHTML = list.map((g, i) => `
+    <tr style="cursor:pointer;" onclick="bukaPasienDariDaftar('${g.pasien.id}', '${g.pasien.nama.replace(/'/g, "\\'")}', '${g.pasien.no_rm || ""}')">
+      <td>${i + 1}</td>
+      <td>${new Date(g.tanggal).toLocaleString("id-ID")}</td>
+      <td>${g.pasien.no_rm || "-"}</td>
+      <td>${g.pasien.nama}</td>
+      <td>${g.tujuan}</td>
+      <td>${g.penjamin}</td>
+      <td>Rp ${formatRupiahKasir(g.total)}</td>
+      <td><span class="badge ${g.semuaLunas ? "badge-selesai" : "badge-batal"}">${g.semuaLunas ? "Lunas" : "Belum Dibayar"}</span></td>
+    </tr>
+  `).join("");
 }
 
-async function htmlRiwayatShift() {
-  const { data, error } = await supabaseClient
-    .from("shift_kasir")
-    .select("*, profil_pegawai(nama)")
-    .eq("status", "ditutup")
-    .order("waktu_tutup", { ascending: false })
-    .limit(15);
-
-  if (error) return `<div class="msg msg-error">Gagal muat riwayat shift: ${error.message}</div>`;
-  if (!data.length) return `<div class="card"><h2>Riwayat Tutup Shift</h2><p style="font-size:13px; color:var(--muted);">Belum ada shift yang ditutup.</p></div>`;
-
-  return `
-    <div class="card">
-      <h2>Riwayat Tutup Shift</h2>
-      <table>
-        <thead><tr><th>Kasir</th><th>Buka</th><th>Tutup</th><th>Jml Transaksi</th><th>Total Pemasukan</th><th>Tunai</th><th>Cash Akhir Fisik</th></tr></thead>
-        <tbody>
-          ${data.map(s => `
-            <tr>
-              <td>${s.profil_pegawai?.nama || "-"}</td>
-              <td>${new Date(s.waktu_buka).toLocaleString("id-ID")}</td>
-              <td>${new Date(s.waktu_tutup).toLocaleString("id-ID")}</td>
-              <td>${s.total_transaksi ?? 0}</td>
-              <td>Rp ${formatRupiahKasir(s.total_pemasukan)}</td>
-              <td>Rp ${formatRupiahKasir(s.total_tunai)}</td>
-              <td>Rp ${formatRupiahKasir(s.cash_akhir_fisik)}</td>
-            </tr>`).join("")}
-        </tbody>
-      </table>
-    </div>`;
+function resetFilterDaftarPembayaran() {
+  document.getElementById("dpTanggal").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("dpCari").value = "";
+  document.getElementById("dpPenjamin").value = "";
+  muatDaftarPembayaran();
 }
 
-async function tutupShiftSekarang() {
-  const msgBox = document.getElementById("msgTutupShift");
-  const cashFisik = document.getElementById("tsCashFisik").value;
-  if (cashFisik === "") { msgBox.innerHTML = `<div class="msg msg-error">Isi cash akhir fisik dulu (hitung uang tunai di laci).</div>`; return; }
-  if (!confirm("Tutup shift sekarang? Pastikan sudah cetak rekap shift.")) return;
-
-  const c = window._closingCache || { trx: [], totalPemasukan: 0, totalTunai: 0, totalNonTunai: 0 };
-  const catatan = document.getElementById("tsCatatan").value.trim();
-
-  const { error } = await supabaseClient
-    .from("shift_kasir")
-    .update({
-      waktu_tutup: new Date().toISOString(),
-      cash_akhir_fisik: Number(cashFisik),
-      total_transaksi: c.trx.length,
-      total_pemasukan: c.totalPemasukan,
-      total_tunai: c.totalTunai,
-      total_nontunai: c.totalNonTunai,
-      catatan_tutup: catatan || null,
-      status: "ditutup"
-    })
-    .eq("id", shiftAktifData.id);
-
-  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal tutup shift: ${error.message}</div>`; return; }
-
-  shiftAktifData = null;
-  renderShiftBar();
-  await muatClosingShift();
-  alert("Shift berhasil ditutup.");
-}
-
-function cetakRekapShift() {
-  if (!shiftAktifData) return;
-  const c = window._closingCache || { trx: [], totalPemasukan: 0, totalTunai: 0, totalNonTunai: 0 };
-  const cashFisik = Number(document.getElementById("tsCashFisik")?.value || 0);
-  const cashSeharusnya = Number(shiftAktifData.cash_awal) + c.totalTunai;
-  const selisih = cashFisik - cashSeharusnya;
-
-  document.getElementById("rsPetugas").textContent = shiftAktifData.profil_pegawai?.nama || profilSaya?.nama || "-";
-  document.getElementById("rsWaktuBuka").textContent = new Date(shiftAktifData.waktu_buka).toLocaleString("id-ID");
-  document.getElementById("rsWaktuTutup").textContent = new Date().toLocaleString("id-ID");
-  document.getElementById("rsCashAwal").textContent = `Rp ${formatRupiahKasir(shiftAktifData.cash_awal)}`;
-  document.getElementById("rsJmlTransaksi").textContent = c.trx.length;
-  document.getElementById("rsTotalPemasukan").textContent = `Rp ${formatRupiahKasir(c.totalPemasukan)}`;
-  document.getElementById("rsTotalTunai").textContent = `Rp ${formatRupiahKasir(c.totalTunai)}`;
-  document.getElementById("rsTotalNonTunai").textContent = `Rp ${formatRupiahKasir(c.totalNonTunai)}`;
-  document.getElementById("rsCashSeharusnya").textContent = `Rp ${formatRupiahKasir(cashSeharusnya)}`;
-  document.getElementById("rsCashFisik").textContent = `Rp ${formatRupiahKasir(cashFisik)}`;
-  document.getElementById("rsSelisih").textContent = `Rp ${formatRupiahKasir(selisih)}`;
-
-  document.getElementById("areaCetakRekapShift").classList.add("aktif-cetak");
-  window.print();
-  setTimeout(() => document.getElementById("areaCetakRekapShift").classList.remove("aktif-cetak"), 500);
+async function bukaPasienDariDaftar(pasienId, nama, noRm) {
+  pasienTerpilihKasir = { id: pasienId, nama, no_rm: noRm };
+  gantiTabKasir("bayar");
+  document.getElementById("kasirNamaPasien").textContent = nama;
+  document.getElementById("kasirNoRmPasien").textContent = noRm || "-";
+  document.getElementById("cardTagihanPasien").style.display = "block";
+  document.getElementById("hasilCariPasienKasir").innerHTML = "";
+  await muatTagihanPasien();
 }
 
 function formatRupiahKasir(angka) {
@@ -477,7 +325,6 @@ async function cariPasienKasir() {
   const hasilBox = document.getElementById("hasilCariPasienKasir");
   document.getElementById("cardTagihanPasien").style.display = "none";
 
-  if (!shiftAktifData) { msgBox.innerHTML = `<div class="msg msg-error">Buka shift kasir dulu sebelum proses pembayaran.</div>`; return; }
   if (!kata) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama atau No. RM dulu.</div>`; return; }
   msgBox.innerHTML = "";
 
@@ -570,7 +417,6 @@ function hitungTotalDipilih() {
 
 async function prosesPembayaran() {
   const msgBox = document.getElementById("msgTagihan");
-  if (!shiftAktifData) { msgBox.innerHTML = `<div class="msg msg-error">Buka shift kasir dulu sebelum proses pembayaran.</div>`; return; }
   const idTerpilih = Array.from(document.querySelectorAll(".chkTagihanItem:checked")).map(cb => cb.value);
   if (!idTerpilih.length) { msgBox.innerHTML = `<div class="msg msg-error">Centang minimal 1 tagihan dulu.</div>`; return; }
 
@@ -584,8 +430,7 @@ async function prosesPembayaran() {
       status: "lunas",
       metode_bayar: metode,
       dibayar_oleh: profilSaya.id,
-      dibayar_at: new Date().toISOString(),
-      shift_id: shiftAktifData.id
+      dibayar_at: new Date().toISOString()
     })
     .in("id", idTerpilih);
 
@@ -662,245 +507,91 @@ async function muatRiwayatTransaksi() {
   `).join("");
 }
 
-// ---------- DAFTAR PEMBAYARAN (ANTRIAN HARI INI) ----------
-let daftarPembayaranCache = [];
+// ---------- LAPORAN KASIR ----------
+function setPeriodeLaporan(jenis) {
+  const now = new Date();
+  const iso = d => d.toISOString().slice(0, 10);
+  if (jenis === "harian") {
+    document.getElementById("lapDari").value = iso(now);
+    document.getElementById("lapSampai").value = iso(now);
+  } else {
+    const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1);
+    document.getElementById("lapDari").value = iso(awalBulan);
+    document.getElementById("lapSampai").value = iso(now);
+  }
+  muatLaporanKasir();
+}
 
-async function muatDaftarPembayaran() {
-  const tbody = document.getElementById("tabelDaftarPembayaran");
-  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
-  const tgl = document.getElementById("dpTanggal").value;
-  if (!tgl) return;
+async function muatLaporanKasir() {
+  const dari = document.getElementById("lapDari").value;
+  const sampai = document.getElementById("lapSampai").value;
+  if (!dari || !sampai) { alert("Pilih rentang tanggal dulu."); return; }
 
   const { data, error } = await supabaseClient
     .from("tagihan_kunjungan")
     .select("*, pasien(nama, no_rm), kunjungan(klaster(nama))")
-    .gte("created_at", `${tgl}T00:00:00`)
-    .lte("created_at", `${tgl}T23:59:59`)
-    .order("created_at", { ascending: true });
+    .neq("status", "batal")
+    .gte("created_at", `${dari}T00:00:00`)
+    .lte("created_at", `${sampai}T23:59:59`)
+    .order("created_at", { ascending: false });
 
-  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (error) { alert("Gagal muat laporan: " + error.message); return; }
 
-  const grup = {};
-  (data || []).forEach(t => {
-    const key = t.pasien_id;
-    if (!key) return;
-    if (!grup[key]) {
-      grup[key] = {
-        pasien_id: t.pasien_id,
-        nama: t.pasien?.nama || "-",
-        no_rm: t.pasien?.no_rm || "-",
-        tujuan: t.kunjungan?.klaster?.nama || "Non-Kunjungan (KIA/KB/Ranap)",
-        jenisBayar: t.jenis_bayar,
-        jam: t.created_at,
-        total: 0,
-        semuaLunas: true
-      };
-    }
-    grup[key].total += Number(t.subtotal);
-    if (t.status !== "lunas") grup[key].semuaLunas = false;
-    if (new Date(t.created_at) < new Date(grup[key].jam)) grup[key].jam = t.created_at;
-  });
+  const lunas = (data || []).filter(t => t.status === "lunas");
+  const piutang = (data || []).filter(t => t.status !== "lunas");
 
-  daftarPembayaranCache = Object.values(grup).sort((a, b) => new Date(a.jam) - new Date(b.jam));
-  renderDaftarPembayaran();
-}
-
-function renderDaftarPembayaran() {
-  const tbody = document.getElementById("tabelDaftarPembayaran");
-  const cari = document.getElementById("dpCari").value.toLowerCase().trim();
-  const penjamin = document.getElementById("dpPenjamin").value;
-  const status = document.getElementById("dpStatus").value;
-
-  const filtered = daftarPembayaranCache.filter(g => {
-    const matchCari = !cari || g.nama.toLowerCase().includes(cari) || g.no_rm.toLowerCase().includes(cari);
-    const matchPenjamin = !penjamin || g.jenisBayar === penjamin;
-    const matchStatus = !status || (status === "lunas" ? g.semuaLunas : !g.semuaLunas);
-    return matchCari && matchPenjamin && matchStatus;
-  });
-
-  if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="7">Gak ada data buat filter/tanggal ini.</td></tr>`; return; }
-
-  tbody.innerHTML = filtered.map(g => `
-    <tr class="clickable-row" data-pid="${g.pasien_id}" data-nama="${String(g.nama).replace(/"/g, "&quot;")}" data-rm="${g.no_rm}" onclick="lompatKePembayaran(this)">
-      <td>${new Date(g.jam).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</td>
-      <td>${g.no_rm}</td>
-      <td>${g.nama}</td>
-      <td>${g.tujuan}</td>
-      <td>${g.jenisBayar}</td>
-      <td>Rp ${formatRupiahKasir(g.total)}</td>
-      <td>${g.semuaLunas
-        ? `<span style="color:#2f9e5c; font-weight:700;">Lunas</span>`
-        : `<span style="color:#c0503f; font-weight:700;">Belum Bayar</span>`}</td>
-    </tr>
-  `).join("");
-}
-
-function filterDaftarPembayaran() { renderDaftarPembayaran(); }
-
-function resetFilterDaftar() {
-  document.getElementById("dpCari").value = "";
-  document.getElementById("dpPenjamin").value = "";
-  document.getElementById("dpStatus").value = "";
-  renderDaftarPembayaran();
-}
-
-function lompatKePembayaran(el) {
-  pasienTerpilihKasir = { id: el.dataset.pid, nama: el.dataset.nama, no_rm: el.dataset.rm };
-  document.getElementById("kasirNamaPasien").textContent = pasienTerpilihKasir.nama;
-  document.getElementById("kasirNoRmPasien").textContent = pasienTerpilihKasir.no_rm || "-";
-  document.getElementById("cardTagihanPasien").style.display = "block";
-  document.getElementById("hasilCariPasienKasir").innerHTML = "";
-  document.getElementById("msgCariPasien").innerHTML = "";
-  gantiTabKasir("bayar");
-  muatTagihanPasien();
-}
-
-// ---------- LAPORAN KASIR ----------
-let laporanKasirPiutangCache = [];
-
-async function muatLaporanKasir() {
-  const isi = document.getElementById("laporanKasirIsi");
-  const dari = document.getElementById("lkDari").value;
-  const sampai = document.getElementById("lkSampai").value;
-  if (!dari || !sampai) { isi.innerHTML = `<div class="msg msg-error">Isi rentang tanggal dulu.</div>`; return; }
-  isi.innerHTML = `<p style="font-size:13px; color:var(--muted);">Memuat laporan...</p>`;
-
-  const [lunasRes, piutangRes] = await Promise.all([
-    supabaseClient
-      .from("tagihan_kunjungan")
-      .select("*, kunjungan(klaster(nama))")
-      .eq("status", "lunas")
-      .gte("dibayar_at", `${dari}T00:00:00`)
-      .lte("dibayar_at", `${sampai}T23:59:59`),
-    supabaseClient
-      .from("tagihan_kunjungan")
-      .select("*, pasien(nama, no_rm), kunjungan(klaster(nama))")
-      .eq("status", "belum_dibayar")
-      .lte("created_at", `${sampai}T23:59:59`)
-      .order("created_at", { ascending: true })
-  ]);
-
-  if (lunasRes.error) { isi.innerHTML = `<div class="msg msg-error">Gagal muat: ${lunasRes.error.message}</div>`; return; }
-  if (piutangRes.error) { isi.innerHTML = `<div class="msg msg-error">Gagal muat: ${piutangRes.error.message}</div>`; return; }
-
-  const lunas = lunasRes.data || [];
   const totalPendapatan = lunas.reduce((s, t) => s + Number(t.subtotal), 0);
+  const totalPiutang = piutang.reduce((s, t) => s + Number(t.subtotal), 0);
 
-  const perKategori = {};
-  const perMetode = {};
+  document.getElementById("lapRingkasan").innerHTML = `
+    <div class="stat-card"><div class="label">Total Pendapatan</div><div class="value">Rp ${formatRupiahKasir(totalPendapatan)}</div></div>
+    <div class="stat-card"><div class="label">Jumlah Transaksi Lunas</div><div class="value">${lunas.length}</div></div>
+    <div class="stat-card"><div class="label">Total Piutang</div><div class="value">Rp ${formatRupiahKasir(totalPiutang)}</div></div>
+    <div class="stat-card"><div class="label">Jumlah Piutang</div><div class="value">${piutang.length}</div></div>
+  `;
+
+  // Rekap per sumber (klaster)
   const perSumber = {};
   lunas.forEach(t => {
-    perKategori[t.kategori] = perKategori[t.kategori] || { jumlah: 0, total: 0 };
-    perKategori[t.kategori].jumlah += 1;
-    perKategori[t.kategori].total += Number(t.subtotal);
-
-    const metode = t.metode_bayar || "-";
-    perMetode[metode] = (perMetode[metode] || 0) + Number(t.subtotal);
-
-    const sumber = t.kunjungan?.klaster?.nama || "Non-Kunjungan (KIA/KB/Ranap)";
-    perSumber[sumber] = perSumber[sumber] || { jumlah: 0, total: 0 };
-    perSumber[sumber].jumlah += 1;
-    perSumber[sumber].total += Number(t.subtotal);
+    const nama = t.kunjungan?.klaster?.nama || "Non-Kunjungan";
+    if (!perSumber[nama]) perSumber[nama] = { jumlah: 0, total: 0 };
+    perSumber[nama].jumlah++;
+    perSumber[nama].total += Number(t.subtotal);
   });
+  const tbodySumber = document.getElementById("tabelLapSumber");
+  const entriSumber = Object.entries(perSumber);
+  tbodySumber.innerHTML = entriSumber.length
+    ? entriSumber.map(([nama, v]) => `<tr><td>${nama}</td><td>${v.jumlah}</td><td>Rp ${formatRupiahKasir(v.total)}</td></tr>`).join("")
+    : `<tr><td colspan="3">Gak ada transaksi lunas di periode ini.</td></tr>`;
 
-  // Piutang, dikelompokkan per pasien biar gampang ditagih
-  const grupPiutang = {};
-  (piutangRes.data || []).forEach(t => {
-    const key = t.pasien_id;
-    if (!key) return;
-    if (!grupPiutang[key]) {
-      grupPiutang[key] = {
-        nama: t.pasien?.nama || "-",
-        no_rm: t.pasien?.no_rm || "-",
-        tujuan: t.kunjungan?.klaster?.nama || "Non-Kunjungan (KIA/KB/Ranap)",
-        sejak: t.created_at,
-        total: 0
-      };
-    }
-    grupPiutang[key].total += Number(t.subtotal);
-    if (new Date(t.created_at) < new Date(grupPiutang[key].sejak)) grupPiutang[key].sejak = t.created_at;
+  // Rekap per metode bayar
+  const perMetode = {};
+  lunas.forEach(t => {
+    const m = t.metode_bayar || "-";
+    if (!perMetode[m]) perMetode[m] = { jumlah: 0, total: 0 };
+    perMetode[m].jumlah++;
+    perMetode[m].total += Number(t.subtotal);
   });
-  laporanKasirPiutangCache = Object.values(grupPiutang).sort((a, b) => new Date(a.sejak) - new Date(b.sejak));
-  const totalPiutang = laporanKasirPiutangCache.reduce((s, p) => s + p.total, 0);
-  const hariIniMs = Date.now();
+  const tbodyMetode = document.getElementById("tabelLapMetode");
+  const entriMetode = Object.entries(perMetode);
+  tbodyMetode.innerHTML = entriMetode.length
+    ? entriMetode.map(([m, v]) => `<tr><td>${m}</td><td>${v.jumlah}</td><td>Rp ${formatRupiahKasir(v.total)}</td></tr>`).join("")
+    : `<tr><td colspan="3">Gak ada transaksi lunas di periode ini.</td></tr>`;
 
-  isi.innerHTML = `
-    <div class="card">
-      <div class="stat-grid">
-        <div class="stat-card"><div class="label">Total Pendapatan (Lunas)</div><div class="value">Rp ${formatRupiahKasir(totalPendapatan)}</div></div>
-        <div class="stat-card"><div class="label">Jumlah Transaksi Lunas</div><div class="value">${lunas.length}</div></div>
-        <div class="stat-card"><div class="label">Total Piutang (Belum Dibayar)</div><div class="value">Rp ${formatRupiahKasir(totalPiutang)}</div></div>
-        <div class="stat-card"><div class="label">Jumlah Pasien Piutang</div><div class="value">${laporanKasirPiutangCache.length}</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Rekap per Kategori Layanan</h2>
-      <table>
-        <thead><tr><th>Kategori</th><th>Jumlah Item</th><th>Total</th></tr></thead>
-        <tbody>
-          ${Object.keys(perKategori).length ? Object.entries(perKategori).map(([k, v]) => `
-            <tr><td>${k}</td><td>${v.jumlah}</td><td>Rp ${formatRupiahKasir(v.total)}</td></tr>
-          `).join("") : `<tr><td colspan="3">Belum ada transaksi lunas di periode ini.</td></tr>`}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>Rekap per Sumber Layanan (Klaster)</h2>
-      <table>
-        <thead><tr><th>Sumber</th><th>Jumlah Transaksi</th><th>Total</th></tr></thead>
-        <tbody>
-          ${Object.keys(perSumber).length ? Object.entries(perSumber).map(([k, v]) => `
-            <tr><td>${k}</td><td>${v.jumlah}</td><td>Rp ${formatRupiahKasir(v.total)}</td></tr>
-          `).join("") : `<tr><td colspan="3">Belum ada transaksi lunas di periode ini.</td></tr>`}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>Rekap per Metode Pembayaran</h2>
-      <table>
-        <thead><tr><th>Metode</th><th>Total</th></tr></thead>
-        <tbody>
-          ${Object.keys(perMetode).length ? Object.entries(perMetode).map(([k, v]) => `
-            <tr><td>${k}</td><td>Rp ${formatRupiahKasir(v)}</td></tr>
-          `).join("") : `<tr><td colspan="2">Belum ada transaksi lunas di periode ini.</td></tr>`}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>Piutang (Belum Dibayar) s/d ${new Date(sampai).toLocaleDateString("id-ID")}</h2>
-      <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Diurutkan dari yang paling lama nunggak.</p>
-      <button type="button" class="btn-secondary" onclick="exportPiutangKasirCsv()" style="margin-bottom:10px;">⬇️ Export CSV</button>
-      <table>
-        <thead><tr><th>No. RM</th><th>Nama</th><th>Tujuan</th><th>Sejak Tanggal</th><th>Umur Piutang</th><th>Total Piutang</th></tr></thead>
-        <tbody>
-          ${laporanKasirPiutangCache.length ? laporanKasirPiutangCache.map(p => {
-            const umurHari = Math.max(0, Math.floor((hariIniMs - new Date(p.sejak).getTime()) / 86400000));
-            return `<tr><td>${p.no_rm}</td><td>${p.nama}</td><td>${p.tujuan}</td><td>${new Date(p.sejak).toLocaleDateString("id-ID")}</td><td>${umurHari} hari</td><td>Rp ${formatRupiahKasir(p.total)}</td></tr>`;
-          }).join("") : `<tr><td colspan="6">Gak ada piutang. 🎉</td></tr>`}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-function exportPiutangKasirCsv() {
-  if (!laporanKasirPiutangCache.length) { alert("Gak ada data piutang buat diexport."); return; }
-  const header = ["No. RM", "Nama", "Tujuan", "Sejak Tanggal", "Total Piutang"];
-  const rows = laporanKasirPiutangCache.map(p => [p.no_rm, p.nama, p.tujuan, new Date(p.sejak).toLocaleDateString("id-ID"), p.total]);
-  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const dari = document.getElementById("lkDari").value;
-  const sampai = document.getElementById("lkSampai").value;
-  a.href = url;
-  a.download = `Piutang_Kasir_${dari}_${sampai}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  // Rekap piutang
+  const tbodyPiutang = document.getElementById("tabelLapPiutang");
+  tbodyPiutang.innerHTML = piutang.length
+    ? piutang.map(t => `
+        <tr>
+          <td>${new Date(t.created_at).toLocaleDateString("id-ID")}</td>
+          <td>${t.pasien?.nama || "-"} (${t.pasien?.no_rm || "-"})</td>
+          <td>${t.kategori}</td>
+          <td>${t.nama_layanan}</td>
+          <td>Rp ${formatRupiahKasir(t.subtotal)}</td>
+          <td>${t.jenis_bayar}</td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="6">Gak ada piutang di periode ini. 🎉</td></tr>`;
 }
 </script>
 
