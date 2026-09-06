@@ -216,6 +216,28 @@ const AKSES_HALAMAN = {
   farmasi: ["apotek.html", "pengaturan.html", "papan-antrian.html"]
 };
 
+// Peta modul_kode (di tabel hak_akses) -> halaman .html yang dibuka.
+// Tambah baris hak_akses baru buat pegawai manapun (role apa aja: bidan,
+// perawat, staff, dst) pakai salah satu modul_kode ini, otomatis dia bisa
+// buka halaman itu juga, TANPA perlu ganti role dasarnya.
+const MODUL_KE_HALAMAN = {
+  pendaftaran: "index.html",
+  rekam_medis: "rekam-medis.html",
+  apotek: "apotek.html",
+  ugd: "ugd.html",
+  ranap: "ranap.html",
+  klaster1: "klaster1.html",
+  manajemen: "klaster1.html", // nama lama, tetap didukung
+  klaster2: "klaster2.html",
+  klaster3: "klaster3.html",
+  klaster4: "klaster4.html",
+  gigi: "gigi.html",
+  pustu: "pustu.html",
+  kasir: "kasir.html",
+  pengaturan: "pengaturan.html",
+  papan_antrian: "papan-antrian.html"
+};
+
 // Hitung daftar halaman yang boleh diakses profil ini: role dasar + tambahan
 // dari hak_akses granular.
 function halamanIzinUntuk(profil) {
@@ -228,11 +250,14 @@ function halamanIzinUntuk(profil) {
   if (profil.pustu_id) return ["pustu.html"];
 
   const izin = new Set(AKSES_HALAMAN[profil.role] || []);
-  if (punyaAksesModul(profil, "rekam_medis")) izin.add("rekam-medis.html");
-  // Kapus/KTU/Bendahara BOK dkk yang bukan admin tapi dikasih hak_akses
-  // modul_kode "manajemen" (lewat Klaster 1 > Edit Pegawai) ikut bisa buka
-  // halaman Klaster 1 (liat dashboard; kelola akun tetap dibatasi admin di UI).
-  if (punyaAksesModul(profil, "manajemen")) izin.add("klaster1.html");
+
+  // Tambahan generik: tiap modul_kode di hak_akses pegawai ini otomatis
+  // buka halaman yang sesuai, apapun role dasarnya.
+  Object.keys(profil.hakAksesPeta || {}).forEach(modulKode => {
+    const halaman = MODUL_KE_HALAMAN[modulKode];
+    if (halaman) izin.add(halaman);
+  });
+
   return Array.from(izin);
 }
 
