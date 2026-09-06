@@ -839,6 +839,7 @@
     <div class="jenis-tab" id="mutTabKeluar" onclick="gantiTabMutasi('keluar')">📤 Mutasi Keluar</div>
     <div class="jenis-tab" id="mutTabInternal" onclick="gantiTabMutasi('internal')">🔁 Mutasi Internal</div>
     <div class="jenis-tab" id="mutTabRetur" onclick="gantiTabMutasi('retur')">↩️ Retur</div>
+    <div class="jenis-tab" id="mutTabPermintaan" onclick="gantiTabMutasi('permintaan')">📨 Permintaan Pustu</div>
     <div class="jenis-tab" id="mutTabRiwayat" onclick="gantiTabMutasi('riwayat')">📜 Riwayat</div>
     <span class="jenis-tab-note">Semua transaksi di sini otomatis update Kartu Stok Obat/BMHP & jadi dasar Stok Opname + LPLPO.</span>
   </div>
@@ -1091,6 +1092,35 @@
 
   </div>
   <!-- /mutPanelRetur -->
+
+  <!-- ===== Sub-tab: Permintaan Pustu (Surat Permintaan di luar siklus LPLPO) ===== -->
+  <div id="mutPanelPermintaan" style="display:none;">
+
+    <div class="card" style="--accent:#6a4c93">
+      <h2><span class="card-num">1</span>Permintaan Masuk dari Pustu</h2>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:12px;">Permintaan mendesak di luar siklus LPLPO bulanan. Approve/tolak di sini gak otomatis mutasi stok — setelah disetujui, tetap proses pengiriman fisik lewat tab Mutasi Keluar seperti biasa.</p>
+      <div id="msgPermintaanPustuApotek"></div>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Pustu</th><th>Jml Item</th><th>Catatan Pustu</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="tabelPermintaanPustuApotek"><tr><td colspan="6">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
+    <div id="pmpDetailWrap" class="card" style="--accent:#e0793c; display:none;">
+      <h2>Proses Permintaan — <span id="pmpNamaPustu"></span></h2>
+      <table>
+        <thead><tr><th>Obat</th><th>Jumlah Diminta</th><th>Jumlah Disetujui</th></tr></thead>
+        <tbody id="tabelItemPermintaanPustu"></tbody>
+      </table>
+      <label>Catatan Farmasi</label>
+      <input type="text" id="pmpCatatanFarmasi" placeholder="Opsional — alasan tolak/catatan approval">
+      <button type="button" class="btn-primary" onclick="prosesPermintaanPustu('disetujui')">Setujui</button>
+      <button type="button" onclick="prosesPermintaanPustu('ditolak')" style="margin-left:6px;">Tolak</button>
+      <button type="button" onclick="document.getElementById('pmpDetailWrap').style.display='none';" style="margin-left:6px;">Tutup</button>
+    </div>
+
+  </div>
+  <!-- /mutPanelPermintaan -->
 
   <!-- ===== Sub-tab: Riwayat Gabungan ===== -->
   <div id="mutPanelRiwayat" style="display:none;">
@@ -3679,16 +3709,104 @@ async function siapkanMutasi() {
 }
 
 function gantiTabMutasi(tab) {
-  ["sbbk", "keluar", "internal", "retur", "riwayat"].forEach(t => {
+  ["sbbk", "keluar", "internal", "retur", "permintaan", "riwayat"].forEach(t => {
     document.getElementById("mutPanel" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? "block" : "none";
     document.getElementById("mutTab" + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle("active", t === tab);
   });
   if (tab === "riwayat") muatRiwayatMutasi();
+  if (tab === "permintaan") muatPermintaanPustuApotek();
 }
 
 function isiSelectObatMutasi(selectId) {
   // Deprecated: field jadi combobox cari (lihat comboObatOptions/filterComboObat*).
   // Dibiarkan sebagai no-op biar pemanggil lama gak error kalau ada sisa referensi.
+}
+
+// ---------- Permintaan Pustu (Surat Permintaan di luar siklus LPLPO) ----------
+let permintaanPustuCache = [];
+let permintaanAktifId = null;
+
+async function muatPermintaanPustuApotek() {
+  const tbody = document.getElementById("tabelPermintaanPustuApotek");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+  document.getElementById("pmpDetailWrap").style.display = "none";
+
+  const { data, error } = await supabaseClient.from("permintaan_obat_pustu")
+    .select("id, tanggal, status, catatan_pustu, catatan_farmasi, pustu:pustu_id(nama), permintaan_obat_pustu_item(id)")
+    .order("created_at", { ascending: false }).limit(50);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  permintaanPustuCache = data || [];
+  if (!permintaanPustuCache.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada permintaan dari Pustu.</td></tr>`; return; }
+
+  const badgeStatusPmp = { diajukan: "badge-menunggu", disetujui: "badge-selesai", ditolak: "badge-batal", selesai: "badge-selesai" };
+  const labelStatusPmp = { diajukan: "Menunggu", disetujui: "Disetujui", ditolak: "Ditolak", selesai: "Selesai" };
+  tbody.innerHTML = permintaanPustuCache.map(p => `
+    <tr>
+      <td>${new Date(p.tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${p.pustu ? p.pustu.nama : "-"}</td>
+      <td>${(p.permintaan_obat_pustu_item || []).length}</td>
+      <td>${p.catatan_pustu || "-"}</td>
+      <td><span class="badge ${badgeStatusPmp[p.status]}">${labelStatusPmp[p.status]}</span></td>
+      <td>${p.status === "diajukan"
+          ? `<button type="button" onclick="bukaDetailPermintaanPustu('${p.id}')">Proses</button>`
+          : "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function bukaDetailPermintaanPustu(id) {
+  const p = permintaanPustuCache.find(x => x.id === id);
+  if (!p) return;
+  permintaanAktifId = id;
+  document.getElementById("pmpNamaPustu").textContent = p.pustu ? p.pustu.nama : "-";
+  document.getElementById("pmpCatatanFarmasi").value = "";
+  document.getElementById("pmpDetailWrap").style.display = "block";
+
+  const tbody = document.getElementById("tabelItemPermintaanPustu");
+  tbody.innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient.from("permintaan_obat_pustu_item")
+    .select("id, jumlah_diminta, obat:obat_id(nama_obat, satuan)")
+    .eq("permintaan_id", id);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="3">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  tbody.innerHTML = (data || []).map(it => `
+    <tr>
+      <td>${it.obat ? it.obat.nama_obat : "-"} (${it.obat ? it.obat.satuan : "-"})</td>
+      <td>${it.jumlah_diminta}</td>
+      <td><input type="number" min="0" class="pmp-jumlah-disetujui" data-item-id="${it.id}" value="${it.jumlah_diminta}" style="width:90px;"></td>
+    </tr>
+  `).join("");
+}
+
+async function prosesPermintaanPustu(statusBaru) {
+  if (!permintaanAktifId) return;
+  const msgBox = document.getElementById("msgPermintaanPustuApotek");
+  const catatanFarmasi = document.getElementById("pmpCatatanFarmasi").value.trim() || null;
+
+  if (statusBaru === "disetujui") {
+    const inputs = document.querySelectorAll(".pmp-jumlah-disetujui");
+    for (const input of inputs) {
+      const jumlah = parseInt(input.value, 10) || 0;
+      const { error: errItem } = await supabaseClient.from("permintaan_obat_pustu_item")
+        .update({ jumlah_disetujui: jumlah }).eq("id", input.dataset.itemId);
+      if (errItem) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan jumlah disetujui: ${errItem.message}</div>`; return; }
+    }
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { error } = await supabaseClient.from("permintaan_obat_pustu")
+    .update({ status: statusBaru, catatan_farmasi: catatanFarmasi, petugas_farmasi_id: user.id, updated_at: new Date().toISOString() })
+    .eq("id", permintaanAktifId);
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal update status: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Permintaan ${statusBaru === "disetujui" ? "disetujui" : "ditolak"}. ${statusBaru === "disetujui" ? "Lanjut kirim barang lewat tab Mutasi Keluar." : ""}</div>`;
+  document.getElementById("pmpDetailWrap").style.display = "none";
+  permintaanAktifId = null;
+  await muatPermintaanPustuApotek();
 }
 
 // ---------- Combobox cari item (Obat/BMHP), dipakai Mutasi Keluar/Internal/Retur ----------

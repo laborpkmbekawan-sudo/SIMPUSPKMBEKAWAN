@@ -4319,3 +4319,54 @@ create trigger trg_audit_jadwal_posyandu after insert or update or delete on jad
 -- ============================================================
 -- SELESAI section 97. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 98. PUSTU — Surat Permintaan Obat (di luar siklus LPLPO bulanan)
+--     Pustu ajukan permintaan mendesak kapan saja, Farmasi Induk
+--     approve/tolak di apotek.html (tab Mutasi > Permintaan Pustu).
+--     Approve TIDAK otomatis mutasi stok — farmasi tetap proses
+--     pengiriman fisik lewat Mutasi Keluar yang udah ada, modul ini
+--     cuma jejak pengajuan & keputusan (paper trail), biar gak
+--     dobel hitung stok.
+-- ============================================================
+create table if not exists permintaan_obat_pustu (
+  id uuid primary key default gen_random_uuid(),
+  pustu_id int not null references pustu(id),
+  tanggal date not null default current_date,
+  status text not null default 'diajukan' check (status in ('diajukan','disetujui','ditolak','selesai')),
+  catatan_pustu text,
+  catatan_farmasi text,
+  petugas_pustu_id uuid references profil_pegawai(id),
+  petugas_farmasi_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists idx_permintaan_obat_pustu_pustu on permintaan_obat_pustu(pustu_id, status);
+create index if not exists idx_permintaan_obat_pustu_status on permintaan_obat_pustu(status);
+
+create table if not exists permintaan_obat_pustu_item (
+  id uuid primary key default gen_random_uuid(),
+  permintaan_id uuid not null references permintaan_obat_pustu(id) on delete cascade,
+  obat_id uuid not null references obat(id),
+  jumlah_diminta int not null,
+  jumlah_disetujui int
+);
+create index if not exists idx_permintaan_obat_pustu_item_permintaan on permintaan_obat_pustu_item(permintaan_id);
+
+alter table permintaan_obat_pustu enable row level security;
+alter table permintaan_obat_pustu_item enable row level security;
+drop policy if exists "authenticated_all_permintaan_obat_pustu" on permintaan_obat_pustu;
+create policy "authenticated_all_permintaan_obat_pustu" on permintaan_obat_pustu for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_permintaan_obat_pustu_item" on permintaan_obat_pustu_item;
+create policy "authenticated_all_permintaan_obat_pustu_item" on permintaan_obat_pustu_item for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_permintaan_obat_pustu on permintaan_obat_pustu;
+create trigger trg_audit_permintaan_obat_pustu after insert or update or delete on permintaan_obat_pustu
+  for each row execute function fn_audit_log();
+drop trigger if exists trg_audit_permintaan_obat_pustu_item on permintaan_obat_pustu_item;
+create trigger trg_audit_permintaan_obat_pustu_item after insert or update or delete on permintaan_obat_pustu_item
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 98. Idempotent, aman diulang.
+-- ============================================================

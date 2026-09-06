@@ -326,6 +326,34 @@
           </table>
         </div>
 
+        <div class="card" style="--accent:#6a4c93;">
+          <h2><span class="card-num" style="background:#6a4c93;">📨</span> Surat Permintaan Obat</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Diajukan kapan saja saat stok mendesak/menipis, di luar siklus bulanan. Setelah disetujui Farmasi Induk, barang tetap dikirim lewat Mutasi Keluar seperti biasa — modul ini cuma jejak pengajuan & keputusannya.</p>
+          <div id="msgPermintaan"></div>
+
+          <div id="pmItemRows"></div>
+          <button type="button" onclick="tambahBarisPermintaan()" style="margin:8px 0;">+ Tambah Item</button>
+          <label>Catatan (opsional)</label>
+          <input type="text" id="pmCatatan" placeholder="Mis. alasan mendesak">
+          <button class="btn-primary" onclick="simpanPermintaanPustu()">Ajukan Permintaan</button>
+
+          <table style="margin-top:16px;">
+            <thead><tr><th>Tanggal</th><th>Jml Item</th><th>Catatan Pustu</th><th>Status</th><th>Catatan Farmasi</th></tr></thead>
+            <tbody id="tabelPermintaanPustu"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">📋</span> Stok Opname Akhir Bulan</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Cocokkan stok fisik vs sistem. Kalau ada selisih, wajib isi keterangan (rusak/hilang/kadaluarsa/dll) — jadi dasar Persediaan Awal bulan depan.</p>
+          <div id="msgOpnamePustu"></div>
+          <table>
+            <thead><tr><th>Obat</th><th>Stok Sistem</th><th>Stok Fisik</th><th>Selisih</th><th>Keterangan</th></tr></thead>
+            <tbody id="tabelOpnamePustu"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+          <button class="btn-primary" onclick="simpanOpnamePustu()">Simpan Hasil Opname</button>
+        </div>
+
       </div>
 
       <!-- ============ JADWAL POSYANDU ============ -->
@@ -942,7 +970,7 @@ function gantiSubtabPT(tab) {
   };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Pustu";
   if (tab === "dashboard") muatDashboardPT();
-  if (tab === "stok") muatStokPustu();
+  if (tab === "stok") { muatStokPustu(); muatPermintaanPustu(); }
   if (tab === "jadwal-posyandu") {
     if (!document.getElementById("jpFilterTahun").value) {
       const now = new Date();
@@ -1289,6 +1317,7 @@ async function muatStokPustu() {
     const opsi = daftarStokObatPustuCache.filter(s => s.stok > 0)
       .map(s => `<option value="${s.obat.id}">${s.obat.nama_obat} (stok: ${s.stok} ${s.obat.satuan})</option>`).join("");
     selObat.innerHTML = `<option value="">- Pilih obat -</option>` + opsi;
+    renderOpnamePustu();
   }
 
   if (errKartu) { tbodyKartu.innerHTML = `<tr><td colspan="6">Gagal muat: ${errKartu.message}</td></tr>`; }
@@ -1332,6 +1361,150 @@ async function simpanPemakaianStokPustu() {
   document.getElementById("skJumlah").value = "";
   document.getElementById("skReferensi").value = "";
   await muatStokPustu();
+}
+
+// ---------- Stok Opname Akhir Bulan (Pustu) ----------
+function renderOpnamePustu() {
+  const tbody = document.getElementById("tabelOpnamePustu");
+  if (!daftarStokObatPustuCache.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada obat di Pustu ini.</td></tr>`; return; }
+  tbody.innerHTML = daftarStokObatPustuCache.map(s => `
+    <tr>
+      <td>${s.obat.nama_obat}</td>
+      <td>${s.stok} ${s.obat.satuan}</td>
+      <td><input type="number" min="0" class="op-fisik" data-sistem="${s.stok}" data-obat="${s.obat.id}" oninput="hitungSelisihOpnamePustu('${s.obat.id}')" style="width:90px;"></td>
+      <td id="opSelisih-${s.obat.id}">-</td>
+      <td><input type="text" class="op-keterangan" data-obat="${s.obat.id}" placeholder="Wajib kalau ada selisih" style="width:180px;"></td>
+    </tr>
+  `).join("");
+}
+
+function hitungSelisihOpnamePustu(obatId) {
+  const input = document.querySelector(`.op-fisik[data-obat="${obatId}"]`);
+  const sistem = parseInt(input.dataset.sistem, 10);
+  const fisik = parseInt(input.value, 10);
+  const sel = document.getElementById(`opSelisih-${obatId}`);
+  if (isNaN(fisik)) { sel.textContent = "-"; return; }
+  const selisih = fisik - sistem;
+  sel.textContent = selisih === 0 ? "0" : (selisih > 0 ? `+${selisih}` : `${selisih}`);
+}
+
+async function simpanOpnamePustu() {
+  const msgBox = document.getElementById("msgOpnamePustu");
+  if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
+
+  const inputs = document.querySelectorAll(".op-fisik");
+  const perubahan = [];
+  for (const input of inputs) {
+    const fisik = parseInt(input.value, 10);
+    if (isNaN(fisik)) continue;
+    const obatId = input.dataset.obat;
+    const sistem = parseInt(input.dataset.sistem, 10);
+    if (fisik === sistem) continue;
+    const keterangan = document.querySelector(`.op-keterangan[data-obat="${obatId}"]`).value.trim();
+    if (!keterangan) { msgBox.innerHTML = `<div class="msg msg-error">Ada selisih stok yang belum diisi keterangan. Wajib diisi kalau ada selisih.</div>`; return; }
+    perubahan.push({ obatId, sistem, fisik, keterangan });
+  }
+  if (!perubahan.length) { msgBox.innerHTML = `<div class="msg msg-error">Gak ada selisih yang diisi. Isi Stok Fisik dulu kalau ada bedanya.</div>`; return; }
+
+  for (const p of perubahan) {
+    const selisih = p.fisik - p.sistem;
+    const jenis = selisih > 0 ? "opname_tambah" : "opname_kurang";
+    const { error: errUpdate } = await supabaseClient.from("stok_obat_pustu").update({ stok: p.fisik, updated_at: new Date().toISOString() })
+      .eq("pustu_id", pustuAktifId).eq("obat_id", p.obatId);
+    if (errUpdate) { msgBox.innerHTML = `<div class="msg msg-error">Gagal update stok: ${errUpdate.message}</div>`; return; }
+
+    const { error: errKartu } = await supabaseClient.from("kartu_stok_pustu").insert({
+      pustu_id: pustuAktifId, obat_id: p.obatId, jenis, jumlah: Math.abs(selisih), saldo_setelah: p.fisik,
+      referensi: "Stok Opname", keterangan: p.keterangan, petugas_id: profilSaya.id
+    });
+    if (errKartu) { msgBox.innerHTML = `<div class="msg msg-error">Sebagian stok terupdate, tapi ada yang gagal catat kartu stok: ${errKartu.message}</div>`; return; }
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">${perubahan.length} item hasil opname tersimpan.</div>`;
+  await muatStokPustu();
+}
+
+// ---------- Surat Permintaan Obat (Pustu) ----------
+let daftarObatMasterCache = [];
+async function muatObatMasterPustu() {
+  if (daftarObatMasterCache.length) return;
+  const { data, error } = await supabaseClient.from("obat").select("id, nama_obat, satuan").order("nama_obat");
+  if (!error) daftarObatMasterCache = data || [];
+}
+
+function tambahBarisPermintaan() {
+  const wrap = document.getElementById("pmItemRows");
+  const rowId = "pmRow" + Date.now() + Math.floor(Math.random() * 1000);
+  const opsi = daftarObatMasterCache.map(o => `<option value="${o.id}">${o.nama_obat} (${o.satuan})</option>`).join("");
+  const div = document.createElement("div");
+  div.className = "grid-3";
+  div.id = rowId;
+  div.style.marginBottom = "6px";
+  div.innerHTML = `
+    <select class="pm-obat">${opsi}</select>
+    <input type="number" class="pm-jumlah" placeholder="Jumlah" min="1">
+    <button type="button" onclick="document.getElementById('${rowId}').remove();">Hapus</button>
+  `;
+  wrap.appendChild(div);
+}
+
+async function simpanPermintaanPustu() {
+  const msgBox = document.getElementById("msgPermintaan");
+  if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
+
+  const rows = document.querySelectorAll("#pmItemRows > div");
+  const items = [];
+  rows.forEach(row => {
+    const obatId = row.querySelector(".pm-obat").value;
+    const jumlah = parseInt(row.querySelector(".pm-jumlah").value, 10);
+    if (obatId && jumlah > 0) items.push({ obat_id: obatId, jumlah_diminta: jumlah });
+  });
+  if (!items.length) { msgBox.innerHTML = `<div class="msg msg-error">Tambah minimal 1 item obat & jumlah dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { data: header, error: errHeader } = await supabaseClient.from("permintaan_obat_pustu").insert({
+    pustu_id: pustuAktifId, catatan_pustu: document.getElementById("pmCatatan").value.trim() || null, petugas_pustu_id: user.id
+  }).select().single();
+  if (errHeader) { msgBox.innerHTML = `<div class="msg msg-error">Gagal ajukan: ${errHeader.message}</div>`; return; }
+
+  const { error: errItem } = await supabaseClient.from("permintaan_obat_pustu_item").insert(
+    items.map(it => ({ ...it, permintaan_id: header.id }))
+  );
+  if (errItem) { msgBox.innerHTML = `<div class="msg msg-error">Header tersimpan tapi item gagal: ${errItem.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Permintaan diajukan (${items.length} item). Tunggu approval Farmasi Induk.</div>`;
+  document.getElementById("pmItemRows").innerHTML = "";
+  tambahBarisPermintaan();
+  document.getElementById("pmCatatan").value = "";
+  await muatPermintaanPustu();
+}
+
+async function muatPermintaanPustu() {
+  const tbody = document.getElementById("tabelPermintaanPustu");
+  if (!pustuAktifId) { tbody.innerHTML = `<tr><td colspan="5">Belum ada Pustu aktif.</td></tr>`; return; }
+
+  await muatObatMasterPustu();
+  if (!document.getElementById("pmItemRows").children.length) tambahBarisPermintaan();
+
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  const { data, error } = await supabaseClient.from("permintaan_obat_pustu")
+    .select("id, tanggal, status, catatan_pustu, catatan_farmasi, permintaan_obat_pustu_item(id)")
+    .eq("pustu_id", pustuAktifId).order("created_at", { ascending: false }).limit(30);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum pernah mengajukan permintaan.</td></tr>`; return; }
+
+  const badgeStatusPm = { diajukan: "badge-menunggu", disetujui: "badge-selesai", ditolak: "badge-batal", selesai: "badge-selesai" };
+  const labelStatusPm = { diajukan: "Menunggu Approval", disetujui: "Disetujui", ditolak: "Ditolak", selesai: "Selesai" };
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td>${jamSingkatTanggalPT(p.tanggal)}</td>
+      <td>${(p.permintaan_obat_pustu_item || []).length}</td>
+      <td>${p.catatan_pustu || "-"}</td>
+      <td><span class="badge ${badgeStatusPm[p.status]}">${labelStatusPm[p.status]}</span></td>
+      <td>${p.catatan_farmasi || "-"}</td>
+    </tr>
+  `).join("");
 }
 
 // ============================================================
