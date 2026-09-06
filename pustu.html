@@ -65,6 +65,7 @@
     <a id="navPosyanduBalita" onclick="gantiSubtabPT('posyandu-balita')">Posyandu Balita</a>
     <a id="navPosyanduLansia" onclick="gantiSubtabPT('posyandu-lansia')">Posyandu Lansia</a>
     <a id="navPosyanduSasaran" onclick="gantiSubtabPT('posyandu-sasaran')">Data Sasaran Posyandu</a>
+    <a id="navKehadiran" onclick="gantiSubtabPT('kehadiran')">Rekap Kehadiran</a>
 
     <div class="ph-group-title">Rujukan</div>
     <a id="navRujukan" onclick="gantiSubtabPT('rujukan')">Rujukan ke Induk</a>
@@ -156,6 +157,14 @@
               <tbody id="tabelStokMenipisPT"><tr><td colspan="3">Memuat...</td></tr></tbody>
             </table>
           </div>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2><span class="card-num" style="background:#26a3a0;">🔄</span> Status Sinkronisasi ke Induk <span class="tag-sync" id="tagStatusSync">Memuat...</span></h2>
+          <table>
+            <thead><tr><th>Komponen</th><th>Status</th><th>Detail</th></tr></thead>
+            <tbody id="tabelStatusSync"><tr><td colspan="3">Memuat...</td></tr></tbody>
+          </table>
         </div>
 
       </div>
@@ -544,6 +553,33 @@
 
       </div>
 
+      <!-- ============ REKAP KEHADIRAN ============ -->
+      <div id="panelKehadiran" style="display:none;">
+
+        <div class="card" style="--accent:#2f9e5c;">
+          <h2><span class="card-num" style="background:#2f9e5c;">👥</span> Rekap Kehadiran Kader &amp; Sasaran per Kegiatan</h2>
+          <p style="font-size:11.5px; color:var(--muted); margin:-6px 0 12px;">Dihitung otomatis: Kader Hadir dari siapa yang input data Posyandu Balita/Lansia tanggal itu, Sasaran Hadir dari jumlah entri Balita+Lansia tanggal itu, Sasaran Terdaftar dari Data Sasaran Posyandu yang aktif.</p>
+          <div id="msgKehadiran"></div>
+          <div class="grid-2" style="margin-bottom:10px;">
+            <div>
+              <label>Bulan</label>
+              <select id="khFilterBulan" onchange="muatRekapKehadiran()">
+                <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option>
+                <option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option>
+                <option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div><label>Tahun</label><input type="number" id="khFilterTahun" style="max-width:120px;" onchange="muatRekapKehadiran()"></div>
+          </div>
+          <table>
+            <thead><tr><th>Tanggal</th><th>Posyandu</th><th>Kader Dijadwalkan</th><th>Kader Hadir</th><th>Sasaran Terdaftar</th><th>Sasaran Hadir</th><th>% Kehadiran</th></tr></thead>
+            <tbody id="tabelRekapKehadiran"><tr><td colspan="7">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
       <!-- ============ RUJUKAN KE INDUK ============ -->
       <div id="panelRujukan" style="display:none;">
 
@@ -885,7 +921,7 @@ function gantiPustuAktifAdmin(idBaru) {
 }
 
 // ---------- Sub-tab nav ----------
-const SUBTAB_PT = ["dashboard", "pelayanan", "rm", "stok", "jadwal-posyandu", "posyandu-balita", "posyandu-lansia", "posyandu-sasaran", "rujukan", "lab-bumil", "laporan-internal", "laporan-dinas", "audit"];
+const SUBTAB_PT = ["dashboard", "pelayanan", "rm", "stok", "jadwal-posyandu", "posyandu-balita", "posyandu-lansia", "posyandu-sasaran", "kehadiran", "rujukan", "lab-bumil", "laporan-internal", "laporan-dinas", "audit"];
 function idPartPT(tab) {
   return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
 }
@@ -900,7 +936,7 @@ function gantiSubtabPT(tab) {
   const judul = {
     dashboard: "Dashboard Pustu", pelayanan: "Pelayanan Dasar Pustu", rm: "Rekam Medis Pustu",
     stok: "Stok Obat Pustu", "jadwal-posyandu": "Jadwal Posyandu", "posyandu-balita": "Posyandu Balita", "posyandu-lansia": "Posyandu Lansia",
-    "posyandu-sasaran": "Data Sasaran Posyandu",
+    "posyandu-sasaran": "Data Sasaran Posyandu", kehadiran: "Rekap Kehadiran",
     rujukan: "Rujukan ke Puskesmas Induk", "lab-bumil": "Lab Bumil (Tripel Eliminasi)", "laporan-internal": "Laporan Internal",
     "laporan-dinas": "Laporan ke Induk/Dinas", audit: "Audit / Keamanan"
   };
@@ -918,6 +954,14 @@ function gantiSubtabPT(tab) {
   if (tab === "posyandu-balita") { document.getElementById("pbTanggal").value = document.getElementById("pbTanggal").value || new Date().toISOString().split("T")[0]; muatPosyanduBalita(); }
   if (tab === "posyandu-lansia") { document.getElementById("plsTanggal").value = document.getElementById("plsTanggal").value || new Date().toISOString().split("T")[0]; muatPosyanduLansia(); }
   if (tab === "posyandu-sasaran") muatSasaranPosyandu();
+  if (tab === "kehadiran") {
+    if (!document.getElementById("khFilterTahun").value) {
+      const now = new Date();
+      document.getElementById("khFilterBulan").value = String(now.getMonth() + 1).padStart(2, "0");
+      document.getElementById("khFilterTahun").value = now.getFullYear();
+    }
+    muatRekapKehadiran();
+  }
   if (tab === "rujukan") muatRujukanPT();
   if (tab === "lab-bumil") { document.getElementById("lbTanggal").value = document.getElementById("lbTanggal").value || new Date().toISOString().split("T")[0]; muatDaftarLabBumil(); }
   if (tab === "laporan-internal") {
@@ -969,6 +1013,7 @@ async function muatDashboardPT() {
 
   muatJadwalDashboardPT();
   muatStokMenipisPT();
+  muatStatusSyncPT();
 
   if (!hariIni.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada kunjungan Pustu hari ini.</td></tr>`; return; }
 
@@ -1946,6 +1991,62 @@ async function hapusJadwalPosyandu(id) {
   await muatJadwalPosyandu();
 }
 
+// ---------- Rekap Kehadiran Kader & Sasaran ----------
+async function muatRekapKehadiran() {
+  const tbody = document.getElementById("tabelRekapKehadiran");
+  if (!pustuAktifId) { tbody.innerHTML = `<tr><td colspan="7">Belum ada Pustu aktif.</td></tr>`; return; }
+  tbody.innerHTML = `<tr><td colspan="7">Memuat...</td></tr>`;
+
+  const bulan = document.getElementById("khFilterBulan").value;
+  const tahun = document.getElementById("khFilterTahun").value;
+  if (!bulan || !tahun) return;
+  const awal = `${tahun}-${bulan}-01`;
+  const akhirDate = new Date(Number(tahun), Number(bulan), 0).getDate();
+  const akhir = `${tahun}-${bulan}-${String(akhirDate).padStart(2, "0")}`;
+
+  const { data: jadwal, error: errJadwal } = await supabaseClient.from("jadwal_posyandu")
+    .select("id, tanggal, nama_posyandu, kader_bertugas, status")
+    .eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir)
+    .neq("status", "batal").order("tanggal");
+
+  if (errJadwal) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${errJadwal.message}</td></tr>`; return; }
+  if (!jadwal.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada jadwal kegiatan bulan ini.</td></tr>`; return; }
+
+  // Cache sasaran terdaftar per nama_posyandu biar gak query berulang
+  const namaPosyanduUnik = [...new Set(jadwal.map(j => j.nama_posyandu))];
+  const { data: sasaranSemua } = await supabaseClient.from("posyandu_sasaran")
+    .select("nama_posyandu").eq("pustu_id", pustuAktifId).eq("aktif", true).in("nama_posyandu", namaPosyanduUnik);
+  const sasaranPerPosyandu = {};
+  (sasaranSemua || []).forEach(s => { sasaranPerPosyandu[s.nama_posyandu] = (sasaranPerPosyandu[s.nama_posyandu] || 0) + 1; });
+
+  const baris = await Promise.all(jadwal.map(async j => {
+    const [{ data: balita }, { data: lansia }] = await Promise.all([
+      supabaseClient.from("posyandu_balita").select("kader_pendamping")
+        .eq("pustu_id", pustuAktifId).eq("nama_posyandu", j.nama_posyandu).eq("tanggal", j.tanggal),
+      supabaseClient.from("posyandu_lansia").select("kader_pendamping")
+        .eq("pustu_id", pustuAktifId).eq("nama_posyandu", j.nama_posyandu).eq("tanggal", j.tanggal)
+    ]);
+    const semuaEntri = [...(balita || []), ...(lansia || [])];
+    const kaderHadir = [...new Set(semuaEntri.map(e => e.kader_pendamping).filter(Boolean))];
+    const sasaranHadir = semuaEntri.length;
+    const sasaranTerdaftar = sasaranPerPosyandu[j.nama_posyandu] || 0;
+    const persen = sasaranTerdaftar > 0 ? Math.round((sasaranHadir / sasaranTerdaftar) * 100) : null;
+    return { j, kaderHadir, sasaranHadir, sasaranTerdaftar, persen };
+  }));
+
+  tbody.innerHTML = baris.map(({ j, kaderHadir, sasaranHadir, sasaranTerdaftar, persen }) => `
+    <tr>
+      <td>${jamSingkatTanggalPT(j.tanggal)}</td>
+      <td>${j.nama_posyandu}</td>
+      <td>${j.kader_bertugas || "-"}</td>
+      <td>${kaderHadir.length ? kaderHadir.join(", ") : "-"}</td>
+      <td>${sasaranTerdaftar}</td>
+      <td>${sasaranHadir}</td>
+      <td>${persen === null ? "-" : `${persen}%`}</td>
+    </tr>
+  `).join("");
+}
+
 // ---------- Dashboard: Jadwal Posyandu Bulan Ini & Alert Stok Menipis ----------
 async function muatJadwalDashboardPT() {
   const tbody = document.getElementById("tabelJadwalDashboardPT");
@@ -1974,6 +2075,49 @@ async function muatJadwalDashboardPT() {
       <td><span class="badge ${BADGE_STATUS_JADWAL[j.status]}">${LABEL_STATUS_JADWAL[j.status]}</span></td>
     </tr>
   `).join("");
+}
+
+async function muatStatusSyncPT() {
+  const tbody = document.getElementById("tabelStatusSync");
+  const tag = document.getElementById("tagStatusSync");
+  if (!pustuAktifId) { tbody.innerHTML = `<tr><td colspan="3">Belum ada Pustu aktif.</td></tr>`; return; }
+
+  // Cek koneksi DB — query ringan ke tabel pustu itu sendiri
+  const cekKoneksi = await supabaseClient.from("pustu").select("id", { count: "exact", head: true }).eq("id", pustuAktifId);
+  const dbOnline = !cekKoneksi.error;
+
+  const [{ data: labTerbaru }, { count: labMenunggu }, { count: rujukMenunggu }] = await Promise.all([
+    supabaseClient.from("lab_bumil_pustu").select("tanggal_hasil")
+      .eq("pustu_id", pustuAktifId).eq("status", "hasil_selesai").order("tanggal_hasil", { ascending: false }).limit(1),
+    supabaseClient.from("lab_bumil_pustu").select("id", { count: "exact", head: true })
+      .eq("pustu_id", pustuAktifId).eq("status", "dikirim_ke_induk"),
+    supabaseClient.from("rujukan").select("id", { count: "exact", head: true })
+      .eq("pustu_asal_id", pustuAktifId).eq("status", "diajukan")
+  ]);
+
+  tag.textContent = dbOnline ? "Live" : "Offline";
+  tag.style.background = dbOnline ? "#eafaee" : "#fde7e9";
+  tag.style.color = dbOnline ? "#2f9e5c" : "#c62836";
+
+  const labTanggal = labTerbaru && labTerbaru[0] ? jamSingkatTanggalPT(labTerbaru[0].tanggal_hasil) : "Belum ada";
+
+  tbody.innerHTML = `
+    <tr>
+      <td>Koneksi ke Database Induk</td>
+      <td><span class="badge ${dbOnline ? "badge-selesai" : "badge-batal"}">${dbOnline ? "Online" : "Offline"}</span></td>
+      <td>${dbOnline ? "Semua data Pustu tersambung real-time ke sistem Induk (satu database)." : cekKoneksi.error?.message || "Gagal konek"}</td>
+    </tr>
+    <tr>
+      <td>Sinkronisasi Lab Bumil (Tripel Eliminasi)</td>
+      <td><span class="badge ${(labMenunggu || 0) > 0 ? "badge-menunggu" : "badge-selesai"}">${(labMenunggu || 0) > 0 ? "Ada yang menunggu" : "Sinkron"}</span></td>
+      <td>Hasil terakhir masuk dari Lab Induk: ${labTanggal}. ${labMenunggu || 0} sampel masih menunggu hasil.</td>
+    </tr>
+    <tr>
+      <td>Rujukan ke Puskesmas Induk</td>
+      <td><span class="badge ${(rujukMenunggu || 0) > 0 ? "badge-menunggu" : "badge-selesai"}">${(rujukMenunggu || 0) > 0 ? "Ada yang menunggu" : "Sinkron"}</span></td>
+      <td>${rujukMenunggu || 0} rujukan masih menunggu direspon/diterima Puskesmas Induk.</td>
+    </tr>
+  `;
 }
 
 async function muatStokMenipisPT() {
