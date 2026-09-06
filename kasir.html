@@ -97,21 +97,28 @@
         <tbody id="tabelTagihanPasien"><tr><td colspan="9">Belum ada pencarian.</td></tr></tbody>
       </table>
 
-      <div style="display:flex; justify-content:flex-end; align-items:center; gap:16px; margin-top:14px; padding-top:14px; border-top:1px solid #e5e7eb;">
-        <div style="font-size:15px; font-weight:700; color:var(--navy, #173b5e);">Total Dipilih: Rp <span id="kasirTotalDipilih">0</span></div>
-      </div>
-      <div class="grid-2" style="margin-top:10px;">
-        <div><label>Metode Bayar</label>
-          <select id="kasirMetodeBayar">
+      <div id="ringkasanTotalTagihan" style="margin-top:14px; padding-top:14px; border-top:1px solid #e5e7eb;"></div>
+
+      <div id="formBayarUmum" class="grid-2" style="margin-top:10px; display:none;">
+        <div><label>Metode Bayar (untuk item Umum)</label>
+          <select id="kasirMetodeBayar" onchange="hitungKembalianKasir()">
             <option value="Tunai">Tunai</option>
             <option value="QRIS">QRIS</option>
             <option value="Debit/Kredit">Debit/Kredit</option>
             <option value="Transfer">Transfer</option>
           </select>
         </div>
-        <div style="display:flex; align-items:flex-end;">
-          <button type="button" class="btn-primary" onclick="prosesPembayaran()" style="margin-bottom:12px;">Proses Pembayaran</button>
+        <div id="wrapUangDiterima">
+          <label>Uang Diterima (Rp)</label>
+          <input type="text" id="kasirUangDiterima" placeholder="0" oninput="hitungKembalianKasir()">
         </div>
+      </div>
+      <div id="wrapKembalian" style="margin-top:10px; display:none; text-align:right; font-size:14px; font-weight:700; color:var(--navy, #173b5e);">
+        Kembalian: Rp <span id="kasirKembalian">0</span>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+        <button type="button" class="btn-primary" onclick="prosesPembayaran()">Proses Pembayaran</button>
       </div>
     </div>
   </div>
@@ -511,8 +518,48 @@ function toggleSemuaTagihan(master) {
 
 function hitungTotalDipilih() {
   const idTerpilih = Array.from(document.querySelectorAll(".chkTagihanItem:checked")).map(cb => cb.value);
-  const total = tagihanCachePasien.filter(t => idTerpilih.includes(t.id)).reduce((s, t) => s + Number(t.subtotal), 0);
-  document.getElementById("kasirTotalDipilih").textContent = formatRupiahKasir(total);
+  const dipilih = tagihanCachePasien.filter(t => idTerpilih.includes(t.id));
+  const totalBpjs = dipilih.filter(t => t.jenis_bayar === "BPJS").reduce((s, t) => s + Number(t.subtotal), 0);
+  const totalUmum = dipilih.filter(t => t.jenis_bayar !== "BPJS").reduce((s, t) => s + Number(t.subtotal), 0);
+
+  const ring = document.getElementById("ringkasanTotalTagihan");
+  if (!dipilih.length) {
+    ring.innerHTML = "";
+    document.getElementById("formBayarUmum").style.display = "none";
+    document.getElementById("wrapKembalian").style.display = "none";
+    return;
+  }
+
+  let baris = "";
+  if (totalBpjs > 0) baris += `<div style="display:flex; justify-content:flex-end; gap:16px; font-size:13.5px; color:var(--muted);">Ditanggung BPJS (otomatis selesai): Rp ${formatRupiahKasir(totalBpjs)}</div>`;
+  if (totalUmum > 0) baris += `<div style="display:flex; justify-content:flex-end; gap:16px; font-size:15px; font-weight:700; color:var(--navy, #173b5e);">Total Perlu Dibayar (Umum): Rp ${formatRupiahKasir(totalUmum)}</div>`;
+  ring.innerHTML = baris;
+
+  document.getElementById("formBayarUmum").style.display = totalUmum > 0 ? "grid" : "none";
+  hitungKembalianKasir();
+}
+
+function hitungKembalianKasir() {
+  const idTerpilih = Array.from(document.querySelectorAll(".chkTagihanItem:checked")).map(cb => cb.value);
+  const dipilih = tagihanCachePasien.filter(t => idTerpilih.includes(t.id));
+  const totalUmum = dipilih.filter(t => t.jenis_bayar !== "BPJS").reduce((s, t) => s + Number(t.subtotal), 0);
+
+  const metode = document.getElementById("kasirMetodeBayar")?.value;
+  const wrapUang = document.getElementById("wrapUangDiterima");
+  const wrapKembalian = document.getElementById("wrapKembalian");
+
+  if (totalUmum <= 0 || metode !== "Tunai") {
+    if (wrapUang) wrapUang.style.display = "none";
+    wrapKembalian.style.display = "none";
+    return;
+  }
+
+  wrapUang.style.display = "block";
+  const raw = document.getElementById("kasirUangDiterima").value.replace(/\D/g, "");
+  const diterima = raw ? Number(raw) : 0;
+  const kembalian = Math.max(0, diterima - totalUmum);
+  document.getElementById("kasirKembalian").textContent = formatRupiahKasir(kembalian);
+  wrapKembalian.style.display = "block";
 }
 
 async function prosesPembayaran() {
@@ -522,39 +569,70 @@ async function prosesPembayaran() {
   const idTerpilih = Array.from(document.querySelectorAll(".chkTagihanItem:checked")).map(cb => cb.value);
   if (!idTerpilih.length) { msgBox.innerHTML = `<div class="msg msg-error">Centang minimal 1 tagihan dulu.</div>`; return; }
 
+  const semuaDipilih = tagihanCachePasien.filter(t => idTerpilih.includes(t.id));
+  const itemBpjs = semuaDipilih.filter(t => t.jenis_bayar === "BPJS");
+  const itemUmum = semuaDipilih.filter(t => t.jenis_bayar !== "BPJS");
+  const totalBpjs = itemBpjs.reduce((s, t) => s + Number(t.subtotal), 0);
+  const totalUmum = itemUmum.reduce((s, t) => s + Number(t.subtotal), 0);
+
   const metode = document.getElementById("kasirMetodeBayar").value;
-  const itemDibayar = tagihanCachePasien.filter(t => idTerpilih.includes(t.id));
-  const total = itemDibayar.reduce((s, t) => s + Number(t.subtotal), 0);
+  let uangDiterima = 0, kembalian = 0;
 
-  const { error } = await supabaseClient
-    .from("tagihan_kunjungan")
-    .update({
-      status: "lunas",
-      metode_bayar: metode,
-      dibayar_oleh: profilSaya.id,
-      dibayar_at: new Date().toISOString(),
-      shift_id: shiftAktif.id
-    })
-    .in("id", idTerpilih);
+  if (totalUmum > 0 && metode === "Tunai") {
+    const raw = document.getElementById("kasirUangDiterima").value.replace(/\D/g, "");
+    uangDiterima = raw ? Number(raw) : 0;
+    if (uangDiterima < totalUmum) { msgBox.innerHTML = `<div class="msg msg-error">Uang diterima kurang dari total yang harus dibayar (Rp ${formatRupiahKasir(totalUmum)}).</div>`; return; }
+    kembalian = uangDiterima - totalUmum;
+  }
 
-  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal proses pembayaran: ${error.message}</div>`; return; }
+  const waktuBayar = new Date().toISOString();
 
-  cetakStruk(itemDibayar, total, metode);
-  msgBox.innerHTML = `<div class="msg msg-success">Pembayaran Rp ${formatRupiahKasir(total)} berhasil diproses.</div>
+  if (itemBpjs.length) {
+    const { error: errBpjs } = await supabaseClient
+      .from("tagihan_kunjungan")
+      .update({ status: "lunas", metode_bayar: null, dibayar_oleh: profilSaya.id, dibayar_at: waktuBayar, shift_id: shiftAktif.id })
+      .in("id", itemBpjs.map(t => t.id));
+    if (errBpjs) { msgBox.innerHTML = `<div class="msg msg-error">Gagal selesaikan tagihan BPJS: ${errBpjs.message}</div>`; return; }
+  }
+
+  if (itemUmum.length) {
+    const { error: errUmum } = await supabaseClient
+      .from("tagihan_kunjungan")
+      .update({ status: "lunas", metode_bayar: metode, dibayar_oleh: profilSaya.id, dibayar_at: waktuBayar, shift_id: shiftAktif.id })
+      .in("id", itemUmum.map(t => t.id));
+    if (errUmum) { msgBox.innerHTML = `<div class="msg msg-error">Gagal proses pembayaran Umum: ${errUmum.message}</div>`; return; }
+  }
+
+  cetakStruk(semuaDipilih, totalBpjs, totalUmum, metode, uangDiterima, kembalian);
+  msgBox.innerHTML = `<div class="msg msg-success">
+      ${totalBpjs > 0 ? `Rp ${formatRupiahKasir(totalBpjs)} ditanggung BPJS (selesai). ` : ""}
+      ${totalUmum > 0 ? `Rp ${formatRupiahKasir(totalUmum)} dibayar tunai/non-tunai (${metode}).` : ""}
+    </div>
     <button class="btn-secondary" onclick="window.print()">Cetak Ulang Struk</button>`;
   await muatTagihanPasien();
 }
 
-function cetakStruk(items, total, metode) {
+function cetakStruk(items, totalBpjs, totalUmum, metode, uangDiterima, kembalian) {
   document.getElementById("strukTanggal").textContent = new Date().toLocaleString("id-ID");
   document.getElementById("strukNama").textContent = pasienTerpilihKasir.nama;
   document.getElementById("strukNoRm").textContent = pasienTerpilihKasir.no_rm || "-";
   document.getElementById("strukKasir").textContent = profilSaya.nama;
   document.getElementById("strukItemList").innerHTML = items.map(t => `
-    <div class="baris"><span>${t.nama_layanan} x${t.jumlah}</span><span>Rp ${formatRupiahKasir(t.subtotal)}</span></div>
+    <div class="baris"><span>${t.nama_layanan} x${t.jumlah} ${t.jenis_bayar === "BPJS" ? "(BPJS)" : ""}</span><span>Rp ${formatRupiahKasir(t.subtotal)}</span></div>
   `).join("");
-  document.getElementById("strukTotal").textContent = `Rp ${formatRupiahKasir(total)}`;
-  document.getElementById("strukMetode").textContent = metode;
+
+  const totalKeseluruhan = totalBpjs + totalUmum;
+  document.getElementById("strukTotal").textContent = `Rp ${formatRupiahKasir(totalKeseluruhan)}`;
+
+  let metodeText = "";
+  if (totalBpjs > 0) metodeText += `Ditanggung BPJS: Rp ${formatRupiahKasir(totalBpjs)}\n`;
+  if (totalUmum > 0) {
+    metodeText += `${metode}: Rp ${formatRupiahKasir(totalUmum)}`;
+    if (metode === "Tunai") {
+      metodeText += `\nUang Diterima: Rp ${formatRupiahKasir(uangDiterima)}\nKembalian: Rp ${formatRupiahKasir(kembalian)}`;
+    }
+  }
+  document.getElementById("strukMetode").innerHTML = metodeText.split("\n").join("<br>");
 
   document.getElementById("areaCetakStruk").classList.add("aktif-cetak");
   window.print();
