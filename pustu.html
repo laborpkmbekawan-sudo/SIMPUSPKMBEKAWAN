@@ -338,8 +338,8 @@
           <button class="btn-primary" onclick="simpanPermintaanPustu()">Ajukan Permintaan</button>
 
           <table style="margin-top:16px;">
-            <thead><tr><th>Tanggal</th><th>Jml Item</th><th>Catatan Pustu</th><th>Status</th><th>Catatan Farmasi</th></tr></thead>
-            <tbody id="tabelPermintaanPustu"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            <thead><tr><th>Tanggal</th><th>Jml Item</th><th>Catatan Pustu</th><th>Status</th><th>Catatan Farmasi</th><th>Aksi</th></tr></thead>
+            <tbody id="tabelPermintaanPustu"><tr><td colspan="6">Memuat...</td></tr></tbody>
           </table>
         </div>
 
@@ -396,6 +396,7 @@
             <thead><tr><th>Tanggal</th><th>Posyandu</th><th>Kader Bertugas</th><th>Lokasi</th><th>Status</th><th>Aksi</th></tr></thead>
             <tbody id="tabelJadwalPosyandu"><tr><td colspan="6">Memuat...</td></tr></tbody>
           </table>
+          <button class="btn-secondary" onclick="exportJadwalPosyanduCsv()" style="margin-top:10px;">⬇ Export CSV</button>
         </div>
 
       </div>
@@ -604,6 +605,7 @@
             <thead><tr><th>Tanggal</th><th>Posyandu</th><th>Kader Dijadwalkan</th><th>Kader Hadir</th><th>Sasaran Terdaftar</th><th>Sasaran Hadir</th><th>% Kehadiran</th></tr></thead>
             <tbody id="tabelRekapKehadiran"><tr><td colspan="7">Memuat...</td></tr></tbody>
           </table>
+          <button class="btn-secondary" onclick="exportRekapKehadiranCsv()" style="margin-top:10px;">⬇ Export CSV</button>
         </div>
 
       </div>
@@ -838,10 +840,19 @@
 
         <div class="card" style="--accent:#173b5e;">
           <h2><span class="card-num" style="background:#173b5e;">🔐</span> Log Login / Sesi</h2>
-          <p style="font-size:11.5px; color:var(--muted); margin:-6px 0 12px;">Nyatet sesi login yang berhasil untuk staf Pustu ini. Percobaan login gagal belum tercatat otomatis di sistem ini.</p>
+          <p style="font-size:11.5px; color:var(--muted); margin:-6px 0 12px;">Nyatet sesi login yang berhasil untuk staf Pustu ini.</p>
           <table>
             <thead><tr><th>Waktu Login</th><th>Nama Staf</th><th>Perangkat</th><th>Status Sesi</th><th>Terakhir Aktif</th></tr></thead>
             <tbody id="tabelAuditLogin"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#b23b3b;">
+          <h2><span class="card-num" style="background:#b23b3b;">⚠</span> Log Percobaan Login Gagal <span class="tag-sync">Se-Puskesmas</span></h2>
+          <p style="font-size:11.5px; color:var(--muted); margin:-6px 0 12px;">Semua percobaan login gagal (email/password salah) tercatat otomatis dari halaman login. Ditampilkan se-Puskesmas — belum bisa difilter per Pustu karena email percobaan gak selalu cocok akun pegawai manapun.</p>
+          <table>
+            <thead><tr><th>Waktu</th><th>Email Dicoba</th><th>Alasan</th><th>Perangkat</th></tr></thead>
+            <tbody id="tabelAuditLoginGagal"><tr><td colspan="4">Memuat...</td></tr></tbody>
           </table>
         </div>
 
@@ -1488,12 +1499,13 @@ async function muatPermintaanPustu() {
 
   tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
   const { data, error } = await supabaseClient.from("permintaan_obat_pustu")
-    .select("id, tanggal, status, catatan_pustu, catatan_farmasi, permintaan_obat_pustu_item(id)")
+    .select("id, tanggal, status, catatan_pustu, catatan_farmasi, mutasi_id, tanggal_kirim, permintaan_obat_pustu_item(id)")
     .eq("pustu_id", pustuAktifId).order("created_at", { ascending: false }).limit(30);
 
-  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
-  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum pernah mengajukan permintaan.</td></tr>`; return; }
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum pernah mengajukan permintaan.</td></tr>`; return; }
 
+  permintaanPustuListCache = data;
   const badgeStatusPm = { diajukan: "badge-menunggu", disetujui: "badge-selesai", ditolak: "badge-batal", selesai: "badge-selesai" };
   const labelStatusPm = { diajukan: "Menunggu Approval", disetujui: "Disetujui", ditolak: "Ditolak", selesai: "Selesai" };
   tbody.innerHTML = data.map(p => `
@@ -1503,8 +1515,81 @@ async function muatPermintaanPustu() {
       <td>${p.catatan_pustu || "-"}</td>
       <td><span class="badge ${badgeStatusPm[p.status]}">${labelStatusPm[p.status]}</span></td>
       <td>${p.catatan_farmasi || "-"}</td>
+      <td>${p.status === "selesai" && p.mutasi_id
+          ? `<button type="button" onclick="cetakBuktiTerimaPermintaan('${p.id}')">🖨 Cetak Bukti</button>`
+          : "-"}</td>
     </tr>
   `).join("");
+}
+
+// ---------- Cetak Bukti Serah Terima (pegangan resmi Pustu) ----------
+// Muncul begitu Farmasi Induk ngirim barang lewat Mutasi Keluar yang
+// di-link ke permintaan ini (lihat apotek.html > Mutasi Keluar > Asal Permintaan).
+let permintaanPustuListCache = [];
+
+async function cetakBuktiTerimaPermintaan(permintaanId) {
+  const p = permintaanPustuListCache.find(x => x.id === permintaanId);
+  if (!p) return;
+
+  const { data: items, error: errItems } = await supabaseClient.from("permintaan_obat_pustu_item")
+    .select("jumlah_diminta, jumlah_disetujui, obat:obat_id(nama_obat, dosis, satuan)")
+    .eq("permintaan_id", permintaanId);
+  if (errItems) { alert("Gagal ambil item: " + errItems.message); return; }
+
+  const { data: mutasi } = await supabaseClient.from("mutasi_keluar")
+    .select("id, penerima_nama, penerima_jabatan, catatan")
+    .eq("id", p.mutasi_id).maybeSingle();
+
+  const noBukti = "BST-" + p.id.slice(0, 8).toUpperCase();
+  const tglAjuan = new Date(p.tanggal).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
+  const tglKirim = p.tanggal_kirim ? new Date(p.tanggal_kirim).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }) : "-";
+
+  const baris = (items || []).map((it, i) => `
+    <tr>
+      <td style="text-align:center;">${i + 1}</td>
+      <td>${it.obat ? it.obat.nama_obat : "-"}${it.obat && it.obat.dosis ? " " + it.obat.dosis : ""}</td>
+      <td style="text-align:center;">${it.jumlah_diminta}</td>
+      <td style="text-align:center;">${it.jumlah_disetujui ?? it.jumlah_diminta}</td>
+      <td style="text-align:center;">${it.obat ? it.obat.satuan : "-"}</td>
+    </tr>
+  `).join("");
+
+  const html = `
+    <html><head><title>Bukti Serah Terima ${noBukti}</title>
+    <style>
+      @page { size: A5; margin: 14mm; }
+      body { font-family: Arial, sans-serif; font-size: 12px; color:#111; }
+      h2 { text-align:center; margin:0 0 2px; font-size:15px; }
+      .sub { text-align:center; margin:0 0 14px; font-size:11px; color:#555; }
+      table { width:100%; border-collapse: collapse; margin:10px 0; }
+      th, td { border:1px solid #999; padding:5px 6px; font-size:11px; }
+      th { background:#f0f0f0; }
+      .info-row { display:flex; justify-content:space-between; margin-bottom:3px; }
+      .ttd-wrap { display:flex; justify-content:space-between; margin-top:40px; }
+      .ttd-box { text-align:center; width:45%; }
+      .ttd-line { margin-top:50px; border-top:1px solid #333; padding-top:4px; }
+    </style></head>
+    <body onload="window.print(); setTimeout(()=>window.close(), 300)">
+      <h2>UPTD PUSKESMAS BEKAWAN</h2>
+      <p class="sub">BUKTI SERAH TERIMA OBAT / BMHP — PUSTU<br>No. ${noBukti}</p>
+      <div class="info-row"><span>Tujuan Pustu</span><strong>${pustuAktifNama || "-"}</strong></div>
+      <div class="info-row"><span>Tanggal Pengajuan</span><span>${tglAjuan}</span></div>
+      <div class="info-row"><span>Tanggal Kirim</span><span>${tglKirim}</span></div>
+      ${p.catatan_pustu ? `<div class="info-row"><span>Catatan Pustu</span><span>${p.catatan_pustu}</span></div>` : ""}
+      ${p.catatan_farmasi ? `<div class="info-row"><span>Catatan Farmasi</span><span>${p.catatan_farmasi}</span></div>` : ""}
+      <table>
+        <thead><tr><th>No</th><th>Nama Obat/BMHP</th><th>Diminta</th><th>Dikirim</th><th>Satuan</th></tr></thead>
+        <tbody>${baris || `<tr><td colspan="5">Tidak ada item.</td></tr>`}</tbody>
+      </table>
+      <div class="ttd-wrap">
+        <div class="ttd-box">Yang Menyerahkan (Farmasi Induk)<div class="ttd-line">&nbsp;</div></div>
+        <div class="ttd-box">Yang Menerima (Pustu)<div class="ttd-line">${mutasi?.penerima_nama ? mutasi.penerima_nama + (mutasi.penerima_jabatan ? " (" + mutasi.penerima_jabatan + ")" : "") : "&nbsp;"}</div></div>
+      </div>
+    </body></html>`;
+
+  const win = window.open("", "_blank", "width=650,height=750");
+  win.document.write(html);
+  win.document.close();
 }
 
 // ============================================================
@@ -2126,6 +2211,7 @@ async function muatJadwalPosyandu() {
     .select("*").eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir).order("tanggal");
 
   if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  jadwalPosyanduListCache = data || [];
   if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada jadwal bulan ini.</td></tr>`; return; }
 
   tbody.innerHTML = data.map(j => `
@@ -2140,6 +2226,7 @@ async function muatJadwalPosyandu() {
           <button class="btn-secondary" onclick="ubahStatusJadwalPosyandu('${j.id}','selesai')">Tandai Selesai</button>
           <button class="btn-secondary" onclick="ubahStatusJadwalPosyandu('${j.id}','batal')">Batalkan</button>
         ` : `<button class="btn-secondary" onclick="hapusJadwalPosyandu('${j.id}')">Hapus</button>`}
+        <button class="btn-secondary" onclick="cetakSuratTugasJadwal('${j.id}')">🖨 Surat Tugas</button>
       </td>
     </tr>
   `).join("");
@@ -2164,7 +2251,107 @@ async function hapusJadwalPosyandu(id) {
   await muatJadwalPosyandu();
 }
 
+// ---------- Export CSV: Jadwal Posyandu ----------
+let jadwalPosyanduListCache = [];
+
+function csvEscape(v) {
+  return `"${String(v ?? "-").replace(/"/g, '""')}"`;
+}
+
+function unduhCsv(namaFile, header, rows) {
+  const csv = [header, ...rows].map(row => row.map(csvEscape).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = namaFile;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportJadwalPosyanduCsv() {
+  if (!jadwalPosyanduListCache.length) { alert("Belum ada data jadwal buat diexport. Pilih bulan/tahun dulu."); return; }
+  const bulan = document.getElementById("jpFilterBulan").value;
+  const tahun = document.getElementById("jpFilterTahun").value;
+  const header = ["Tanggal", "Nama Posyandu", "Kader Bertugas", "Lokasi", "Status", "Keterangan"];
+  const rows = jadwalPosyanduListCache.map(j => [
+    new Date(j.tanggal).toLocaleDateString("id-ID"), j.nama_posyandu, j.kader_bertugas || "-",
+    j.lokasi || "-", LABEL_STATUS_JADWAL[j.status] || j.status, j.keterangan || "-"
+  ]);
+  unduhCsv(`jadwal_posyandu_${pustuAktifNama || "pustu"}_${tahun}-${bulan}.csv`, header, rows);
+}
+
+// ---------- Cetak Surat Tugas Kegiatan Posyandu (pegangan resmi kader) ----------
+function cetakSuratTugasJadwal(jadwalId) {
+  const j = jadwalPosyanduListCache.find(x => x.id === jadwalId);
+  if (!j) { alert("Data jadwal gak ketemu, coba muat ulang daftarnya."); return; }
+
+  const noSurat = "ST-" + j.id.slice(0, 8).toUpperCase();
+  const tglKegiatan = new Date(j.tanggal).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
+  const tglTerbit = new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
+  const daftarKader = (j.kader_bertugas || "").split(",").map(k => k.trim()).filter(Boolean);
+
+  const barisKader = daftarKader.length
+    ? daftarKader.map((k, i) => `
+        <tr>
+          <td style="text-align:center;">${i + 1}</td>
+          <td>${k}</td>
+          <td style="height:36px;"></td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="3">Belum ada nama kader dicatat di jadwal ini.</td></tr>`;
+
+  const html = `
+    <html><head><title>Surat Tugas ${noSurat}</title>
+    <style>
+      @page { size: A5; margin: 14mm; }
+      body { font-family: Arial, sans-serif; font-size: 12px; color:#111; }
+      h2 { text-align:center; margin:0 0 2px; font-size:15px; }
+      .sub { text-align:center; margin:0 0 16px; font-size:11px; color:#555; }
+      table { width:100%; border-collapse: collapse; margin:10px 0; }
+      th, td { border:1px solid #999; padding:5px 6px; font-size:11px; }
+      th { background:#f0f0f0; }
+      .info-row { display:flex; justify-content:space-between; margin-bottom:4px; }
+      .isi { margin:16px 0; line-height:1.7; text-align:justify; }
+      .ttd-wrap { display:flex; justify-content:flex-end; margin-top:36px; }
+      .ttd-box { text-align:center; width:55%; }
+      .ttd-line { margin-top:56px; border-top:1px solid #333; padding-top:4px; }
+    </style></head>
+    <body onload="window.print(); setTimeout(()=>window.close(), 300)">
+      <h2>UPTD PUSKESMAS BEKAWAN</h2>
+      <p class="sub">SURAT TUGAS KEGIATAN POSYANDU<br>No. ${noSurat}</p>
+
+      <div class="isi">
+        Dengan ini menugaskan kader yang tercantum di bawah untuk melaksanakan kegiatan
+        Posyandu <b>${j.nama_posyandu}</b> pada:
+      </div>
+      <div class="info-row"><span>Tanggal Kegiatan</span><strong>${tglKegiatan}</strong></div>
+      <div class="info-row"><span>Lokasi</span><span>${j.lokasi || "-"}</span></div>
+      ${j.keterangan ? `<div class="info-row"><span>Keterangan</span><span>${j.keterangan}</span></div>` : ""}
+
+      <table>
+        <thead><tr><th>No</th><th>Nama Kader Bertugas</th><th>Tanda Tangan</th></tr></thead>
+        <tbody>${barisKader}</tbody>
+      </table>
+
+      <div class="isi">Demikian surat tugas ini dibuat untuk dilaksanakan dengan penuh tanggung jawab.</div>
+
+      <div class="ttd-wrap">
+        <div class="ttd-box">
+          ${pustuAktifNama || "Pustu"}, ${tglTerbit}<br>Penanggung Jawab Pustu
+          <div class="ttd-line">&nbsp;</div>
+        </div>
+      </div>
+    </body></html>`;
+
+  const win = window.open("", "_blank", "width=650,height=750");
+  win.document.write(html);
+  win.document.close();
+}
+
 // ---------- Rekap Kehadiran Kader & Sasaran ----------
+let rekapKehadiranListCache = [];
+
 async function muatRekapKehadiran() {
   const tbody = document.getElementById("tabelRekapKehadiran");
   if (!pustuAktifId) { tbody.innerHTML = `<tr><td colspan="7">Belum ada Pustu aktif.</td></tr>`; return; }
@@ -2183,7 +2370,7 @@ async function muatRekapKehadiran() {
     .neq("status", "batal").order("tanggal");
 
   if (errJadwal) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${errJadwal.message}</td></tr>`; return; }
-  if (!jadwal.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada jadwal kegiatan bulan ini.</td></tr>`; return; }
+  if (!jadwal.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada jadwal kegiatan bulan ini.</td></tr>`; rekapKehadiranListCache = []; return; }
 
   // Cache sasaran terdaftar per nama_posyandu biar gak query berulang
   const namaPosyanduUnik = [...new Set(jadwal.map(j => j.nama_posyandu))];
@@ -2218,6 +2405,19 @@ async function muatRekapKehadiran() {
       <td>${persen === null ? "-" : `${persen}%`}</td>
     </tr>
   `).join("");
+  rekapKehadiranListCache = baris;
+}
+
+function exportRekapKehadiranCsv() {
+  if (!rekapKehadiranListCache.length) { alert("Belum ada data rekap buat diexport. Pilih bulan/tahun dulu."); return; }
+  const bulan = document.getElementById("khFilterBulan").value;
+  const tahun = document.getElementById("khFilterTahun").value;
+  const header = ["Tanggal", "Posyandu", "Kader Dijadwalkan", "Kader Hadir", "Sasaran Terdaftar", "Sasaran Hadir", "% Kehadiran"];
+  const rows = rekapKehadiranListCache.map(({ j, kaderHadir, sasaranHadir, sasaranTerdaftar, persen }) => [
+    new Date(j.tanggal).toLocaleDateString("id-ID"), j.nama_posyandu, j.kader_bertugas || "-",
+    kaderHadir.length ? kaderHadir.join("; ") : "-", sasaranTerdaftar, sasaranHadir, persen === null ? "-" : `${persen}%`
+  ]);
+  unduhCsv(`rekap_kehadiran_${pustuAktifNama || "pustu"}_${tahun}-${bulan}.csv`, header, rows);
 }
 
 // ---------- Dashboard: Jadwal Posyandu Bulan Ini & Alert Stok Menipis ----------
@@ -2378,6 +2578,28 @@ async function muatAuditPT() {
           </tr>
         `).join("")
       : `<tr><td colspan="5">Belum ada data sesi login staf Pustu ini.</td></tr>`;
+  }
+
+  // ---- Log Percobaan Login Gagal (se-Puskesmas, lihat catatan di card) ----
+  const tbodyLoginGagal = document.getElementById("tabelAuditLoginGagal");
+  const { data: gagal, error: errGagal } = await supabaseClient
+    .from("percobaan_login_gagal")
+    .select("waktu, email_dicoba, alasan, perangkat")
+    .order("waktu", { ascending: false })
+    .limit(30);
+  if (errGagal) {
+    tbodyLoginGagal.innerHTML = `<tr><td colspan="4">Gagal muat: ${errGagal.message}</td></tr>`;
+  } else {
+    tbodyLoginGagal.innerHTML = (gagal || []).length
+      ? gagal.map(g => `
+          <tr>
+            <td>${new Date(g.waktu).toLocaleString("id-ID")}</td>
+            <td>${g.email_dicoba || "-"}</td>
+            <td>${g.alasan || "-"}</td>
+            <td style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(g.perangkat || "").replace(/"/g, "&quot;")}">${g.perangkat || "-"}</td>
+          </tr>
+        `).join("")
+      : `<tr><td colspan="4">Belum ada percobaan login gagal tercatat.</td></tr>`;
   }
 
   // ---- Log Input Data per Posyandu (dari audit_log, tabel posyandu_balita & posyandu_lansia) ----

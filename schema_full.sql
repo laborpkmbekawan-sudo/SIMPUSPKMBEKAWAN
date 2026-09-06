@@ -4370,3 +4370,53 @@ create trigger trg_audit_permintaan_obat_pustu_item after insert or update or de
 -- ============================================================
 -- SELESAI section 98. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 99. PUSTU — Link balik Permintaan Obat -> Mutasi Keluar
+--     Waktu Farmasi Induk proses pengiriman fisik lewat Mutasi
+--     Keluar (yang sudah ada) ke Pustu, dia bisa pilih "asal
+--     permintaan" yang statusnya sudah disetujui. Begitu mutasi
+--     tersimpan, permintaan_obat_pustu terkait otomatis ditandai
+--     'selesai' + dicatat mutasi_id & tanggal_kirim -- ini jadi
+--     dasar Pustu nampilin/cetak Bukti Serah Terima sbg pegangan
+--     resmi. Gak nambah tabel baru, cuma 2 kolom tambahan.
+-- ============================================================
+alter table permintaan_obat_pustu add column if not exists mutasi_id uuid references mutasi_keluar(id);
+alter table permintaan_obat_pustu add column if not exists tanggal_kirim date;
+create index if not exists idx_permintaan_obat_pustu_mutasi on permintaan_obat_pustu(mutasi_id);
+
+-- ============================================================
+-- SELESAI section 99. Idempotent, aman diulang.
+-- ============================================================
+
+-- ============================================================
+-- 100. Log Percobaan Login Gagal (Audit/Keamanan)
+--      Dicatat dari login.html tiap kali signInWithPassword gagal.
+--      Insert dilakukan SEBELUM user authenticated (masih anon),
+--      jadi butuh policy insert khusus utk role anon -- append-only,
+--      gak ada policy update/delete sama sekali (anti-tampering).
+--      Baca cuma boleh staf yang udah login (authenticated).
+--      Ditampilkan di panel Audit/Keamanan Pustu (se-Puskesmas,
+--      belum bisa difilter per Pustu krn email gak disimpan di
+--      profil_pegawai -- hanya di auth.users).
+-- ============================================================
+create table if not exists percobaan_login_gagal (
+  id uuid primary key default gen_random_uuid(),
+  email_dicoba text,
+  alasan text,
+  perangkat text,
+  waktu timestamptz not null default now()
+);
+create index if not exists idx_percobaan_login_gagal_waktu on percobaan_login_gagal(waktu desc);
+
+alter table percobaan_login_gagal enable row level security;
+drop policy if exists "anon_insert_percobaan_login_gagal" on percobaan_login_gagal;
+create policy "anon_insert_percobaan_login_gagal" on percobaan_login_gagal for insert to anon with check (true);
+drop policy if exists "authenticated_insert_percobaan_login_gagal" on percobaan_login_gagal;
+create policy "authenticated_insert_percobaan_login_gagal" on percobaan_login_gagal for insert to authenticated with check (true);
+drop policy if exists "authenticated_select_percobaan_login_gagal" on percobaan_login_gagal;
+create policy "authenticated_select_percobaan_login_gagal" on percobaan_login_gagal for select to authenticated using (true);
+
+-- ============================================================
+-- SELESAI section 100. Idempotent, aman diulang.
+-- ============================================================

@@ -929,11 +929,21 @@
         </div>
         <div id="mkWrapPustu" style="display:none;">
           <label>Pilih Pustu *</label>
-          <select id="mkPustu"><option value="">Memuat...</option></select>
+          <select id="mkPustu" onchange="muatPermintaanAsalMutasi()"><option value="">Memuat...</option></select>
         </div>
         <div>
           <label>Tanggal Mutasi *</label>
           <input type="date" id="mkTanggal">
+        </div>
+      </div>
+      <div id="mkWrapPermintaanAsal" class="grid-3" style="display:none; margin-bottom:14px; align-items:end;">
+        <div style="grid-column: span 2;">
+          <label>Asal Permintaan Pustu (opsional)</label>
+          <select id="mkPermintaanAsal"><option value="">-- Bukan dari permintaan (kirim manual) --</option></select>
+          <p style="font-size:11px; color:var(--muted); margin:4px 0 0;">Pilih kalau mutasi ini ngirim barang buat permintaan mendesak Pustu yang udah disetujui. Status permintaan otomatis jadi "Selesai" & Pustu bisa cetak bukti terima.</p>
+        </div>
+        <div>
+          <button type="button" onclick="isiItemDariPermintaanAsal()">Isi Item dari Permintaan Ini</button>
         </div>
       </div>
       <div class="grid-3" style="margin-bottom:14px;">
@@ -3895,6 +3905,57 @@ function toggleTujuanMutasi() {
   const tipe = document.getElementById("mkTujuanTipe").value;
   document.getElementById("mkWrapKlaster").style.display = tipe === "klaster" ? "block" : "none";
   document.getElementById("mkWrapPustu").style.display = tipe === "pustu" ? "block" : "none";
+  document.getElementById("mkWrapPermintaanAsal").style.display = tipe === "pustu" ? "" : "none";
+  if (tipe !== "pustu") {
+    document.getElementById("mkPermintaanAsal").innerHTML = `<option value="">-- Bukan dari permintaan (kirim manual) --</option>`;
+  } else {
+    muatPermintaanAsalMutasi();
+  }
+}
+
+// ---------- Link balik: Asal Permintaan Pustu di form Mutasi Keluar ----------
+let permintaanAsalItemCache = [];
+
+async function muatPermintaanAsalMutasi() {
+  const selPustu = document.getElementById("mkPustu").value;
+  const selAsal = document.getElementById("mkPermintaanAsal");
+  selAsal.innerHTML = `<option value="">-- Bukan dari permintaan (kirim manual) --</option>`;
+  if (!selPustu) return;
+
+  const { data, error } = await supabaseClient.from("permintaan_obat_pustu")
+    .select("id, tanggal, catatan_pustu, permintaan_obat_pustu_item(id)")
+    .eq("pustu_id", selPustu).eq("status", "disetujui").is("mutasi_id", null)
+    .order("tanggal", { ascending: false });
+  if (error) { console.error("Gagal muat permintaan asal:", error.message); return; }
+  (data || []).forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = `${new Date(p.tanggal).toLocaleDateString("id-ID")} — ${(p.permintaan_obat_pustu_item || []).length} item${p.catatan_pustu ? " (" + p.catatan_pustu + ")" : ""}`;
+    selAsal.appendChild(opt);
+  });
+}
+
+async function isiItemDariPermintaanAsal() {
+  const permintaanId = document.getElementById("mkPermintaanAsal").value;
+  if (!permintaanId) { alert("Pilih dulu permintaan asalnya di dropdown."); return; }
+
+  const { data, error } = await supabaseClient.from("permintaan_obat_pustu_item")
+    .select("obat_id, jumlah_diminta, jumlah_disetujui, obat:obat_id(nama_obat, dosis, satuan, stok, jenis_item)")
+    .eq("permintaan_id", permintaanId);
+  if (error) { alert("Gagal ambil item permintaan: " + error.message); return; }
+
+  document.getElementById("mkItemRows").innerHTML = "";
+  (data || []).forEach(it => {
+    tambahBarisMutKeluar();
+    const rows = document.querySelectorAll("#mkItemRows .mut-item-row");
+    const row = rows[rows.length - 1];
+    const jumlah = it.jumlah_disetujui ?? it.jumlah_diminta;
+    row.querySelector(".mi-obat-id").value = it.obat_id;
+    row.querySelector(".mi-combo-input").value = `${it.obat.nama_obat}${it.obat.dosis ? " " + it.obat.dosis : ""}`;
+    row.querySelector(".mi-satuan").textContent = it.obat.satuan;
+    row.querySelector(".mi-jumlah").value = jumlah;
+  });
+  if (!data.length) { alert("Permintaan ini belum ada item."); return; }
 }
 
 // ---------- SBBK: baris item dinamis ----------
@@ -4141,12 +4202,27 @@ async function simpanMutasiKeluar() {
     }
   }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Mutasi keluar ke "${tujuanNama}" tersimpan, stok terpotong.</div>`;
+  // Link balik ke Surat Permintaan Obat Pustu (kalau dipilih) — tandai selesai
+  // + simpan mutasi_id & tanggal_kirim, jadi dasar Pustu cetak bukti terima.
+  let pesanLink = "";
+  const permintaanAsalId = tujuanTipe === "pustu" ? document.getElementById("mkPermintaanAsal").value : "";
+  if (permintaanAsalId) {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { error: errLink } = await supabaseClient.from("permintaan_obat_pustu")
+      .update({ status: "selesai", mutasi_id: header.id, tanggal_kirim: tanggal, petugas_farmasi_id: user.id, updated_at: new Date().toISOString() })
+      .eq("id", permintaanAsalId);
+    pesanLink = errLink
+      ? ` (gagal update status permintaan asal: ${errLink.message})`
+      : " Permintaan asal ditandai selesai — Pustu bisa cetak bukti terima.";
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Mutasi keluar ke "${tujuanNama}" tersimpan, stok terpotong.${pesanLink}</div>`;
   document.getElementById("mkPenerimaNama").value = "";
   document.getElementById("mkPenerimaJabatan").value = "";
   document.getElementById("mkCatatan").value = "";
   document.getElementById("mkItemRows").innerHTML = "";
   tambahBarisMutKeluar();
+  if (tujuanTipe === "pustu") await muatPermintaanAsalMutasi();
   await muatDaftarObat();
   await muatMutasiKeluarList();
 }
