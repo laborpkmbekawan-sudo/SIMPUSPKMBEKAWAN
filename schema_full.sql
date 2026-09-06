@@ -4286,3 +4286,36 @@ create policy "authenticated_all_log_akses_lab_bumil_pustu" on log_akses_lab_bum
 -- ============================================================
 -- SELESAI section 96. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 97. PUSTU — Jadwal Kegiatan Posyandu
+--     Jadwal bulanan per Posyandu (tanggal, kader bertugas, lokasi).
+--     Dipakai buat card "Jadwal Kegiatan Posyandu" di Dashboard Pustu
+--     & nav Jadwal Posyandu. Independen dari posyandu_balita/lansia
+--     (yang nyatet hasil kegiatan) — ini nyatet rencana/jadwalnya.
+-- ============================================================
+create table if not exists jadwal_posyandu (
+  id uuid primary key default gen_random_uuid(),
+  pustu_id int not null references pustu(id),
+  nama_posyandu text not null,
+  tanggal date not null,
+  kader_bertugas text,
+  lokasi text,
+  keterangan text,
+  status text not null default 'terjadwal' check (status in ('terjadwal','selesai','batal')),
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_jadwal_posyandu_pustu on jadwal_posyandu(pustu_id, tanggal);
+
+alter table jadwal_posyandu enable row level security;
+drop policy if exists "authenticated_all_jadwal_posyandu" on jadwal_posyandu;
+create policy "authenticated_all_jadwal_posyandu" on jadwal_posyandu for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_jadwal_posyandu on jadwal_posyandu;
+create trigger trg_audit_jadwal_posyandu after insert or update or delete on jadwal_posyandu
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 97. Idempotent, aman diulang.
+-- ============================================================
