@@ -63,6 +63,7 @@
     <div class="ph-group-title">Posyandu</div>
     <a id="navPosyanduBalita" onclick="gantiSubtabPT('posyandu-balita')">Posyandu Balita</a>
     <a id="navPosyanduLansia" onclick="gantiSubtabPT('posyandu-lansia')">Posyandu Lansia</a>
+    <a id="navPosyanduSasaran" onclick="gantiSubtabPT('posyandu-sasaran')">Data Sasaran Posyandu</a>
 
     <div class="ph-group-title">Rujukan</div>
     <a id="navRujukan" onclick="gantiSubtabPT('rujukan')">Rujukan ke Induk</a>
@@ -73,6 +74,9 @@
     <div class="ph-group-title">Laporan</div>
     <a id="navLaporanInternal" onclick="gantiSubtabPT('laporan-internal')">Laporan Internal</a>
     <a id="navLaporanDinas" onclick="gantiSubtabPT('laporan-dinas')">Laporan ke Induk/Dinas</a>
+
+    <div class="ph-group-title">Keamanan</div>
+    <a id="navAudit" onclick="gantiSubtabPT('audit')">Audit / Keamanan</a>
 
     <div class="ph-group-title">Modul Lain</div>
     <a href="index.html">Pendaftaran</a>
@@ -431,6 +435,52 @@
 
       </div>
 
+      <!-- ============ DATA SASARAN POSYANDU (S & K buat SKDN) ============ -->
+      <div id="panelPosyanduSasaran" style="display:none;">
+
+        <div class="card" style="--accent:#2f9e5c;">
+          <h2><span class="card-num" style="background:#2f9e5c;">🗂</span> Tambah Sasaran</h2>
+          <p style="font-size:11.5px; color:var(--muted); margin:-6px 0 12px;">Daftar sasaran wilayah kerja Posyandu (S) — beda dari catatan kegiatan bulanan. Sekali daftar, tetap dipakai tiap bulan sampai ditandai non-aktif (pindah/lulus usia).</p>
+          <div id="msgPosyanduSasaran"></div>
+
+          <div class="grid-2">
+            <div>
+              <label>Kategori *</label>
+              <select id="psKategori"><option value="Balita">Balita</option><option value="Lansia">Lansia</option></select>
+            </div>
+            <div><label>Nama Posyandu *</label><input type="text" id="psNamaPosyandu" placeholder="Mis. Posyandu Melati 1"></div>
+          </div>
+          <div class="grid-3">
+            <div><label>Nama *</label><input type="text" id="psNama"></div>
+            <div><label>NIK</label><input type="text" id="psNik" placeholder="Opsional"></div>
+            <div><label>Tanggal Lahir</label><input type="date" id="psTglLahir"></div>
+          </div>
+          <div class="grid-2">
+            <div><label>Nama Orang Tua (kalau Balita)</label><input type="text" id="psNamaOrtu"></div>
+            <div><label>Catatan</label><input type="text" id="psCatatan"></div>
+          </div>
+
+          <button class="btn-primary" onclick="simpanSasaranPosyandu()">Simpan Sasaran</button>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▤</span> Daftar Sasaran Terdaftar</h2>
+          <div class="grid-2" style="margin-bottom:10px;">
+            <div>
+              <label>Filter Kategori</label>
+              <select id="psFilterKategori" onchange="muatSasaranPosyandu()">
+                <option value="">Semua</option><option value="Balita">Balita</option><option value="Lansia">Lansia</option>
+              </select>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Kategori</th><th>Posyandu</th><th>Nama</th><th>NIK</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="tabelPosyanduSasaran"><tr><td colspan="6">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
       <!-- ============ RUJUKAN KE INDUK ============ -->
       <div id="panelRujukan" style="display:none;">
 
@@ -607,10 +657,10 @@
 
         <div class="card" style="--accent:#c15b7a;">
           <h2><span class="card-num" style="background:#c15b7a;">👶</span> Laporan Posyandu — SKDN <span class="tag-sync">SP2TP</span></h2>
-          <p style="font-size:11.5px; color:var(--muted); margin:-4px 0 12px;">S (Sasaran) ditetapkan manual oleh Dinas per wilayah, belum tersambung otomatis ke sistem ini. K, D dihitung dari data kader/timbang yang diinput per Posyandu.</p>
+          <p style="font-size:11.5px; color:var(--muted); margin:-4px 0 12px;">S diambil dari menu <b>Data Sasaran Posyandu</b> (isi dulu di sana kalau kosong). K = balita unik yang tercatat ditimbang bulan ini. N = naik BB dibanding bulan lalu (heuristik pencocokan NIK/nama, balita baru tanpa data bulan lalu tidak dihitung).</p>
           <table>
-            <thead><tr><th>Posyandu</th><th>K (Balita Terdaftar)</th><th>D (Ditimbang)</th><th>Dapat Vit. A</th></tr></thead>
-            <tbody id="tabelLdSkdn"><tr><td colspan="4">-</td></tr></tbody>
+            <thead><tr><th>Posyandu</th><th>S (Sasaran)</th><th>K (Terdaftar)</th><th>D (Ditimbang)</th><th>N (Naik BB)</th><th>Dapat Vit. A</th></tr></thead>
+            <tbody id="tabelLdSkdn"><tr><td colspan="6">-</td></tr></tbody>
           </table>
         </div>
 
@@ -652,6 +702,45 @@
             <div class="pt-stat-card" style="--accent:#173b5e;"><div class="label">Kunjungan Masuk ke LB1</div><div class="value" id="ldKontribLb1">0</div></div>
             <div class="pt-stat-card" style="--accent:#c15b7a;"><div class="label">Kegiatan Posyandu Masuk ke LB3</div><div class="value" id="ldKontribLb3">0</div></div>
           </div>
+        </div>
+
+      </div>
+
+      <!-- ============ AUDIT / KEAMANAN ============ -->
+      <div id="panelAudit" style="display:none;">
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">🔐</span> Log Login / Sesi</h2>
+          <p style="font-size:11.5px; color:var(--muted); margin:-6px 0 12px;">Nyatet sesi login yang berhasil untuk staf Pustu ini. Percobaan login gagal belum tercatat otomatis di sistem ini.</p>
+          <table>
+            <thead><tr><th>Waktu Login</th><th>Nama Staf</th><th>Perangkat</th><th>Status Sesi</th><th>Terakhir Aktif</th></tr></thead>
+            <tbody id="tabelAuditLogin"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">👶</span> Log Input Data per Posyandu</h2>
+          <table>
+            <thead><tr><th>Waktu</th><th>Tabel</th><th>Aksi</th><th>Posyandu</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelAuditPosyandu"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2><span class="card-num" style="background:#26a3a0;">▤</span> Log Akses Rekam Medis</h2>
+          <table>
+            <thead><tr><th>Waktu</th><th>Pasien</th><th>Aksi</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelAuditRm"><tr><td colspan="4">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#5b21b6;">
+          <h2><span class="card-num" style="background:#5b21b6;">🧪</span> Log Akses Hasil Lab Bumil <span class="tag-sync">Sensitif</span></h2>
+          <p style="font-size:11.5px; color:var(--muted); margin:-6px 0 12px;">Data kesehatan sensitif — akses dibatasi &amp; tercatat khusus, terpisah dari log RM biasa.</p>
+          <table>
+            <thead><tr><th>Waktu</th><th>Pasien</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelAuditLabBumil"><tr><td colspan="3">Memuat...</td></tr></tbody>
+          </table>
         </div>
 
       </div>
@@ -733,7 +822,7 @@ function gantiPustuAktifAdmin(idBaru) {
 }
 
 // ---------- Sub-tab nav ----------
-const SUBTAB_PT = ["dashboard", "pelayanan", "rm", "stok", "posyandu-balita", "posyandu-lansia", "rujukan", "lab-bumil", "laporan-internal", "laporan-dinas"];
+const SUBTAB_PT = ["dashboard", "pelayanan", "rm", "stok", "posyandu-balita", "posyandu-lansia", "posyandu-sasaran", "rujukan", "lab-bumil", "laporan-internal", "laporan-dinas", "audit"];
 function idPartPT(tab) {
   return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
 }
@@ -748,13 +837,16 @@ function gantiSubtabPT(tab) {
   const judul = {
     dashboard: "Dashboard Pustu", pelayanan: "Pelayanan Dasar Pustu", rm: "Rekam Medis Pustu",
     stok: "Stok Obat Pustu", "posyandu-balita": "Posyandu Balita", "posyandu-lansia": "Posyandu Lansia",
-    rujukan: "Rujukan ke Puskesmas Induk", "lab-bumil": "Lab Bumil (Tripel Eliminasi)", "laporan-internal": "Laporan Internal"
+    "posyandu-sasaran": "Data Sasaran Posyandu",
+    rujukan: "Rujukan ke Puskesmas Induk", "lab-bumil": "Lab Bumil (Tripel Eliminasi)", "laporan-internal": "Laporan Internal",
+    "laporan-dinas": "Laporan ke Induk/Dinas", audit: "Audit / Keamanan"
   };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Pustu";
   if (tab === "dashboard") muatDashboardPT();
   if (tab === "stok") muatStokPustu();
   if (tab === "posyandu-balita") { document.getElementById("pbTanggal").value = document.getElementById("pbTanggal").value || new Date().toISOString().split("T")[0]; muatPosyanduBalita(); }
   if (tab === "posyandu-lansia") { document.getElementById("plsTanggal").value = document.getElementById("plsTanggal").value || new Date().toISOString().split("T")[0]; muatPosyanduLansia(); }
+  if (tab === "posyandu-sasaran") muatSasaranPosyandu();
   if (tab === "rujukan") muatRujukanPT();
   if (tab === "lab-bumil") { document.getElementById("lbTanggal").value = document.getElementById("lbTanggal").value || new Date().toISOString().split("T")[0]; muatDaftarLabBumil(); }
   if (tab === "laporan-internal") {
@@ -765,6 +857,15 @@ function gantiSubtabPT(tab) {
       muatLaporanInternal();
     }
   }
+  if (tab === "laporan-dinas") {
+    const now = new Date();
+    if (!document.getElementById("ldTahun").value) {
+      document.getElementById("ldBulan").value = String(now.getMonth() + 1).padStart(2, "0");
+      document.getElementById("ldTahun").value = now.getFullYear();
+      muatLaporanDinas();
+    }
+  }
+  if (tab === "audit") muatAuditPT();
 }
 
 // ---------- DASHBOARD ----------
@@ -883,6 +984,7 @@ function pilihPasienPT(p, konteks) {
     document.getElementById("rmNamaPasienLengkap").textContent = p.nama;
     muatRiwayatPustuRM();
     muatRmLengkapRM();
+    catatLogAksesRmPustu(p.id, `Buka RM lengkap pasien dari Pustu ${pustuAktifNama}`);
   }
 }
 
@@ -1384,11 +1486,13 @@ async function muatDaftarLabBumil() {
   tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
 
   const { data, error } = await supabaseClient.from("lab_bumil_pustu")
-    .select("id, tanggal_ambil_sampel, usia_kehamilan_minggu, status, hasil_hbsag, hasil_hiv, hasil_sifilis, pasien:pasien_id(nama, no_rm)")
+    .select("id, pasien_id, tanggal_ambil_sampel, usia_kehamilan_minggu, status, hasil_hbsag, hasil_hiv, hasil_sifilis, pasien:pasien_id(nama, no_rm)")
     .eq("pustu_id", pustuAktifId).order("tanggal_ambil_sampel", { ascending: false }).limit(50);
 
   if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
   if (!data.length) { tbody.innerHTML = `<tr><td colspan="8">Belum ada sampel Lab Bumil tercatat.</td></tr>`; return; }
+
+  catatLogAksesLabBumilBatch(data.map(r => ({ id: r.id, pasien_id: r.pasien_id })));
 
   const badgeStatus = { sampel_diambil: "badge-menunggu", dikirim_ke_induk: "badge-dipanggil", hasil_selesai: "badge-selesai" };
   const labelStatus = { sampel_diambil: "Sampel Diambil", dikirim_ke_induk: "Dikirim ke Induk", hasil_selesai: "Hasil Selesai" };
@@ -1502,23 +1606,46 @@ async function muatLaporanDinas() {
   const akhirDate = new Date(parseInt(tahun), parseInt(bulan), 0);
   const akhir = akhirDate.toISOString().split("T")[0];
 
+  // Periode sebelumnya (buat heuristik "Naik BB" — bandingkan timbang bulan ini vs bulan lalu)
+  let bulanSebelum = parseInt(bulan) - 1, tahunSebelum = parseInt(tahun);
+  if (bulanSebelum < 1) { bulanSebelum = 12; tahunSebelum -= 1; }
+  const bulanSebelumStr = String(bulanSebelum).padStart(2, "0");
+  const awalSebelum = `${tahunSebelum}-${bulanSebelumStr}-01`;
+  const akhirSebelumDate = new Date(tahunSebelum, bulanSebelum, 0);
+  const akhirSebelum = akhirSebelumDate.toISOString().split("T")[0];
+
   const [
     { data: kunjungan, error: errK },
     { data: balita, error: errB },
+    { data: balitaSebelum, error: errBS },
     { data: lansia, error: errL },
-    { data: lab, error: errLab }
+    { data: lab, error: errLab },
+    { data: sasaran, error: errS }
   ] = await Promise.all([
     supabaseClient.from("kunjungan").select("pasien_id, kunjungan_pustu(jenis_layanan)").eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir),
-    supabaseClient.from("posyandu_balita").select("nama_posyandu, nama_balita, status_gizi, vitamin_a, imunisasi_diberikan").eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir),
+    supabaseClient.from("posyandu_balita").select("nama_posyandu, nama_balita, nik_balita, tgl_lahir, status_gizi, vitamin_a, imunisasi_diberikan, berat_badan").eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir),
+    supabaseClient.from("posyandu_balita").select("nama_balita, nik_balita, tgl_lahir, berat_badan").eq("pustu_id", pustuAktifId).gte("tanggal", awalSebelum).lte("tanggal", akhirSebelum),
     supabaseClient.from("posyandu_lansia").select("nama_posyandu, tindak_lanjut").eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir),
-    supabaseClient.from("lab_bumil_pustu").select("tanggal_ambil_sampel, status, hasil_hbsag, hasil_hiv, hasil_sifilis, pasien(nama, nik)").eq("pustu_id", pustuAktifId).gte("tanggal_ambil_sampel", awal).lte("tanggal_ambil_sampel", akhir)
+    supabaseClient.from("lab_bumil_pustu").select("tanggal_ambil_sampel, status, hasil_hbsag, hasil_hiv, hasil_sifilis, pasien(nama, nik)").eq("pustu_id", pustuAktifId).gte("tanggal_ambil_sampel", awal).lte("tanggal_ambil_sampel", akhir),
+    supabaseClient.from("posyandu_sasaran").select("kategori, nama_posyandu, aktif").eq("pustu_id", pustuAktifId).eq("aktif", true)
   ]);
 
-  if (errK || errB || errL || errLab) {
-    console.error("Gagal muat laporan dinas:", errK || errB || errL || errLab);
+  if (errK || errB || errL || errLab || errS) {
+    console.error("Gagal muat laporan dinas:", errK || errB || errL || errLab || errS);
     document.getElementById("tabelLdJenisLayanan").innerHTML = `<tr><td colspan="2">Gagal muat laporan.</td></tr>`;
     return;
   }
+
+  // Map berat badan bulan lalu, key = nik (fallback nama+tgl_lahir), buat bandingin "Naik BB"
+  const kunciBalita = b => b.nik_balita ? `nik:${b.nik_balita}` : `nb:${(b.nama_balita || "").toLowerCase()}|${b.tgl_lahir || ""}`;
+  const beratBulanLalu = {};
+  (balitaSebelum || []).forEach(b => { beratBulanLalu[kunciBalita(b)] = parseFloat(b.berat_badan); });
+
+  // Sasaran (S) per Posyandu, dari master posyandu_sasaran kategori Balita
+  const sasaranPerPosyandu = {};
+  (sasaran || []).filter(s => s.kategori === "Balita").forEach(s => {
+    sasaranPerPosyandu[s.nama_posyandu] = (sasaranPerPosyandu[s.nama_posyandu] || 0) + 1;
+  });
 
   // ---- Laporan Bulanan Kegiatan ----
   document.getElementById("ldTotalKunjungan").textContent = (kunjungan || []).length;
@@ -1540,23 +1667,27 @@ async function muatLaporanDinas() {
   const grupBalita = {};
   (balita || []).forEach(b => {
     const nm = b.nama_posyandu || "Tanpa Nama";
-    if (!grupBalita[nm]) grupBalita[nm] = { namaSet: new Set(), ditimbang: 0, vitA: 0, gizi: {}, imunisasi: {} };
+    if (!grupBalita[nm]) grupBalita[nm] = { namaSet: new Set(), ditimbang: 0, vitA: 0, naik: 0, gizi: {}, imunisasi: {} };
     grupBalita[nm].namaSet.add(b.nama_balita);
     grupBalita[nm].ditimbang++;
     if (b.vitamin_a) grupBalita[nm].vitA++;
+    const beratLalu = beratBulanLalu[kunciBalita(b)];
+    if (beratLalu !== undefined && !isNaN(beratLalu) && parseFloat(b.berat_badan) > beratLalu) grupBalita[nm].naik++;
     const g = b.status_gizi || "Tidak dicatat";
     grupBalita[nm].gizi[g] = (grupBalita[nm].gizi[g] || 0) + 1;
     (b.imunisasi_diberikan || "").split(",").map(s => s.trim()).filter(Boolean).forEach(antigen => {
       grupBalita[nm].imunisasi[antigen] = (grupBalita[nm].imunisasi[antigen] || 0) + 1;
     });
   });
-  const namaPosyanduBalita = Object.keys(grupBalita);
+  // Gabung nama Posyandu dari kegiatan bulan ini + dari master sasaran (biar Posyandu yang S-nya sudah didaftar tapi belum ada kegiatan bulan ini tetap muncul)
+  const namaPosyanduBalita = Array.from(new Set([...Object.keys(grupBalita), ...Object.keys(sasaranPerPosyandu)]));
   document.getElementById("tabelLdSkdn").innerHTML = namaPosyanduBalita.length
     ? namaPosyanduBalita.map(nm => {
-        const g = grupBalita[nm];
-        return `<tr><td>${nm}</td><td>${g.namaSet.size}</td><td>${g.ditimbang}</td><td>${g.vitA}</td></tr>`;
+        const g = grupBalita[nm] || { namaSet: new Set(), ditimbang: 0, vitA: 0, naik: 0 };
+        const s = sasaranPerPosyandu[nm];
+        return `<tr><td>${nm}</td><td>${s !== undefined ? s : "-"}</td><td>${g.namaSet.size}</td><td>${g.ditimbang}</td><td>${g.naik}</td><td>${g.vitA}</td></tr>`;
       }).join("")
-    : `<tr><td colspan="4">Belum ada data Posyandu periode ini.</td></tr>`;
+    : `<tr><td colspan="6">Belum ada data Posyandu periode ini.</td></tr>`;
 
   // ---- Laporan Imunisasi per Posyandu ----
   const barisImunisasi = [];
@@ -1590,6 +1721,187 @@ async function muatLaporanDinas() {
   // ---- Kontribusi LB1 & LB3 ----
   document.getElementById("ldKontribLb1").textContent = (kunjungan || []).length;
   document.getElementById("ldKontribLb3").textContent = (balita || []).length + (lansia || []).length;
+}
+
+// ---------- DATA SASARAN POSYANDU (S & K buat SKDN akurat) ----------
+async function simpanSasaranPosyandu() {
+  const msgBox = document.getElementById("msgPosyanduSasaran");
+  if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
+
+  const nama = document.getElementById("psNama").value.trim();
+  const namaPosyandu = document.getElementById("psNamaPosyandu").value.trim();
+  if (!nama || !namaPosyandu) { msgBox.innerHTML = `<div class="msg msg-error">Nama & Nama Posyandu wajib diisi.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const payload = {
+    pustu_id: pustuAktifId,
+    kategori: document.getElementById("psKategori").value,
+    nama_posyandu: namaPosyandu,
+    nama,
+    nik: document.getElementById("psNik").value.trim() || null,
+    tgl_lahir: document.getElementById("psTglLahir").value || null,
+    nama_ortu: document.getElementById("psNamaOrtu").value.trim() || null,
+    catatan: document.getElementById("psCatatan").value.trim() || null,
+    petugas_id: user.id
+  };
+
+  const { error } = await supabaseClient.from("posyandu_sasaran").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Sasaran "${nama}" tersimpan di Posyandu ${namaPosyandu}.</div>`;
+  ["psNama", "psNik", "psTglLahir", "psNamaOrtu", "psCatatan"].forEach(id => document.getElementById(id).value = "");
+  await muatSasaranPosyandu();
+}
+
+async function muatSasaranPosyandu() {
+  const tbody = document.getElementById("tabelPosyanduSasaran");
+  if (!pustuAktifId) { tbody.innerHTML = `<tr><td colspan="6">Belum ada Pustu aktif.</td></tr>`; return; }
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const filterKategori = document.getElementById("psFilterKategori").value;
+  let query = supabaseClient.from("posyandu_sasaran").select("*").eq("pustu_id", pustuAktifId).order("nama_posyandu").order("nama");
+  if (filterKategori) query = query.eq("kategori", filterKategori);
+
+  const { data, error } = await query;
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada sasaran terdaftar.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(s => `
+    <tr>
+      <td>${s.kategori}</td>
+      <td>${s.nama_posyandu}</td>
+      <td>${s.nama}</td>
+      <td>${s.nik || "-"}</td>
+      <td>${s.aktif ? `<span class="badge badge-selesai">Aktif</span>` : `<span class="badge badge-batal">Non-Aktif</span>`}</td>
+      <td>${s.aktif
+          ? `<button class="btn-secondary" onclick="toggleAktifSasaran('${s.id}', false)">Non-Aktifkan</button>`
+          : `<button class="btn-secondary" onclick="toggleAktifSasaran('${s.id}', true)">Aktifkan</button>`}</td>
+    </tr>
+  `).join("");
+}
+
+async function toggleAktifSasaran(id, aktifBaru) {
+  const { error } = await supabaseClient.from("posyandu_sasaran").update({ aktif: aktifBaru }).eq("id", id);
+  if (error) { alert("Gagal update: " + error.message); return; }
+  await muatSasaranPosyandu();
+}
+
+// ---------- Log akses sensitif: RM Pustu & Lab Bumil ----------
+// Gagal catat log gak boleh nge-block alur utama, jadi cuma log error ke console.
+async function catatLogAksesRmPustu(pasienId, keterangan) {
+  try {
+    const { error } = await supabaseClient.from("log_akses_rm").insert({
+      pasien_id: pasienId,
+      kunjungan_id: null,
+      aksi: "lihat",
+      keterangan,
+      petugas_id: profilSaya?.id || null
+    });
+    if (error) console.error("Gagal catat log akses RM Pustu:", error.message);
+  } catch (e) { console.error("Gagal catat log akses RM Pustu:", e.message); }
+}
+
+async function catatLogAksesLabBumilBatch(baris) {
+  if (!baris.length) return;
+  try {
+    const payload = baris.map(r => ({
+      lab_bumil_id: r.id,
+      pasien_id: r.pasien_id,
+      aksi: "lihat",
+      keterangan: `Buka daftar Lab Bumil di Pustu ${pustuAktifNama}`,
+      petugas_id: profilSaya?.id || null
+    }));
+    const { error } = await supabaseClient.from("log_akses_lab_bumil_pustu").insert(payload);
+    if (error) console.error("Gagal catat log akses Lab Bumil:", error.message);
+  } catch (e) { console.error("Gagal catat log akses Lab Bumil:", e.message); }
+}
+
+// ---------- AUDIT / KEAMANAN ----------
+async function muatAuditPT() {
+  if (!pustuAktifId) return;
+
+  // Kumpulan id staf yang ditugaskan ke Pustu aktif — dasar filter log login & audit lain
+  const { data: stafPustu } = await supabaseClient.from("profil_pegawai").select("id, nama").eq("pustu_id", pustuAktifId);
+  const idStafPustu = new Set((stafPustu || []).map(s => s.id));
+
+  // ---- Log Login / Sesi ----
+  const tbodyLogin = document.getElementById("tabelAuditLogin");
+  const { data: sesi, error: errSesi } = await supabaseClient
+    .from("sesi_aktif")
+    .select("login_at, last_active, dicabut, perangkat, pegawai:pegawai_id(id, nama, pustu_id)")
+    .order("login_at", { ascending: false })
+    .limit(100);
+  if (errSesi) {
+    tbodyLogin.innerHTML = `<tr><td colspan="5">Gagal muat: ${errSesi.message}</td></tr>`;
+  } else {
+    const sesiPustu = (sesi || []).filter(s => s.pegawai && s.pegawai.pustu_id === pustuAktifId).slice(0, 30);
+    tbodyLogin.innerHTML = sesiPustu.length
+      ? sesiPustu.map(s => `
+          <tr>
+            <td>${new Date(s.login_at).toLocaleString("id-ID")}</td>
+            <td>${s.pegawai ? s.pegawai.nama : "-"}</td>
+            <td>${s.perangkat || "-"}</td>
+            <td>${s.dicabut ? `<span class="badge badge-batal">Dicabut</span>` : `<span class="badge badge-selesai">Aktif</span>`}</td>
+            <td>${new Date(s.last_active).toLocaleString("id-ID")}</td>
+          </tr>
+        `).join("")
+      : `<tr><td colspan="5">Belum ada data sesi login staf Pustu ini.</td></tr>`;
+  }
+
+  // ---- Log Input Data per Posyandu (dari audit_log, tabel posyandu_balita & posyandu_lansia) ----
+  const tbodyPosyandu = document.getElementById("tabelAuditPosyandu");
+  const { data: auditPosyandu, error: errAudit } = await supabaseClient
+    .from("audit_log")
+    .select("tabel, aksi, data_baru, data_lama, created_at, petugas:petugas_id(nama)")
+    .in("tabel", ["posyandu_balita", "posyandu_lansia"])
+    .order("created_at", { ascending: false })
+    .limit(150);
+  if (errAudit) {
+    tbodyPosyandu.innerHTML = `<tr><td colspan="5">Gagal muat: ${errAudit.message}</td></tr>`;
+  } else {
+    const filtered = (auditPosyandu || []).filter(a => {
+      const rec = a.data_baru || a.data_lama;
+      return rec && rec.pustu_id === pustuAktifId;
+    }).slice(0, 30);
+    tbodyPosyandu.innerHTML = filtered.length
+      ? filtered.map(a => {
+          const rec = a.data_baru || a.data_lama;
+          return `<tr><td>${new Date(a.created_at).toLocaleString("id-ID")}</td><td>${a.tabel === "posyandu_balita" ? "Posyandu Balita" : "Posyandu Lansia"}</td><td>${a.aksi}</td><td>${rec?.nama_posyandu || "-"}</td><td>${a.petugas ? a.petugas.nama : "-"}</td></tr>`;
+        }).join("")
+      : `<tr><td colspan="5">Belum ada log input Posyandu.</td></tr>`;
+  }
+
+  // ---- Log Akses RM (dari log_akses_rm, entri yang dibuat lewat Pustu ini) ----
+  const tbodyRm = document.getElementById("tabelAuditRm");
+  const { data: logRm, error: errRm } = await supabaseClient
+    .from("log_akses_rm")
+    .select("created_at, aksi, keterangan, pasien:pasien_id(nama), petugas:petugas_id(id, nama)")
+    .order("created_at", { ascending: false })
+    .limit(150);
+  if (errRm) {
+    tbodyRm.innerHTML = `<tr><td colspan="4">Gagal muat: ${errRm.message}</td></tr>`;
+  } else {
+    const filtered = (logRm || []).filter(l => l.petugas && idStafPustu.has(l.petugas.id) && (l.keterangan || "").includes("Pustu")).slice(0, 30);
+    tbodyRm.innerHTML = filtered.length
+      ? filtered.map(l => `<tr><td>${new Date(l.created_at).toLocaleString("id-ID")}</td><td>${l.pasien ? l.pasien.nama : "-"}</td><td>${l.aksi}</td><td>${l.petugas ? l.petugas.nama : "-"}</td></tr>`).join("")
+      : `<tr><td colspan="4">Belum ada log akses RM lewat Pustu ini.</td></tr>`;
+  }
+
+  // ---- Log Akses Lab Bumil (sensitif) ----
+  const tbodyLab = document.getElementById("tabelAuditLabBumil");
+  const { data: logLab, error: errLab } = await supabaseClient
+    .from("log_akses_lab_bumil_pustu")
+    .select("created_at, pasien:pasien_id(nama), petugas:petugas_id(nama), lab_bumil:lab_bumil_id(pustu_id)")
+    .order("created_at", { ascending: false })
+    .limit(150);
+  if (errLab) {
+    tbodyLab.innerHTML = `<tr><td colspan="3">Gagal muat: ${errLab.message}</td></tr>`;
+  } else {
+    const filtered = (logLab || []).filter(l => l.lab_bumil && l.lab_bumil.pustu_id === pustuAktifId).slice(0, 30);
+    tbodyLab.innerHTML = filtered.length
+      ? filtered.map(l => `<tr><td>${new Date(l.created_at).toLocaleString("id-ID")}</td><td>${l.pasien ? l.pasien.nama : "-"}</td><td>${l.petugas ? l.petugas.nama : "-"}</td></tr>`).join("")
+      : `<tr><td colspan="3">Belum ada log akses Lab Bumil.</td></tr>`;
+  }
 }
 </script>
 </body>

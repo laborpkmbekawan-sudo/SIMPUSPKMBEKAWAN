@@ -4224,3 +4224,65 @@ create trigger trg_audit_lab_bumil_pustu after insert or update or delete on lab
 -- ============================================================
 -- SELESAI section 95. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 96. PUSTU — Data Sasaran Posyandu (buat SKDN akurat) + Log Akses
+--     Lab Bumil (data sensitif, dipisah dari log_akses_rm biasa).
+--     a) posyandu_sasaran: master sasaran (S) per Posyandu/kategori,
+--        independen dari kegiatan bulanan (posyandu_balita/lansia).
+--        Dipakai buat hitung S & K di Laporan SKDN, gak dihapus tiap
+--        bulan — cukup tandai non-aktif kalau pindah/lulus usia.
+--     b) log_akses_lab_bumil_pustu: audit siapa buka hasil skrining
+--        HBsAg/HIV/Sifilis bumil tertentu — data kesehatan sensitif,
+--        dipisah dari log_akses_rm supaya bisa direkap khusus di
+--        panel Audit/Keamanan Pustu.
+-- ============================================================
+create table if not exists posyandu_sasaran (
+  id uuid primary key default gen_random_uuid(),
+  pustu_id int not null references pustu(id),
+  kategori text not null check (kategori in ('Balita','Lansia')),
+  nama_posyandu text not null,
+  nama text not null,
+  nik text,
+  tgl_lahir date,
+  nama_ortu text,
+  aktif boolean not null default true,
+  catatan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_posyandu_sasaran_pustu on posyandu_sasaran(pustu_id, kategori, nama_posyandu);
+create index if not exists idx_posyandu_sasaran_aktif on posyandu_sasaran(aktif);
+
+alter table posyandu_sasaran enable row level security;
+drop policy if exists "authenticated_all_posyandu_sasaran" on posyandu_sasaran;
+create policy "authenticated_all_posyandu_sasaran" on posyandu_sasaran for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_posyandu_sasaran on posyandu_sasaran;
+create trigger trg_audit_posyandu_sasaran after insert or update or delete on posyandu_sasaran
+  for each row execute function fn_audit_log();
+
+create table if not exists log_akses_lab_bumil_pustu (
+  id uuid primary key default gen_random_uuid(),
+  lab_bumil_id uuid references lab_bumil_pustu(id) on delete cascade,
+  pasien_id uuid references pasien(id),
+  aksi text not null default 'lihat' check (aksi in ('lihat')),
+  keterangan text,
+  petugas_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_log_akses_lab_bumil_pustu_lab on log_akses_lab_bumil_pustu(lab_bumil_id);
+create index if not exists idx_log_akses_lab_bumil_pustu_tanggal on log_akses_lab_bumil_pustu(created_at);
+
+alter table log_akses_lab_bumil_pustu enable row level security;
+drop policy if exists "authenticated_all_log_akses_lab_bumil_pustu" on log_akses_lab_bumil_pustu;
+create policy "authenticated_all_log_akses_lab_bumil_pustu" on log_akses_lab_bumil_pustu for all to authenticated using (true) with check (true);
+
+-- CATATAN KETERBATASAN: sistem ini belum punya tabel percobaan login
+-- gagal (butuh hook khusus di sisi Supabase Auth buat nangkepnya).
+-- Panel Audit/Keamanan Pustu pakai sesi_aktif (section 38) buat log
+-- login/sesi — itu nyatet sesi berhasil, bukan percobaan gagal.
+
+-- ============================================================
+-- SELESAI section 96. Idempotent, aman diulang.
+-- ============================================================
