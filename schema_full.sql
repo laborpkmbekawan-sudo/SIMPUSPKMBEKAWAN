@@ -4184,3 +4184,43 @@ create trigger trg_audit_posyandu_lansia after insert or update or delete on pos
 -- ============================================================
 -- SELESAI section 94. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 95. LAB BUMIL PUSTU — Skrining Tripel Eliminasi (HBsAg/HIV/Sifilis)
+--     Sampel diambil di Pustu waktu Pelayanan KIA Dasar, dikirim fisik
+--     ke Lab Induk, hasil diisi petugas Lab lewat rekam-medis.html.
+--     Gak butuh kunjungan Lab terpisah (beda dari rujukan_lab biasa)
+--     karena pasiennya gak datang fisik ke Induk — cuma sampelnya.
+-- ============================================================
+create table if not exists lab_bumil_pustu (
+  id uuid primary key default gen_random_uuid(),
+  pustu_id int not null references pustu(id),
+  pasien_id uuid not null references pasien(id),
+  tanggal_ambil_sampel date not null default current_date,
+  usia_kehamilan_minggu int,
+  hasil_hbsag text not null default 'belum_diperiksa' check (hasil_hbsag in ('belum_diperiksa','non_reaktif','reaktif')),
+  hasil_hiv text not null default 'belum_diperiksa' check (hasil_hiv in ('belum_diperiksa','non_reaktif','reaktif')),
+  hasil_sifilis text not null default 'belum_diperiksa' check (hasil_sifilis in ('belum_diperiksa','non_reaktif','reaktif')),
+  status text not null default 'sampel_diambil' check (status in ('sampel_diambil','dikirim_ke_induk','hasil_selesai')),
+  tanggal_kirim date,
+  tanggal_hasil date,
+  catatan_pustu text,
+  catatan_lab text,
+  petugas_pustu_id uuid references profil_pegawai(id),
+  petugas_lab_id uuid references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_lab_bumil_pustu_pustu on lab_bumil_pustu(pustu_id, status);
+create index if not exists idx_lab_bumil_pustu_status on lab_bumil_pustu(status);
+
+alter table lab_bumil_pustu enable row level security;
+drop policy if exists "authenticated_all_lab_bumil_pustu" on lab_bumil_pustu;
+create policy "authenticated_all_lab_bumil_pustu" on lab_bumil_pustu for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_lab_bumil_pustu on lab_bumil_pustu;
+create trigger trg_audit_lab_bumil_pustu after insert or update or delete on lab_bumil_pustu
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 95. Idempotent, aman diulang.
+-- ============================================================

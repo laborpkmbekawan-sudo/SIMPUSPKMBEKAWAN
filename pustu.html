@@ -67,6 +67,12 @@
     <div class="ph-group-title">Rujukan</div>
     <a id="navRujukan" onclick="gantiSubtabPT('rujukan')">Rujukan ke Induk</a>
 
+    <div class="ph-group-title">KIA</div>
+    <a id="navLabBumil" onclick="gantiSubtabPT('lab-bumil')">Lab Bumil (Tripel Eliminasi)</a>
+
+    <div class="ph-group-title">Laporan</div>
+    <a id="navLaporanInternal" onclick="gantiSubtabPT('laporan-internal')">Laporan Internal</a>
+
     <div class="ph-group-title">Modul Lain</div>
     <a href="index.html">Pendaftaran</a>
     <a href="rekam-medis.html">Rekam Medis</a>
@@ -459,6 +465,111 @@
 
       </div>
 
+      <!-- ============ LAB BUMIL PUSTU (TRIPEL ELIMINASI) ============ -->
+      <div id="panelLabBumil" style="display:none;">
+
+        <div class="card" style="--accent:#5b21b6;">
+          <h2><span class="card-num" style="background:#5b21b6;">🧪</span> Ambil Sampel Lab Bumil</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Skrining Tripel Eliminasi (HBsAg / HIV / Sifilis) buat ibu hamil. Sampel diambil di Pustu, dikirim fisik ke Lab Induk, hasil diisi petugas Lab lalu kebaca balik di sini otomatis.</p>
+          <div id="msgLabBumilCari"></div>
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien Ibu Hamil (NIK / No. RM / Nama)</label>
+              <input type="text" id="lbCari" placeholder="Ketik NIK, No. RM, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienPT('lb');}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienPT('lb')" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+          <div id="lbHasilCari"></div>
+
+          <div id="lbWrap" style="display:none;">
+            <p style="font-size:12.5px; margin:10px 0;">Pasien: <b id="lbNamaPasien"></b> · No. RM: <b id="lbNoRm"></b></p>
+            <div id="msgLabBumilSimpan"></div>
+            <div class="grid-2">
+              <div><label>Tanggal Ambil Sampel</label><input type="date" id="lbTanggal"></div>
+              <div><label>Usia Kehamilan (minggu)</label><input type="number" id="lbUsiaKehamilan" min="0"></div>
+            </div>
+            <label>Catatan</label>
+            <input type="text" id="lbCatatan" placeholder="Opsional">
+            <button class="btn-primary" onclick="simpanLabBumil()">Simpan Sampel</button>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▤</span> Daftar Sampel & Status</h2>
+          <table>
+            <thead><tr><th>Tanggal Ambil</th><th>Pasien</th><th>Usia Kehamilan</th><th>Status</th><th>HBsAg</th><th>HIV</th><th>Sifilis</th><th>Aksi</th></tr></thead>
+            <tbody id="tabelLabBumil"><tr><td colspan="8">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- ============ LAPORAN INTERNAL ============ -->
+      <div id="panelLaporanInternal" style="display:none;">
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▦</span> Filter Periode</h2>
+          <div class="grid-2">
+            <div>
+              <label>Bulan</label>
+              <select id="liBulan">
+                <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option>
+                <option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option>
+                <option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option>
+                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div><label>Tahun</label><input type="number" id="liTahun" style="max-width:120px;"></div>
+          </div>
+          <button class="btn-primary" onclick="muatLaporanInternal()">Tampilkan Laporan</button>
+          <button class="btn-secondary" onclick="window.print()">🖨 Cetak</button>
+        </div>
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2><span class="card-num" style="background:#26a3a0;">▣</span> Rekap Kunjungan Pustu</h2>
+          <div class="pt-stat-grid">
+            <div class="pt-stat-card" style="--accent:#26a3a0;"><div class="label">Total Kunjungan</div><div class="value" id="liTotalKunjungan">0</div></div>
+            <div class="pt-stat-card" style="--accent:#e0793c;"><div class="label">Rujuk ke Induk</div><div class="value" id="liTotalRujuk">0</div></div>
+            <div class="pt-stat-card" style="--accent:#173b5e;"><div class="label">Pasien Unik</div><div class="value" id="liTotalPasienUnik">0</div></div>
+          </div>
+          <table>
+            <thead><tr><th>Jenis Layanan</th><th>Jumlah</th></tr></thead>
+            <tbody id="tabelLiJenisLayanan"><tr><td colspan="2">Pilih periode lalu klik Tampilkan Laporan.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">👶</span> Rekap Capaian Posyandu</h2>
+          <div class="grid-2">
+            <div>
+              <h3 style="font-size:13px; color:var(--navy); margin-bottom:8px;">Posyandu Balita</h3>
+              <table>
+                <thead><tr><th>Indikator</th><th>Jumlah</th></tr></thead>
+                <tbody id="tabelLiPosyanduBalita"><tr><td colspan="2">-</td></tr></tbody>
+              </table>
+            </div>
+            <div>
+              <h3 style="font-size:13px; color:var(--navy); margin-bottom:8px;">Posyandu Lansia</h3>
+              <table>
+                <thead><tr><th>Indikator</th><th>Jumlah</th></tr></thead>
+                <tbody id="tabelLiPosyanduLansia"><tr><td colspan="2">-</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#5b21b6;">
+          <h2><span class="card-num" style="background:#5b21b6;">🧪</span> Rekap Skrining Lab Bumil</h2>
+          <table>
+            <thead><tr><th>Indikator</th><th>Jumlah</th></tr></thead>
+            <tbody id="tabelLiLabBumil"><tr><td colspan="2">-</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </div>
@@ -536,7 +647,7 @@ function gantiPustuAktifAdmin(idBaru) {
 }
 
 // ---------- Sub-tab nav ----------
-const SUBTAB_PT = ["dashboard", "pelayanan", "rm", "stok", "posyandu-balita", "posyandu-lansia", "rujukan"];
+const SUBTAB_PT = ["dashboard", "pelayanan", "rm", "stok", "posyandu-balita", "posyandu-lansia", "rujukan", "lab-bumil", "laporan-internal"];
 function idPartPT(tab) {
   return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
 }
@@ -551,7 +662,7 @@ function gantiSubtabPT(tab) {
   const judul = {
     dashboard: "Dashboard Pustu", pelayanan: "Pelayanan Dasar Pustu", rm: "Rekam Medis Pustu",
     stok: "Stok Obat Pustu", "posyandu-balita": "Posyandu Balita", "posyandu-lansia": "Posyandu Lansia",
-    rujukan: "Rujukan ke Puskesmas Induk"
+    rujukan: "Rujukan ke Puskesmas Induk", "lab-bumil": "Lab Bumil (Tripel Eliminasi)", "laporan-internal": "Laporan Internal"
   };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Pustu";
   if (tab === "dashboard") muatDashboardPT();
@@ -559,6 +670,15 @@ function gantiSubtabPT(tab) {
   if (tab === "posyandu-balita") { document.getElementById("pbTanggal").value = document.getElementById("pbTanggal").value || new Date().toISOString().split("T")[0]; muatPosyanduBalita(); }
   if (tab === "posyandu-lansia") { document.getElementById("plsTanggal").value = document.getElementById("plsTanggal").value || new Date().toISOString().split("T")[0]; muatPosyanduLansia(); }
   if (tab === "rujukan") muatRujukanPT();
+  if (tab === "lab-bumil") { document.getElementById("lbTanggal").value = document.getElementById("lbTanggal").value || new Date().toISOString().split("T")[0]; muatDaftarLabBumil(); }
+  if (tab === "laporan-internal") {
+    const now = new Date();
+    if (!document.getElementById("liTahun").value) {
+      document.getElementById("liBulan").value = String(now.getMonth() + 1).padStart(2, "0");
+      document.getElementById("liTahun").value = now.getFullYear();
+      muatLaporanInternal();
+    }
+  }
 }
 
 // ---------- DASHBOARD ----------
@@ -610,7 +730,7 @@ async function cariPasienPT(konteks) {
   const kunci = document.getElementById(konteks + "Cari").value.trim();
   const hasilDiv = document.getElementById(konteks + "HasilCari");
   hasilDiv.innerHTML = "";
-  const wrapId = konteks === "pl" ? "plWrap" : "rmWrap";
+  const wrapId = konteks === "pl" ? "plWrap" : konteks === "lb" ? "lbWrap" : "rmWrap";
   document.getElementById(wrapId).style.display = "none";
 
   if (!pustuAktifId) {
@@ -664,6 +784,13 @@ function pilihPasienPT(p, konteks) {
     document.getElementById("msgPTPelayanan").innerHTML = "";
     ["plSubjektif", "plTd", "plSuhu", "plNadi", "plRespirasi", "plBb", "plTb", "plObjektif", "plIcd10", "plAssessment", "plPlan", "plCatatanPustu"]
       .forEach(id => document.getElementById(id).value = "");
+  } else if (konteks === "lb") {
+    document.getElementById("lbWrap").style.display = "block";
+    document.getElementById("lbNamaPasien").textContent = p.nama;
+    document.getElementById("lbNoRm").textContent = p.no_rm || "-";
+    document.getElementById("msgLabBumilSimpan").innerHTML = "";
+    document.getElementById("lbUsiaKehamilan").value = "";
+    document.getElementById("lbCatatan").value = "";
   } else {
     document.getElementById("rmWrap").style.display = "block";
     document.getElementById("rmNamaPasienPustu").textContent = p.nama;
@@ -1134,6 +1261,148 @@ async function simpanRujukanResmi() {
 
   document.getElementById("rjFormWrap").style.display = "none";
   await muatRujukanPT();
+}
+
+// ============================================================
+// ---------- LAB BUMIL PUSTU (TRIPEL ELIMINASI) ----------
+// ============================================================
+async function simpanLabBumil() {
+  const msgBox = document.getElementById("msgLabBumilSimpan");
+  if (!pasienTerpilihPT) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
+
+  const tanggal = document.getElementById("lbTanggal").value;
+  if (!tanggal) { msgBox.innerHTML = `<div class="msg msg-error">Tanggal ambil sampel wajib diisi.</div>`; return; }
+
+  const payload = {
+    pustu_id: pustuAktifId,
+    pasien_id: pasienTerpilihPT.id,
+    tanggal_ambil_sampel: tanggal,
+    usia_kehamilan_minggu: document.getElementById("lbUsiaKehamilan").value ? parseInt(document.getElementById("lbUsiaKehamilan").value, 10) : null,
+    catatan_pustu: document.getElementById("lbCatatan").value.trim() || null,
+    petugas_pustu_id: profilSaya.id
+  };
+
+  const { error } = await supabaseClient.from("lab_bumil_pustu").insert(payload);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Sampel tersimpan. Kirim fisik sampelnya ke Lab Induk, lalu tandai "Dikirim ke Induk" di daftar bawah.</div>`;
+  document.getElementById("lbUsiaKehamilan").value = "";
+  document.getElementById("lbCatatan").value = "";
+  await muatDaftarLabBumil();
+}
+
+async function muatDaftarLabBumil() {
+  const tbody = document.getElementById("tabelLabBumil");
+  if (!pustuAktifId) { tbody.innerHTML = `<tr><td colspan="8">Belum ada Pustu aktif.</td></tr>`; return; }
+  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient.from("lab_bumil_pustu")
+    .select("id, tanggal_ambil_sampel, usia_kehamilan_minggu, status, hasil_hbsag, hasil_hiv, hasil_sifilis, pasien:pasien_id(nama, no_rm)")
+    .eq("pustu_id", pustuAktifId).order("tanggal_ambil_sampel", { ascending: false }).limit(50);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="8">Belum ada sampel Lab Bumil tercatat.</td></tr>`; return; }
+
+  const badgeStatus = { sampel_diambil: "badge-menunggu", dikirim_ke_induk: "badge-dipanggil", hasil_selesai: "badge-selesai" };
+  const labelStatus = { sampel_diambil: "Sampel Diambil", dikirim_ke_induk: "Dikirim ke Induk", hasil_selesai: "Hasil Selesai" };
+  const badgeHasil = h => h === "belum_diperiksa" ? "-" : h === "reaktif" ? `<span class="badge badge-stok-rendah">Reaktif</span>` : `<span class="badge badge-selesai">Non-Reaktif</span>`;
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${new Date(r.tanggal_ambil_sampel).toLocaleDateString("id-ID")}</td>
+      <td>${r.pasien ? r.pasien.nama : "-"} ${r.pasien && r.pasien.no_rm ? `(${r.pasien.no_rm})` : ""}</td>
+      <td>${r.usia_kehamilan_minggu ? r.usia_kehamilan_minggu + " mgg" : "-"}</td>
+      <td><span class="badge ${badgeStatus[r.status] || ""}">${labelStatus[r.status] || r.status}</span></td>
+      <td>${badgeHasil(r.hasil_hbsag)}</td>
+      <td>${badgeHasil(r.hasil_hiv)}</td>
+      <td>${badgeHasil(r.hasil_sifilis)}</td>
+      <td>${r.status === "sampel_diambil" ? `<button class="btn-secondary" onclick="tandaiDikirimLabBumil('${r.id}')">Tandai Dikirim</button>` : "-"}</td>
+    </tr>
+  `).join("");
+}
+
+async function tandaiDikirimLabBumil(id) {
+  const { error } = await supabaseClient.from("lab_bumil_pustu")
+    .update({ status: "dikirim_ke_induk", tanggal_kirim: new Date().toISOString().split("T")[0] }).eq("id", id);
+  if (error) { alert("Gagal update status: " + error.message); return; }
+  await muatDaftarLabBumil();
+}
+
+// ============================================================
+// ---------- LAPORAN INTERNAL ----------
+// ============================================================
+async function muatLaporanInternal() {
+  if (!pustuAktifId) return;
+  const bulan = document.getElementById("liBulan").value;
+  const tahun = document.getElementById("liTahun").value;
+  if (!bulan || !tahun) return;
+
+  const awal = `${tahun}-${bulan}-01`;
+  const akhirDate = new Date(parseInt(tahun), parseInt(bulan), 0); // hari terakhir bulan itu
+  const akhir = akhirDate.toISOString().split("T")[0];
+
+  const [{ data: kunjungan, error: errK }, { data: balita, error: errB }, { data: lansia, error: errL }, { data: lab, error: errLab }] = await Promise.all([
+    supabaseClient.from("kunjungan").select("pasien_id, kunjungan_pustu(jenis_layanan)").eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir),
+    supabaseClient.from("posyandu_balita").select("status_gizi, vitamin_a").eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir),
+    supabaseClient.from("posyandu_lansia").select("tindak_lanjut").eq("pustu_id", pustuAktifId).gte("tanggal", awal).lte("tanggal", akhir),
+    supabaseClient.from("lab_bumil_pustu").select("status, hasil_hbsag, hasil_hiv, hasil_sifilis").eq("pustu_id", pustuAktifId).gte("tanggal_ambil_sampel", awal).lte("tanggal_ambil_sampel", akhir)
+  ]);
+
+  if (errK || errB || errL || errLab) {
+    document.getElementById("tabelLiJenisLayanan").innerHTML = `<tr><td colspan="2">Gagal muat laporan.</td></tr>`;
+    return;
+  }
+
+  // ---- Kunjungan ----
+  document.getElementById("liTotalKunjungan").textContent = (kunjungan || []).length;
+  const jumlahRujuk = (kunjungan || []).filter(k => (k.kunjungan_pustu[0]?.jenis_layanan) === "rujuk_ke_induk").length;
+  document.getElementById("liTotalRujuk").textContent = jumlahRujuk;
+  document.getElementById("liTotalPasienUnik").textContent = new Set((kunjungan || []).map(k => k.pasien_id)).size;
+
+  const perJenis = {};
+  (kunjungan || []).forEach(k => {
+    const jenis = k.kunjungan_pustu[0]?.jenis_layanan || "lainnya";
+    perJenis[jenis] = (perJenis[jenis] || 0) + 1;
+  });
+  const tbodyJenis = document.getElementById("tabelLiJenisLayanan");
+  const entriesJenis = Object.entries(perJenis);
+  tbodyJenis.innerHTML = entriesJenis.length
+    ? entriesJenis.map(([j, n]) => `<tr><td>${LABEL_JENIS_LAYANAN[j] || j}</td><td>${n}</td></tr>`).join("")
+    : `<tr><td colspan="2">Belum ada kunjungan periode ini.</td></tr>`;
+
+  // ---- Posyandu Balita ----
+  const totalBalita = (balita || []).length;
+  const vitA = (balita || []).filter(b => b.vitamin_a).length;
+  const giziKurangKeBawah = (balita || []).filter(b => ["Kurang (T)", "Buruk", "BGM"].includes(b.status_gizi)).length;
+  document.getElementById("tabelLiPosyanduBalita").innerHTML = `
+    <tr><td>Balita ditimbang</td><td>${totalBalita}</td></tr>
+    <tr><td>Dapat Vitamin A</td><td>${vitA}</td></tr>
+    <tr><td>Status Gizi Kurang/Buruk/BGM</td><td>${giziKurangKeBawah}</td></tr>
+  `;
+
+  // ---- Posyandu Lansia ----
+  const totalLansia = (lansia || []).length;
+  const perTindakLanjut = {};
+  (lansia || []).forEach(l => { const t = l.tindak_lanjut || "Tidak Ada"; perTindakLanjut[t] = (perTindakLanjut[t] || 0) + 1; });
+  document.getElementById("tabelLiPosyanduLansia").innerHTML = `
+    <tr><td>Lansia diperiksa</td><td>${totalLansia}</td></tr>
+    ${Object.entries(perTindakLanjut).map(([t, n]) => `<tr><td>${t}</td><td>${n}</td></tr>`).join("")}
+  `;
+
+  // ---- Lab Bumil ----
+  const totalSampel = (lab || []).length;
+  const selesai = (lab || []).filter(l => l.status === "hasil_selesai").length;
+  const reaktifHbsag = (lab || []).filter(l => l.hasil_hbsag === "reaktif").length;
+  const reaktifHiv = (lab || []).filter(l => l.hasil_hiv === "reaktif").length;
+  const reaktifSifilis = (lab || []).filter(l => l.hasil_sifilis === "reaktif").length;
+  document.getElementById("tabelLiLabBumil").innerHTML = `
+    <tr><td>Sampel diambil</td><td>${totalSampel}</td></tr>
+    <tr><td>Hasil selesai</td><td>${selesai}</td></tr>
+    <tr><td>Reaktif HBsAg</td><td>${reaktifHbsag}</td></tr>
+    <tr><td>Reaktif HIV</td><td>${reaktifHiv}</td></tr>
+    <tr><td>Reaktif Sifilis</td><td>${reaktifSifilis}</td></tr>
+  `;
 }
 </script>
 </body>

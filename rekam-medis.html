@@ -38,6 +38,39 @@
 
   <div id="modeKlinis" style="display:none;">
 
+  <div class="card" id="cardLabBumilPustu" style="display:none;">
+    <h2>🧪 Sampel Lab Bumil dari Pustu (Tripel Eliminasi)</h2>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Sampel dikirim fisik dari Pustu — isi hasilnya di sini, otomatis kebaca balik di Pustu asal.</p>
+    <div id="msgLabBumilInduk"></div>
+    <table>
+      <thead><tr><th>Tanggal Kirim</th><th>Pasien</th><th>Pustu Asal</th><th>Usia Kehamilan</th><th></th></tr></thead>
+      <tbody id="tabelLabBumilMasuk"><tr><td colspan="5">Memuat...</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="card" id="cardIsiHasilLabBumil" style="display:none;">
+    <h2>Isi Hasil Lab Bumil — <span id="lbiNamaPasien"></span></h2>
+    <div id="msgIsiHasilLabBumil"></div>
+    <div class="grid-3">
+      <div>
+        <label>HBsAg</label>
+        <select id="lbiHbsag"><option value="belum_diperiksa">- Pilih -</option><option value="non_reaktif">Non-Reaktif</option><option value="reaktif">Reaktif</option></select>
+      </div>
+      <div>
+        <label>HIV</label>
+        <select id="lbiHiv"><option value="belum_diperiksa">- Pilih -</option><option value="non_reaktif">Non-Reaktif</option><option value="reaktif">Reaktif</option></select>
+      </div>
+      <div>
+        <label>Sifilis</label>
+        <select id="lbiSifilis"><option value="belum_diperiksa">- Pilih -</option><option value="non_reaktif">Non-Reaktif</option><option value="reaktif">Reaktif</option></select>
+      </div>
+    </div>
+    <label>Catatan Lab</label>
+    <input type="text" id="lbiCatatan" placeholder="Opsional">
+    <button class="btn-primary" onclick="simpanHasilLabBumilInduk()">Simpan Hasil</button>
+    <button class="btn-secondary" onclick="document.getElementById('cardIsiHasilLabBumil').style.display='none';">Batal</button>
+  </div>
+
   <div class="card">
     <h2>Antrian Menunggu Pemeriksaan</h2>
     <table>
@@ -553,10 +586,74 @@ function isiOtomatisIcd() {
     await muatDaftarObat();
     await muatMasterTarifRM();
     await muatAntrian();
+    await muatLabBumilMasuk();
   } else {
     document.getElementById("modePendaftaran").style.display = "block";
   }
 })();
+
+// ---------- LAB BUMIL DARI PUSTU (Tripel Eliminasi) ----------
+let labBumilMasukCache = [];
+
+async function muatLabBumilMasuk() {
+  const card = document.getElementById("cardLabBumilPustu");
+  const tbody = document.getElementById("tabelLabBumilMasuk");
+  const { data, error } = await supabaseClient.from("lab_bumil_pustu")
+    .select("id, tanggal_kirim, usia_kehamilan_minggu, pasien:pasien_id(nama), pustu:pustu_id(nama)")
+    .eq("status", "dikirim_ke_induk").order("tanggal_kirim", { ascending: true });
+
+  if (error) { console.error("Gagal muat lab bumil masuk:", error.message); return; }
+  labBumilMasukCache = data || [];
+
+  if (!labBumilMasukCache.length) { card.style.display = "none"; return; }
+  card.style.display = "block";
+
+  tbody.innerHTML = labBumilMasukCache.map((r, i) => `
+    <tr>
+      <td>${r.tanggal_kirim ? new Date(r.tanggal_kirim).toLocaleDateString("id-ID") : "-"}</td>
+      <td>${r.pasien ? r.pasien.nama : "-"}</td>
+      <td>${r.pustu ? r.pustu.nama : "-"}</td>
+      <td>${r.usia_kehamilan_minggu ? r.usia_kehamilan_minggu + " mgg" : "-"}</td>
+      <td><button class="btn-secondary" onclick="bukaFormHasilLabBumil(${i})">Isi Hasil</button></td>
+    </tr>
+  `).join("");
+}
+
+function bukaFormHasilLabBumil(index) {
+  const r = labBumilMasukCache[index];
+  window._lbiTerpilih = r;
+  document.getElementById("lbiNamaPasien").textContent = r.pasien ? r.pasien.nama : "-";
+  document.getElementById("lbiHbsag").value = "belum_diperiksa";
+  document.getElementById("lbiHiv").value = "belum_diperiksa";
+  document.getElementById("lbiSifilis").value = "belum_diperiksa";
+  document.getElementById("lbiCatatan").value = "";
+  document.getElementById("msgIsiHasilLabBumil").innerHTML = "";
+  document.getElementById("cardIsiHasilLabBumil").style.display = "block";
+  document.getElementById("cardIsiHasilLabBumil").scrollIntoView({ behavior: "smooth" });
+}
+
+async function simpanHasilLabBumilInduk() {
+  const msgBox = document.getElementById("msgIsiHasilLabBumil");
+  const r = window._lbiTerpilih;
+  if (!r) { msgBox.innerHTML = `<div class="msg msg-error">Pilih sampel dulu.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const payload = {
+    hasil_hbsag: document.getElementById("lbiHbsag").value,
+    hasil_hiv: document.getElementById("lbiHiv").value,
+    hasil_sifilis: document.getElementById("lbiSifilis").value,
+    catatan_lab: document.getElementById("lbiCatatan").value.trim() || null,
+    status: "hasil_selesai",
+    tanggal_hasil: new Date().toISOString().split("T")[0],
+    petugas_lab_id: user.id
+  };
+
+  const { error } = await supabaseClient.from("lab_bumil_pustu").update(payload).eq("id", r.id);
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan hasil: ${error.message}</div>`; return; }
+
+  document.getElementById("cardIsiHasilLabBumil").style.display = "none";
+  await muatLabBumilMasuk();
+}
 
 async function muatDaftarObat() {
   const { data, error } = await supabaseClient.from("obat").select("nama_obat, dosis, stok, harga").gt("stok", 0).order("nama_obat");
