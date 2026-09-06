@@ -87,6 +87,7 @@
     <a href="gigi.html">Poli Gigi</a>
     <a href="pengaturan.html">Pengaturan</a>
     <a href="kasir.html">Kasir</a>
+          <a href="papan-antrian.html">Papan Antrian</a>
     </nav>
   </aside>
 
@@ -659,6 +660,7 @@
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button type="button" class="lap-tab active" id="kpSub-db" onclick="gantiSubKepegawaian('db')">Database Nakes</button>
             <button type="button" class="lap-tab" id="kpSub-reminder" onclick="gantiSubKepegawaian('reminder')">Reminder STR/SIP</button>
+            <button type="button" class="lap-tab" id="kpSub-jadwal" onclick="gantiSubKepegawaian('jadwal')">Jadwal Praktik</button>
           </div>
         </div>
 
@@ -684,6 +686,39 @@
             <table>
               <thead><tr><th>Nama</th><th>Dokumen</th><th>Nomor</th><th>Berlaku Sampai</th><th>Status</th></tr></thead>
               <tbody id="tabelReminderStrSip"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== JADWAL PRAKTIK ===== -->
+        <div id="kpPanel-jadwal" style="display:none;">
+          <div class="card" style="--accent:#2f9e5c;">
+            <h2><span class="card-num" style="background:#2f9e5c;">🗓️</span> Tambah Jadwal Praktik</h2>
+            <div id="msgJadwalPraktik"></div>
+            <div class="grid-2">
+              <div><label>Petugas *</label><select id="jdwPetugas"><option value="">- Pilih petugas -</option></select></div>
+              <div><label>Klaster/Poli *</label><select id="jdwKlaster"><option value="">- Pilih klaster -</option></select></div>
+            </div>
+            <div class="grid-3">
+              <div><label>Hari *</label>
+                <select id="jdwHari">
+                  <option>Senin</option><option>Selasa</option><option>Rabu</option><option>Kamis</option>
+                  <option>Jumat</option><option>Sabtu</option><option>Minggu</option>
+                </select>
+              </div>
+              <div><label>Jam Mulai *</label><input type="time" id="jdwJamMulai" value="08:00"></div>
+              <div><label>Jam Selesai *</label><input type="time" id="jdwJamSelesai" value="14:00"></div>
+            </div>
+            <label>Keterangan (opsional)</label>
+            <input type="text" id="jdwKeterangan" placeholder="mis. piket UGD, pengganti dr. X, dll.">
+            <button type="button" class="btn-primary" onclick="simpanJadwalPraktik()">Simpan Jadwal</button>
+          </div>
+
+          <div class="card">
+            <h2>Jadwal Praktik Mingguan</h2>
+            <table>
+              <thead><tr><th>Hari</th><th>Jam</th><th>Petugas</th><th>Klaster/Poli</th><th>Keterangan</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody id="tabelJadwalPraktik"><tr><td colspan="7">Memuat...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -2592,11 +2627,12 @@ let daftarKepegawaianGlobal = [];
 let daftarDataKepegawaianGlobal = [];
 
 function gantiSubKepegawaian(sub) {
-  ["db", "reminder"].forEach(s => {
+  ["db", "reminder", "jadwal"].forEach(s => {
     document.getElementById(`kpPanel-${s}`).style.display = s === sub ? "block" : "none";
     document.getElementById(`kpSub-${s}`).classList.toggle("active", s === sub);
   });
   if (sub === "reminder") muatReminderStrSip();
+  if (sub === "jadwal") muatJadwalPraktik();
 }
 
 async function muatKepegawaian() {
@@ -2765,8 +2801,101 @@ async function muatReminderStrSip() {
 }
 
 // ============================================================
-// SARPRAS & ALAT (ASPAK)
+// JADWAL PRAKTIK PETUGAS
 // ============================================================
+const URUTAN_HARI = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
+let daftarJadwalPraktikGlobal = [];
+
+async function isiDropdownJadwalPraktik() {
+  const selP = document.getElementById("jdwPetugas");
+  const selK = document.getElementById("jdwKlaster");
+  if (selP.options.length <= 1) {
+    (daftarKepegawaianGlobal || []).forEach(p => {
+      selP.insertAdjacentHTML("beforeend", `<option value="${p.id}">${p.nama} (${p.role})</option>`);
+    });
+  }
+  if (selK.options.length <= 1) {
+    const { data: klasterList } = await supabaseClient.from("klaster").select("id, kode, nama").order("id");
+    (klasterList || []).forEach(k => {
+      selK.insertAdjacentHTML("beforeend", `<option value="${k.id}">${k.kode} — ${k.nama}</option>`);
+    });
+  }
+}
+
+async function muatJadwalPraktik() {
+  const tbody = document.getElementById("tabelJadwalPraktik");
+  if (!daftarKepegawaianGlobal.length) await muatKepegawaian();
+  await isiDropdownJadwalPraktik();
+
+  const { data, error } = await supabaseClient
+    .from("jadwal_praktik")
+    .select("*, profil_pegawai(nama, role), klaster(kode, nama)")
+    .order("hari")
+    .order("jam_mulai");
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  daftarJadwalPraktikGlobal = (data || []).sort((a, b) => URUTAN_HARI.indexOf(a.hari) - URUTAN_HARI.indexOf(b.hari) || a.jam_mulai.localeCompare(b.jam_mulai));
+
+  if (!daftarJadwalPraktikGlobal.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada jadwal praktik.</td></tr>`; return; }
+
+  tbody.innerHTML = daftarJadwalPraktikGlobal.map(j => `
+    <tr>
+      <td>${j.hari}</td>
+      <td>${j.jam_mulai?.slice(0, 5)} - ${j.jam_selesai?.slice(0, 5)}</td>
+      <td>${j.profil_pegawai?.nama || "-"}</td>
+      <td>${j.klaster ? `${j.klaster.kode} — ${j.klaster.nama}` : "-"}</td>
+      <td>${j.keterangan || "-"}</td>
+      <td><span class="badge ${j.aktif ? 'badge-selesai' : 'badge-batal'}">${j.aktif ? "Aktif" : "Nonaktif"}</span></td>
+      <td>
+        <button class="btn-secondary" onclick="toggleAktifJadwalPraktik('${j.id}', ${j.aktif})">${j.aktif ? "Nonaktifkan" : "Aktifkan"}</button>
+        <button class="btn-secondary" onclick="hapusJadwalPraktik('${j.id}')">Hapus</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function simpanJadwalPraktik() {
+  const msgBox = document.getElementById("msgJadwalPraktik");
+  const petugasId = document.getElementById("jdwPetugas").value;
+  const klasterId = document.getElementById("jdwKlaster").value;
+  const hari = document.getElementById("jdwHari").value;
+  const jamMulai = document.getElementById("jdwJamMulai").value;
+  const jamSelesai = document.getElementById("jdwJamSelesai").value;
+  const keterangan = document.getElementById("jdwKeterangan").value.trim();
+
+  if (!petugasId || !klasterId || !jamMulai || !jamSelesai) { msgBox.innerHTML = `<div class="msg msg-error">Lengkapi petugas, klaster, dan jam dulu.</div>`; return; }
+  if (jamSelesai <= jamMulai) { msgBox.innerHTML = `<div class="msg msg-error">Jam selesai harus setelah jam mulai.</div>`; return; }
+
+  const { error } = await supabaseClient.from("jadwal_praktik").insert({
+    petugas_id: petugasId,
+    klaster_id: Number(klasterId),
+    hari,
+    jam_mulai: jamMulai,
+    jam_selesai: jamSelesai,
+    keterangan: keterangan || null
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-sukses">Jadwal praktik tersimpan.</div>`;
+  document.getElementById("jdwKeterangan").value = "";
+  await muatJadwalPraktik();
+}
+
+async function toggleAktifJadwalPraktik(id, statusSekarang) {
+  const { error } = await supabaseClient.from("jadwal_praktik").update({ aktif: !statusSekarang }).eq("id", id);
+  if (error) { alert(`Gagal ubah status: ${error.message}`); return; }
+  await muatJadwalPraktik();
+}
+
+async function hapusJadwalPraktik(id) {
+  if (!confirm("Hapus jadwal praktik ini?")) return;
+  const { error } = await supabaseClient.from("jadwal_praktik").delete().eq("id", id);
+  if (error) { alert(`Gagal hapus: ${error.message}`); return; }
+  await muatJadwalPraktik();
+}
+
+
 let daftarAlatGlobal = [];
 const LABEL_KONDISI = { baik: "Baik", rusak_ringan: "Rusak Ringan", rusak_berat: "Rusak Berat" };
 const BADGE_KONDISI = { baik: "badge-selesai", rusak_ringan: "badge-menunggu", rusak_berat: "badge-batal" };

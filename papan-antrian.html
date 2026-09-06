@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Papan Antrian - SIMPUS Bekawan</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #0b1524;
+    color: #f1f5f9;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+  }
+  .pa-top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 32px;
+    background: #10203a;
+    border-bottom: 3px solid #2f9e5c;
+  }
+  .pa-top h1 { font-size: 22px; margin: 0; color: #f1f5f9; }
+  .pa-top .sub { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+  .pa-jam { font-size: 28px; font-weight: 700; color: #2f9e5c; text-align: right; }
+  .pa-tanggal { font-size: 13px; color: #94a3b8; text-align: right; }
+  .pa-kembali { position: absolute; top: 18px; right: 32px; font-size: 12px; }
+  .pa-kembali a { color: #64748b; text-decoration: none; }
+
+  .pa-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    padding: 28px 32px;
+  }
+  .pa-card {
+    background: #10203a;
+    border-radius: 14px;
+    padding: 22px;
+    text-align: center;
+    border-top: 5px solid #2f9e5c;
+  }
+  .pa-card .nama-klaster { font-size: 16px; font-weight: 700; color: #cbd5e1; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .5px; }
+  .pa-card .nomor-dipanggil { font-size: 72px; font-weight: 800; color: #2f9e5c; line-height: 1; margin: 10px 0; }
+  .pa-card .label-nomor { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+  .pa-card .info-bawah { display: flex; justify-content: space-around; margin-top: 14px; font-size: 13px; color: #94a3b8; }
+  .pa-card .info-bawah b { color: #f1f5f9; font-size: 16px; display: block; }
+
+  .pa-jadwal {
+    margin: 0 32px 32px;
+    background: #10203a;
+    border-radius: 14px;
+    padding: 20px 24px;
+  }
+  .pa-jadwal h2 { font-size: 16px; margin: 0 0 12px; color: #cbd5e1; }
+  .pa-jadwal table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .pa-jadwal th, .pa-jadwal td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #1e2f4a; }
+  .pa-jadwal th { color: #64748b; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  .pa-jadwal td { color: #e2e8f0; }
+  .pa-kosong { text-align: center; color: #64748b; padding: 40px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="pa-top">
+  <div>
+    <h1>UPTD PUSKESMAS BEKAWAN</h1>
+    <div class="sub">Papan Informasi Antrian</div>
+  </div>
+  <div>
+    <div class="pa-jam" id="paJam">--:--:--</div>
+    <div class="pa-tanggal" id="paTanggal">-</div>
+  </div>
+</div>
+<div class="pa-kembali"><a href="index.html">&larr; Kembali ke Dashboard</a></div>
+
+<div class="pa-grid" id="paGrid">
+  <div class="pa-kosong">Memuat data antrian...</div>
+</div>
+
+<div class="pa-jadwal">
+  <h2>🗓️ Jadwal Praktik Hari Ini</h2>
+  <table>
+    <thead><tr><th>Jam</th><th>Petugas</th><th>Klaster / Poli</th><th>Keterangan</th></tr></thead>
+    <tbody id="paTabelJadwal"><tr><td colspan="4">Memuat...</td></tr></tbody>
+  </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script>
+const URUTAN_HARI_PA = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+let paDipanggilTerakhir = {}; // klaster_id -> no_antrian terakhir yang sudah diumumkan
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+  const profilSaya = await getProfilSaya();
+  cekAksesHalaman(profilSaya, "papan-antrian.html");
+
+  jalankanJam();
+  setInterval(jalankanJam, 1000);
+
+  await muatPapanAntrian();
+  await muatJadwalHariIni();
+  setInterval(muatPapanAntrian, 7000);
+  setInterval(muatJadwalHariIni, 60000);
+})();
+
+function jalankanJam() {
+  const now = new Date();
+  document.getElementById("paJam").textContent = now.toLocaleTimeString("id-ID");
+  document.getElementById("paTanggal").textContent = now.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+
+async function muatPapanAntrian() {
+  const grid = document.getElementById("paGrid");
+  const hariIni = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("id, no_antrian, status, klaster_id, klaster(kode, nama)")
+    .eq("tanggal", hariIni)
+    .neq("klaster_id", 1) // K1 = Manajemen, gak ada layanan pasien
+    .order("no_antrian", { ascending: true });
+
+  if (error) { grid.innerHTML = `<div class="pa-kosong">Gagal muat data: ${error.message}</div>`; return; }
+  if (!data || !data.length) { grid.innerHTML = `<div class="pa-kosong">Belum ada kunjungan hari ini.</div>`; return; }
+
+  const grup = {};
+  data.forEach(k => {
+    const key = k.klaster_id;
+    if (!grup[key]) grup[key] = { nama: k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "Klaster", menunggu: 0, diperiksa: 0, dipanggilList: [] };
+    if (k.status === "menunggu") grup[key].menunggu++;
+    if (k.status === "diperiksa") grup[key].diperiksa++;
+    if (k.status === "dipanggil") grup[key].dipanggilList.push(k.no_antrian);
+  });
+
+  grid.innerHTML = Object.entries(grup).map(([klasterId, g]) => {
+    const nomorSekarang = g.dipanggilList.length ? g.dipanggilList[g.dipanggilList.length - 1] : null;
+
+    // Umumkan suara kalau ada nomor dipanggil baru yang belum pernah diumumkan
+    if (nomorSekarang !== null && paDipanggilTerakhir[klasterId] !== nomorSekarang) {
+      paDipanggilTerakhir[klasterId] = nomorSekarang;
+      umumkanNomor(nomorSekarang, g.nama);
+    }
+
+    return `
+      <div class="pa-card">
+        <div class="nama-klaster">${g.nama}</div>
+        <div class="label-nomor">Nomor Dipanggil</div>
+        <div class="nomor-dipanggil">${nomorSekarang !== null ? nomorSekarang : "-"}</div>
+        <div class="info-bawah">
+          <div><b>${g.menunggu}</b>Menunggu</div>
+          <div><b>${g.diperiksa}</b>Diperiksa</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function umumkanNomor(nomor, namaKlaster) {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    const teks = `Nomor antrian ${nomor}, silakan menuju ke ${namaKlaster.split("—")[1] || namaKlaster}`;
+    const ucap = new SpeechSynthesisUtterance(teks);
+    ucap.lang = "id-ID";
+    ucap.rate = 0.95;
+    window.speechSynthesis.speak(ucap);
+  } catch (e) { console.error("Gagal umumkan suara:", e); }
+}
+
+async function muatJadwalHariIni() {
+  const tbody = document.getElementById("paTabelJadwal");
+  const namaHari = URUTAN_HARI_PA[new Date().getDay()];
+
+  const { data, error } = await supabaseClient
+    .from("jadwal_praktik")
+    .select("*, profil_pegawai(nama, role), klaster(kode, nama)")
+    .eq("hari", namaHari)
+    .eq("aktif", true)
+    .order("jam_mulai");
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat jadwal: ${error.message}</td></tr>`; return; }
+  if (!data || !data.length) { tbody.innerHTML = `<tr><td colspan="4">Belum ada jadwal praktik untuk hari ${namaHari}.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(j => `
+    <tr>
+      <td>${j.jam_mulai?.slice(0, 5)} - ${j.jam_selesai?.slice(0, 5)}</td>
+      <td>${j.profil_pegawai?.nama || "-"} (${j.profil_pegawai?.role || "-"})</td>
+      <td>${j.klaster ? `${j.klaster.kode} — ${j.klaster.nama}` : "-"}</td>
+      <td>${j.keterangan || "-"}</td>
+    </tr>
+  `).join("");
+}
+</script>
+</body>
+</html>

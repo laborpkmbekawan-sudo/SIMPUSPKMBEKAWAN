@@ -206,13 +206,13 @@ async function panggilAdmin(action, payload) {
 // akses ke rekam-medis.html, walau role dasarnya bukan dokter/perawat/bidan.
 // ============================================================
 const AKSES_HALAMAN = {
-  admin: ["index.html", "rekam-medis.html", "apotek.html", "ugd.html", "ranap.html", "klaster1.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "kasir.html"],
-  petugas: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html"],
-  staff: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html"],
-  dokter: ["rekam-medis.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html"],
-  perawat: ["rekam-medis.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html"],
-  bidan: ["rekam-medis.html", "ugd.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html"],
-  farmasi: ["apotek.html", "pengaturan.html"]
+  admin: ["index.html", "rekam-medis.html", "apotek.html", "ugd.html", "ranap.html", "klaster1.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "kasir.html", "papan-antrian.html"],
+  petugas: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html", "papan-antrian.html"],
+  staff: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html", "papan-antrian.html"],
+  dokter: ["rekam-medis.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
+  perawat: ["rekam-medis.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
+  bidan: ["rekam-medis.html", "ugd.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
+  farmasi: ["apotek.html", "pengaturan.html", "papan-antrian.html"]
 };
 
 // Hitung daftar halaman yang boleh diakses profil ini: role dasar + tambahan
