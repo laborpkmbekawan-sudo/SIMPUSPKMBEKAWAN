@@ -3848,6 +3848,10 @@ create trigger trg_audit_audit_internal_mutu after insert or update or delete on
   for each row execute function fn_audit_log();
 
 -- ============================================================
+-- SELESAI section 87. Idempotent, aman diulang.
+-- ============================================================
+
+-- ============================================================
 -- 88. KASIR — Shift Kasir (Buka/Tutup Shift & Closing)
 --     shift_kasir: 1 baris per shift kasir dibuka. Kasir wajib
 --     buka shift dulu (catat cash awal) sebelum bisa proses
@@ -3889,3 +3893,107 @@ create index if not exists idx_tagihan_kunjungan_shift on tagihan_kunjungan(shif
 -- ============================================================
 -- SELESAI section 88. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 89. KEPEGAWAIAN — Jadwal Praktik Petugas
+--     jadwal_praktik: jadwal piket mingguan per petugas per klaster.
+--     Dipakai di Klaster1 > Kepegawaian (atur jadwal) dan di
+--     Papan Antrian (nunjukin siapa yang praktik hari ini).
+-- ============================================================
+create table if not exists jadwal_praktik (
+  id uuid primary key default gen_random_uuid(),
+  petugas_id uuid not null references profil_pegawai(id),
+  klaster_id int references klaster(id),
+  hari text not null check (hari in ('Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')),
+  jam_mulai time not null,
+  jam_selesai time not null,
+  keterangan text,
+  aktif boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_jadwal_praktik_petugas on jadwal_praktik(petugas_id);
+create index if not exists idx_jadwal_praktik_hari on jadwal_praktik(hari);
+
+alter table jadwal_praktik enable row level security;
+drop policy if exists "authenticated_all_jadwal_praktik" on jadwal_praktik;
+create policy "authenticated_all_jadwal_praktik" on jadwal_praktik for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_jadwal_praktik on jadwal_praktik;
+create trigger trg_audit_jadwal_praktik after insert or update or delete on jadwal_praktik
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 89. Idempotent, aman diulang.
+-- ============================================================
+
+-- ============================================================
+-- 90. PENGATURAN — Profil Puskesmas (identitas institusi)
+--     Singleton (id selalu 1). Dipakai buat kop cetak struk,
+--     rekap shift, papan antrian, dsb — biar gak hardcode teks
+--     "UPTD PUSKESMAS BEKAWAN" di banyak file.
+-- ============================================================
+create table if not exists profil_puskesmas (
+  id int primary key default 1 check (id = 1),
+  nama text not null default 'UPTD PUSKESMAS BEKAWAN',
+  alamat text,
+  kelurahan_desa text,
+  kecamatan text,
+  kabupaten text,
+  no_telp text,
+  email text,
+  kepala_puskesmas text,
+  nip_kepala text,
+  updated_at timestamptz not null default now(),
+  updated_by uuid references profil_pegawai(id)
+);
+
+insert into profil_puskesmas (id) values (1) on conflict (id) do nothing;
+
+alter table profil_puskesmas enable row level security;
+drop policy if exists "authenticated_all_profil_puskesmas" on profil_puskesmas;
+create policy "authenticated_all_profil_puskesmas" on profil_puskesmas for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_profil_puskesmas on profil_puskesmas;
+create trigger trg_audit_profil_puskesmas after insert or update on profil_puskesmas
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 90. Idempotent, aman diulang.
+-- ============================================================
+
+-- ============================================================
+-- 91. REKAM MEDIS — Persetujuan Tindakan (Informed Consent)
+--     persetujuan_tindakan: dibuat sebelum tindakan medis yang
+--     butuh persetujuan tertulis (mis. tindakan bedah minor,
+--     pencabutan gigi, pemasangan alat). Tanda tangan disimpan
+--     sebagai data URL PNG dari canvas (base64), gak perlu
+--     storage terpisah.
+-- ============================================================
+create table if not exists persetujuan_tindakan (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_id uuid not null references kunjungan(id),
+  pasien_id uuid not null references pasien(id),
+  nama_tindakan text not null,
+  penjelasan_risiko text,
+  jenis_persetujuan text not null default 'setuju' check (jenis_persetujuan in ('setuju', 'menolak')),
+  nama_penanda_tangan text not null,
+  hubungan_dengan_pasien text not null default 'Diri Sendiri',
+  tanda_tangan_data text not null,
+  petugas_saksi_id uuid references profil_pegawai(id),
+  dibuat_at timestamptz not null default now()
+);
+
+create index if not exists idx_persetujuan_tindakan_kunjungan on persetujuan_tindakan(kunjungan_id);
+create index if not exists idx_persetujuan_tindakan_pasien on persetujuan_tindakan(pasien_id);
+
+alter table persetujuan_tindakan enable row level security;
+drop policy if exists "authenticated_all_persetujuan_tindakan" on persetujuan_tindakan;
+create policy "authenticated_all_persetujuan_tindakan" on persetujuan_tindakan for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_persetujuan_tindakan on persetujuan_tindakan;
+create trigger trg_audit_persetujuan_tindakan after insert or update or delete on persetujuan_tindakan
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 91. Idempotent, aman diulang.
