@@ -4007,3 +4007,50 @@ alter table tagihan_kunjungan add constraint tagihan_kunjungan_kategori_check
 
 -- ============================================================
 -- SELESAI section 92. Idempotent, aman diulang.
+
+-- ============================================================
+-- 93. MODUL PUSTU
+--     Pegawai bisa ditugaskan ke satu Pustu (pegawai Pustu cuma bisa
+--     buka pustu.html). Kunjungan yang dilayani di Pustu tetap masuk
+--     tabel kunjungan + rekam_medis yang sama dengan Induk (satu pasien
+--     satu RM, bukan bikin RM baru) — cuma ditambah pustu_id & detail
+--     jenis layanan khusus Pustu di kunjungan_pustu.
+-- ============================================================
+
+-- Pegawai yang ditugaskan di Pustu tertentu (bidan/perawat/petugas Pustu).
+-- null artinya pegawai Induk biasa (gak berubah dari sebelumnya).
+alter table profil_pegawai add column if not exists pustu_id int references pustu(id);
+create index if not exists idx_profil_pegawai_pustu on profil_pegawai(pustu_id);
+
+-- Tandai kunjungan mana yang terjadi di Pustu (null = di Induk, gak berubah).
+alter table kunjungan add column if not exists pustu_id int references pustu(id);
+create index if not exists idx_kunjungan_pustu on kunjungan(pustu_id);
+
+-- Detail tambahan khusus kunjungan Pustu: jenis layanan Pustu-nya apa,
+-- di luar SOAP standar yang sudah ada di rekam_medis.
+create table if not exists kunjungan_pustu (
+  id uuid primary key default gen_random_uuid(),
+  kunjungan_id uuid not null references kunjungan(id) on delete cascade,
+  pustu_id int not null references pustu(id),
+  jenis_layanan text not null check (jenis_layanan in (
+    'pemeriksaan_umum', 'kia_dasar', 'skrining_ptm', 'p3k', 'rujuk_ke_induk'
+  )),
+  catatan_pustu text,
+  petugas_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kunjungan_pustu_kunjungan on kunjungan_pustu(kunjungan_id);
+create index if not exists idx_kunjungan_pustu_pustu on kunjungan_pustu(pustu_id);
+
+alter table kunjungan_pustu enable row level security;
+drop policy if exists "authenticated_all_kunjungan_pustu" on kunjungan_pustu;
+create policy "authenticated_all_kunjungan_pustu" on kunjungan_pustu for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_kunjungan_pustu on kunjungan_pustu;
+create trigger trg_audit_kunjungan_pustu after insert or update or delete on kunjungan_pustu
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 93. Idempotent, aman diulang.
+-- ============================================================

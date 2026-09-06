@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pustu - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ================= Pustu / Poskesdes / Polindes (skema Navy/Teal, konsisten sama modul lain) ================= */
+.dash-content, .topbar { --navy:#0f2942; --navy-2:#173b5e; --teal-a:#1c7d7f; --teal-2:#26a3a0; --orange:#e0793c; --red:#c0503f; --green:#2f9e5c; }
+
+.sidebar { background: linear-gradient(180deg, var(--navy) 0%, var(--teal-a) 130%) !important; }
+.sidebar nav a.active { border-left: 3px solid var(--green) !important; background: rgba(255,255,255,.09) !important; }
+.sidebar nav a:hover { background: rgba(255,255,255,.06) !important; }
+.topbar h1 { color: var(--navy); }
+.ph-group-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.5); text-transform: uppercase; padding: 14px 18px 4px; }
+
+.dash-content .card { border-left: 4px solid var(--accent, var(--teal-2)); }
+.dash-content .card h2 { display: flex; align-items: center; gap: 8px; }
+.card-num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; color:#fff; font-size:13px; flex-shrink:0; }
+
+.pt-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+.pt-stat-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; border-left:4px solid var(--accent,#999); }
+.pt-stat-card .label { font-size:11.5px; color:var(--muted); margin-bottom:6px; }
+.pt-stat-card .value { font-size:24px; font-weight:700; color:#111827; }
+
+.pt-lokasi-banner { background:#eafaf6; border:1px solid #bfe8db; border-radius:10px; padding:12px 18px; font-size:12.5px; color:#1c6b52; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.pt-lokasi-banner.warn { background:#fdf1e8; border-color:#f2d0ae; color:#8a5a1c; }
+.pt-lokasi-banner select { margin-bottom:0; min-width:220px; }
+.tag-sync { display:inline-block; font-size:8.5px; font-weight:700; background:#eafaee; color:var(--green); padding:1px 6px; border-radius:8px; margin-left:4px; }
+
+@media print {
+  .sidebar, .topbar, .card button, .btn-primary, .btn-secondary { display:none !important; }
+  .dash-content { margin:0 !important; }
+  .card { border:none !important; box-shadow:none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+    </div>
+
+    <nav>
+    <div class="ph-group-title">Pustu / Poskesdes / Polindes</div>
+    <a class="active" id="navDashboard" onclick="gantiSubtabPT('dashboard')">Dashboard</a>
+
+    <div class="ph-group-title">Pelayanan</div>
+    <a id="navPelayanan" onclick="gantiSubtabPT('pelayanan')">Pelayanan Dasar Pustu</a>
+
+    <div class="ph-group-title">Data</div>
+    <a id="navRm" onclick="gantiSubtabPT('rm')">Rekam Medis Pustu</a>
+
+    <div class="ph-group-title">Modul Lain</div>
+    <a href="index.html">Pendaftaran</a>
+    <a href="rekam-medis.html">Rekam Medis</a>
+    <a href="apotek.html">Apotek</a>
+    <a href="ugd.html">UGD</a>
+    <a href="ranap.html">Rawat Inap</a>
+    <a href="klaster1.html">Klaster 1</a>
+    <a href="klaster2.html">Klaster 2</a>
+    <a href="klaster3.html">Klaster 3</a>
+    <a href="klaster4.html">Klaster 4</a>
+    <a href="gigi.html">Poli Gigi</a>
+    <a href="pengaturan.html">Pengaturan</a>
+    <a href="kasir.html">Kasir</a>
+    <a href="papan-antrian.html">Papan Antrian</a>
+    </nav>
+  </aside>
+
+  <div class="main-wrap">
+
+    <div class="topbar">
+      <h1>Dashboard Pustu</h1>
+      <div class="user-info">
+        <span id="namaUser">Memuat...</span>
+        <button onclick="logout()">Keluar</button>
+      </div>
+    </div>
+
+    <div class="dash-content">
+
+      <div id="ptLokasiBanner" class="pt-lokasi-banner">
+        <span id="ptLokasiTeks">Memuat lokasi Pustu...</span>
+      </div>
+
+      <!-- ============ DASHBOARD ============ -->
+      <div id="panelDashboard">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Pelayanan yang dicatat di Pustu langsung tersambung ke Rekam Medis Induk lewat No. RM/NIK pasien yang sama — bukan bikin RM baru.</p>
+
+        <div class="pt-stat-grid">
+          <div class="pt-stat-card" style="--accent:#26a3a0;">
+            <div class="label">Kunjungan Pustu Hari Ini</div>
+            <div class="value" id="statKunjunganPT">0</div>
+          </div>
+          <div class="pt-stat-card" style="--accent:#e0793c;">
+            <div class="label">Rujuk ke Induk Hari Ini</div>
+            <div class="value" id="statRujukPT">0</div>
+          </div>
+          <div class="pt-stat-card" style="--accent:#173b5e;">
+            <div class="label">Pasien Unik Bulan Ini</div>
+            <div class="value" id="statPasienUnikPT">0</div>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▣</span> Kunjungan Pustu Hari Ini</h2>
+          <table>
+            <thead><tr><th>No. Antrian</th><th>Pasien</th><th>Jenis Layanan</th><th>Jenis Bayar</th><th>Petugas</th></tr></thead>
+            <tbody id="tabelKunjunganPTHariIni"><tr><td colspan="5">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- ============ PELAYANAN DASAR PUSTU ============ -->
+      <div id="panelPelayanan" style="display:none;">
+
+        <div class="card" style="--accent:#26a3a0;">
+          <h2><span class="card-num" style="background:#26a3a0;">🩺</span> Cari Pasien</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Cari pasien yang sudah pernah terdaftar di Puskesmas Induk. Kalau pasien belum pernah terdaftar sama sekali, daftarkan dulu lewat Pendaftaran di Induk.</p>
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / No. BPJS / Nama)</label>
+              <input type="text" id="plCari" placeholder="Ketik NIK, No. RM, No. BPJS, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienPT('pl');}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienPT('pl')" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+          <div id="plHasilCari"></div>
+        </div>
+
+        <div id="plWrap" style="display:none;">
+
+          <div class="card" style="--accent:#e0793c;">
+            <h2>Form Pelayanan — <span id="plNamaPasien"></span> <span class="tag-sync">Sync ke RM Induk</span></h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">No. RM: <b id="plNoRm">-</b> · NIK: <b id="plNik">-</b></p>
+            <div id="msgPTPelayanan"></div>
+
+            <div class="grid-2">
+              <div>
+                <label>Jenis Layanan *</label>
+                <select id="plJenisLayanan" required>
+                  <option value="pemeriksaan_umum">Pemeriksaan umum</option>
+                  <option value="kia_dasar">Pelayanan KIA dasar</option>
+                  <option value="skrining_ptm">Skrining PTM dasar</option>
+                  <option value="p3k">P3K / penanganan awal</option>
+                  <option value="rujuk_ke_induk">Rujuk ke Puskesmas Induk</option>
+                </select>
+              </div>
+              <div>
+                <label>Jenis Bayar *</label>
+                <select id="plJenisBayar" required>
+                  <option value="Umum">Umum</option>
+                  <option value="BPJS">BPJS</option>
+                </select>
+              </div>
+            </div>
+
+            <label>Keluhan (Subjektif)</label>
+            <textarea id="plSubjektif" placeholder="Keluhan pasien"></textarea>
+
+            <h3 style="font-size:13px; color:var(--navy); margin:14px 0 8px;">Tanda Vital</h3>
+            <div class="grid-3">
+              <div><label>Tekanan Darah</label><input type="text" id="plTd" placeholder="120/80"></div>
+              <div><label>Suhu (°C)</label><input type="text" id="plSuhu"></div>
+              <div><label>Nadi (x/menit)</label><input type="text" id="plNadi"></div>
+            </div>
+            <div class="grid-3">
+              <div><label>Respirasi (x/menit)</label><input type="text" id="plRespirasi"></div>
+              <div><label>Berat Badan (kg)</label><input type="text" id="plBb"></div>
+              <div><label>Tinggi Badan (cm)</label><input type="text" id="plTb"></div>
+            </div>
+
+            <label>Objektif</label>
+            <textarea id="plObjektif" placeholder="Hasil pemeriksaan fisik"></textarea>
+
+            <div class="grid-2">
+              <div><label>Kode ICD-10</label><input type="text" id="plIcd10" placeholder="Contoh: J06.9"></div>
+              <div><label>Assessment / Diagnosis</label><input type="text" id="plAssessment"></div>
+            </div>
+
+            <label>Plan / Tata Laksana</label>
+            <textarea id="plPlan" placeholder="Tata laksana yang diberikan"></textarea>
+
+            <label>Catatan Tambahan Khusus Pustu</label>
+            <textarea id="plCatatanPustu" placeholder="Misal: kondisi lapangan, kader yang mendampingi, dll (opsional)"></textarea>
+
+            <button class="btn-primary" onclick="simpanPelayananPT()">Simpan Pelayanan</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ============ REKAM MEDIS PUSTU (READ-ONLY) ============ -->
+      <div id="panelRm" style="display:none;">
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">▤</span> Cari Pasien</h2>
+          <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Read-only — buat lihat riwayat, bukan buat mengubah data. Perubahan rekam medis hanya lewat form Pelayanan Dasar Pustu atau di Puskesmas Induk.</p>
+          <div class="grid-2">
+            <div>
+              <label>Cari Pasien (NIK / No. RM / No. BPJS / Nama)</label>
+              <input type="text" id="rmCari" placeholder="Ketik NIK, No. RM, No. BPJS, atau nama" onkeydown="if(event.key==='Enter'){event.preventDefault();cariPasienPT('rm');}">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" onclick="cariPasienPT('rm')" style="margin-bottom:12px;">Cari Pasien</button>
+            </div>
+          </div>
+          <div id="rmHasilCari"></div>
+        </div>
+
+        <div id="rmWrap" style="display:none;">
+
+          <div class="card" style="--accent:#26a3a0;">
+            <h2>Riwayat Pelayanan di Pustu Ini — <span id="rmNamaPasienPustu"></span></h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Jenis Layanan</th><th>Assessment</th><th>Catatan Pustu</th><th>Petugas</th></tr></thead>
+              <tbody id="tabelRiwayatPustuRM"><tr><td colspan="5">Belum ada riwayat.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2>Riwayat Rekam Medis Lengkap (Lintas Klaster) — <span id="rmNamaPasienLengkap"></span> <span class="tag-sync">Sync</span></h2>
+            <table>
+              <thead><tr><th>Tanggal</th><th>Klaster</th><th>Keluhan</th><th>Assessment</th><th>Plan</th><th>Obat</th></tr></thead>
+              <tbody id="tabelRmLengkapRM"><tr><td colspan="6">Belum ada riwayat.</td></tr></tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+let profilSaya = null;
+let pustuAktifId = null;
+let pustuAktifNama = null;
+let daftarKlasterGlobalPT = [];
+let pasienTerpilihPT = null; // dipakai bareng buat panel Pelayanan & RM (cari ulang tiap ganti panel)
+
+const KLASTER_KODE_PER_LAYANAN = {
+  pemeriksaan_umum: "K3", kia_dasar: "K2", skrining_ptm: "K3", p3k: "LK", rujuk_ke_induk: "LK"
+};
+const LABEL_JENIS_LAYANAN = {
+  pemeriksaan_umum: "Pemeriksaan umum", kia_dasar: "Pelayanan KIA dasar", skrining_ptm: "Skrining PTM dasar",
+  p3k: "P3K / penanganan awal", rujuk_ke_induk: "Rujuk ke Puskesmas Induk"
+};
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  profilSaya = await getProfilSaya();
+  cekAksesHalaman(profilSaya, "pustu.html");
+  if (profilSaya) {
+    document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+  }
+
+  const { data: klasterData } = await supabaseClient.from("klaster").select("*");
+  daftarKlasterGlobalPT = klasterData || [];
+
+  await siapkanLokasiPustu();
+  await muatDashboardPT();
+})();
+
+// ---------- Tentukan Pustu aktif: staff Pustu terkunci ke pustu_id-nya, admin bisa pilih ----------
+async function siapkanLokasiPustu() {
+  const banner = document.getElementById("ptLokasiBanner");
+  const teks = document.getElementById("ptLokasiTeks");
+
+  if (profilSaya && profilSaya.pustu_id) {
+    pustuAktifId = profilSaya.pustu_id;
+    pustuAktifNama = profilSaya.pustu ? profilSaya.pustu.nama : "Pustu";
+    teks.innerHTML = `Lokasi Pustu: <b>${pustuAktifNama}</b>`;
+    return;
+  }
+
+  if (profilSaya && profilSaya.role === "admin") {
+    const { data, error } = await supabaseClient.from("pustu").select("*").eq("aktif", true).order("nama");
+    if (error || !data || !data.length) {
+      banner.classList.add("warn");
+      teks.textContent = "Belum ada data Pustu/Poskesdes/Polindes. Tambahkan dulu di database.";
+      return;
+    }
+    pustuAktifId = data[0].id;
+    pustuAktifNama = data[0].nama;
+    const opsi = data.map(p => `<option value="${p.id}">${p.nama} (${p.tipe})</option>`).join("");
+    banner.innerHTML = `Login sebagai admin — pilih Pustu yang mau dikelola: <select id="ptPilihPustu" onchange="gantiPustuAktifAdmin(this.value)">${opsi}</select>`;
+    return;
+  }
+
+  banner.classList.add("warn");
+  teks.textContent = "Akun kamu belum ditugaskan ke Pustu manapun. Hubungi admin di Klaster 1.";
+}
+
+function gantiPustuAktifAdmin(idBaru) {
+  pustuAktifId = parseInt(idBaru);
+  document.getElementById("plWrap").style.display = "none";
+  document.getElementById("rmWrap").style.display = "none";
+  document.getElementById("plHasilCari").innerHTML = "";
+  document.getElementById("rmHasilCari").innerHTML = "";
+  muatDashboardPT();
+}
+
+// ---------- Sub-tab nav ----------
+const SUBTAB_PT = ["dashboard", "pelayanan", "rm"];
+function idPartPT(tab) {
+  return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
+}
+function gantiSubtabPT(tab) {
+  SUBTAB_PT.forEach(t => {
+    const idPart = idPartPT(t);
+    const panel = document.getElementById("panel" + idPart);
+    if (panel) panel.style.display = (t === tab) ? "block" : "none";
+    const nav = document.getElementById("nav" + idPart);
+    if (nav) nav.classList.toggle("active", t === tab);
+  });
+  const judul = { dashboard: "Dashboard Pustu", pelayanan: "Pelayanan Dasar Pustu", rm: "Rekam Medis Pustu" };
+  document.querySelector(".topbar h1").textContent = judul[tab] || "Pustu";
+  if (tab === "dashboard") muatDashboardPT();
+}
+
+// ---------- DASHBOARD ----------
+async function muatDashboardPT() {
+  const tbody = document.getElementById("tabelKunjunganPTHariIni");
+  if (!pustuAktifId) {
+    tbody.innerHTML = `<tr><td colspan="5">Belum ada Pustu aktif.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const today = new Date().toISOString().split("T")[0];
+  const awalBulan = today.slice(0, 8) + "01";
+
+  const [{ data: hariIni, error: errHariIni }, { data: bulanIni }] = await Promise.all([
+    supabaseClient.from("kunjungan")
+      .select("no_antrian, jenis_bayar, pasien:pasien_id(nama), kunjungan_pustu(jenis_layanan, petugas:petugas_id(nama))")
+      .eq("pustu_id", pustuAktifId).eq("tanggal", today).order("no_antrian"),
+    supabaseClient.from("kunjungan")
+      .select("pasien_id")
+      .eq("pustu_id", pustuAktifId).gte("tanggal", awalBulan)
+  ]);
+
+  if (errHariIni) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${errHariIni.message}</td></tr>`; return; }
+
+  document.getElementById("statKunjunganPT").textContent = (hariIni || []).length;
+  const jumlahRujuk = (hariIni || []).filter(k => (k.kunjungan_pustu[0]?.jenis_layanan) === "rujuk_ke_induk").length;
+  document.getElementById("statRujukPT").textContent = jumlahRujuk;
+  document.getElementById("statPasienUnikPT").textContent = new Set((bulanIni || []).map(k => k.pasien_id)).size;
+
+  if (!hariIni.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada kunjungan Pustu hari ini.</td></tr>`; return; }
+
+  tbody.innerHTML = hariIni.map(k => {
+    const kp = k.kunjungan_pustu[0] || null;
+    return `
+      <tr>
+        <td>${k.no_antrian}</td>
+        <td>${k.pasien ? k.pasien.nama : "-"}</td>
+        <td>${kp ? (LABEL_JENIS_LAYANAN[kp.jenis_layanan] || kp.jenis_layanan) : "-"}</td>
+        <td>${k.jenis_bayar}</td>
+        <td>${kp && kp.petugas ? kp.petugas.nama : "-"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// ---------- CARI PASIEN (dipakai bareng Pelayanan & RM) ----------
+async function cariPasienPT(konteks) {
+  const kunci = document.getElementById(konteks + "Cari").value.trim();
+  const hasilDiv = document.getElementById(konteks + "HasilCari");
+  hasilDiv.innerHTML = "";
+  const wrapId = konteks === "pl" ? "plWrap" : "rmWrap";
+  document.getElementById(wrapId).style.display = "none";
+
+  if (!pustuAktifId) {
+    hasilDiv.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif. Hubungi admin.</div>`;
+    return;
+  }
+  if (!kunci) {
+    hasilDiv.innerHTML = `<div class="msg msg-error">Isi nama, NIK, No. RM, atau No. BPJS dulu.</div>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("pasien")
+    .select("*")
+    .or(`nik.eq.${kunci},no_rm.eq.${kunci},no_bpjs.eq.${kunci},nama.ilike.%${kunci}%`)
+    .is("digabung_ke_id", null)
+    .order("nama")
+    .limit(20);
+
+  if (error) { hasilDiv.innerHTML = `<div class="msg msg-error">Gagal cari: ${error.message}</div>`; return; }
+  if (!data.length) { hasilDiv.innerHTML = `<div class="msg msg-error">Pasien tidak ditemukan. Pasien harus sudah terdaftar di Puskesmas Induk dulu.</div>`; return; }
+
+  if (data.length === 1) { pilihPasienPT(data[0], konteks); return; }
+
+  hasilDiv.innerHTML = `<div class="msg msg-success">${data.length} pasien ditemukan, pilih salah satu:</div>` +
+    `<table><thead><tr><th>Nama</th><th>No. RM</th><th>NIK</th><th></th></tr></thead><tbody>` +
+    data.map((p, i) => `
+      <tr>
+        <td>${p.nama}</td>
+        <td>${p.no_rm || "-"}</td>
+        <td>${p.nik}</td>
+        <td><button class="btn-secondary" onclick="pilihPasienPTDariHasil(${i}, '${konteks}')">Pilih</button></td>
+      </tr>
+    `).join("") + `</tbody></table>`;
+  window["_hasilCariPT_" + konteks] = data;
+}
+
+function pilihPasienPTDariHasil(index, konteks) {
+  pilihPasienPT(window["_hasilCariPT_" + konteks][index], konteks);
+}
+
+function pilihPasienPT(p, konteks) {
+  pasienTerpilihPT = p;
+  document.getElementById(konteks + "HasilCari").innerHTML = "";
+
+  if (konteks === "pl") {
+    document.getElementById("plWrap").style.display = "block";
+    document.getElementById("plNamaPasien").textContent = p.nama;
+    document.getElementById("plNoRm").textContent = p.no_rm || "-";
+    document.getElementById("plNik").textContent = p.nik;
+    document.getElementById("msgPTPelayanan").innerHTML = "";
+    ["plSubjektif", "plTd", "plSuhu", "plNadi", "plRespirasi", "plBb", "plTb", "plObjektif", "plIcd10", "plAssessment", "plPlan", "plCatatanPustu"]
+      .forEach(id => document.getElementById(id).value = "");
+  } else {
+    document.getElementById("rmWrap").style.display = "block";
+    document.getElementById("rmNamaPasienPustu").textContent = p.nama;
+    document.getElementById("rmNamaPasienLengkap").textContent = p.nama;
+    muatRiwayatPustuRM();
+    muatRmLengkapRM();
+  }
+}
+
+// ---------- PELAYANAN DASAR PUSTU ----------
+async function simpanPelayananPT() {
+  const msgBox = document.getElementById("msgPTPelayanan");
+  if (!pasienTerpilihPT) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
+
+  const jenisLayanan = document.getElementById("plJenisLayanan").value;
+  const jenisBayar = document.getElementById("plJenisBayar").value;
+  const kodeKlaster = KLASTER_KODE_PER_LAYANAN[jenisLayanan];
+  const klasterTujuan = daftarKlasterGlobalPT.find(k => k.kode === kodeKlaster);
+  if (!klasterTujuan) { msgBox.innerHTML = `<div class="msg msg-error">Klaster tujuan tidak ditemukan buat jenis layanan ini.</div>`; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  const { data: noKunjunganData, error: errNo } = await supabaseClient.rpc("generate_no_kunjungan");
+  const { data: noAntrianData, error: errAntrian } = await supabaseClient.rpc("generate_no_antrian", { p_klaster_id: klasterTujuan.id });
+  if (errNo || errAntrian) { msgBox.innerHTML = `<div class="msg msg-error">Gagal generate nomor: ${(errNo || errAntrian).message}</div>`; return; }
+
+  const payloadKunjungan = {
+    no_kunjungan: noKunjunganData,
+    pasien_id: pasienTerpilihPT.id,
+    klaster_id: klasterTujuan.id,
+    pustu_id: pustuAktifId,
+    jenis_bayar: jenisBayar,
+    jenis_pasien: jenisBayar,
+    lokasi_pemeriksaan: pustuAktifNama,
+    pengirim: "Sendiri",
+    no_antrian: noAntrianData,
+    keluhan_awal: document.getElementById("plSubjektif").value.trim(),
+    tekanan_darah: document.getElementById("plTd").value.trim(),
+    suhu: document.getElementById("plSuhu").value.trim(),
+    nadi: document.getElementById("plNadi").value.trim(),
+    respirasi: document.getElementById("plRespirasi").value.trim(),
+    berat_badan: document.getElementById("plBb").value.trim(),
+    tinggi_badan: document.getElementById("plTb").value.trim(),
+    status: "selesai",
+    created_by: user.id
+  };
+
+  const { data: kunjunganBaru, error: errK } = await supabaseClient.from("kunjungan").insert(payloadKunjungan).select("id").single();
+  if (errK) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan kunjungan: ${errK.message}</div>`; return; }
+
+  const payloadRM = {
+    kunjungan_id: kunjunganBaru.id,
+    subjektif: document.getElementById("plSubjektif").value.trim(),
+    objektif: document.getElementById("plObjektif").value.trim(),
+    tekanan_darah: payloadKunjungan.tekanan_darah,
+    suhu: payloadKunjungan.suhu,
+    nadi: payloadKunjungan.nadi,
+    respirasi: payloadKunjungan.respirasi,
+    berat_badan: payloadKunjungan.berat_badan,
+    tinggi_badan: payloadKunjungan.tinggi_badan,
+    assessment: document.getElementById("plAssessment").value.trim(),
+    kode_icd10: document.getElementById("plIcd10").value.trim(),
+    plan: document.getElementById("plPlan").value.trim(),
+    petugas_id: user.id
+  };
+  const { error: errRM } = await supabaseClient.from("rekam_medis").insert(payloadRM);
+  if (errRM) { msgBox.innerHTML = `<div class="msg msg-error">Kunjungan tersimpan, tapi gagal simpan rekam medis: ${errRM.message}</div>`; return; }
+
+  const payloadKP = {
+    kunjungan_id: kunjunganBaru.id,
+    pustu_id: pustuAktifId,
+    jenis_layanan: jenisLayanan,
+    catatan_pustu: document.getElementById("plCatatanPustu").value.trim() || null,
+    petugas_id: user.id
+  };
+  const { error: errKP } = await supabaseClient.from("kunjungan_pustu").insert(payloadKP);
+  if (errKP) { msgBox.innerHTML = `<div class="msg msg-error">Kunjungan & RM tersimpan, tapi gagal simpan detail Pustu: ${errKP.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Pelayanan berhasil disimpan. No. Kunjungan ${noKunjunganData}, No. Antrian ${noAntrianData}. Tersambung ke RM Induk pasien ${pasienTerpilihPT.nama} (No. RM ${pasienTerpilihPT.no_rm || "-"}).</div>`;
+  ["plSubjektif", "plTd", "plSuhu", "plNadi", "plRespirasi", "plBb", "plTb", "plObjektif", "plIcd10", "plAssessment", "plPlan", "plCatatanPustu"]
+    .forEach(id => document.getElementById(id).value = "");
+  await muatDashboardPT();
+}
+
+// ---------- REKAM MEDIS PUSTU (READ-ONLY) ----------
+async function muatRiwayatPustuRM() {
+  const tbody = document.getElementById("tabelRiwayatPustuRM");
+  tbody.innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan_pustu")
+    .select("jenis_layanan, catatan_pustu, petugas:petugas_id(nama), kunjungan:kunjungan_id(tanggal, pasien_id, rekam_medis(assessment, kode_icd10))")
+    .eq("pustu_id", pustuAktifId)
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+
+  const filtered = (data || []).filter(r => r.kunjungan && r.kunjungan.pasien_id === pasienTerpilihPT.id);
+  if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada riwayat pelayanan di Pustu ini.</td></tr>`; return; }
+
+  tbody.innerHTML = filtered.map(r => {
+    const rm = (r.kunjungan.rekam_medis && r.kunjungan.rekam_medis[0]) || null;
+    return `
+      <tr>
+        <td>${new Date(r.kunjungan.tanggal).toLocaleDateString("id-ID")}</td>
+        <td>${LABEL_JENIS_LAYANAN[r.jenis_layanan] || r.jenis_layanan}</td>
+        <td>${rm ? `${rm.assessment || "-"} ${rm.kode_icd10 ? "(" + rm.kode_icd10 + ")" : ""}` : "-"}</td>
+        <td>${r.catatan_pustu || "-"}</td>
+        <td>${r.petugas ? r.petugas.nama : "-"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function muatRmLengkapRM() {
+  const tbody = document.getElementById("tabelRmLengkapRM");
+  tbody.innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("id, tanggal, keluhan_awal, klaster(nama, kode), rekam_medis(assessment, kode_icd10, plan), resep(daftar_obat)")
+    .eq("pasien_id", pasienTerpilihPT.id)
+    .order("tanggal", { ascending: false })
+    .limit(30);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="6">Belum ada riwayat kunjungan / rekam medis.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(k => {
+    const rm = (k.rekam_medis && k.rekam_medis[0]) || null;
+    const resepList = k.resep || [];
+    const obatRingkas = resepList.length
+      ? resepList.map(r => (r.daftar_obat || []).map(o => o.nama_obat).join(", ")).filter(Boolean).join(" | ")
+      : "-";
+    return `
+      <tr>
+        <td>${new Date(k.tanggal).toLocaleDateString("id-ID")}</td>
+        <td>${k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "-"}</td>
+        <td>${k.keluhan_awal || "-"}</td>
+        <td>${rm ? `${rm.assessment || "-"} ${rm.kode_icd10 ? "(" + rm.kode_icd10 + ")" : ""}` : "-"}</td>
+        <td>${rm?.plan || "-"}</td>
+        <td>${obatRingkas || "-"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+</script>
+</body>
+</html>

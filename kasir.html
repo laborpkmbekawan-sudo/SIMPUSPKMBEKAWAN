@@ -33,6 +33,7 @@
     <a href="klaster3.html">Klaster 3</a>
     <a href="klaster4.html">Klaster 4</a>
     <a href="gigi.html">Poli Gigi</a>
+    <a href="pustu.html">Pustu</a>
     <a href="pengaturan.html">Pengaturan</a>
     <a href="kasir.html" class="active">Kasir</a>
   </div>
@@ -92,53 +93,9 @@
     <div class="card" id="cardTagihanPasien" style="display:none;">
       <h2>Tagihan — <span id="kasirNamaPasien"></span> <span style="font-weight:400; font-size:12px; color:var(--muted);">(No. RM <span id="kasirNoRmPasien">-</span>)</span></h2>
       <div id="msgTagihan"></div>
-
-      <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
-        <button type="button" class="btn-secondary" onclick="toggleFormItemManual()">+ Tambah Item Manual</button>
-      </div>
-
-      <div id="formItemManual" class="card" style="display:none; background:#f9fafb; margin-bottom:14px;">
-        <div class="grid-2">
-          <div><label>Kategori</label>
-            <select id="imKategori" onchange="isiPilihanLayananManual()">
-              <option value="Konsultasi">Konsultasi</option>
-              <option value="Pemeriksaan">Pemeriksaan</option>
-              <option value="Tindakan">Tindakan</option>
-              <option value="Laboratorium">Laboratorium</option>
-              <option value="Obat">Obat</option>
-              <option value="Administrasi">Administrasi</option>
-              <option value="Lain-lain">Lain-lain</option>
-            </select>
-          </div>
-          <div><label>Jenis Bayar</label>
-            <select id="imJenisBayar" onchange="isiHargaOtomatisManual()">
-              <option value="Umum">Umum</option>
-              <option value="BPJS">BPJS</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid-2">
-          <div><label>Layanan (dari Master Tarif)</label>
-            <select id="imLayananTarif" onchange="isiHargaOtomatisManual()">
-              <option value="">-- Custom / Ketik Manual --</option>
-            </select>
-          </div>
-          <div><label>Nama Layanan (kalau Custom)</label><input type="text" id="imNamaCustom" placeholder="Ketik nama layanan..."></div>
-        </div>
-        <div class="grid-2">
-          <div><label>Jumlah</label><input type="number" id="imJumlah" value="1" min="1"></div>
-          <div><label>Harga Satuan (Rp)</label><input type="text" id="imHarga" placeholder="0" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-        </div>
-        <div id="msgItemManual"></div>
-        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
-          <button type="button" class="btn-secondary" onclick="toggleFormItemManual()">Batal</button>
-          <button type="button" class="btn-primary" onclick="simpanItemManual()">Simpan Item</button>
-        </div>
-      </div>
-
       <table>
-        <thead><tr><th style="width:26px;"><input type="checkbox" id="chkSemuaTagihan" onchange="toggleSemuaTagihan(this)"></th><th>Tanggal</th><th>Kategori</th><th>Layanan</th><th>Sumber</th><th>Jml</th><th>Harga Satuan</th><th>Subtotal</th><th>Cara Bayar</th><th>Aksi</th></tr></thead>
-        <tbody id="tabelTagihanPasien"><tr><td colspan="10">Belum ada pencarian.</td></tr></tbody>
+        <thead><tr><th style="width:26px;"><input type="checkbox" id="chkSemuaTagihan" onchange="toggleSemuaTagihan(this)"></th><th>Tanggal</th><th>Kategori</th><th>Layanan</th><th>Sumber</th><th>Jml</th><th>Harga Satuan</th><th>Subtotal</th><th>Cara Bayar</th></tr></thead>
+        <tbody id="tabelTagihanPasien"><tr><td colspan="9">Belum ada pencarian.</td></tr></tbody>
       </table>
 
       <div id="ringkasanTotalTagihan" style="margin-top:14px; padding-top:14px; border-top:1px solid #e5e7eb;"></div>
@@ -284,7 +241,6 @@ let profilSaya = null;
 let hasilCariCache = [];
 let pasienTerpilihKasir = null;
 let tagihanCachePasien = [];
-let masterTarifCacheKasir = [];
 let shiftAktif = null;
 let laporanCache = null;
 
@@ -305,96 +261,7 @@ let laporanCache = null;
   const hariIni = new Date().toISOString().split("T")[0];
   document.getElementById("riwDari").value = hariIni;
   document.getElementById("riwSampai").value = hariIni;
-
-  await muatMasterTarifKasir();
 })();
-
-// ---------- ITEM MANUAL ----------
-async function muatMasterTarifKasir() {
-  const { data, error } = await supabaseClient
-    .from("master_tarif")
-    .select("id, kategori, nama_layanan, tarif_umum, tarif_bpjs")
-    .eq("aktif", true)
-    .order("kategori").order("nama_layanan");
-  if (error) { console.error(error); return; }
-  masterTarifCacheKasir = data || [];
-}
-
-function toggleFormItemManual() {
-  const box = document.getElementById("formItemManual");
-  const buka = box.style.display === "none";
-  box.style.display = buka ? "block" : "none";
-  document.getElementById("msgItemManual").innerHTML = "";
-  if (buka) {
-    document.getElementById("imKategori").value = "Konsultasi";
-    document.getElementById("imJenisBayar").value = "Umum";
-    document.getElementById("imNamaCustom").value = "";
-    document.getElementById("imJumlah").value = "1";
-    document.getElementById("imHarga").value = "";
-    isiPilihanLayananManual();
-  }
-}
-
-function isiPilihanLayananManual() {
-  const kategori = document.getElementById("imKategori").value;
-  const sel = document.getElementById("imLayananTarif");
-  const cocok = masterTarifCacheKasir.filter(t => t.kategori === kategori);
-  sel.innerHTML = `<option value="">-- Custom / Ketik Manual --</option>` +
-    cocok.map(t => `<option value="${t.id}">${t.nama_layanan}</option>`).join("");
-  isiHargaOtomatisManual();
-}
-
-function isiHargaOtomatisManual() {
-  const tarifId = document.getElementById("imLayananTarif").value;
-  const jenisBayar = document.getElementById("imJenisBayar").value;
-  if (!tarifId) return;
-  const t = masterTarifCacheKasir.find(x => x.id === tarifId);
-  if (!t) return;
-  document.getElementById("imHarga").value = jenisBayar === "BPJS" ? Number(t.tarif_bpjs || 0) : Number(t.tarif_umum || 0);
-}
-
-async function simpanItemManual() {
-  const msgBox = document.getElementById("msgItemManual");
-  if (!pasienTerpilihKasir) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
-
-  const kategori = document.getElementById("imKategori").value;
-  const jenisBayar = document.getElementById("imJenisBayar").value;
-  const tarifId = document.getElementById("imLayananTarif").value || null;
-  const tarifDipilih = tarifId ? masterTarifCacheKasir.find(x => x.id === tarifId) : null;
-  const namaLayanan = tarifDipilih ? tarifDipilih.nama_layanan : document.getElementById("imNamaCustom").value.trim();
-  const jumlah = Number(document.getElementById("imJumlah").value) || 1;
-  const harga = Number(document.getElementById("imHarga").value) || 0;
-
-  if (!namaLayanan) { msgBox.innerHTML = `<div class="msg msg-error">Isi nama layanan (atau pilih dari Master Tarif).</div>`; return; }
-  if (harga <= 0) { msgBox.innerHTML = `<div class="msg msg-error">Harga satuan harus lebih dari 0.</div>`; return; }
-
-  const payload = {
-    pasien_id: pasienTerpilihKasir.id,
-    kategori,
-    nama_layanan: namaLayanan,
-    jumlah,
-    harga_satuan: harga,
-    subtotal: jumlah * harga,
-    jenis_bayar: jenisBayar,
-    sumber_tabel: "manual_kasir",
-    tarif_id: tarifId,
-    status: "belum_dibayar",
-    petugas_id: profilSaya.id
-  };
-
-  const { error } = await supabaseClient.from("tagihan_kunjungan").insert(payload);
-  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan: ${error.message}</div>`; return; }
-
-  toggleFormItemManual();
-  await muatTagihanPasien();
-}
-
-async function hapusItemManual(id) {
-  if (!confirm("Hapus item ini dari tagihan?")) return;
-  const { error } = await supabaseClient.from("tagihan_kunjungan").delete().eq("id", id).eq("sumber_tabel", "manual_kasir").eq("status", "belum_dibayar");
-  if (error) { alert("Gagal hapus: " + error.message); return; }
-  await muatTagihanPasien();
-}
 
 // ---------- SHIFT KASIR ----------
 async function muatStatusShift() {
@@ -610,7 +477,7 @@ async function pilihPasienKasir(pasienId) {
 
 async function muatTagihanPasien() {
   const tbody = document.getElementById("tabelTagihanPasien");
-  tbody.innerHTML = `<tr><td colspan="10">Memuat...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="9">Memuat...</td></tr>`;
   document.getElementById("msgTagihan").innerHTML = "";
 
   const { data, error } = await supabaseClient
@@ -620,11 +487,11 @@ async function muatTagihanPasien() {
     .eq("status", "belum_dibayar")
     .order("created_at", { ascending: false });
 
-  if (error) { tbody.innerHTML = `<tr><td colspan="10">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (error) { tbody.innerHTML = `<tr><td colspan="9">Gagal muat: ${error.message}</td></tr>`; return; }
 
   tagihanCachePasien = data || [];
   if (!tagihanCachePasien.length) {
-    tbody.innerHTML = `<tr><td colspan="10">Gak ada tagihan belum dibayar buat pasien ini. 🎉</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9">Gak ada tagihan belum dibayar buat pasien ini. 🎉</td></tr>`;
     hitungTotalDipilih();
     return;
   }
@@ -635,12 +502,11 @@ async function muatTagihanPasien() {
       <td>${new Date(t.created_at).toLocaleDateString("id-ID")}</td>
       <td>${t.kategori}</td>
       <td>${t.nama_layanan}</td>
-      <td>${t.sumber_tabel === "manual_kasir" ? "Input Manual Kasir" : (t.kunjungan?.no_kunjungan || "Non-kunjungan (KIA/KB)")}</td>
+      <td>${t.kunjungan?.no_kunjungan || "Non-kunjungan (KIA/KB)"}</td>
       <td>${t.jumlah}</td>
       <td>Rp ${formatRupiahKasir(t.harga_satuan)}</td>
       <td>Rp ${formatRupiahKasir(t.subtotal)}</td>
       <td>${t.jenis_bayar}</td>
-      <td>${t.sumber_tabel === "manual_kasir" ? `<button type="button" class="btn-secondary" onclick="hapusItemManual('${t.id}')" style="padding:4px 8px; font-size:12px;">Hapus</button>` : "-"}</td>
     </tr>
   `).join("");
   hitungTotalDipilih();

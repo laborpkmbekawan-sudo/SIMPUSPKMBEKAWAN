@@ -85,6 +85,7 @@
     <a href="klaster3.html">Klaster 3</a>
     <a href="klaster4.html">Klaster 4</a>
     <a href="gigi.html">Poli Gigi</a>
+    <a href="pustu.html">Pustu</a>
     <a href="pengaturan.html">Pengaturan</a>
     <a href="kasir.html">Kasir</a>
           <a href="papan-antrian.html">Papan Antrian</a>
@@ -148,10 +149,10 @@
           <table>
             <thead>
               <tr>
-                <th>Nama</th><th>Email</th><th>Role</th><th>Klaster Utama</th><th>Status</th><th>Aksi</th>
+                <th>Nama</th><th>Email</th><th>Role</th><th>Klaster Utama</th><th>Lokasi Pustu</th><th>Status</th><th>Aksi</th>
               </tr>
             </thead>
-            <tbody id="tabelPegawai"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            <tbody id="tabelPegawai"><tr><td colspan="7">Memuat...</td></tr></tbody>
           </table>
         </div>
 
@@ -182,6 +183,13 @@
               <div>
                 <label>Klaster Utama</label>
                 <select id="npKlaster"><option value="">- Tidak ada -</option></select>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div>
+                <label>Lokasi Pustu</label>
+                <select id="npPustu"><option value="">- Bukan staff Pustu -</option></select>
+                <p style="font-size:11px; color:var(--muted); margin:4px 0 0;">Isi kalau pegawai ini ditugaskan di Pustu/Poskesdes/Polindes. Akunnya nanti cuma bisa buka halaman Pustu, gak ikut akses Klaster/Rekam Medis Induk.</p>
               </div>
             </div>
             <button type="submit" class="btn-primary">Tambah Pegawai</button>
@@ -235,6 +243,13 @@
                 <option value="true">Aktif</option>
                 <option value="false">Nonaktif</option>
               </select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label>Lokasi Pustu</label>
+              <select id="editPustu"><option value="">- Bukan staff Pustu -</option></select>
+              <p style="font-size:11px; color:var(--muted); margin:4px 0 0;">Isi kalau pegawai ini ditugaskan di Pustu/Poskesdes/Polindes. Akunnya nanti cuma bisa buka halaman Pustu.</p>
             </div>
           </div>
           <button type="button" class="btn-primary" onclick="simpanProfilPegawai()">Simpan Role/Klaster/Status</button>
@@ -1544,12 +1559,13 @@ let pegawaiEdit = null;
   if (profil) document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;
 
   await muatKlasterUntukSelect();
+  await muatPustuUntukSelect();
   await muatDashboardK1();
 
   if (profil && profil.role === "admin") {
     await muatDaftarPegawai();
   } else {
-    document.getElementById("tabelPegawai").innerHTML = `<tr><td colspan="6">Kelola akun cuma bisa dilakukan admin.</td></tr>`;
+    document.getElementById("tabelPegawai").innerHTML = `<tr><td colspan="7">Kelola akun cuma bisa dilakukan admin.</td></tr>`;
     document.getElementById("formPegawaiBaru").style.display = "none";
   }
 
@@ -1698,6 +1714,15 @@ async function muatKlasterUntukSelect() {
   document.getElementById("amKlaster").innerHTML = '<option value="">- Lintas klaster / manajemen -</option>' + opsi;
 }
 
+// ---------- Daftar Pustu/Poskesdes/Polindes buat select penugasan pegawai ----------
+async function muatPustuUntukSelect() {
+  const { data, error } = await supabaseClient.from("pustu").select("*").eq("aktif", true).order("nama");
+  if (error) return;
+  const opsi = (data || []).map(p => `<option value="${p.id}">${p.nama} (${p.tipe})</option>`).join("");
+  document.getElementById("npPustu").innerHTML = '<option value="">- Bukan staff Pustu -</option>' + opsi;
+  document.getElementById("editPustu").innerHTML = '<option value="">- Bukan staff Pustu -</option>' + opsi;
+}
+
 // ---------- Pegawai ringan buat select (PJ/petugas), semua role bisa baca ----------
 async function muatPegawaiUntukSelect() {
   const { data, error } = await supabaseClient.from("profil_pegawai").select("id, nama").eq("aktif", true).order("nama");
@@ -1712,7 +1737,7 @@ async function muatDaftarPegawai() {
   const tbody = document.getElementById("tabelPegawai");
   const { data, error } = await panggilAdmin("daftar_pegawai", {});
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="6">Gagal muat: ${error}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error}</td></tr>`;
     return;
   }
   daftarPegawaiGlobal = data;
@@ -1722,10 +1747,11 @@ async function muatDaftarPegawai() {
       <td>${p.email || "-"}</td>
       <td>${p.role}</td>
       <td>${p.klaster ? `${p.klaster.kode} — ${p.klaster.nama}` : "-"}</td>
+      <td>${p.pustu ? p.pustu.nama : "-"}</td>
       <td>${p.aktif ? '<span class="badge badge-selesai">Aktif</span>' : '<span class="badge badge-batal">Nonaktif</span>'}</td>
       <td><button class="btn-secondary" onclick="bukaEditPegawai(${i})">Edit</button></td>
     </tr>
-  `).join("") || `<tr><td colspan="6">Belum ada pegawai.</td></tr>`;
+  `).join("") || `<tr><td colspan="7">Belum ada pegawai.</td></tr>`;
 }
 
 document.getElementById("formPegawaiBaru").addEventListener("submit", async (e) => {
@@ -1738,6 +1764,7 @@ document.getElementById("formPegawaiBaru").addEventListener("submit", async (e) 
     password: document.getElementById("npPassword").value,
     role: document.getElementById("npRole").value,
     klaster_id: document.getElementById("npKlaster").value ? parseInt(document.getElementById("npKlaster").value) : null,
+    pustu_id: document.getElementById("npPustu").value ? parseInt(document.getElementById("npPustu").value) : null,
   };
 
   const { error } = await panggilAdmin("buat_pegawai", payload);
@@ -1760,6 +1787,7 @@ function bukaEditPegawai(index) {
   document.getElementById("editPasswordBaru").value = "";
   document.getElementById("editRole").value = pegawaiEdit.role;
   document.getElementById("editKlaster").value = pegawaiEdit.klaster_id || "";
+  document.getElementById("editPustu").value = pegawaiEdit.pustu_id || "";
   document.getElementById("editAktif").value = String(!!pegawaiEdit.aktif);
   document.getElementById("msgBoxEdit").innerHTML = "";
 
@@ -1868,6 +1896,7 @@ async function simpanProfilPegawai() {
     pegawai_id: pegawaiEdit.id,
     role: document.getElementById("editRole").value,
     klaster_id: document.getElementById("editKlaster").value ? parseInt(document.getElementById("editKlaster").value) : null,
+    pustu_id: document.getElementById("editPustu").value ? parseInt(document.getElementById("editPustu").value) : null,
     aktif: document.getElementById("editAktif").value === "true",
   };
   const { error } = await panggilAdmin("update_profil", payload);

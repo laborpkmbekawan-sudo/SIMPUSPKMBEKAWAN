@@ -70,8 +70,9 @@ serve(async (req) => {
         const { data: profilList, error: e1 } = await admin
           .from("profil_pegawai")
           .select(`
-            id, nama, nip, role, klaster_id, aktif, created_at,
+            id, nama, nip, role, klaster_id, pustu_id, aktif, created_at,
             klaster(nama, kode),
+            pustu(nama, tipe),
             pegawai_klaster(klaster_id, keterangan, klaster(nama, kode)),
             hak_akses(id, modul_kode, klaster_id, level)
           `)
@@ -89,7 +90,7 @@ serve(async (req) => {
 
       // ------------------------------------------------------
       case "buat_pegawai": {
-        const { email, password, nama, nip, role, klaster_id } = payload ?? {};
+        const { email, password, nama, nip, role, klaster_id, pustu_id } = payload ?? {};
         if (!email || !password || !nama || !role) {
           return json({ error: "email, password, nama, role wajib diisi." }, 400);
         }
@@ -99,7 +100,8 @@ serve(async (req) => {
         if (e1) throw e1;
 
         const { error: e2 } = await admin.from("profil_pegawai").insert({
-          id: created.user.id, nama, nip: nip || null, role, klaster_id: klaster_id || null, aktif: true,
+          id: created.user.id, nama, nip: nip || null, role, klaster_id: klaster_id || null,
+          pustu_id: pustu_id || null, aktif: true,
         });
         if (e2) {
           // Rollback biar gak ada auth user nyangkut tanpa profil
@@ -129,13 +131,14 @@ serve(async (req) => {
 
       // ------------------------------------------------------
       case "update_profil": {
-        const { pegawai_id, nama, nip, role, klaster_id, aktif } = payload ?? {};
+        const { pegawai_id, nama, nip, role, klaster_id, pustu_id, aktif } = payload ?? {};
         if (!pegawai_id) return json({ error: "pegawai_id wajib." }, 400);
         const patch: Record<string, unknown> = {};
         if (nama !== undefined) patch.nama = nama;
         if (nip !== undefined) patch.nip = nip;
         if (role !== undefined) patch.role = role;
         if (klaster_id !== undefined) patch.klaster_id = klaster_id;
+        if (pustu_id !== undefined) patch.pustu_id = pustu_id;
         if (aktif !== undefined) patch.aktif = aktif;
         const { error } = await admin.from("profil_pegawai").update(patch).eq("id", pegawai_id);
         if (error) throw error;

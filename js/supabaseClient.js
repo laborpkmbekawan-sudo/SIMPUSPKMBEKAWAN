@@ -109,6 +109,7 @@ async function getProfilSaya() {
     .select(`
       *,
       klaster(nama, kode),
+      pustu(nama, tipe, wilayah),
       pegawai_klaster(klaster_id, keterangan, klaster(nama, kode)),
       hak_akses(modul_kode, klaster_id, level)
     `)
@@ -206,7 +207,7 @@ async function panggilAdmin(action, payload) {
 // akses ke rekam-medis.html, walau role dasarnya bukan dokter/perawat/bidan.
 // ============================================================
 const AKSES_HALAMAN = {
-  admin: ["index.html", "rekam-medis.html", "apotek.html", "ugd.html", "ranap.html", "klaster1.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "kasir.html", "papan-antrian.html"],
+  admin: ["index.html", "rekam-medis.html", "apotek.html", "ugd.html", "ranap.html", "klaster1.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "kasir.html", "papan-antrian.html", "pustu.html"],
   petugas: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html", "papan-antrian.html"],
   staff: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html", "papan-antrian.html"],
   dokter: ["rekam-medis.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
@@ -220,6 +221,11 @@ const AKSES_HALAMAN = {
 function halamanIzinUntuk(profil) {
   if (!profil) return [];
   if (profil.role === "admin") return AKSES_HALAMAN.admin;
+
+  // Pegawai yang ditugaskan di Pustu (bidan/perawat/petugas Pustu dkk) cuma
+  // boleh buka pustu.html, gak ikut akses klaster/rekam-medis induk biasa
+  // walau role dasarnya dokter/perawat/bidan/dst.
+  if (profil.pustu_id) return ["pustu.html"];
 
   const izin = new Set(AKSES_HALAMAN[profil.role] || []);
   if (punyaAksesModul(profil, "rekam_medis")) izin.add("rekam-medis.html");
