@@ -1,6 +1,6 @@
 /* ============================================================
    TAMPILAN BARU — sidebar & topbar, Design System resmi SIMPUS
-   Palet: TEAL (disetujui, gantiin navy lama).
+   Palet: HIJAU + PUTIH (disetujui, gantiin teal gelap).
    File ini TAMBAHAN, bukan pengganti css/style.css.
    Cara pakai: taruh 1 baris <link> ini SETELAH link style.css:
    <link rel="stylesheet" href="css/tampilan-baru.css">
@@ -8,15 +8,15 @@
    ============================================================ */
 
 :root {
-  --sb-primary: #0F6B68;
-  --sb-primary-dark: #0B4F4D;
-  --sb-sidebar: #073B3A;
-  --sb-active: #167A73;
-  --sb-bg: #F5F8FA;
+  --sb-primary: #16A34A;
+  --sb-primary-dark: #0F7A38;
+  --sb-primary-light: #E6F6EC;
+  --sb-sidebar: #FFFFFF;
+  --sb-bg: #F5F9F6;
   --sb-card: #FFFFFF;
-  --sb-border: #E1E8EB;
-  --sb-text: #234047;
-  --sb-text-2: #6B7C85;
+  --sb-border: #E1E8E3;
+  --sb-text: #1F2D27;
+  --sb-text-2: #6B7C74;
   --sb-success: #22A06B;
   --sb-warning: #F59E0B;
   --sb-danger: #D94B6A;
@@ -26,7 +26,8 @@
 /* ---------- Sidebar ---------- */
 .sidebar {
   width: 264px !important;
-  background: linear-gradient(180deg, var(--sb-sidebar) 0%, #0B4F4D 100%) !important;
+  background: var(--sb-sidebar) !important;
+  border-right: 1px solid var(--sb-border);
   padding: 0 !important;
   display: flex;
   flex-direction: column;
@@ -34,15 +35,16 @@
 
 .sidebar .brand {
   padding: 20px 18px !important;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid var(--sb-border);
   gap: 10px !important;
 }
+.sidebar .brand strong { color: var(--sb-text) !important; }
 
 .sidebar .brand .dot {
   width: 34px !important;
   height: 34px !important;
   border-radius: 9px !important;
-  background: rgba(255,255,255,0.12) !important;
+  background: var(--sb-primary-light) !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,7 +60,7 @@
   font-size: 11px !important;
   font-weight: 700 !important;
   letter-spacing: .04em;
-  color: rgba(255,255,255,0.38) !important;
+  color: var(--sb-text-2) !important;
   text-transform: uppercase;
   margin: 16px 10px 6px !important;
 }
@@ -72,20 +74,20 @@
   margin: 2px 4px !important;
   padding: 9px 10px !important;
   font-size: 13.5px !important;
-  color: rgba(255,255,255,0.78) !important;
+  color: var(--sb-text) !important;
   border-left: none !important;
 }
 
 .sidebar nav a:hover {
-  background: rgba(255,255,255,0.08) !important;
-  color: #fff !important;
+  background: var(--sb-bg) !important;
+  color: var(--sb-text) !important;
 }
 
 .sidebar nav a.active {
-  background: var(--sb-active) !important;
-  color: #fff !important;
-  font-weight: 600 !important;
-  box-shadow: none !important;
+  background: var(--sb-primary-light) !important;
+  color: var(--sb-primary-dark) !important;
+  font-weight: 700 !important;
+  box-shadow: inset 3px 0 0 var(--sb-primary) !important;
 }
 
 .nav-icon {
@@ -110,10 +112,10 @@
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.38);
+  color: var(--sb-text-2);
   padding: 4px 6px;
 }
-.nav-group-title:hover { color: rgba(255,255,255,0.6); }
+.nav-group-title:hover { color: var(--sb-primary-dark); }
 .nav-group-title .chevron { transition: transform .15s ease; font-size: 10px; }
 .nav-group-title.collapsed .chevron { transform: rotate(-90deg); }
 .nav-group-body { overflow: hidden; }
