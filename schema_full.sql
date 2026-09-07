@@ -4472,3 +4472,65 @@ create trigger trg_audit_approval_laporan_kapus after insert or update or delete
 -- ============================================================
 -- SELESAI section 101. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 102. PENGAJUAN CUTI/IZIN & SURAT TUGAS
+--      Self-service: pegawai ajukan sendiri lewat pengaturan.html,
+--      Kepala Puskesmas approve/tolak lewat kapus.html. Pola status
+--      sama kayak module approval lain: diajukan -> disetujui/ditolak.
+--      jumlah_hari dihitung client-side pas insert (inklusif kedua
+--      tanggal), disimpan biar gak perlu hitung ulang tiap query.
+-- ============================================================
+create table if not exists pengajuan_cuti_izin (
+  id uuid primary key default gen_random_uuid(),
+  pegawai_id uuid not null references profil_pegawai(id) on delete cascade,
+  jenis text not null check (jenis in ('cuti_tahunan', 'cuti_sakit', 'izin', 'cuti_melahirkan', 'lainnya')),
+  tanggal_mulai date not null,
+  tanggal_selesai date not null,
+  jumlah_hari int not null default 1,
+  alasan text,
+  status text not null default 'diajukan' check (status in ('diajukan', 'disetujui', 'ditolak')),
+  catatan_kapus text,
+  diputuskan_oleh uuid references profil_pegawai(id),
+  tanggal_keputusan timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists surat_tugas (
+  id uuid primary key default gen_random_uuid(),
+  pegawai_id uuid not null references profil_pegawai(id) on delete cascade,
+  perihal text not null,
+  tempat_tugas text,
+  tanggal_mulai date not null,
+  tanggal_selesai date not null,
+  keterangan text,
+  status text not null default 'diajukan' check (status in ('diajukan', 'disetujui', 'ditolak')),
+  catatan_kapus text,
+  diputuskan_oleh uuid references profil_pegawai(id),
+  tanggal_keputusan timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pengajuan_cuti_izin_pegawai on pengajuan_cuti_izin(pegawai_id, status);
+create index if not exists idx_pengajuan_cuti_izin_status on pengajuan_cuti_izin(status);
+create index if not exists idx_surat_tugas_pegawai on surat_tugas(pegawai_id, status);
+create index if not exists idx_surat_tugas_status on surat_tugas(status);
+
+alter table pengajuan_cuti_izin enable row level security;
+alter table surat_tugas enable row level security;
+drop policy if exists "authenticated_all_pengajuan_cuti_izin" on pengajuan_cuti_izin;
+create policy "authenticated_all_pengajuan_cuti_izin" on pengajuan_cuti_izin for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_surat_tugas" on surat_tugas;
+create policy "authenticated_all_surat_tugas" on surat_tugas for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pengajuan_cuti_izin on pengajuan_cuti_izin;
+create trigger trg_audit_pengajuan_cuti_izin after insert or update or delete on pengajuan_cuti_izin
+  for each row execute function fn_audit_log();
+
+drop trigger if exists trg_audit_surat_tugas on surat_tugas;
+create trigger trg_audit_surat_tugas after insert or update or delete on surat_tugas
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 102. Idempotent, aman diulang.
+-- ============================================================

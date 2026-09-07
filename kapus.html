@@ -147,6 +147,8 @@
         <div class="kap-subtab-row">
           <button class="kap-subtab-btn active" id="kapTabLplpoBtn" onclick="gantiTabApproval('lplpo')">Approval LPLPO</button>
           <button class="kap-subtab-btn" id="kapTabLaporanBtn" onclick="gantiTabApproval('laporan')">Approval Laporan Penting</button>
+          <button class="kap-subtab-btn" id="kapTabCutiBtn" onclick="gantiTabApproval('cuti')">Approval Cuti/Izin</button>
+          <button class="kap-subtab-btn" id="kapTabTugasBtn" onclick="gantiTabApproval('tugas')">Approval Surat Tugas</button>
         </div>
 
         <!-- ===== Sub-tab: LPLPO ===== -->
@@ -182,6 +184,44 @@
               <table>
                 <thead><tr><th>Laporan</th><th>Periode</th><th>Hasil Review</th><th>Tanggal</th><th>Catatan</th></tr></thead>
                 <tbody id="kapTbodyRiwayatLaporan"><tr><td colspan="5">Memuat...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Sub-tab: Cuti/Izin ===== -->
+        <div id="kapTabCuti" style="display:none;">
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">⏳</span> Menunggu Persetujuan</h2>
+            <p style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">Pengajuan cuti/izin dari pegawai, lewat Pengaturan &rarr; Pengajuan Cuti/Izin &amp; Surat Tugas.</p>
+            <div id="kapCutiPending"><div class="kap-kosong">Memuat...</div></div>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">🕘</span> Riwayat Approval Cuti/Izin</h2>
+            <div class="tbl-wrap" style="overflow:auto;">
+              <table>
+                <thead><tr><th>Nama</th><th>Jenis</th><th>Tanggal</th><th>Status</th><th>Catatan</th></tr></thead>
+                <tbody id="kapTbodyRiwayatCuti"><tr><td colspan="5">Memuat...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Sub-tab: Surat Tugas ===== -->
+        <div id="kapTabTugas" style="display:none;">
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">⏳</span> Menunggu Persetujuan</h2>
+            <p style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">Pengajuan surat tugas dari pegawai, lewat Pengaturan &rarr; Pengajuan Cuti/Izin &amp; Surat Tugas.</p>
+            <div id="kapTugasPending"><div class="kap-kosong">Memuat...</div></div>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">🕘</span> Riwayat Approval Surat Tugas</h2>
+            <div class="tbl-wrap" style="overflow:auto;">
+              <table>
+                <thead><tr><th>Nama</th><th>Perihal</th><th>Tanggal</th><th>Status</th><th>Catatan</th></tr></thead>
+                <tbody id="kapTbodyRiwayatTugas"><tr><td colspan="5">Memuat...</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -368,9 +408,15 @@ function gantiSubtabKapus(tab) {
 function gantiTabApproval(tab) {
   document.getElementById("kapTabLplpo").style.display = tab === "lplpo" ? "block" : "none";
   document.getElementById("kapTabLaporan").style.display = tab === "laporan" ? "block" : "none";
+  document.getElementById("kapTabCuti").style.display = tab === "cuti" ? "block" : "none";
+  document.getElementById("kapTabTugas").style.display = tab === "tugas" ? "block" : "none";
   document.getElementById("kapTabLplpoBtn").classList.toggle("active", tab === "lplpo");
   document.getElementById("kapTabLaporanBtn").classList.toggle("active", tab === "laporan");
+  document.getElementById("kapTabCutiBtn").classList.toggle("active", tab === "cuti");
+  document.getElementById("kapTabTugasBtn").classList.toggle("active", tab === "tugas");
   if (tab === "laporan") muatApprovalLaporan();
+  if (tab === "cuti") muatApprovalCuti();
+  if (tab === "tugas") muatApprovalTugas();
 }
 
 // ================================================================
@@ -669,6 +715,166 @@ async function muatRiwayatReviewLaporan() {
       </tr>
     `;
   }).join("");
+}
+
+// ================================================================
+// APPROVAL CUTI/IZIN
+// ================================================================
+const LABEL_JENIS_CUTI_KAPUS = { cuti_tahunan: "Cuti Tahunan", cuti_sakit: "Cuti Sakit", izin: "Izin", cuti_melahirkan: "Cuti Melahirkan", lainnya: "Lainnya" };
+
+async function muatApprovalCuti() {
+  const pendingBox = document.getElementById("kapCutiPending");
+  pendingBox.innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const { data: pending, error } = await supabaseClient
+    .from("pengajuan_cuti_izin")
+    .select("id, jenis, tanggal_mulai, tanggal_selesai, jumlah_hari, alasan, created_at, pegawai_id, profil_pegawai!pegawai_id(nama)")
+    .eq("status", "diajukan")
+    .order("created_at", { ascending: true });
+
+  if (error) { pendingBox.innerHTML = `<div class="msg msg-error">Gagal muat: ${error.message}</div>`; return; }
+
+  pendingBox.innerHTML = (!pending || pending.length === 0)
+    ? `<div class="kap-kosong">Tidak ada pengajuan cuti/izin yang menunggu approval.</div>`
+    : pending.map(p => `
+        <div class="kap-appr-card">
+          <div class="kap-appr-head">
+            <div>
+              <h4>${p.profil_pegawai ? p.profil_pegawai.nama : "-"} — ${LABEL_JENIS_CUTI_KAPUS[p.jenis] || p.jenis}</h4>
+              <div class="sub">${new Date(p.tanggal_mulai).toLocaleDateString("id-ID")} &ndash; ${new Date(p.tanggal_selesai).toLocaleDateString("id-ID")} (${p.jumlah_hari} hari)</div>
+              <div class="sub">Alasan: ${p.alasan || "-"}</div>
+            </div>
+            <div class="kap-appr-actions">
+              <button type="button" class="btn-secondary" style="color:#c62836; border-color:#c62836;" onclick="tolakCuti('${p.id}')">Tolak</button>
+              <button type="button" class="btn-primary" onclick="setujuiCuti('${p.id}')">Setujui</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+  await muatRiwayatApprovalCuti();
+}
+
+async function setujuiCuti(id) {
+  if (!confirm("Setujui pengajuan cuti/izin ini?")) return;
+  const { error } = await supabaseClient.from("pengajuan_cuti_izin").update({
+    status: "disetujui", diputuskan_oleh: profilSaya.id, tanggal_keputusan: new Date().toISOString()
+  }).eq("id", id);
+  if (error) { alert("Gagal menyetujui: " + error.message); return; }
+  await muatApprovalCuti();
+}
+
+async function tolakCuti(id) {
+  const catatan = prompt("Alasan penolakan (wajib diisi):");
+  if (catatan === null) return;
+  if (!catatan.trim()) { alert("Alasan penolakan wajib diisi."); return; }
+  const { error } = await supabaseClient.from("pengajuan_cuti_izin").update({
+    status: "ditolak", catatan_kapus: catatan.trim(), diputuskan_oleh: profilSaya.id, tanggal_keputusan: new Date().toISOString()
+  }).eq("id", id);
+  if (error) { alert("Gagal menolak: " + error.message); return; }
+  await muatApprovalCuti();
+}
+
+async function muatRiwayatApprovalCuti() {
+  const tbody = document.getElementById("kapTbodyRiwayatCuti");
+  const { data, error } = await supabaseClient
+    .from("pengajuan_cuti_izin")
+    .select("jenis, tanggal_mulai, tanggal_selesai, status, catatan_kapus, tanggal_keputusan, profil_pegawai!pegawai_id(nama)")
+    .in("status", ["disetujui", "ditolak"])
+    .order("tanggal_keputusan", { ascending: false })
+    .limit(15);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Belum ada riwayat.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td>${d.profil_pegawai ? d.profil_pegawai.nama : "-"}</td>
+      <td>${LABEL_JENIS_CUTI_KAPUS[d.jenis] || d.jenis}</td>
+      <td>${new Date(d.tanggal_mulai).toLocaleDateString("id-ID")} &ndash; ${new Date(d.tanggal_selesai).toLocaleDateString("id-ID")}</td>
+      <td><span class="kap-hist-badge ${d.status === "disetujui" ? "approved" : "rejected"}">${d.status === "disetujui" ? "Disetujui" : "Ditolak"}</span></td>
+      <td>${d.catatan_kapus || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+// ================================================================
+// APPROVAL SURAT TUGAS
+// ================================================================
+async function muatApprovalTugas() {
+  const pendingBox = document.getElementById("kapTugasPending");
+  pendingBox.innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const { data: pending, error } = await supabaseClient
+    .from("surat_tugas")
+    .select("id, perihal, tempat_tugas, tanggal_mulai, tanggal_selesai, keterangan, created_at, pegawai_id, profil_pegawai!pegawai_id(nama)")
+    .eq("status", "diajukan")
+    .order("created_at", { ascending: true });
+
+  if (error) { pendingBox.innerHTML = `<div class="msg msg-error">Gagal muat: ${error.message}</div>`; return; }
+
+  pendingBox.innerHTML = (!pending || pending.length === 0)
+    ? `<div class="kap-kosong">Tidak ada pengajuan surat tugas yang menunggu approval.</div>`
+    : pending.map(p => `
+        <div class="kap-appr-card">
+          <div class="kap-appr-head">
+            <div>
+              <h4>${p.profil_pegawai ? p.profil_pegawai.nama : "-"} — ${p.perihal}</h4>
+              <div class="sub">${p.tempat_tugas || "-"} • ${new Date(p.tanggal_mulai).toLocaleDateString("id-ID")} &ndash; ${new Date(p.tanggal_selesai).toLocaleDateString("id-ID")}</div>
+              ${p.keterangan ? `<div class="sub">Keterangan: ${p.keterangan}</div>` : ""}
+            </div>
+            <div class="kap-appr-actions">
+              <button type="button" class="btn-secondary" style="color:#c62836; border-color:#c62836;" onclick="tolakTugas('${p.id}')">Tolak</button>
+              <button type="button" class="btn-primary" onclick="setujuiTugas('${p.id}')">Setujui</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+  await muatRiwayatApprovalTugas();
+}
+
+async function setujuiTugas(id) {
+  if (!confirm("Setujui pengajuan surat tugas ini?")) return;
+  const { error } = await supabaseClient.from("surat_tugas").update({
+    status: "disetujui", diputuskan_oleh: profilSaya.id, tanggal_keputusan: new Date().toISOString()
+  }).eq("id", id);
+  if (error) { alert("Gagal menyetujui: " + error.message); return; }
+  await muatApprovalTugas();
+}
+
+async function tolakTugas(id) {
+  const catatan = prompt("Alasan penolakan (wajib diisi):");
+  if (catatan === null) return;
+  if (!catatan.trim()) { alert("Alasan penolakan wajib diisi."); return; }
+  const { error } = await supabaseClient.from("surat_tugas").update({
+    status: "ditolak", catatan_kapus: catatan.trim(), diputuskan_oleh: profilSaya.id, tanggal_keputusan: new Date().toISOString()
+  }).eq("id", id);
+  if (error) { alert("Gagal menolak: " + error.message); return; }
+  await muatApprovalTugas();
+}
+
+async function muatRiwayatApprovalTugas() {
+  const tbody = document.getElementById("kapTbodyRiwayatTugas");
+  const { data, error } = await supabaseClient
+    .from("surat_tugas")
+    .select("perihal, tanggal_mulai, tanggal_selesai, status, catatan_kapus, tanggal_keputusan, profil_pegawai!pegawai_id(nama)")
+    .in("status", ["disetujui", "ditolak"])
+    .order("tanggal_keputusan", { ascending: false })
+    .limit(15);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Belum ada riwayat.</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td>${d.profil_pegawai ? d.profil_pegawai.nama : "-"}</td>
+      <td>${d.perihal}</td>
+      <td>${new Date(d.tanggal_mulai).toLocaleDateString("id-ID")} &ndash; ${new Date(d.tanggal_selesai).toLocaleDateString("id-ID")}</td>
+      <td><span class="kap-hist-badge ${d.status === "disetujui" ? "approved" : "rejected"}">${d.status === "disetujui" ? "Disetujui" : "Ditolak"}</span></td>
+      <td>${d.catatan_kapus || "-"}</td>
+    </tr>
+  `).join("");
 }
 
 // ================================================================

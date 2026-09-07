@@ -49,6 +49,72 @@
     </form>
   </div>
 
+  <div class="card" style="--accent:#6a4c93;">
+    <h2><span class="card-num" style="background:#6a4c93;">🗂</span> Pengajuan Cuti/Izin &amp; Surat Tugas</h2>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Ajukan cuti/izin atau surat tugas dinas luar. Persetujuan dilakukan oleh Kepala Puskesmas.</p>
+
+    <div style="display:flex; gap:6px; margin-bottom:14px; border-bottom:2px solid var(--border);">
+      <button type="button" class="lap-tab active" id="pjSub-cuti" onclick="gantiSubPengajuan('cuti')">Cuti/Izin</button>
+      <button type="button" class="lap-tab" id="pjSub-tugas" onclick="gantiSubPengajuan('tugas')">Surat Tugas</button>
+    </div>
+
+    <!-- ===== Sub: Cuti/Izin ===== -->
+    <div id="pjTabCuti">
+      <div id="msgPjCuti"></div>
+      <form id="formPengajuanCuti">
+        <label>Jenis *</label>
+        <select id="pjcJenis" required>
+          <option value="cuti_tahunan">Cuti Tahunan</option>
+          <option value="cuti_sakit">Cuti Sakit</option>
+          <option value="izin">Izin</option>
+          <option value="cuti_melahirkan">Cuti Melahirkan</option>
+          <option value="lainnya">Lainnya</option>
+        </select>
+        <div class="grid-2">
+          <div><label>Tanggal Mulai *</label><input type="date" id="pjcMulai" required></div>
+          <div><label>Tanggal Selesai *</label><input type="date" id="pjcSelesai" required></div>
+        </div>
+        <label>Alasan</label>
+        <textarea id="pjcAlasan" rows="2"></textarea>
+        <button type="submit" class="btn-primary">Ajukan Cuti/Izin</button>
+      </form>
+
+      <h3 style="font-size:13.5px; color:var(--navy); margin:18px 0 8px;">Riwayat Pengajuan Saya</h3>
+      <div class="tbl-wrap" style="overflow:auto;">
+        <table>
+          <thead><tr><th>Jenis</th><th>Tanggal</th><th>Hari</th><th>Status</th><th>Catatan Kapus</th></tr></thead>
+          <tbody id="tabelRiwayatCuti"><tr><td colspan="5">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== Sub: Surat Tugas ===== -->
+    <div id="pjTabTugas" style="display:none;">
+      <div id="msgPjTugas"></div>
+      <form id="formPengajuanTugas">
+        <label>Perihal *</label>
+        <input type="text" id="pjtPerihal" required>
+        <label>Tempat Tugas</label>
+        <input type="text" id="pjtTempat">
+        <div class="grid-2">
+          <div><label>Tanggal Mulai *</label><input type="date" id="pjtMulai" required></div>
+          <div><label>Tanggal Selesai *</label><input type="date" id="pjtSelesai" required></div>
+        </div>
+        <label>Keterangan</label>
+        <textarea id="pjtKeterangan" rows="2"></textarea>
+        <button type="submit" class="btn-primary">Ajukan Surat Tugas</button>
+      </form>
+
+      <h3 style="font-size:13.5px; color:var(--navy); margin:18px 0 8px;">Riwayat Pengajuan Saya</h3>
+      <div class="tbl-wrap" style="overflow:auto;">
+        <table>
+          <thead><tr><th>Perihal</th><th>Tempat</th><th>Tanggal</th><th>Status</th><th>Catatan Kapus</th></tr></thead>
+          <tbody id="tabelRiwayatTugas"><tr><td colspan="5">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ MANAJEMEN USER & AKSES (admin only) ============ -->
   <div id="blokUserAkses" style="display:none;">
 
@@ -255,6 +321,8 @@ let pegawaiEdit = null;
   cekAksesHalaman(profil, "pengaturan.html");
   sesuaikanTabNav(profil);
   if (profil) document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;
+
+  await muatRiwayatPengajuanSaya();
 
   if (profil && profil.role === "admin") {
     document.getElementById("blokUserAkses").style.display = "block";
@@ -599,6 +667,108 @@ async function simpanTarif() {
   batalEditTarif();
   await muatMasterTarif();
 }
+
+// ================================================================
+// PENGAJUAN CUTI/IZIN & SURAT TUGAS (self-service, approval di kapus.html)
+// ================================================================
+const LABEL_JENIS_CUTI = { cuti_tahunan: "Cuti Tahunan", cuti_sakit: "Cuti Sakit", izin: "Izin", cuti_melahirkan: "Cuti Melahirkan", lainnya: "Lainnya" };
+const LABEL_STATUS_PENGAJUAN = { diajukan: "Menunggu", disetujui: "Disetujui", ditolak: "Ditolak" };
+const KELAS_STATUS_PENGAJUAN = { diajukan: "badge-menunggu", disetujui: "badge-selesai", ditolak: "badge-batal" };
+
+function gantiSubPengajuan(sub) {
+  document.getElementById("pjTabCuti").style.display = sub === "cuti" ? "block" : "none";
+  document.getElementById("pjTabTugas").style.display = sub === "tugas" ? "block" : "none";
+  document.getElementById("pjSub-cuti").classList.toggle("active", sub === "cuti");
+  document.getElementById("pjSub-tugas").classList.toggle("active", sub === "tugas");
+}
+
+function badgeStatusPengajuan(status) {
+  return `<span class="badge ${KELAS_STATUS_PENGAJUAN[status] || "badge-menunggu"}">${LABEL_STATUS_PENGAJUAN[status] || status}</span>`;
+}
+
+async function muatRiwayatPengajuanSaya() {
+  if (!profilSaya) return;
+
+  const [cutiRes, tugasRes] = await Promise.all([
+    supabaseClient.from("pengajuan_cuti_izin").select("jenis, tanggal_mulai, tanggal_selesai, jumlah_hari, status, catatan_kapus")
+      .eq("pegawai_id", profilSaya.id).order("created_at", { ascending: false }),
+    supabaseClient.from("surat_tugas").select("perihal, tempat_tugas, tanggal_mulai, tanggal_selesai, status, catatan_kapus")
+      .eq("pegawai_id", profilSaya.id).order("created_at", { ascending: false })
+  ]);
+
+  const tbodyCuti = document.getElementById("tabelRiwayatCuti");
+  const cuti = cutiRes.data || [];
+  tbodyCuti.innerHTML = cuti.length ? cuti.map(c => `
+    <tr>
+      <td>${LABEL_JENIS_CUTI[c.jenis] || c.jenis}</td>
+      <td>${new Date(c.tanggal_mulai).toLocaleDateString("id-ID")} &ndash; ${new Date(c.tanggal_selesai).toLocaleDateString("id-ID")}</td>
+      <td>${c.jumlah_hari}</td>
+      <td>${badgeStatusPengajuan(c.status)}</td>
+      <td>${c.catatan_kapus || "-"}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Belum ada pengajuan.</td></tr>`;
+
+  const tbodyTugas = document.getElementById("tabelRiwayatTugas");
+  const tugas = tugasRes.data || [];
+  tbodyTugas.innerHTML = tugas.length ? tugas.map(t => `
+    <tr>
+      <td>${t.perihal}</td>
+      <td>${t.tempat_tugas || "-"}</td>
+      <td>${new Date(t.tanggal_mulai).toLocaleDateString("id-ID")} &ndash; ${new Date(t.tanggal_selesai).toLocaleDateString("id-ID")}</td>
+      <td>${badgeStatusPengajuan(t.status)}</td>
+      <td>${t.catatan_kapus || "-"}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Belum ada pengajuan.</td></tr>`;
+}
+
+document.getElementById("formPengajuanCuti").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msgBox = document.getElementById("msgPjCuti");
+  const mulai = document.getElementById("pjcMulai").value;
+  const selesai = document.getElementById("pjcSelesai").value;
+
+  if (new Date(selesai) < new Date(mulai)) { msgBox.innerHTML = `<div class="msg msg-error">Tanggal selesai tidak boleh sebelum tanggal mulai.</div>`; return; }
+  const jumlahHari = Math.round((new Date(selesai) - new Date(mulai)) / 86400000) + 1;
+
+  const { error } = await supabaseClient.from("pengajuan_cuti_izin").insert({
+    pegawai_id: profilSaya.id,
+    jenis: document.getElementById("pjcJenis").value,
+    tanggal_mulai: mulai,
+    tanggal_selesai: selesai,
+    jumlah_hari: jumlahHari,
+    alasan: document.getElementById("pjcAlasan").value.trim() || null
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal mengajukan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Pengajuan cuti/izin terkirim, menunggu persetujuan Kepala Puskesmas.</div>`;
+  document.getElementById("formPengajuanCuti").reset();
+  await muatRiwayatPengajuanSaya();
+});
+
+document.getElementById("formPengajuanTugas").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msgBox = document.getElementById("msgPjTugas");
+  const mulai = document.getElementById("pjtMulai").value;
+  const selesai = document.getElementById("pjtSelesai").value;
+
+  if (new Date(selesai) < new Date(mulai)) { msgBox.innerHTML = `<div class="msg msg-error">Tanggal selesai tidak boleh sebelum tanggal mulai.</div>`; return; }
+
+  const { error } = await supabaseClient.from("surat_tugas").insert({
+    pegawai_id: profilSaya.id,
+    perihal: document.getElementById("pjtPerihal").value.trim(),
+    tempat_tugas: document.getElementById("pjtTempat").value.trim() || null,
+    tanggal_mulai: mulai,
+    tanggal_selesai: selesai,
+    keterangan: document.getElementById("pjtKeterangan").value.trim() || null
+  });
+
+  if (error) { msgBox.innerHTML = `<div class="msg msg-error">Gagal mengajukan: ${error.message}</div>`; return; }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Pengajuan surat tugas terkirim, menunggu persetujuan Kepala Puskesmas.</div>`;
+  document.getElementById("formPengajuanTugas").reset();
+  await muatRiwayatPengajuanSaya();
+});
 </script>
 
 </body>
