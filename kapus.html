@@ -49,6 +49,7 @@
 .kap-hist-badge.disetujui_dinas { background:#e7f3fb; color:var(--teal-a); }
 .kap-hist-badge.diterima { background:#eafaee; color:#16865c; }
 .kap-hist-badge.rejected { background:#fde7e9; color:#c62836; }
+.tag-sync { display:inline-block; font-size:8.5px; font-weight:700; background:#eafaee; color:var(--green); padding:1px 6px; border-radius:8px; margin-left:4px; }
 </style>
 </head>
 <body>
@@ -81,6 +82,9 @@
       <a id="navKesling" onclick="gantiSubtabKapus('kesling')">Kesehatan Lingkungan</a>
       <a id="navAnakRemaja" onclick="gantiSubtabKapus('anakremaja')">Anak Sekolah &amp; Remaja</a>
       <a id="navLaporanDinas" onclick="gantiSubtabKapus('laporandinas')">Laporan ke Dinas</a>
+
+      <div class="ph-group-title">Keamanan</div>
+      <a id="navAudit" onclick="gantiSubtabKapus('audit')">Audit / Keamanan</a>
 
       <div class="ph-group-title">Modul Lain</div>
       <a href="index.html">Pendaftaran</a>
@@ -839,6 +843,57 @@
 
       </div>
 
+      <!-- ============ AUDIT / KEAMANAN ============ -->
+      <div id="panelAudit" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Monitoring keamanan sistem lintas klaster &amp; lintas unit (Induk, Klaster 1–4, Pustu), read-only.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Akun Aktif</div><div class="value" id="akAktif">0</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">Akun Nonaktif</div><div class="value" id="akNonaktif">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Sesi Login Tercatat</div><div class="value" id="akSesiAktif">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Login Gagal (30 Hari)</div><div class="value" id="akLoginGagal30">0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">🛡</span> Log Aktivitas User (Sesi Login) <span class="tag-sync">Se-Puskesmas</span></h2>
+          <p style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">Siapa login, dari unit &amp; role apa, kapan terakhir aktif. Sesi yang dipaksa logout ditandai "Dicabut".</p>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Nama</th><th>Role</th><th>Unit</th><th>Perangkat</th><th>Login</th><th>Terakhir Aktif</th><th>Status</th></tr></thead>
+              <tbody id="tabelAuditAktivitasKapus"><tr><td colspan="7">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">⚠</span> Log Percobaan Login Gagal <span class="tag-sync">Se-Puskesmas</span></h2>
+          <p style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">Semua percobaan login gagal (email/password salah) tercatat otomatis dari halaman login, anti-tampering (append-only).</p>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Waktu</th><th>Email Dicoba</th><th>Alasan</th><th>Perangkat</th></tr></thead>
+              <tbody id="tabelLoginGagalKapus"><tr><td colspan="4">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#6a4c93;">
+          <h2><span class="card-num" style="background:#6a4c93;">👥</span> Ringkasan Akun per Role</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Role</th><th>Aktif</th><th>Nonaktif</th><th>Total</th></tr></thead>
+              <tbody id="tabelRingkasanAkunKapus"><tr><td colspan="4">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c62836;">
+          <h2><span class="card-num" style="background:#c62836;">⛔</span> Daftar Akun Nonaktif</h2>
+          <div id="listAkunNonaktifKapus"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </div>
@@ -861,14 +916,14 @@ let profilSaya = null;
 })();
 
 function gantiSubtabKapus(tab) {
-  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm", keuangan: "panelKeuangan", tren: "panelTren", kia: "panelKia", menular: "panelMenular", ranapugd: "panelRanapUgd", klaster3: "panelKlaster3", apotek: "panelApotek", survei: "panelSurvei", gigi: "panelGigi", mutu: "panelMutu", surveilans: "panelSurveilans", risiko: "panelRisiko", kesling: "panelKesling", anakremaja: "panelAnakRemaja", laporandinas: "panelLaporanDinas" };
-  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm", keuangan: "navKeuangan", tren: "navTren", kia: "navKia", menular: "navMenular", ranapugd: "navRanapUgd", klaster3: "navKlaster3", apotek: "navApotek", survei: "navSurvei", gigi: "navGigi", mutu: "navMutu", surveilans: "navSurveilans", risiko: "navRisiko", kesling: "navKesling", anakremaja: "navAnakRemaja", laporandinas: "navLaporanDinas" };
+  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm", keuangan: "panelKeuangan", tren: "panelTren", kia: "panelKia", menular: "panelMenular", ranapugd: "panelRanapUgd", klaster3: "panelKlaster3", apotek: "panelApotek", survei: "panelSurvei", gigi: "panelGigi", mutu: "panelMutu", surveilans: "panelSurveilans", risiko: "panelRisiko", kesling: "panelKesling", anakremaja: "panelAnakRemaja", laporandinas: "panelLaporanDinas", audit: "panelAudit" };
+  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm", keuangan: "navKeuangan", tren: "navTren", kia: "navKia", menular: "navMenular", ranapugd: "navRanapUgd", klaster3: "navKlaster3", apotek: "navApotek", survei: "navSurvei", gigi: "navGigi", mutu: "navMutu", surveilans: "navSurveilans", risiko: "navRisiko", kesling: "navKesling", anakremaja: "navAnakRemaja", laporandinas: "navLaporanDinas", audit: "navAudit" };
   Object.values(panelMap).forEach(id => document.getElementById(id).style.display = "none");
   Object.values(navMap).forEach(id => document.getElementById(id).classList.remove("active"));
   document.getElementById(panelMap[tab]).style.display = "block";
   document.getElementById(navMap[tab]).classList.add("active");
 
-  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas", keuangan: "Laporan Keuangan", tren: "Tren Kunjungan", kia: "Program KIA", menular: "Program Penyakit Menular", ranapugd: "Rekap Rawat Inap & UGD", klaster3: "Program Dewasa & Lansia", apotek: "Rekap Apotek", survei: "Rekap Survei Kepuasan", gigi: "Rekap Poli Gigi", mutu: "Mutu & Keselamatan Pasien", surveilans: "Surveilans & KLB", risiko: "Manajemen Risiko & PPI/K3", kesling: "Kesehatan Lingkungan", anakremaja: "Anak Sekolah & Remaja", laporandinas: "Laporan ke Dinas Kesehatan" };
+  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas", keuangan: "Laporan Keuangan", tren: "Tren Kunjungan", kia: "Program KIA", menular: "Program Penyakit Menular", ranapugd: "Rekap Rawat Inap & UGD", klaster3: "Program Dewasa & Lansia", apotek: "Rekap Apotek", survei: "Rekap Survei Kepuasan", gigi: "Rekap Poli Gigi", mutu: "Mutu & Keselamatan Pasien", surveilans: "Surveilans & KLB", risiko: "Manajemen Risiko & PPI/K3", kesling: "Kesehatan Lingkungan", anakremaja: "Anak Sekolah & Remaja", laporandinas: "Laporan ke Dinas Kesehatan", audit: "Audit / Keamanan" };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Kepala Puskesmas";
 
   if (tab === "approval") muatApprovalLplpo();
@@ -889,6 +944,7 @@ function gantiSubtabKapus(tab) {
   if (tab === "kesling") muatRekapKesling();
   if (tab === "anakremaja") muatRekapAnakRemaja();
   if (tab === "laporandinas") muatRekapLaporanDinas();
+  if (tab === "audit") muatAuditKeamananKapus();
 }
 
 function gantiTabApproval(tab) {
@@ -2517,6 +2573,108 @@ async function muatRekapLaporanDinas() {
   document.getElementById("kapListKlbBelumW1").innerHTML = klbBelumW1.length
     ? klbBelumW1.map(k => `<div class="kap-alert-row"><span class="ic">🚨</span><div><strong>${k.judul}</strong> — ${k.jenis_penyakit}<div class="t">Belum lapor Formulir W1 ke Dinas Kesehatan</div></div></div>`).join("")
     : `<div class="kap-kosong">Semua KLB aktif sudah lapor W1.</div>`;
+}
+
+// ================================================================
+// AUDIT / KEAMANAN (lintas klaster & unit, read-only)
+// ================================================================
+async function muatAuditKeamananKapus() {
+  await Promise.all([
+    muatLogAktivitasKapus(),
+    muatLoginGagalKapus(),
+    muatRingkasanAkunKapus()
+  ]);
+}
+
+// ---------- Log Aktivitas User (sesi login), se-Puskesmas ----------
+async function muatLogAktivitasKapus() {
+  const tbody = document.getElementById("tabelAuditAktivitasKapus");
+  const { data, error } = await supabaseClient
+    .from("sesi_aktif")
+    .select("*, profil_pegawai(nama, role, klaster(nama), pustu(nama))")
+    .order("last_active", { ascending: false })
+    .limit(100);
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal muat: ${error.message}</td></tr>`; return; }
+  const sesi = data || [];
+  document.getElementById("akSesiAktif").textContent = sesi.filter(s => !s.dicabut).length;
+  if (!sesi.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada sesi tercatat.</td></tr>`; return; }
+  tbody.innerHTML = sesi.map(s => {
+    const p = s.profil_pegawai;
+    const unit = p ? (p.klaster ? p.klaster.nama : (p.pustu ? `Pustu ${p.pustu.nama}` : "Induk")) : "-";
+    return `
+    <tr>
+      <td>${p ? p.nama : "-"}</td>
+      <td>${p ? p.role : "-"}</td>
+      <td>${unit}</td>
+      <td>${s.perangkat || "-"}</td>
+      <td>${new Date(s.login_at).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${new Date(s.last_active).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${s.dicabut ? `<span class="badge badge-batal">Dicabut</span>` : `<span class="badge badge-selesai">Aktif</span>`}</td>
+    </tr>
+  `;
+  }).join("");
+}
+
+// ---------- Log Percobaan Login Gagal, se-Puskesmas ----------
+async function muatLoginGagalKapus() {
+  const tbody = document.getElementById("tabelLoginGagalKapus");
+  const { data, error } = await supabaseClient
+    .from("percobaan_login_gagal")
+    .select("waktu, email_dicoba, alasan, perangkat")
+    .order("waktu", { ascending: false })
+    .limit(50);
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  const gagal = data || [];
+  const batas30 = Date.now() - 30 * 86400000;
+  document.getElementById("akLoginGagal30").textContent = gagal.filter(g => new Date(g.waktu).getTime() >= batas30).length;
+  tbody.innerHTML = gagal.length
+    ? gagal.map(g => `
+        <tr>
+          <td>${new Date(g.waktu).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+          <td>${g.email_dicoba || "-"}</td>
+          <td>${g.alasan || "-"}</td>
+          <td style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(g.perangkat || "").replace(/"/g, "&quot;")}">${g.perangkat || "-"}</td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="4">Belum ada percobaan login gagal tercatat.</td></tr>`;
+}
+
+// ---------- Ringkasan Akun Aktif / Nonaktif ----------
+async function muatRingkasanAkunKapus() {
+  const tbodyRingkasan = document.getElementById("tabelRingkasanAkunKapus");
+  const listNonaktif = document.getElementById("listAkunNonaktifKapus");
+  const { data, error } = await supabaseClient
+    .from("profil_pegawai")
+    .select("id, nama, role, aktif, klaster(nama), pustu(nama)");
+  if (error) {
+    tbodyRingkasan.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`;
+    listNonaktif.innerHTML = `<div class="kap-kosong">Gagal muat data.</div>`;
+    return;
+  }
+  const akun = data || [];
+  const totalAktif = akun.filter(a => a.aktif).length;
+  const totalNonaktif = akun.filter(a => !a.aktif).length;
+  document.getElementById("akAktif").textContent = totalAktif;
+  document.getElementById("akNonaktif").textContent = totalNonaktif;
+
+  const perRole = {};
+  akun.forEach(a => {
+    const r = a.role || "(tanpa role)";
+    if (!perRole[r]) perRole[r] = { aktif: 0, nonaktif: 0 };
+    a.aktif ? perRole[r].aktif++ : perRole[r].nonaktif++;
+  });
+  const roleList = Object.keys(perRole).sort();
+  tbodyRingkasan.innerHTML = roleList.length
+    ? roleList.map(r => `<tr><td>${r}</td><td>${perRole[r].aktif}</td><td>${perRole[r].nonaktif}</td><td><strong>${perRole[r].aktif + perRole[r].nonaktif}</strong></td></tr>`).join("")
+    : `<tr><td colspan="4">Belum ada data pegawai.</td></tr>`;
+
+  const nonaktif = akun.filter(a => !a.aktif);
+  listNonaktif.innerHTML = nonaktif.length
+    ? nonaktif.map(a => {
+        const unit = a.klaster ? a.klaster.nama : (a.pustu ? `Pustu ${a.pustu.nama}` : "Induk");
+        return `<div class="kap-alert-row"><span class="ic">⛔</span><div><strong>${a.nama}</strong> — ${a.role}<div class="t">${unit} · Akun dinonaktifkan</div></div></div>`;
+      }).join("")
+    : `<div class="kap-kosong">Tidak ada akun nonaktif saat ini.</div>`;
 }
 </script>
 </body>
