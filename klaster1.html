@@ -1063,6 +1063,58 @@ body{
   .k1-stat-grid{grid-template-columns:1fr!important}
 }
 
+
+/* ================= KLASTER 1 DROPDOWN NAVIGATION ================= */
+.k1-nav{padding:10px 12px 22px!important;}
+.k1-section-title{
+  padding:12px 12px 7px!important;
+  font-size:10px!important; font-weight:800!important; letter-spacing:.08em!important;
+  color:#6f918a!important; text-transform:uppercase!important;
+}
+.k1-other-title{margin-top:8px!important;border-top:1px solid #dceee8!important;padding-top:17px!important;}
+.k1-menu-main{
+  position:relative!important; margin:2px 0 7px!important; padding:10px 12px 10px 40px!important;
+  min-height:40px!important; border-radius:10px!important;
+  background:#e9f8f2!important; color:#086d50!important; font-weight:750!important;
+}
+.k1-menu-main::before{
+  content:'⌂'; position:absolute; left:13px; top:50%; transform:translateY(-50%);
+  width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+  color:#0b8a67;font-size:15px;
+}
+.k1-dropdown{margin:3px 0!important;border-radius:11px!important;}
+.k1-dropdown-head{
+  width:100%!important; display:flex!important; align-items:center!important; justify-content:space-between!important;
+  border:1px solid transparent!important; background:transparent!important; color:#285e57!important;
+  border-radius:10px!important; padding:9px 11px!important; min-height:39px!important;
+  font:600 11.5px Inter,ui-sans-serif,system-ui,sans-serif!important; cursor:pointer!important;
+  text-align:left!important; transition:.18s ease!important;
+}
+.k1-dropdown-head:hover{background:#edf9f5!important;color:#08785c!important;}
+.k1-head-icon{
+  display:inline-flex!important; width:23px!important; margin-right:7px!important; justify-content:center!important;
+  color:#0b8062!important; font-size:14px!important;
+}
+.k1-chevron{font-size:16px!important; line-height:1!important; color:#6f918a!important; transition:transform .18s ease!important;}
+.k1-dropdown.open .k1-chevron{transform:rotate(180deg)!important;}
+.k1-dropdown-body{display:none!important;padding:2px 0 4px 15px!important;border-left:1px solid #cfe9df!important;margin-left:17px!important;}
+.k1-dropdown.open .k1-dropdown-body{display:block!important;}
+.k1-dropdown-body a{
+  display:block!important; position:relative!important; min-height:34px!important; padding:8px 9px 8px 17px!important;
+  margin:1px 0!important; border-radius:8px!important; color:#52736d!important; font-size:11px!important; font-weight:500!important;
+}
+.k1-dropdown-body a::before{
+  content:''; position:absolute; left:2px; top:50%; transform:translateY(-50%);
+  width:5px;height:5px;border-radius:50%;background:#b8dcd0;
+}
+.k1-dropdown-body a:hover{background:#eaf8f3!important;color:#08785c!important;}
+.k1-dropdown-body a.active{
+  background:#d9f3e9!important;color:#067454!important;font-weight:750!important;
+}
+.k1-dropdown-body a.active::before{background:#0b9b73!important;width:6px;height:6px;}
+.k1-menu-main.active{box-shadow:inset 0 0 0 1px rgba(11,138,103,.05)!important;}
+@media(max-width:760px){.k1-nav{padding-bottom:12px!important}.k1-dropdown-body{margin-left:12px!important;}}
+
 </style>
 </head>
 <body>
@@ -1075,45 +1127,70 @@ body{
       <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
     </div>
 
-    <nav>
-    <div class="ph-group-title">Klaster 1 — Manajemen</div>
-    <a class="active" id="navDashboard" onclick="gantiSubtabK1('dashboard')">Dashboard</a>
+    <nav class="k1-nav">
+      <div class="k1-section-title">KLASTER 1 — MANAJEMEN</div>
+      <a class="k1-menu-main active" id="navDashboard" onclick="gantiSubtabK1('dashboard')">Dashboard</a>
 
-    <div class="ph-group-title">Administrasi Umum</div>
-    <a id="navSurat" onclick="gantiSubtabK1('surat')">Surat Masuk &amp; Keluar</a>
+      <div class="k1-dropdown open" id="dropAdministrasi">
+        <button type="button" class="k1-dropdown-head" onclick="toggleK1Dropdown('dropAdministrasi')"><span><span class="k1-head-icon">✉</span> Administrasi Umum</span><span class="k1-chevron">⌄</span></button>
+        <div class="k1-dropdown-body">
+          <a id="navSurat" onclick="gantiSubtabK1('surat')">Surat Masuk &amp; Keluar</a>
+        </div>
+      </div>
 
-    <div class="ph-group-title">Perencanaan &amp; Keuangan</div>
-    <a id="navPerencanaan" onclick="gantiSubtabK1('perencanaan')">Perencanaan (RUK/RPK)</a>
-    <a id="navKeuangan" onclick="gantiSubtabK1('keuangan')">Keuangan</a>
+      <div class="k1-dropdown" id="dropPerencanaan">
+        <button type="button" class="k1-dropdown-head" onclick="toggleK1Dropdown('dropPerencanaan')"><span><span class="k1-head-icon">▤</span> Perencanaan &amp; Keuangan</span><span class="k1-chevron">⌄</span></button>
+        <div class="k1-dropdown-body">
+          <a id="navPerencanaan" onclick="gantiSubtabK1('perencanaan')">Perencanaan (RUK/RPK)</a>
+          <a id="navKeuangan" onclick="gantiSubtabK1('keuangan')">Keuangan</a>
+        </div>
+      </div>
 
-    <div class="ph-group-title">SDM &amp; Sarpras</div>
-    <a id="navKepegawaian" onclick="gantiSubtabK1('kepegawaian')">Kepegawaian (SDM)</a>
-    <a id="navSarpras" onclick="gantiSubtabK1('sarpras')">Sarpras &amp; Alat (ASPAK)</a>
+      <div class="k1-dropdown" id="dropSdm">
+        <button type="button" class="k1-dropdown-head" onclick="toggleK1Dropdown('dropSdm')"><span><span class="k1-head-icon">♙</span> SDM &amp; Sarpras</span><span class="k1-chevron">⌄</span></button>
+        <div class="k1-dropdown-body">
+          <a id="navKepegawaian" onclick="gantiSubtabK1('kepegawaian')">Kepegawaian (SDM)</a>
+          <a id="navSarpras" onclick="gantiSubtabK1('sarpras')">Sarpras &amp; Alat (ASPAK)</a>
+        </div>
+      </div>
 
-    <div class="ph-group-title">Mutu &amp; Jejaring</div>
-    <a id="navMutu" onclick="gantiSubtabK1('mutu')">Mutu &amp; Keselamatan Pasien</a>
-    <a id="navJejaring" onclick="gantiSubtabK1('jejaring')">Jejaring &amp; Jaringan</a>
+      <div class="k1-dropdown" id="dropMutu">
+        <button type="button" class="k1-dropdown-head" onclick="toggleK1Dropdown('dropMutu')"><span><span class="k1-head-icon">♡</span> Mutu &amp; Jejaring</span><span class="k1-chevron">⌄</span></button>
+        <div class="k1-dropdown-body">
+          <a id="navMutu" onclick="gantiSubtabK1('mutu')">Mutu &amp; Keselamatan Pasien</a>
+          <a id="navJejaring" onclick="gantiSubtabK1('jejaring')">Jejaring &amp; Jaringan</a>
+        </div>
+      </div>
 
-    <div class="ph-group-title">Laporan &amp; Audit</div>
-    <a id="navLaporanInternal" onclick="gantiSubtabK1('laporan-internal')">Laporan Internal</a>
-    <a id="navLaporanDinas" onclick="gantiSubtabK1('laporan-dinas')">Laporan ke Dinas Kesehatan</a>
-    <a id="navAudit" onclick="gantiSubtabK1('audit')">Audit / Keamanan</a>
+      <div class="k1-dropdown" id="dropLaporan">
+        <button type="button" class="k1-dropdown-head" onclick="toggleK1Dropdown('dropLaporan')"><span><span class="k1-head-icon">▧</span> Laporan &amp; Audit</span><span class="k1-chevron">⌄</span></button>
+        <div class="k1-dropdown-body">
+          <a id="navLaporanInternal" onclick="gantiSubtabK1('laporan-internal')">Laporan Internal</a>
+          <a id="navLaporanDinas" onclick="gantiSubtabK1('laporan-dinas')">Laporan ke Dinas Kesehatan</a>
+          <a id="navAudit" onclick="gantiSubtabK1('audit')">Audit / Keamanan</a>
+        </div>
+      </div>
 
-    <div class="ph-group-title">Modul Lain</div>
-    <a href="index.html">Pendaftaran</a>
-    <a href="rekam-medis.html">Rekam Medis</a>
-    <a href="apotek.html">Apotek</a>
-    <a href="ugd.html">UGD</a>
-    <a href="ranap.html">Rawat Inap</a>
-    <a href="klaster2.html">Klaster 2</a>
-    <a href="klaster3.html">Klaster 3</a>
-    <a href="klaster4.html">Klaster 4</a>
-    <a href="gigi.html">Poli Gigi</a>
-    <a href="pustu.html">Pustu</a>
-    <a href="pengaturan.html">Pengaturan</a>
-    <a href="kasir.html">Kasir</a>
+      <div class="k1-section-title k1-other-title">MODUL LAIN</div>
+      <div class="k1-dropdown" id="dropModulLain">
+        <button type="button" class="k1-dropdown-head" onclick="toggleK1Dropdown('dropModulLain')"><span><span class="k1-head-icon">▦</span> Modul Sistem</span><span class="k1-chevron">⌄</span></button>
+        <div class="k1-dropdown-body">
+          <a href="index.html">Pendaftaran</a>
+          <a href="rekam-medis.html">Rekam Medis</a>
+          <a href="apotek.html">Apotek</a>
+          <a href="ugd.html">UGD</a>
+          <a href="ranap.html">Rawat Inap</a>
+          <a href="klaster2.html">Klaster 2</a>
+          <a href="klaster3.html">Klaster 3</a>
+          <a href="klaster4.html">Klaster 4</a>
+          <a href="gigi.html">Poli Gigi</a>
+          <a href="pustu.html">Pustu</a>
+          <a href="pengaturan.html">Pengaturan</a>
+          <a href="kasir.html">Kasir</a>
           <a href="papan-antrian.html">Papan Antrian</a>
-    <a href="kapus.html">Kepala Puskesmas</a>
+          <a href="kapus.html">Kepala Puskesmas</a>
+        </div>
+      </div>
     </nav>
   </aside>
 
@@ -2518,6 +2595,28 @@ let daftarKlasterGlobal = [];
   await muatKepatuhanMutuK1();
 })();
 
+
+// ---------- Dropdown menu Klaster 1 (visual/navigation only) ----------
+function toggleK1Dropdown(id){
+  const el=document.getElementById(id);
+  if(el) el.classList.toggle('open');
+}
+function bukaDropdownK1UntukTab(tab){
+  const groupMap={
+    surat:'dropAdministrasi',
+    perencanaan:'dropPerencanaan', keuangan:'dropPerencanaan',
+    kepegawaian:'dropSdm', sarpras:'dropSdm',
+    mutu:'dropMutu', jejaring:'dropMutu',
+    'laporan-internal':'dropLaporan', 'laporan-dinas':'dropLaporan', audit:'dropLaporan'
+  };
+  document.querySelectorAll('.k1-dropdown').forEach(el=>{
+    if(el.id==='dropModulLain') return;
+    el.classList.remove('open');
+  });
+  const target=groupMap[tab];
+  if(target) document.getElementById(target)?.classList.add('open');
+}
+
 function gantiSubtabK1(tab) {
   const panelMap = {
     dashboard: "panelDashboard", surat: "panelSurat",
@@ -2539,6 +2638,7 @@ function gantiSubtabK1(tab) {
   Object.values(navMap).forEach(id => document.getElementById(id).classList.remove("active"));
   document.getElementById(panelMap[tab]).style.display = "block";
   document.getElementById(navMap[tab]).classList.add("active");
+  bukaDropdownK1UntukTab(tab);
 
   const judul = {
     dashboard: "Dashboard Klaster 1 — Manajemen",
