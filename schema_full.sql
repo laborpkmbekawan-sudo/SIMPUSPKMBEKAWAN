@@ -4685,3 +4685,18 @@ create index if not exists idx_rujukan_lab_k3_silab_pasien on rujukan_lab_k3(sil
 -- ============================================================
 -- SELESAI section 105. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 106. INTEGRASI SILAB — kolom jembatan di rujukan_lab_k4
+--      (Klaster 4, sama konsepnya kayak section 103/105)
+--      Idempotent, aman diulang.
+-- ============================================================
+
+alter table rujukan_lab_k4 add column if not exists silab_pasien_id uuid;
+alter table rujukan_lab_k4 add column if not exists silab_dikirim_at timestamptz;
+
+create index if not exists idx_rujukan_lab_k4_silab_pasien on rujukan_lab_k4(silab_pasien_id);
+
+-- ============================================================
+-- SELESAI section 106. Idempotent, aman diulang.
+-- ============================================================
