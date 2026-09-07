@@ -7,14 +7,20 @@
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* ================= Klaster 1 - Manajemen (skema Navy/Oranye, konsisten sama modul lain) ================= */
-.dash-content, .topbar { --navy:#0f2942; --navy-2:#173b5e; --teal-a:#1c7d7f; --teal-2:#26a3a0; --orange:#e0793c; --red:#c0503f; --plum:#6a4c93; --green:#2f9e5c; }
+/* ================= Klaster 1 - Manajemen (skema Hijau, senada Apotek) ================= */
+.dash-content, .topbar { --navy:#0b3b2e; --navy-2:#0f7a45; --teal-a:#0f5c3c; --teal-2:#16a36f; --orange:#e0793c; --red:#c0503f; --plum:#6a4c93; --green:#2f9e5c; }
 
-.sidebar { background: linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%) !important; }
-.sidebar nav a.active { border-left: 3px solid var(--orange) !important; background: rgba(255,255,255,.09) !important; }
+.sidebar { background: linear-gradient(180deg, #0b3b2e 0%, #0f7a45 100%) !important; }
+.sidebar nav a.active { border-left: 3px solid #16a36f !important; background: rgba(255,255,255,.09) !important; }
 .sidebar nav a:hover { background: rgba(255,255,255,.06) !important; }
-.topbar h1 { color: var(--navy); }
-.ph-group-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.5); text-transform: uppercase; padding: 14px 18px 4px; }
+.topbar { background: linear-gradient(180deg, #0f5132 0%, #0b3b2e 100%) !important; }
+.topbar h1 { color: #ffffff; }
+.ph-group-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.45); text-transform: uppercase; padding: 14px 18px 4px; }
+.ph-group-title { cursor:pointer; display:flex; align-items:center; justify-content:space-between; user-select:none; }
+.ph-group-title .chev { font-size:10px; transition:transform .18s ease; opacity:.6; }
+.ph-group-title.closed .chev { transform:rotate(-90deg); }
+.ph-group-body { overflow:hidden; max-height:600px; transition:max-height .22s ease; }
+.ph-group-body.closed { max-height:0; }
 
 .dash-content .card { border-left: 4px solid var(--accent, var(--navy-2)); }
 .dash-content .card h2 { display: flex; align-items: center; gap: 8px; }
@@ -54,27 +60,38 @@
     <div class="ph-group-title">Klaster 1 — Manajemen</div>
     <a class="active" id="navDashboard" onclick="gantiSubtabK1('dashboard')">Dashboard</a>
 
-    <div class="ph-group-title">Administrasi Umum</div>
+    <div class="ph-group-title" onclick="toggleGroup(this)">Administrasi Umum <span class="chev">▾</span></div>
+    <div class="ph-group-body">
     <a id="navSurat" onclick="gantiSubtabK1('surat')">Surat Masuk &amp; Keluar</a>
+    </div>
 
-    <div class="ph-group-title">Perencanaan &amp; Keuangan</div>
+    <div class="ph-group-title" onclick="toggleGroup(this)">Perencanaan &amp; Keuangan <span class="chev">▾</span></div>
+    <div class="ph-group-body">
     <a id="navPerencanaan" onclick="gantiSubtabK1('perencanaan')">Perencanaan (RUK/RPK)</a>
     <a id="navKeuangan" onclick="gantiSubtabK1('keuangan')">Keuangan</a>
+    </div>
 
-    <div class="ph-group-title">SDM &amp; Sarpras</div>
+    <div class="ph-group-title" onclick="toggleGroup(this)">SDM &amp; Sarpras <span class="chev">▾</span></div>
+    <div class="ph-group-body">
     <a id="navKepegawaian" onclick="gantiSubtabK1('kepegawaian')">Kepegawaian (SDM)</a>
     <a id="navSarpras" onclick="gantiSubtabK1('sarpras')">Sarpras &amp; Alat (ASPAK)</a>
+    </div>
 
-    <div class="ph-group-title">Mutu &amp; Jejaring</div>
+    <div class="ph-group-title" onclick="toggleGroup(this)">Mutu &amp; Jejaring <span class="chev">▾</span></div>
+    <div class="ph-group-body">
     <a id="navMutu" onclick="gantiSubtabK1('mutu')">Mutu &amp; Keselamatan Pasien</a>
     <a id="navJejaring" onclick="gantiSubtabK1('jejaring')">Jejaring &amp; Jaringan</a>
+    </div>
 
-    <div class="ph-group-title">Laporan &amp; Audit</div>
+    <div class="ph-group-title" onclick="toggleGroup(this)">Laporan &amp; Audit <span class="chev">▾</span></div>
+    <div class="ph-group-body">
     <a id="navLaporanInternal" onclick="gantiSubtabK1('laporan-internal')">Laporan Internal</a>
     <a id="navLaporanDinas" onclick="gantiSubtabK1('laporan-dinas')">Laporan ke Dinas Kesehatan</a>
     <a id="navAudit" onclick="gantiSubtabK1('audit')">Audit / Keamanan</a>
+    </div>
 
-    <div class="ph-group-title">Modul Lain</div>
+    <div class="ph-group-title closed" onclick="toggleGroup(this)">Modul Lain <span class="chev">▾</span></div>
+    <div class="ph-group-body closed">
     <a href="index.html">Pendaftaran</a>
     <a href="rekam-medis.html">Rekam Medis</a>
     <a href="apotek.html">Apotek</a>
@@ -87,8 +104,9 @@
     <a href="pustu.html">Pustu</a>
     <a href="pengaturan.html">Pengaturan</a>
     <a href="kasir.html">Kasir</a>
-          <a href="papan-antrian.html">Papan Antrian</a>
+    <a href="papan-antrian.html">Papan Antrian</a>
     <a href="kapus.html">Kepala Puskesmas</a>
+    </div>
     </nav>
   </aside>
 
@@ -1492,6 +1510,15 @@ let daftarKlasterGlobal = [];
   await muatAuditK1("kepegawaian");
   await muatKepatuhanMutuK1();
 })();
+
+// ---------- Accordion menu sidebar ----------
+function toggleGroup(el) {
+  el.classList.toggle("closed");
+  const body = el.nextElementSibling;
+  if (body && body.classList.contains("ph-group-body")) {
+    body.classList.toggle("closed");
+  }
+}
 
 function gantiSubtabK1(tab) {
   const panelMap = {
