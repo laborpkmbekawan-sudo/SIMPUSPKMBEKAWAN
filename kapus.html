@@ -71,6 +71,10 @@
       <a id="navKia" onclick="gantiSubtabKapus('kia')">Program KIA</a>
       <a id="navMenular" onclick="gantiSubtabKapus('menular')">Program Penyakit Menular</a>
       <a id="navRanapUgd" onclick="gantiSubtabKapus('ranapugd')">Rekap Ranap &amp; UGD</a>
+      <a id="navKlaster3" onclick="gantiSubtabKapus('klaster3')">Program Dewasa &amp; Lansia</a>
+      <a id="navApotek" onclick="gantiSubtabKapus('apotek')">Rekap Apotek</a>
+      <a id="navSurvei" onclick="gantiSubtabKapus('survei')">Rekap Survei Kepuasan</a>
+      <a id="navGigi" onclick="gantiSubtabKapus('gigi')">Rekap Poli Gigi</a>
 
       <div class="ph-group-title">Modul Lain</div>
       <a href="index.html">Pendaftaran</a>
@@ -467,6 +471,153 @@
 
       </div>
 
+      <!-- ============ PROGRAM DEWASA & LANSIA (KLASTER 3) ============ -->
+      <div id="panelKlaster3" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap Posbindu PTM & Prolanis, read-only. Input tetap di Klaster 3.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Peserta Posbindu (30 Hari)</div><div class="value" id="k3PosbinduTotal">0</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">Perlu Rujuk (30 Hari)</div><div class="value" id="k3PerluRujuk">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Peserta Prolanis Aktif</div><div class="value" id="k3ProlanisAktif">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Prolanis Terlambat Kontrol</div><div class="value" id="k3ProlanisTerlambat">0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Rekap Posbindu PTM — 30 Hari Terakhir</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Total Peserta</th><th>Normal</th><th>Berisiko</th><th>Perlu Rujuk</th></tr></thead>
+              <tbody id="kapTbodyPosbindu"><tr><td colspan="4">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#1c7d7f;">
+          <h2><span class="card-num" style="background:#1c7d7f;">2</span> Rekap Prolanis per Jenis Penyakit Kronis</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Jenis Penyakit Kronis</th><th>Peserta Aktif</th><th>Rutin</th><th>Tidak Rutin</th><th>Terlambat</th></tr></thead>
+              <tbody id="kapTbodyProlanis"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">3</span> Peserta Perlu Perhatian</h2>
+          <p style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">Posbindu dengan hasil "Perlu Rujuk" (30 hari) & peserta Prolanis berstatus "Terlambat".</p>
+          <div id="kapListPerhatianK3"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
+      <!-- ============ REKAP APOTEK ============ -->
+      <div id="panelApotek" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap stok & distribusi obat, read-only. Input tetap di Apotek.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Total Item Obat/BMHP</div><div class="value" id="apoTotalItem">0</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">Stok Kritis</div><div class="value" id="apoStokKritis">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Mendekati Kadaluarsa (90 Hari)</div><div class="value" id="apoExpSoon">0</div></div>
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Nilai Stok Total</div><div class="value" id="apoNilaiStok" style="font-size:16px;">Rp 0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">1</span> Stok Kritis (&le; Stok Minimum)</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Nama Obat/BMHP</th><th>Kategori</th><th>Stok</th><th>Stok Minimum</th></tr></thead>
+              <tbody id="kapTbodyStokKritis"><tr><td colspan="4">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#e0793c;">
+          <h2><span class="card-num" style="background:#e0793c;">2</span> Mendekati Kadaluarsa (&le; 90 Hari)</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Nama Obat/BMHP</th><th>No. Lot</th><th>Exp. Date</th><th>Sisa Hari</th><th>Stok</th></tr></thead>
+              <tbody id="kapTbodyExpired"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">3</span> Obat Terbanyak Keluar — 30 Hari Terakhir</h2>
+          <div id="kapListObatTerbanyak"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
+      <!-- ============ REKAP SURVEI KEPUASAN ============ -->
+      <div id="panelSurvei" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap survei kepuasan pasien (isi mandiri via QR), read-only.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Responden (30 Hari)</div><div class="value" id="svResponden">0</div></div>
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Rata-rata Skor Keseluruhan</div><div class="value" id="svRataRata">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Aspek Skor Terendah</div><div class="value" id="svTerendah" style="font-size:15px;">-</div></div>
+          <div class="kap-kpi-card" style="--accent:#6a4c93;"><div class="label">% Puas (Skor &ge; 4)</div><div class="value" id="svPersenPuas">0%</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Rata-rata Skor per Aspek — 30 Hari Terakhir</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Aspek</th><th>Rata-rata Skor</th><th>Skala</th></tr></thead>
+              <tbody id="kapTbodySurvei"><tr><td colspan="3">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">2</span> Saran &amp; Masukan Terbaru</h2>
+          <div id="kapListSaranSurvei"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
+      <!-- ============ REKAP POLI GIGI ============ -->
+      <div id="panelGigi" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap pemeriksaan, tindakan & promotif Poli Gigi, read-only. Input tetap di Poli Gigi.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Pemeriksaan (30 Hari)</div><div class="value" id="gigiPemeriksaan">0</div></div>
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Tindakan (30 Hari)</div><div class="value" id="gigiTindakan">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Kasus Karies (30 Hari)</div><div class="value" id="gigiKaries">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#6a4c93;"><div class="label">Siswa Diperiksa UKGS (30 Hari)</div><div class="value" id="gigiUkgs">0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Rekap Jenis Tindakan — 30 Hari Terakhir</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Jenis Tindakan</th><th>Jumlah</th></tr></thead>
+              <tbody id="kapTbodyTindakanGigi"><tr><td colspan="2">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#1c7d7f;">
+          <h2><span class="card-num" style="background:#1c7d7f;">2</span> Kegiatan Promotif &amp; Preventif (UKGS) — 30 Hari Terakhir</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Sekolah</th><th>Jenis Kegiatan</th><th>Sasaran</th><th>Diperiksa</th><th>Bermasalah</th></tr></thead>
+              <tbody id="kapTbodyUkgs"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">3</span> Rujukan Eksternal Gigi Menunggu — 30 Hari Terakhir</h2>
+          <div id="kapListRujukGigi"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </div>
@@ -489,14 +640,14 @@ let profilSaya = null;
 })();
 
 function gantiSubtabKapus(tab) {
-  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm", keuangan: "panelKeuangan", tren: "panelTren", kia: "panelKia", menular: "panelMenular", ranapugd: "panelRanapUgd" };
-  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm", keuangan: "navKeuangan", tren: "navTren", kia: "navKia", menular: "navMenular", ranapugd: "navRanapUgd" };
+  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm", keuangan: "panelKeuangan", tren: "panelTren", kia: "panelKia", menular: "panelMenular", ranapugd: "panelRanapUgd", klaster3: "panelKlaster3", apotek: "panelApotek", survei: "panelSurvei", gigi: "panelGigi" };
+  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm", keuangan: "navKeuangan", tren: "navTren", kia: "navKia", menular: "navMenular", ranapugd: "navRanapUgd", klaster3: "navKlaster3", apotek: "navApotek", survei: "navSurvei", gigi: "navGigi" };
   Object.values(panelMap).forEach(id => document.getElementById(id).style.display = "none");
   Object.values(navMap).forEach(id => document.getElementById(id).classList.remove("active"));
   document.getElementById(panelMap[tab]).style.display = "block";
   document.getElementById(navMap[tab]).classList.add("active");
 
-  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas", keuangan: "Laporan Keuangan", tren: "Tren Kunjungan", kia: "Program KIA", menular: "Program Penyakit Menular", ranapugd: "Rekap Rawat Inap & UGD" };
+  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas", keuangan: "Laporan Keuangan", tren: "Tren Kunjungan", kia: "Program KIA", menular: "Program Penyakit Menular", ranapugd: "Rekap Rawat Inap & UGD", klaster3: "Program Dewasa & Lansia", apotek: "Rekap Apotek", survei: "Rekap Survei Kepuasan", gigi: "Rekap Poli Gigi" };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Kepala Puskesmas";
 
   if (tab === "approval") muatApprovalLplpo();
@@ -507,6 +658,10 @@ function gantiSubtabKapus(tab) {
   if (tab === "kia") muatProgramKia();
   if (tab === "menular") muatProgramMenular();
   if (tab === "ranapugd") muatRekapRanapUgd();
+  if (tab === "klaster3") muatRekapKlaster3();
+  if (tab === "apotek") muatRekapApotek();
+  if (tab === "survei") muatRekapSurvei();
+  if (tab === "gigi") muatRekapGigi();
 }
 
 function gantiTabApproval(tab) {
@@ -1585,6 +1740,229 @@ async function muatRekapRanapUgd() {
   listBox.innerHTML = kasus.length
     ? kasus.map(k => `<div class="kap-alert-row"><span class="ic">${k.sumber === "UGD" ? "🚨" : "🛏️"}</span><div><strong>${k.nama}</strong> — ${k.sumber}<div class="t">${k.ket} · ${new Date(k.waktu).toLocaleString("id-ID")}</div></div></div>`).join("")
     : `<div class="kap-kosong">Tidak ada kasus berat aktif saat ini.</div>`;
+}
+
+// ================================================================
+// REKAP PROGRAM DEWASA & LANSIA (KLASTER 3) — POSBINDU & PROLANIS
+// ================================================================
+async function muatRekapKlaster3() {
+  document.getElementById("kapTbodyPosbindu").innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+  document.getElementById("kapTbodyProlanis").innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  document.getElementById("kapListPerhatianK3").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const tigaPuluhHariLalu = new Date(); tigaPuluhHariLalu.setDate(tigaPuluhHariLalu.getDate() - 29);
+  const batas30 = tigaPuluhHariLalu.toISOString().slice(0, 10);
+
+  const [posbinduRes, prolanisRes] = await Promise.all([
+    supabaseClient.from("posbindu_ptm").select("id, tanggal, hasil_igd, pasien(nama)").gte("tanggal", batas30),
+    supabaseClient.from("kontrol_prolanis").select("id, tanggal, jenis_penyakit_kronis, status_kontrol, pasien(nama)")
+  ]);
+
+  const posbindu = posbinduRes.data || [];
+  const prolanis = prolanisRes.data || [];
+
+  // ---- Posbindu 30 hari ----
+  const pbNormal = posbindu.filter(p => p.hasil_igd === "Normal").length;
+  const pbBerisiko = posbindu.filter(p => p.hasil_igd === "Berisiko").length;
+  const pbRujuk = posbindu.filter(p => p.hasil_igd === "Perlu Rujuk");
+  document.getElementById("k3PosbinduTotal").textContent = posbindu.length;
+  document.getElementById("k3PerluRujuk").textContent = pbRujuk.length;
+  document.getElementById("kapTbodyPosbindu").innerHTML = `<tr><td>${posbindu.length}</td><td>${pbNormal}</td><td>${pbBerisiko}</td><td>${pbRujuk.length}</td></tr>`;
+
+  // ---- Prolanis: ambil data terbaru per pasien (aktif = punya minimal 1 kontrol) ----
+  const terbaruPerPasien = {};
+  prolanis.forEach(p => {
+    const key = p.pasien?.nama || p.id;
+    if (!terbaruPerPasien[key] || p.tanggal > terbaruPerPasien[key].tanggal) terbaruPerPasien[key] = p;
+  });
+  const prolanisAktif = Object.values(terbaruPerPasien);
+  const prolanisTerlambat = prolanisAktif.filter(p => p.status_kontrol === "Terlambat");
+  document.getElementById("k3ProlanisAktif").textContent = prolanisAktif.length;
+  document.getElementById("k3ProlanisTerlambat").textContent = prolanisTerlambat.length;
+
+  const jenisList = ["Hipertensi", "Diabetes Melitus", "Hipertensi & Diabetes Melitus", "Lainnya"];
+  document.getElementById("kapTbodyProlanis").innerHTML = jenisList.map(j => {
+    const grup = prolanisAktif.filter(p => p.jenis_penyakit_kronis === j);
+    const rutin = grup.filter(p => p.status_kontrol === "Rutin").length;
+    const tidakRutin = grup.filter(p => p.status_kontrol === "Tidak Rutin").length;
+    const terlambat = grup.filter(p => p.status_kontrol === "Terlambat").length;
+    return `<tr><td>${j}</td><td>${grup.length}</td><td>${rutin}</td><td>${tidakRutin}</td><td>${terlambat}</td></tr>`;
+  }).join("");
+
+  // ---- Peserta perlu perhatian (gabungan) ----
+  let perhatian = [];
+  pbRujuk.forEach(p => perhatian.push({ nama: p.pasien?.nama || "-", ket: "Posbindu: Perlu Rujuk", tanggal: p.tanggal }));
+  prolanisTerlambat.forEach(p => perhatian.push({ nama: p.pasien?.nama || "-", ket: `Prolanis Terlambat (${p.jenis_penyakit_kronis || "-"})`, tanggal: p.tanggal }));
+  perhatian.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+  const listBox = document.getElementById("kapListPerhatianK3");
+  listBox.innerHTML = perhatian.length
+    ? perhatian.map(p => `<div class="kap-alert-row"><span class="ic">⚠️</span><div><strong>${p.nama}</strong> — ${p.ket}<div class="t">${new Date(p.tanggal).toLocaleDateString("id-ID")}</div></div></div>`).join("")
+    : `<div class="kap-kosong">Tidak ada peserta yang perlu perhatian saat ini.</div>`;
+}
+
+// ================================================================
+// REKAP APOTEK — STOK & DISTRIBUSI
+// ================================================================
+async function muatRekapApotek() {
+  document.getElementById("kapTbodyStokKritis").innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+  document.getElementById("kapTbodyExpired").innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  document.getElementById("kapListObatTerbanyak").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const tigaPuluhHariLalu = new Date(); tigaPuluhHariLalu.setDate(tigaPuluhHariLalu.getDate() - 29);
+  const batas30 = tigaPuluhHariLalu.toISOString().slice(0, 10);
+  const sembilanPuluhHariLagi = new Date(); sembilanPuluhHariLagi.setDate(sembilanPuluhHariLagi.getDate() + 90);
+  const batasExp = sembilanPuluhHariLagi.toISOString().slice(0, 10);
+  const hariIni = new Date().toISOString().slice(0, 10);
+
+  const [obatRes, kartuRes] = await Promise.all([
+    supabaseClient.from("obat").select("id, nama_obat, kategori, stok, stok_minimum, harga, no_lot, exp_date"),
+    supabaseClient.from("kartu_stok").select("obat_id, tanggal, jenis, jumlah").eq("jenis", "keluar").gte("tanggal", batas30)
+  ]);
+
+  const obat = obatRes.data || [];
+  const kartu = kartuRes.data || [];
+
+  // ---- KPI ----
+  document.getElementById("apoTotalItem").textContent = obat.length;
+  const stokKritis = obat.filter(o => o.stok <= (o.stok_minimum ?? 10));
+  document.getElementById("apoStokKritis").textContent = stokKritis.length;
+  const expSoon = obat.filter(o => o.exp_date && o.exp_date >= hariIni && o.exp_date <= batasExp);
+  document.getElementById("apoExpSoon").textContent = expSoon.length;
+  const nilaiStok = obat.reduce((sum, o) => sum + (Number(o.harga || 0) * Number(o.stok || 0)), 0);
+  document.getElementById("apoNilaiStok").textContent = formatRupiah(nilaiStok);
+
+  // ---- Tabel Stok Kritis ----
+  stokKritis.sort((a, b) => a.stok - b.stok);
+  document.getElementById("kapTbodyStokKritis").innerHTML = stokKritis.length
+    ? stokKritis.map(o => `<tr><td>${o.nama_obat}</td><td>${o.kategori || "-"}</td><td>${o.stok}</td><td>${o.stok_minimum ?? 10}</td></tr>`).join("")
+    : `<tr><td colspan="4">Tidak ada stok kritis saat ini.</td></tr>`;
+
+  // ---- Tabel Mendekati Kadaluarsa ----
+  expSoon.sort((a, b) => new Date(a.exp_date) - new Date(b.exp_date));
+  document.getElementById("kapTbodyExpired").innerHTML = expSoon.length
+    ? expSoon.map(o => {
+        const sisaHari = Math.ceil((new Date(o.exp_date) - new Date(hariIni)) / (1000 * 60 * 60 * 24));
+        return `<tr><td>${o.nama_obat}</td><td>${o.no_lot || "-"}</td><td>${new Date(o.exp_date).toLocaleDateString("id-ID")}</td><td>${sisaHari} hari</td><td>${o.stok}</td></tr>`;
+      }).join("")
+    : `<tr><td colspan="5">Tidak ada item mendekati kadaluarsa dalam 90 hari.</td></tr>`;
+
+  // ---- Obat Terbanyak Keluar 30 Hari ----
+  const obatMap = {};
+  obat.forEach(o => obatMap[o.id] = o.nama_obat);
+  const rekapKeluar = {};
+  kartu.forEach(k => { rekapKeluar[k.obat_id] = (rekapKeluar[k.obat_id] || 0) + k.jumlah; });
+  const top = Object.entries(rekapKeluar)
+    .map(([obat_id, jumlah]) => ({ nama: obatMap[obat_id] || "Obat tidak dikenal", jumlah }))
+    .sort((a, b) => b.jumlah - a.jumlah)
+    .slice(0, 10);
+
+  document.getElementById("kapListObatTerbanyak").innerHTML = top.length
+    ? top.map((t, i) => `<div class="kap-alert-row"><span class="ic">${i + 1}.</span><div><strong>${t.nama}</strong><div class="t">${t.jumlah} unit keluar (30 hari terakhir)</div></div></div>`).join("")
+    : `<div class="kap-kosong">Belum ada data pengeluaran obat dalam 30 hari terakhir.</div>`;
+}
+
+// ================================================================
+// REKAP SURVEI KEPUASAN
+// ================================================================
+async function muatRekapSurvei() {
+  document.getElementById("kapTbodySurvei").innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+  document.getElementById("kapListSaranSurvei").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const tigaPuluhHariLalu = new Date(); tigaPuluhHariLalu.setDate(tigaPuluhHariLalu.getDate() - 29);
+  const batas30 = tigaPuluhHariLalu.toISOString();
+
+  const { data, error } = await supabaseClient
+    .from("survei_kepuasan")
+    .select("id, nama_pasien, skor_kecepatan, skor_keramahan, skor_kejelasan_informasi, skor_kebersihan, saran, created_at")
+    .gte("created_at", batas30)
+    .order("created_at", { ascending: false });
+
+  const survei = (!error && data) || [];
+  document.getElementById("svResponden").textContent = survei.length;
+
+  if (!survei.length) {
+    document.getElementById("svRataRata").textContent = "0";
+    document.getElementById("svTerendah").textContent = "-";
+    document.getElementById("svPersenPuas").textContent = "0%";
+    document.getElementById("kapTbodySurvei").innerHTML = `<tr><td colspan="3">Belum ada responden dalam 30 hari terakhir.</td></tr>`;
+    document.getElementById("kapListSaranSurvei").innerHTML = `<div class="kap-kosong">Belum ada saran/masukan dalam 30 hari terakhir.</div>`;
+    return;
+  }
+
+  const aspek = [
+    { key: "skor_kecepatan", label: "Kecepatan Pelayanan" },
+    { key: "skor_keramahan", label: "Keramahan Petugas" },
+    { key: "skor_kejelasan_informasi", label: "Kejelasan Informasi" },
+    { key: "skor_kebersihan", label: "Kebersihan Fasilitas" }
+  ];
+  const rataAspek = aspek.map(a => ({
+    label: a.label,
+    rata: survei.reduce((sum, s) => sum + (s[a.key] || 0), 0) / survei.length
+  }));
+
+  const rataKeseluruhan = rataAspek.reduce((sum, a) => sum + a.rata, 0) / rataAspek.length;
+  document.getElementById("svRataRata").textContent = rataKeseluruhan.toFixed(2);
+
+  const terendah = rataAspek.reduce((min, a) => a.rata < min.rata ? a : min, rataAspek[0]);
+  document.getElementById("svTerendah").textContent = terendah.label;
+
+  const rataPerResponden = survei.map(s => (s.skor_kecepatan + s.skor_keramahan + s.skor_kejelasan_informasi + s.skor_kebersihan) / 4);
+  const puas = rataPerResponden.filter(r => r >= 4).length;
+  document.getElementById("svPersenPuas").textContent = `${Math.round((puas / survei.length) * 100)}%`;
+
+  document.getElementById("kapTbodySurvei").innerHTML = rataAspek.map(a => `<tr><td>${a.label}</td><td>${a.rata.toFixed(2)}</td><td>1 - 5</td></tr>`).join("");
+
+  const denganSaran = survei.filter(s => s.saran && s.saran.trim()).slice(0, 10);
+  document.getElementById("kapListSaranSurvei").innerHTML = denganSaran.length
+    ? denganSaran.map(s => `<div class="kap-alert-row"><span class="ic">💬</span><div><strong>${s.nama_pasien || "Anonim"}</strong><div class="t">"${s.saran}" — ${new Date(s.created_at).toLocaleDateString("id-ID")}</div></div></div>`).join("")
+    : `<div class="kap-kosong">Belum ada saran/masukan dalam 30 hari terakhir.</div>`;
+}
+
+// ================================================================
+// REKAP POLI GIGI
+// ================================================================
+async function muatRekapGigi() {
+  document.getElementById("kapTbodyTindakanGigi").innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+  document.getElementById("kapTbodyUkgs").innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  document.getElementById("kapListRujukGigi").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const tigaPuluhHariLalu = new Date(); tigaPuluhHariLalu.setDate(tigaPuluhHariLalu.getDate() - 29);
+  const batas30 = tigaPuluhHariLalu.toISOString().slice(0, 10);
+
+  const [periksaRes, tindakanRes, ukgsRes, rujukRes] = await Promise.all([
+    supabaseClient.from("pemeriksaan_gigi").select("id, tanggal, temuan_karies").gte("tanggal", batas30),
+    supabaseClient.from("tindakan_gigi").select("id, tanggal, jenis_tindakan").gte("tanggal", batas30),
+    supabaseClient.from("kegiatan_promotif_gigi").select("id, tanggal, jenis_kegiatan, nama_sekolah, jumlah_siswa_sasaran, jumlah_siswa_diperiksa, jumlah_siswa_bermasalah").gte("tanggal", batas30),
+    supabaseClient.from("rujukan_lab_gigi").select("id, tanggal, jenis, status, pasien(nama)").eq("jenis", "Rujukan Eksternal").in("status", ["Diajukan", "Diterima"]).gte("tanggal", batas30)
+  ]);
+
+  const periksa = periksaRes.data || [];
+  const tindakan = tindakanRes.data || [];
+  const ukgs = ukgsRes.data || [];
+  const rujuk = rujukRes.data || [];
+
+  document.getElementById("gigiPemeriksaan").textContent = periksa.length;
+  document.getElementById("gigiTindakan").textContent = tindakan.length;
+  document.getElementById("gigiKaries").textContent = periksa.filter(p => p.temuan_karies).length;
+  document.getElementById("gigiUkgs").textContent = ukgs.reduce((sum, u) => sum + (u.jumlah_siswa_diperiksa || 0), 0);
+
+  // ---- Rekap jenis tindakan ----
+  const jenisTindakanList = ["Penambalan (Tumpatan)", "Pencabutan (Ekstraksi)", "Pembersihan Karang Gigi (Scaling)", "Perawatan Saluran Akar", "Tindakan Kecil Bedah Mulut", "Lain-lain"];
+  const adaTindakan = jenisTindakanList.filter(j => tindakan.some(t => t.jenis_tindakan === j));
+  document.getElementById("kapTbodyTindakanGigi").innerHTML = adaTindakan.length
+    ? adaTindakan.map(j => `<tr><td>${j}</td><td>${tindakan.filter(t => t.jenis_tindakan === j).length}</td></tr>`).join("")
+    : `<tr><td colspan="2">Belum ada tindakan dalam 30 hari terakhir.</td></tr>`;
+
+  // ---- Kegiatan UKGS ----
+  document.getElementById("kapTbodyUkgs").innerHTML = ukgs.length
+    ? ukgs.map(u => `<tr><td>${u.nama_sekolah}</td><td>${u.jenis_kegiatan}</td><td>${u.jumlah_siswa_sasaran}</td><td>${u.jumlah_siswa_diperiksa}</td><td>${u.jumlah_siswa_bermasalah}</td></tr>`).join("")
+    : `<tr><td colspan="5">Belum ada kegiatan promotif dalam 30 hari terakhir.</td></tr>`;
+
+  // ---- Rujukan eksternal menunggu ----
+  document.getElementById("kapListRujukGigi").innerHTML = rujuk.length
+    ? rujuk.map(r => `<div class="kap-alert-row"><span class="ic">🦷</span><div><strong>${r.pasien?.nama || "-"}</strong> — Status: ${r.status}<div class="t">${new Date(r.tanggal).toLocaleDateString("id-ID")}</div></div></div>`).join("")
+    : `<div class="kap-kosong">Tidak ada rujukan eksternal yang menunggu dalam 30 hari terakhir.</div>`;
 }
 </script>
 </body>
