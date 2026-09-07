@@ -227,6 +227,7 @@ const AKSES_HALAMAN = {
   perawat: ["rekam-medis.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
   bidan: ["rekam-medis.html", "ugd.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
   farmasi: ["apotek.html", "pengaturan.html", "papan-antrian.html"],
+  klaster1: ["klaster1.html", "pengaturan.html", "papan-antrian.html"],
   kepala_puskesmas: ["kapus.html"],
   pemegang_program: ["pemegang-program.html"]
 };
