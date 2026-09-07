@@ -186,8 +186,20 @@ async function panggilAdmin(action, payload) {
   });
 
   if (error) {
-    // supabase-js bungkus error HTTP non-2xx di sini; coba baca pesan dari body kalau ada
-    const pesan = error.context?.error || error.message || "Gagal hubungi server.";
+    // supabase-js bungkus error HTTP non-2xx di sini. error.context itu Response
+    // mentah, BUKAN JSON hasil parse — jadi error.context?.error selalu undefined
+    // dan yang kepampang cuma pesan generik "Edge Function returned a non-2xx
+    // status code". Di sini kita baca body-nya sendiri biar pesan error ASLI
+    // dari server (mis. "duplicate key...", "pegawai_id wajib.") yang muncul.
+    let pesan = error.message || "Gagal hubungi server.";
+    try {
+      if (error.context && typeof error.context.json === "function") {
+        const body = await error.context.json();
+        if (body?.error) pesan = body.error;
+      }
+    } catch (e2) {
+      // body bukan JSON / sudah kebaca — pakai pesan fallback di atas
+    }
     return { error: pesan };
   }
   if (data?.error) return { error: data.error };
