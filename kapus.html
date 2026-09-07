@@ -68,6 +68,8 @@
       <a id="navSdm" onclick="gantiSubtabKapus('sdm')">SDM Ringkas</a>
       <a id="navKeuangan" onclick="gantiSubtabKapus('keuangan')">Laporan Keuangan</a>
       <a id="navTren" onclick="gantiSubtabKapus('tren')">Tren Kunjungan</a>
+      <a id="navKia" onclick="gantiSubtabKapus('kia')">Program KIA</a>
+      <a id="navMenular" onclick="gantiSubtabKapus('menular')">Program Penyakit Menular</a>
 
       <div class="ph-group-title">Modul Lain</div>
       <a href="index.html">Pendaftaran</a>
@@ -366,6 +368,64 @@
 
       </div>
 
+      <!-- ============ PROGRAM KIA ============ -->
+      <div id="panelKia" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap program KIA & Imunisasi, read-only. Input pemeriksaan tetap di Klaster 2.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Ibu Hamil Aktif</div><div class="value" id="kiaBumilAktif">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Persalinan Bulan Ini</div><div class="value" id="kiaPersalinan">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#6a4c93;"><div class="label">Kunjungan Nifas Bulan Ini</div><div class="value" id="kiaNifas">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Imunisasi Dasar Bulan Ini</div><div class="value" id="kiaImunisasi">0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Tren 6 Bulan Terakhir</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Bulan</th><th>Bumil Baru</th><th>Persalinan</th><th>Kunjungan Nifas</th><th>Imunisasi Dasar</th><th>Imunisasi BIAS</th></tr></thead>
+              <tbody id="kapTbodyTrenKia"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">2</span> Ibu Hamil Risiko Tinggi (Skrining ANC)</h2>
+          <div id="kapListBumilRisiko"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
+      <!-- ============ PROGRAM PENYAKIT MENULAR ============ -->
+      <div id="panelMenular" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap program penyakit menular, read-only. Input pemeriksaan tetap di Klaster 4.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">TB Dalam Pengobatan</div><div class="value" id="pmTbAktif">0</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">Kusta Dalam Pengobatan MDT</div><div class="value" id="pmKustaAktif">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">HIV Reaktif (Kumulatif)</div><div class="value" id="pmHivReaktif">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Kasus Baru (30 Hari)</div><div class="value" id="pmKasusBaru">0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Rekap per Program</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Program</th><th>Aktif/Dalam Pengobatan</th><th>Kasus Baru (30 Hari)</th></tr></thead>
+              <tbody id="kapTbodyProgramMenular"><tr><td colspan="3">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">2</span> Perlu Rujuk RS (30 Hari Terakhir)</h2>
+          <div id="kapListRujukMenular"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </div>
@@ -388,14 +448,14 @@ let profilSaya = null;
 })();
 
 function gantiSubtabKapus(tab) {
-  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm", keuangan: "panelKeuangan", tren: "panelTren" };
-  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm", keuangan: "navKeuangan", tren: "navTren" };
+  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm", keuangan: "panelKeuangan", tren: "panelTren", kia: "panelKia", menular: "panelMenular" };
+  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm", keuangan: "navKeuangan", tren: "navTren", kia: "navKia", menular: "navMenular" };
   Object.values(panelMap).forEach(id => document.getElementById(id).style.display = "none");
   Object.values(navMap).forEach(id => document.getElementById(id).classList.remove("active"));
   document.getElementById(panelMap[tab]).style.display = "block";
   document.getElementById(navMap[tab]).classList.add("active");
 
-  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas", keuangan: "Laporan Keuangan", tren: "Tren Kunjungan" };
+  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas", keuangan: "Laporan Keuangan", tren: "Tren Kunjungan", kia: "Program KIA", menular: "Program Penyakit Menular" };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Kepala Puskesmas";
 
   if (tab === "approval") muatApprovalLplpo();
@@ -403,6 +463,8 @@ function gantiSubtabKapus(tab) {
   if (tab === "sdm") muatSdmRingkas();
   if (tab === "keuangan") muatLaporanKeuangan();
   if (tab === "tren") muatTrenKunjungan();
+  if (tab === "kia") muatProgramKia();
+  if (tab === "menular") muatProgramMenular();
 }
 
 function gantiTabApproval(tab) {
@@ -1238,6 +1300,139 @@ async function muatTrenKunjungan() {
       options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
     });
   }
+}
+
+// ================================================================
+// PROGRAM KIA (rekap lintas Klaster 2, read-only)
+// ================================================================
+async function muatProgramKia() {
+  document.getElementById("kapTbodyTrenKia").innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+  document.getElementById("kapListBumilRisiko").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const enamBulanLalu = new Date(); enamBulanLalu.setMonth(enamBulanLalu.getMonth() - 5); enamBulanLalu.setDate(1); enamBulanLalu.setHours(0, 0, 0, 0);
+  const awalEnamBulan = enamBulanLalu.toISOString().slice(0, 10);
+  const sekarang = new Date();
+  const awalBulanIni = new Date(sekarang.getFullYear(), sekarang.getMonth(), 1).toISOString().slice(0, 10);
+
+  const [bumilRes, persalinanRes, nifasRes, imunDasarRes, imunBiasRes, ancRes] = await Promise.all([
+    supabaseClient.from("kehamilan").select("id, status, created_at, catatan").gte("created_at", awalEnamBulan),
+    supabaseClient.from("persalinan").select("id, tanggal").gte("tanggal", awalEnamBulan),
+    supabaseClient.from("kunjungan_nifas").select("id, tanggal").gte("tanggal", awalEnamBulan),
+    supabaseClient.from("imunisasi_dasar").select("id, tanggal").gte("tanggal", awalEnamBulan),
+    supabaseClient.from("imunisasi_bias").select("id, tanggal").gte("tanggal", awalEnamBulan),
+    supabaseClient.from("kunjungan_anc").select("id, skrining_risiko, catatan, usia_kehamilan_minggu, created_at, kehamilan_id, kehamilan(pasien_id, pasien(nama))").order("created_at", { ascending: false }).limit(200)
+  ]);
+
+  const bumil = bumilRes.data || [];
+  const persalinan = persalinanRes.data || [];
+  const nifas = nifasRes.data || [];
+  const imunDasar = imunDasarRes.data || [];
+  const imunBias = imunBiasRes.data || [];
+  const anc = ancRes.data || [];
+
+  // ---- KPI bulan berjalan ----
+  document.getElementById("kiaBumilAktif").textContent = bumil.filter(b => b.status === "hamil").length;
+  document.getElementById("kiaPersalinan").textContent = persalinan.filter(p => p.tanggal >= awalBulanIni).length;
+  document.getElementById("kiaNifas").textContent = nifas.filter(n => n.tanggal >= awalBulanIni).length;
+  document.getElementById("kiaImunisasi").textContent = imunDasar.filter(i => i.tanggal >= awalBulanIni).length;
+
+  // ---- Tren 6 bulan ----
+  const namaBulanPendek = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+  const bulanList = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(sekarang.getFullYear(), sekarang.getMonth() - i, 1);
+    bulanList.push({ label: `${namaBulanPendek[d.getMonth()]} ${d.getFullYear()}`, awal: d.toISOString().slice(0, 10), akhir: new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString().slice(0, 10) });
+  }
+  const hitungDiRentang = (list, field, awal, akhir) => list.filter(x => x[field] >= awal && x[field] < akhir).length;
+
+  document.getElementById("kapTbodyTrenKia").innerHTML = bulanList.map(b => `
+    <tr>
+      <td>${b.label}</td>
+      <td>${hitungDiRentang(bumil, "created_at", b.awal, b.akhir)}</td>
+      <td>${hitungDiRentang(persalinan, "tanggal", b.awal, b.akhir)}</td>
+      <td>${hitungDiRentang(nifas, "tanggal", b.awal, b.akhir)}</td>
+      <td>${hitungDiRentang(imunDasar, "tanggal", b.awal, b.akhir)}</td>
+      <td>${hitungDiRentang(imunBias, "tanggal", b.awal, b.akhir)}</td>
+    </tr>
+  `).join("");
+
+  // ---- Ibu hamil risiko tinggi (skrining_risiko tidak kosong, ambil ANC terbaru per kehamilan) ----
+  const ancTerbaruPerKehamilan = {};
+  anc.forEach(a => { if (!ancTerbaruPerKehamilan[a.kehamilan_id]) ancTerbaruPerKehamilan[a.kehamilan_id] = a; });
+  const risiko = Object.values(ancTerbaruPerKehamilan).filter(a => Array.isArray(a.skrining_risiko) && a.skrining_risiko.length > 0);
+
+  const listBox = document.getElementById("kapListBumilRisiko");
+  listBox.innerHTML = risiko.length
+    ? risiko.map(a => {
+        const nama = a.kehamilan && a.kehamilan.pasien ? a.kehamilan.pasien.nama : "-";
+        return `<div class="kap-alert-row"><span class="ic">⚠️</span><div><strong>${nama}</strong> — ${a.usia_kehamilan_minggu ?? "-"} minggu<div class="t">Risiko: ${a.skrining_risiko.join(", ")}</div></div></div>`;
+      }).join("")
+    : `<div class="kap-kosong">Tidak ada ibu hamil dengan skrining risiko tinggi saat ini.</div>`;
+}
+
+// ================================================================
+// PROGRAM PENYAKIT MENULAR (rekap lintas Klaster 4, read-only)
+// ================================================================
+async function muatProgramMenular() {
+  document.getElementById("kapTbodyProgramMenular").innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+  document.getElementById("kapListRujukMenular").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const tigaPuluhHariLalu = new Date(); tigaPuluhHariLalu.setDate(tigaPuluhHariLalu.getDate() - 29);
+  const batas30 = tigaPuluhHariLalu.toISOString().slice(0, 10);
+
+  const [tbRes, kustaRes, hivRes, malariaRes, ispaRes, diareRes] = await Promise.all([
+    supabaseClient.from("pemeriksaan_tb").select("id, tanggal, status_pengobatan, pasien(nama)"),
+    supabaseClient.from("pemeriksaan_kusta").select("id, tanggal, status_pengobatan, pasien(nama)"),
+    supabaseClient.from("pemeriksaan_hiv").select("id, tanggal, hasil_tes, status_pengobatan_arv, pasien(nama)"),
+    supabaseClient.from("pemeriksaan_malaria").select("id, tanggal, hasil, status_pengobatan, pasien(nama)").gte("tanggal", batas30),
+    supabaseClient.from("pemeriksaan_ispa").select("id, tanggal, klasifikasi, status_pengobatan, pasien(nama)").gte("tanggal", batas30),
+    supabaseClient.from("pemeriksaan_diare").select("id, tanggal, derajat_dehidrasi, tatalaksana, pasien(nama)").gte("tanggal", batas30)
+  ]);
+
+  const tb = tbRes.data || [];
+  const kusta = kustaRes.data || [];
+  const hiv = hivRes.data || [];
+  const malaria = malariaRes.data || [];
+  const ispa = ispaRes.data || [];
+  const diare = diareRes.data || [];
+
+  const tbAktif = tb.filter(t => t.status_pengobatan === "Dalam Pengobatan");
+  const kustaAktif = kusta.filter(k => k.status_pengobatan === "Dalam Pengobatan MDT");
+  const hivReaktif = hiv.filter(h => h.hasil_tes === "Reaktif");
+  const malariaPositif = malaria.filter(m => m.hasil && m.hasil.startsWith("Positif"));
+  const ispaPneumonia = ispa.filter(i => i.klasifikasi && i.klasifikasi !== "Bukan Pneumonia");
+  const diareBerat = diare.filter(d => d.derajat_dehidrasi === "Dehidrasi Berat");
+
+  const tbBaru30 = tb.filter(t => t.tanggal >= batas30).length;
+  const kustaBaru30 = kusta.filter(k => k.tanggal >= batas30).length;
+  const hivBaru30 = hiv.filter(h => h.tanggal >= batas30).length;
+
+  document.getElementById("pmTbAktif").textContent = tbAktif.length;
+  document.getElementById("pmKustaAktif").textContent = kustaAktif.length;
+  document.getElementById("pmHivReaktif").textContent = hivReaktif.length;
+  document.getElementById("pmKasusBaru").textContent = tbBaru30 + kustaBaru30 + hivBaru30 + malariaPositif.length + ispaPneumonia.length + diareBerat.length;
+
+  document.getElementById("kapTbodyProgramMenular").innerHTML = `
+    <tr><td>TB</td><td>${tbAktif.length} dalam pengobatan</td><td>${tbBaru30}</td></tr>
+    <tr><td>Kusta</td><td>${kustaAktif.length} dalam pengobatan MDT</td><td>${kustaBaru30}</td></tr>
+    <tr><td>HIV</td><td>${hivReaktif.length} reaktif (kumulatif)</td><td>${hivBaru30}</td></tr>
+    <tr><td>Malaria</td><td>-</td><td>${malariaPositif.length} positif</td></tr>
+    <tr><td>ISPA/Pneumonia</td><td>-</td><td>${ispaPneumonia.length} kasus pneumonia</td></tr>
+    <tr><td>Diare</td><td>-</td><td>${diareBerat.length} dehidrasi berat</td></tr>
+  `;
+
+  // ---- Perlu rujuk RS, 30 hari terakhir ----
+  let rujuk = [];
+  malaria.filter(m => m.status_pengobatan === "Rujuk RS").forEach(m => rujuk.push({ nama: m.pasien?.nama || "-", program: "Malaria", tanggal: m.tanggal }));
+  ispa.filter(i => i.status_pengobatan === "Rujuk RS").forEach(i => rujuk.push({ nama: i.pasien?.nama || "-", program: "ISPA/Pneumonia", tanggal: i.tanggal }));
+  diare.filter(d => d.tatalaksana === "Rujuk RS").forEach(d => rujuk.push({ nama: d.pasien?.nama || "-", program: "Diare", tanggal: d.tanggal }));
+  hiv.filter(h => h.tanggal >= batas30 && h.status_pengobatan_arv === "Rujuk RS").forEach(h => rujuk.push({ nama: h.pasien?.nama || "-", program: "HIV", tanggal: h.tanggal }));
+  rujuk.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+  const listBox = document.getElementById("kapListRujukMenular");
+  listBox.innerHTML = rujuk.length
+    ? rujuk.map(r => `<div class="kap-alert-row"><span class="ic">🚑</span><div><strong>${r.nama}</strong> — ${r.program}<div class="t">${new Date(r.tanggal).toLocaleDateString("id-ID")}</div></div></div>`).join("")
+    : `<div class="kap-kosong">Tidak ada kasus yang perlu rujuk RS dalam 30 hari terakhir.</div>`;
 }
 </script>
 </body>
