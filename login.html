@@ -578,12 +578,17 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  window.location.href = "index.html";
+  await arahkanSetelahLogin();
 });
+
+async function arahkanSetelahLogin() {
+  const profil = await getProfilSaya();
+  window.location.href = (profil && profil.role === "admin") ? "admin.html" : "index.html";
+}
 
 (async () => {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session) window.location.href = "index.html";
+  if (session) await arahkanSetelahLogin();
 })();
 </script>
 

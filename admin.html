@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Admin - SIMPUS Bekawan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#12261F;
+    --ink-2:#1D3A2E;
+    --paper:#EEF2ED;
+    --card:#FFFFFF;
+    --line:#D7E0D6;
+    --brass:#A9762C;
+    --brass-soft:#F1E4CE;
+    --teal:#1F6F5C;
+    --teal-soft:#E3EFE9;
+    --text:#17241D;
+    --text-muted:#5B6B60;
+    --red:#B23A2E;
+    --red-soft:#F7E7E4;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--text);
+    font-family:'Public Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{ font-family:'Fraunces', serif; }
+
+  /* ---------- Plang / bar atas ---------- */
+  .plang{
+    background:var(--ink);
+    color:#fff;
+    border-bottom:3px solid var(--brass);
+    padding:16px 32px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .plang .brand{ display:flex; align-items:center; gap:12px; }
+  .plang .dot{
+    width:14px; height:14px; border-radius:50%;
+    background:var(--brass); flex:none;
+  }
+  .plang .brand-text .nama-instansi{
+    font-weight:700; letter-spacing:.03em; font-size:14px;
+  }
+  .plang .brand-text .sub{
+    font-size:11.5px; color:#c9d6cf; margin-top:1px;
+  }
+  .plang .akun{ display:flex; align-items:center; gap:12px; }
+  .plang .avatar{
+    width:32px; height:32px; border-radius:50%;
+    background:var(--brass); color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:13px; flex:none;
+  }
+  .plang .akun-text{ font-size:12.5px; line-height:1.3; }
+  .plang .akun-text .nama{ font-weight:600; }
+  .plang .akun-text .peran{ color:#c9d6cf; }
+  .plang button{
+    background:transparent;
+    border:1px solid rgba(255,255,255,.35);
+    color:#fff;
+    padding:7px 14px;
+    border-radius:6px;
+    font-family:'Public Sans', sans-serif;
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  .plang button:hover{ background:rgba(255,255,255,.1); }
+
+  /* ---------- Wrapper konten ---------- */
+  .board{ max-width:900px; margin:0 auto; padding:36px 24px 64px; }
+
+  .tanggal{ font-size:13px; color:var(--text-muted); margin-bottom:2px; }
+  .board h1{
+    font-weight:500; font-size:30px; margin:0 0 22px;
+    color:var(--ink-2);
+  }
+
+  /* ---------- Stat chips ---------- */
+  .stat-row{
+    display:grid;
+    grid-template-columns:1.3fr 1fr 1fr;
+    gap:14px;
+    margin-bottom:36px;
+  }
+  .stat-chip{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:16px 18px;
+  }
+  .stat-chip.hero{ background:var(--teal-soft); border-color:var(--teal); }
+  .stat-chip .label{
+    font-size:11.5px; color:var(--text-muted);
+    text-transform:none; letter-spacing:.01em;
+  }
+  .stat-chip .num{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    margin-top:4px;
+  }
+  .stat-chip.hero .num{ font-size:40px; color:var(--ink-2); }
+  .stat-chip:not(.hero) .num{ font-size:26px; color:var(--ink-2); }
+
+  /* ---------- Ledger wilayah kerja ---------- */
+  .section-title{
+    font-size:12px; font-weight:700; color:var(--text-muted);
+    letter-spacing:.06em; margin:0 0 10px;
+    padding-bottom:6px; border-bottom:1px solid var(--line);
+  }
+  .ledger{ margin-bottom:36px; }
+  .ledger-row{
+    display:flex; align-items:baseline; gap:8px;
+    padding:9px 2px;
+    border-bottom:1px dotted var(--line);
+    font-size:14px;
+  }
+  .ledger-row:last-child{ border-bottom:none; }
+  .ledger-row .nama-lokasi{ flex:none; color:var(--text); }
+  .ledger-row .leader{
+    flex:1; border-bottom:1px dotted var(--line);
+    position:relative; top:-4px;
+  }
+  .ledger-row .jumlah{
+    flex:none; font-variant-numeric:tabular-nums;
+    font-weight:600; color:var(--ink-2); min-width:90px; text-align:right;
+  }
+
+  /* ---------- Modul launcher (gaya direktori) ---------- */
+  .modul-group{ margin-bottom:30px; }
+  .modul-list{ background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .modul-row{
+    display:flex; align-items:center; gap:14px;
+    padding:13px 16px;
+    text-decoration:none; color:var(--text);
+    border-bottom:1px solid var(--line);
+    transition:background .12s ease;
+  }
+  .modul-row:last-child{ border-bottom:none; }
+  .modul-row:hover{ background:var(--brass-soft); }
+  .modul-row:hover .panah{ transform:translateX(3px); }
+  .modul-row .ikon{ font-size:18px; flex:none; width:22px; text-align:center; }
+  .modul-row .teks{ flex:1; min-width:0; }
+  .modul-row .teks .nama{ font-weight:600; font-size:14px; }
+  .modul-row .teks .ket{ font-size:12px; color:var(--text-muted); margin-top:1px; }
+  .modul-row .panah{ flex:none; color:var(--brass); transition:transform .12s ease; }
+
+  footer{
+    text-align:center; font-size:11.5px; color:var(--text-muted);
+    padding:20px 0 10px;
+  }
+
+  @media (max-width:640px){
+    .plang{ padding:14px 18px; }
+    .board{ padding:26px 16px 48px; }
+    .stat-row{ grid-template-columns:1fr; }
+    .board h1{ font-size:24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="plang">
+  <div class="brand">
+    <span class="dot"></span>
+    <div class="brand-text">
+      <div class="nama-instansi">UPTD PUSKESMAS BEKAWAN</div>
+      <div class="sub">Sistem Informasi Manajemen Puskesmas &mdash; Dashboard Admin</div>
+    </div>
+  </div>
+  <div class="akun">
+    <div class="avatar" id="avatarAdmin">A</div>
+    <div class="akun-text">
+      <div class="nama" id="namaUser">Memuat...</div>
+      <div class="peran">Administrator Sistem</div>
+    </div>
+    <button onclick="logout()">Keluar</button>
+  </div>
+</div>
+
+<div class="board">
+
+  <div class="tanggal" id="tanggalHariIni">&nbsp;</div>
+  <h1>Ringkasan operasional hari ini</h1>
+
+  <div class="stat-row">
+    <div class="stat-chip hero">
+      <div class="label">Total kunjungan hari ini &mdash; seluruh wilayah kerja</div>
+      <div class="num" id="statTotalKunjungan">&ndash;</div>
+    </div>
+    <div class="stat-chip">
+      <div class="label">Pasien terdaftar</div>
+      <div class="num" id="statPasien">&ndash;</div>
+    </div>
+    <div class="stat-chip">
+      <div class="label">Pegawai aktif</div>
+      <div class="num" id="statPegawai">&ndash;</div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="section-title">KUNJUNGAN HARI INI PER WILAYAH KERJA</div>
+    <div id="ledgerWilayah">
+      <div class="ledger-row"><span class="nama-lokasi">Memuat data&hellip;</span><span class="leader"></span><span class="jumlah"></span></div>
+    </div>
+  </div>
+
+  <div class="modul-group">
+    <div class="section-title">PELAYANAN LANGSUNG</div>
+    <div class="modul-list">
+      <a class="modul-row" href="index.html"><span class="ikon">🧾</span><span class="teks"><div class="nama">Pendaftaran</div><div class="ket">Loket, antrian, dan skrining awal pasien</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="rekam-medis.html"><span class="ikon">📋</span><span class="teks"><div class="nama">Rekam Medis</div><div class="ket">Catatan SOAP, resep, dan riwayat berobat</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="ugd.html"><span class="ikon">🚑</span><span class="teks"><div class="nama">UGD</div><div class="ket">Triase dan tindakan gawat darurat</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="ranap.html"><span class="ikon">🛏️</span><span class="teks"><div class="nama">Rawat Inap</div><div class="ket">Pemberian obat terjadwal dan berkas klaim BPJS</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="apotek.html"><span class="ikon">💊</span><span class="teks"><div class="nama">Apotek</div><div class="ket">Resep, stok obat, dan laporan LPLPO</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="gigi.html"><span class="ikon">🦷</span><span class="teks"><div class="nama">Poli Gigi</div><div class="ket">Periksa dan tindakan gigi</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="kasir.html"><span class="ikon">💳</span><span class="teks"><div class="nama">Kasir</div><div class="ket">Tagihan dan pembayaran pasien</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="papan-antrian.html"><span class="ikon">📺</span><span class="teks"><div class="nama">Papan Antrian</div><div class="ket">Layar nomor antrian untuk ruang tunggu</div></span><span class="panah">→</span></a>
+    </div>
+  </div>
+
+  <div class="modul-group">
+    <div class="section-title">PROGRAM KESEHATAN MASYARAKAT</div>
+    <div class="modul-list">
+      <a class="modul-row" href="klaster1.html"><span class="ikon">🗂️</span><span class="teks"><div class="nama">Klaster 1 &mdash; Administrasi &amp; Manajemen</div><div class="ket">Surat, keuangan, kepegawaian, dan mutu</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="klaster2.html"><span class="ikon">🧑</span><span class="teks"><div class="nama">Klaster 2 &mdash; Ibu, Anak &amp; Remaja</div><div class="ket">Imunisasi, MTBS, posyandu, dan PKPR</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="klaster3.html"><span class="ikon">💪</span><span class="teks"><div class="nama">Klaster 3 &mdash; Usia Dewasa &amp; Lansia</div><div class="ket">Register, rujukan, dan rekam medis program</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="klaster4.html"><span class="ikon">🩹</span><span class="teks"><div class="nama">Klaster 4 &mdash; Penyakit Menular</div><div class="ket">Program TB, SKDR, dan penyelidikan epidemiologi</div></span><span class="panah">→</span></a>
+    </div>
+  </div>
+
+  <div class="modul-group">
+    <div class="section-title">JARINGAN &amp; PROGRAM</div>
+    <div class="modul-list">
+      <a class="modul-row" href="pustu.html"><span class="ikon">🏥</span><span class="teks"><div class="nama">Pustu</div><div class="ket">Pelayanan dan stok obat di 4 lokasi pustu</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="pemegang-program.html"><span class="ikon">📌</span><span class="teks"><div class="nama">Pemegang Program</div><div class="ket">Ringkasan capaian program per pemegang</div></span><span class="panah">→</span></a>
+    </div>
+  </div>
+
+  <div class="modul-group">
+    <div class="section-title">MANAJEMEN &amp; EKSEKUTIF</div>
+    <div class="modul-list">
+      <a class="modul-row" href="pengaturan.html"><span class="ikon">⚙️</span><span class="teks"><div class="nama">Pengaturan</div><div class="ket">Master data, tarif, pegawai, dan cuti/izin</div></span><span class="panah">→</span></a>
+      <a class="modul-row" href="kapus.html"><span class="ikon">🧭</span><span class="teks"><div class="nama">Kepala Puskesmas</div><div class="ket">Kinerja, keuangan, dan approval</div></span><span class="panah">→</span></a>
+    </div>
+  </div>
+
+  <footer>SIMPUS UPTD Puskesmas Bekawan &middot; Dashboard Admin</footer>
+
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+(async function () {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  const profil = await getProfilSaya();
+  if (!profil) return;
+
+  // Halaman ini khusus admin. Role lain dilempar ke halaman sesuai izinnya.
+  if (profil.role !== "admin") {
+    cekAksesHalaman(profil, "admin.html");
+    return;
+  }
+
+  document.getElementById("namaUser").textContent = profil.nama || "Admin";
+  document.getElementById("avatarAdmin").textContent = (profil.nama || "A").trim().charAt(0).toUpperCase();
+
+  document.getElementById("tanggalHariIni").textContent =
+    new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  muatRingkasan();
+})();
+
+async function muatRingkasan() {
+  const today = new Date().toISOString().split("T")[0];
+
+  // Total pasien terdaftar
+  const { count: totalPasien } = await supabaseClient
+    .from("pasien").select("id", { count: "exact", head: true });
+  document.getElementById("statPasien").textContent = totalPasien ?? 0;
+
+  // Pegawai aktif
+  const { count: totalPegawai } = await supabaseClient
+    .from("profil_pegawai").select("id", { count: "exact", head: true }).eq("aktif", true);
+  document.getElementById("statPegawai").textContent = totalPegawai ?? 0;
+
+  // Daftar pustu aktif (buat label ledger wilayah kerja)
+  const { data: daftarPustu } = await supabaseClient
+    .from("pustu").select("id, nama").eq("aktif", true).order("id");
+
+  // Kunjungan hari ini, seluruh wilayah (induk = pustu_id null)
+  const { data: kunjunganHariIni, error } = await supabaseClient
+    .from("kunjungan").select("id, pustu_id").eq("tanggal", today);
+
+  const ledgerEl = document.getElementById("ledgerWilayah");
+
+  if (error || !kunjunganHariIni) {
+    document.getElementById("statTotalKunjungan").textContent = "0";
+    ledgerEl.innerHTML = `<div class="ledger-row"><span class="nama-lokasi">Belum ada data kunjungan.</span><span class="leader"></span><span class="jumlah"></span></div>`;
+    return;
+  }
+
+  document.getElementById("statTotalKunjungan").textContent = kunjunganHariIni.length;
+
+  const hitungInduk = kunjunganHariIni.filter(k => !k.pustu_id).length;
+  const baris = [{ nama: "Puskesmas Induk", jumlah: hitungInduk }];
+
+  (daftarPustu || []).forEach(p => {
+    const jumlah = kunjunganHariIni.filter(k => k.pustu_id === p.id).length;
+    baris.push({ nama: `Pustu ${p.nama}`, jumlah });
+  });
+
+  ledgerEl.innerHTML = baris.map(b => `
+    <div class="ledger-row">
+      <span class="nama-lokasi">${b.nama}</span>
+      <span class="leader"></span>
+      <span class="jumlah">${b.jumlah} kunjungan</span>
+    </div>
+  `).join("");
+}
+</script>
+
+</body>
+</html>
