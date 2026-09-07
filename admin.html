@@ -59,6 +59,31 @@
   muatRingkasan();
 })();
 
+// ChatGPT bikin tombol dropdown (.nav-toggle) + CSS-nya, tapi lupa JS buat
+// buka/tutupnya. Ini yang bikin klik dropdown gak muncul apa-apa.
+document.querySelectorAll(".nav-toggle").forEach(btn => {
+  btn.addEventListener("click", () => {
+    btn.classList.toggle("open");
+    const sub = document.getElementById(btn.dataset.menu);
+    if (sub) sub.classList.toggle("open");
+  });
+});
+
+// Tombol menu mobile (☰) juga belum ada JS-nya — sekalian dipasang.
+const tombolMobile = document.getElementById("mobileMenu");
+const sidebarEl = document.getElementById("sidebar");
+const overlayEl = document.getElementById("overlay");
+if (tombolMobile && sidebarEl && overlayEl) {
+  tombolMobile.addEventListener("click", () => {
+    sidebarEl.classList.toggle("show");
+    overlayEl.classList.toggle("show");
+  });
+  overlayEl.addEventListener("click", () => {
+    sidebarEl.classList.remove("show");
+    overlayEl.classList.remove("show");
+  });
+}
+
 async function muatRingkasan() {
   const today = new Date().toISOString().split("T")[0];
 
@@ -75,6 +100,8 @@ async function muatRingkasan() {
   // Daftar pustu aktif (buat label ledger wilayah kerja)
   const { data: daftarPustu } = await supabaseClient
     .from("pustu").select("id, nama").eq("aktif", true).order("id");
+  const statPustuEl = document.getElementById("statPustu");
+  if (statPustuEl) statPustuEl.textContent = (daftarPustu || []).length;
 
   // Kunjungan hari ini, seluruh wilayah (induk = pustu_id null)
   const { data: kunjunganHariIni, error } = await supabaseClient
