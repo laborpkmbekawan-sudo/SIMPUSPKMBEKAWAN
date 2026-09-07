@@ -269,6 +269,7 @@
 .lp-hist-status { font-size: 10.5px; padding: 3px 10px; border-radius: 12px; font-weight: 700; }
 .lp-hist-status.draft { background: #f4f6f8; color: #6b7280; }
 .lp-hist-status.diajukan { background: #fff6ee; color: var(--orange); }
+.lp-hist-status.disetujui_kapus { background: #f2ecf9; color: var(--plum); }
 .lp-hist-status.disetujui_dinas { background: #e7f3fb; color: var(--teal-a); }
 .lp-hist-status.diterima { background: #eafaee; color: #16865c; }
 @media (max-width: 1100px) {
@@ -340,6 +341,7 @@
     <a href="pengaturan.html">Pengaturan</a>
     <a href="kasir.html">Kasir</a>
           <a href="papan-antrian.html">Papan Antrian</a>
+    <a href="kapus.html">Kepala Puskesmas</a>
     </nav>
   </aside>
 
@@ -1190,6 +1192,7 @@
           <div><label>Petugas Penyusun</label><div id="lpPetugas" style="font-size:13px; font-weight:600; color:var(--navy);">-</div></div>
         </div>
         <div id="lpStatusFlow" class="lp-status-flow"></div>
+        <div id="lpKapusNote" style="display:none; margin-top:10px;"></div>
       </div>
 
       <div id="lpKosong" style="display:none; text-align:center; padding:40px 0;">
@@ -1265,6 +1268,7 @@
               <option value="">Semua Status</option>
               <option value="draft">Draft</option>
               <option value="diajukan">Diajukan</option>
+              <option value="disetujui_kapus">Disetujui Kapus</option>
               <option value="disetujui_dinas">Disetujui Dinas</option>
               <option value="diterima">Barang Diterima</option>
             </select>
@@ -4464,9 +4468,11 @@ async function muatRiwayatMutasi() {
 // LPLPO — Laporan Pemakaian & Lembar Permintaan Obat
 // ============================================================
 const BULAN_LABEL_LPLPO = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-const LABEL_STATUS_LPLPO = { draft: "Draft", diajukan: "Diajukan", disetujui_dinas: "Disetujui Dinas", diterima: "Barang Diterima" };
-const ORDER_STATUS_LPLPO = ["draft", "diajukan", "disetujui_dinas", "diterima"];
-const LABEL_TOMBOL_LANJUT_LPLPO = { draft: "Ajukan ke Dinas", diajukan: "Tandai Disetujui Dinas", disetujui_dinas: "Tandai Barang Diterima" };
+const LABEL_STATUS_LPLPO = { draft: "Draft", diajukan: "Diajukan", disetujui_kapus: "Disetujui Kapus", disetujui_dinas: "Disetujui Dinas", diterima: "Barang Diterima" };
+const ORDER_STATUS_LPLPO = ["draft", "diajukan", "disetujui_kapus", "disetujui_dinas", "diterima"];
+// "diajukan" sengaja gak ada di sini -- di status itu Farmasi harus nunggu
+// approval Kepala Puskesmas dulu (lihat kapus.html), tombol lanjut dikunci.
+const LABEL_TOMBOL_LANJUT_LPLPO = { draft: "Ajukan (Perlu Approval Kapus)", disetujui_kapus: "Tandai Disetujui Dinas", disetujui_dinas: "Tandai Barang Diterima" };
 
 let lplpoTahunSekarang = new Date().getFullYear();
 let lplpoBulanSekarang = new Date().getMonth() + 1;
@@ -4581,9 +4587,26 @@ async function muatPeriodeLplpo(bulan, tahun) {
   const btnLanjut = document.getElementById("lpBtnLanjut");
   if (header.status === "diterima") {
     btnLanjut.style.display = "none";
+    btnLanjut.disabled = false;
+  } else if (header.status === "diajukan") {
+    btnLanjut.style.display = "";
+    btnLanjut.disabled = true;
+    btnLanjut.textContent = "Menunggu Approval Kepala Puskesmas";
   } else {
     btnLanjut.style.display = "";
+    btnLanjut.disabled = false;
     btnLanjut.textContent = LABEL_TOMBOL_LANJUT_LPLPO[header.status] || "Lanjutkan";
+  }
+
+  const noteBox = document.getElementById("lpKapusNote");
+  if (header.catatan_kapus) {
+    const kelas = header.status === "draft" ? "msg-error" : "msg-success";
+    const judul = header.status === "draft" ? "Ditolak Kepala Puskesmas" : "Catatan Kepala Puskesmas";
+    noteBox.style.display = "";
+    noteBox.innerHTML = `<div class="msg ${kelas}"><strong>${judul}:</strong> ${header.catatan_kapus}</div>`;
+  } else {
+    noteBox.style.display = "none";
+    noteBox.innerHTML = "";
   }
 }
 
@@ -4877,7 +4900,7 @@ async function lanjutkanStatusLplpo() {
   if (status === "draft") await simpanDraftLplpo();
 
   const patch = { status: berikutnya, updated_at: new Date().toISOString() };
-  if (berikutnya === "diajukan") patch.tanggal_diajukan = new Date().toISOString();
+  if (berikutnya === "diajukan") { patch.tanggal_diajukan = new Date().toISOString(); patch.catatan_kapus = null; }
   if (berikutnya === "disetujui_dinas") patch.tanggal_disetujui = new Date().toISOString();
   if (berikutnya === "diterima") patch.tanggal_diterima = new Date().toISOString();
 

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kepala Puskesmas - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.kap-kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+.kap-kpi-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; border-left:4px solid var(--accent,#999); }
+.kap-kpi-card .label { font-size:11px; color:var(--muted); text-transform:uppercase; }
+.kap-kpi-card .value { font-size:24px; font-weight:700; color:#111827; margin-top:4px; }
+.kap-kpi-card.warn .value { color:var(--orange); }
+.kap-kpi-card.danger .value { color:var(--red); }
+.kap-kpi-card.good .value { color:var(--green); }
+
+.kap-alert-row { display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); font-size:12.5px; }
+.kap-alert-row:last-child { border-bottom:none; }
+.kap-alert-row .ic { font-size:15px; flex-shrink:0; }
+.kap-alert-row .t { color:var(--muted); font-size:11.5px; margin-top:1px; }
+.kap-kosong { text-align:center; padding:24px 0; color:var(--muted); font-size:12.5px; }
+
+.kap-appr-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:12px; }
+.kap-appr-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+.kap-appr-head h4 { font-size:13.5px; color:var(--navy); margin:0 0 4px; }
+.kap-appr-head .sub { font-size:11.5px; color:var(--muted); }
+.kap-appr-actions { display:flex; gap:8px; flex-shrink:0; }
+.kap-appr-detail { margin-top:10px; border-top:1px dashed var(--border); padding-top:10px; display:none; }
+.kap-appr-detail.show { display:block; }
+.kap-appr-detail table { width:100%; font-size:11.8px; }
+.kap-appr-detail th { text-align:left; background:#f0f5f6; padding:6px 8px; font-size:10px; text-transform:uppercase; color:var(--navy); }
+.kap-appr-detail td { padding:6px 8px; border-bottom:1px solid var(--border); }
+
+.kap-subtab-row { display:flex; gap:6px; margin-bottom:16px; border-bottom:2px solid var(--border); }
+.kap-subtab-btn { background:none; border:none; padding:9px 4px; margin-right:18px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; }
+.kap-subtab-btn.active { color:var(--navy); border-bottom-color:var(--orange); }
+
+.kap-hist-badge { font-size:10px; padding:3px 9px; border-radius:12px; font-weight:700; }
+.kap-hist-badge.draft { background:#f4f6f8; color:#6b7280; }
+.kap-hist-badge.diajukan { background:#fff6ee; color:var(--orange); }
+.kap-hist-badge.disetujui_kapus, .kap-hist-badge.approved { background:#f2ecf9; color:var(--plum); }
+.kap-hist-badge.disetujui_dinas { background:#e7f3fb; color:var(--teal-a); }
+.kap-hist-badge.diterima { background:#eafaee; color:#16865c; }
+.kap-hist-badge.rejected { background:#fde7e9; color:#c62836; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+    </div>
+    <nav>
+      <div class="ph-group-title">Kepala Puskesmas</div>
+      <a class="active" id="navDashboard" onclick="gantiSubtabKapus('dashboard')">Dashboard Eksekutif</a>
+      <a id="navApproval" onclick="gantiSubtabKapus('approval')">Persetujuan &amp; Otorisasi</a>
+
+      <div class="ph-group-title">Modul Lain</div>
+      <a href="index.html">Pendaftaran</a>
+      <a href="rekam-medis.html">Rekam Medis</a>
+      <a href="apotek.html">Apotek</a>
+      <a href="ugd.html">UGD</a>
+      <a href="ranap.html">Rawat Inap</a>
+      <a href="klaster1.html">Klaster 1</a>
+      <a href="klaster2.html">Klaster 2</a>
+      <a href="klaster3.html">Klaster 3</a>
+      <a href="klaster4.html">Klaster 4</a>
+      <a href="gigi.html">Poli Gigi</a>
+      <a href="pustu.html">Pustu</a>
+      <a href="pengaturan.html">Pengaturan</a>
+      <a href="kasir.html">Kasir</a>
+      <a href="papan-antrian.html">Papan Antrian</a>
+    </nav>
+  </aside>
+
+  <div class="main-wrap">
+
+    <div class="topbar">
+      <h1>Dashboard Eksekutif</h1>
+      <div class="user-info">
+        <span id="namaUser">Memuat...</span>
+        <button onclick="logout()">Keluar</button>
+      </div>
+    </div>
+
+    <div class="dash-content">
+
+      <!-- ============ DASHBOARD EKSEKUTIF ============ -->
+      <div id="panelDashboard">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Ringkasan lintas unit, ditarik langsung dari data operasional hari ini. Modul Kepala Puskesmas dibangun bertahap.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Kunjungan Hari Ini</div><div class="value" id="kapiKunjungan">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Sedang Menunggu</div><div class="value" id="kapiMenunggu">0</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">Stok Obat Kritis</div><div class="value" id="kapiStokKritis">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#6a4c93;"><div class="label">Kasus UGD Aktif</div><div class="value" id="kapiUgdAktif">0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Ringkasan Kunjungan per Unit — Hari Ini</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Klaster / Unit</th><th>Menunggu</th><th>Diperiksa</th><th>Selesai</th><th>Total</th></tr></thead>
+              <tbody id="kapTbodyUnit"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#1c7d7f;">
+          <h2><span class="card-num" style="background:#1c7d7f;">2</span> Indikator Mutu Kunci — Bulan Berjalan</h2>
+          <p style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">Capaian terbaru per indikator aktif. Kelola target &amp; input capaian lengkap di Klaster 1 &rarr; Mutu &amp; Keselamatan Pasien.</p>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Indikator</th><th>Jenis</th><th>Target</th><th>Capaian</th><th>Status</th></tr></thead>
+              <tbody id="kapTbodyMutu"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">3</span> Alert Kritis</h2>
+          <div id="kapAlertList"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
+      <!-- ============ PERSETUJUAN & OTORISASI ============ -->
+      <div id="panelApproval" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Kepala Puskesmas jadi penanggung jawab akhir sebelum dokumen dikirim ke Dinas Kesehatan.</p>
+
+        <div class="kap-subtab-row">
+          <button class="kap-subtab-btn active" id="kapTabLplpoBtn" onclick="gantiTabApproval('lplpo')">Approval LPLPO</button>
+          <button class="kap-subtab-btn" id="kapTabLaporanBtn" onclick="gantiTabApproval('laporan')">Approval Laporan Penting</button>
+        </div>
+
+        <!-- ===== Sub-tab: LPLPO ===== -->
+        <div id="kapTabLplpo">
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">⏳</span> Menunggu Persetujuan</h2>
+            <p style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">LPLPO yang sudah diajukan Farmasi, menunggu disetujui sebelum lanjut ke Dinas Kesehatan.</p>
+            <div id="kapLplpoPending"><div class="kap-kosong">Memuat...</div></div>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">🕘</span> Riwayat Approval LPLPO</h2>
+            <div class="tbl-wrap" style="overflow:auto;">
+              <table>
+                <thead><tr><th>Periode</th><th>Status</th><th>Disetujui/Ditolak Pada</th><th>Catatan</th></tr></thead>
+                <tbody id="kapTbodyRiwayatLplpo"><tr><td colspan="4">Memuat...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Sub-tab: Laporan Penting ===== -->
+        <div id="kapTabLaporan" style="display:none;">
+          <div class="card" style="--accent:#e0793c;">
+            <h2><span class="card-num" style="background:#e0793c;">⏳</span> Laporan Menunggu Review</h2>
+            <p style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">Laporan berstatus draft di Klaster 1, belum ditandai terkirim ke Dinas Kesehatan. Persetujuan di sini sifatnya endorsement — status pengiriman tetap dikelola petugas Klaster 1.</p>
+            <div id="kapLaporanPending"><div class="kap-kosong">Memuat...</div></div>
+          </div>
+
+          <div class="card" style="--accent:#173b5e;">
+            <h2><span class="card-num" style="background:#173b5e;">🕘</span> Riwayat Review Laporan</h2>
+            <div class="tbl-wrap" style="overflow:auto;">
+              <table>
+                <thead><tr><th>Laporan</th><th>Periode</th><th>Hasil Review</th><th>Tanggal</th><th>Catatan</th></tr></thead>
+                <tbody id="kapTbodyRiwayatLaporan"><tr><td colspan="5">Memuat...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+let profilSaya = null;
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  const profil = await getProfilSaya();
+  profilSaya = profil;
+  cekAksesHalaman(profil, "kapus.html");
+  sesuaikanTabNav(profil);
+  if (profil) document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;
+
+  await muatDashboardKapus();
+})();
+
+function gantiSubtabKapus(tab) {
+  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval" };
+  const navMap = { dashboard: "navDashboard", approval: "navApproval" };
+  Object.values(panelMap).forEach(id => document.getElementById(id).style.display = "none");
+  Object.values(navMap).forEach(id => document.getElementById(id).classList.remove("active"));
+  document.getElementById(panelMap[tab]).style.display = "block";
+  document.getElementById(navMap[tab]).classList.add("active");
+
+  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi" };
+  document.querySelector(".topbar h1").textContent = judul[tab] || "Kepala Puskesmas";
+
+  if (tab === "approval") muatApprovalLplpo();
+}
+
+function gantiTabApproval(tab) {
+  document.getElementById("kapTabLplpo").style.display = tab === "lplpo" ? "block" : "none";
+  document.getElementById("kapTabLaporan").style.display = tab === "laporan" ? "block" : "none";
+  document.getElementById("kapTabLplpoBtn").classList.toggle("active", tab === "lplpo");
+  document.getElementById("kapTabLaporanBtn").classList.toggle("active", tab === "laporan");
+  if (tab === "laporan") muatApprovalLaporan();
+}
+
+// ================================================================
+// DASHBOARD EKSEKUTIF
+// ================================================================
+async function muatDashboardKapus() {
+  const hariIni = new Date().toISOString().slice(0, 10);
+
+  const [kunjunganRes, obatRes, ugdRes, mutuRes, insidenRes, klbRes] = await Promise.all([
+    supabaseClient.from("kunjungan").select("id, status, klaster_id, klaster(nama)").eq("tanggal", hariIni),
+    supabaseClient.from("obat").select("id, nama_obat, stok, stok_minimum"),
+    supabaseClient.from("kunjungan_ugd").select("id, status_ugd, created_at").gte("created_at", hariIni + "T00:00:00"),
+    supabaseClient.from("capaian_indikator_mutu")
+      .select("numerator, denominator, capaian, tahun, bulan, indikator_mutu(nama_indikator, jenis, target, satuan, aktif)")
+      .eq("tahun", new Date().getFullYear()).eq("bulan", new Date().getMonth() + 1),
+    supabaseClient.from("insiden_keselamatan_pasien").select("id, jenis_insiden, grading, status, tanggal_kejadian").neq("status", "selesai").order("tanggal_kejadian", { ascending: false }).limit(5),
+    supabaseClient.from("klb_kejadian").select("id, judul, jenis_penyakit, jumlah_kasus, status").eq("status", "Aktif")
+  ]);
+
+  const kunjungan = kunjunganRes.data || [];
+  const obat = obatRes.data || [];
+  const ugd = ugdRes.data || [];
+  const mutu = (mutuRes.data || []).filter(m => m.indikator_mutu && m.indikator_mutu.aktif);
+  const insiden = insidenRes.data || [];
+  const klb = klbRes.data || [];
+
+  // ---- KPI ----
+  const kunjunganAktif = kunjungan.filter(k => k.status !== "batal");
+  const stokKritis = obat.filter(o => o.stok <= (o.stok_minimum ?? 10));
+  const ugdAktif = ugd.filter(u => !["pulang", "meninggal"].includes(u.status_ugd));
+
+  document.getElementById("kapiKunjungan").textContent = kunjunganAktif.length;
+  document.getElementById("kapiMenunggu").textContent = kunjungan.filter(k => k.status === "menunggu").length;
+  document.getElementById("kapiStokKritis").textContent = stokKritis.length;
+  document.getElementById("kapiUgdAktif").textContent = ugdAktif.length;
+
+  // ---- Ringkasan per unit ----
+  const perUnit = {};
+  kunjunganAktif.forEach(k => {
+    const nama = k.klaster ? k.klaster.nama : "Tanpa Klaster";
+    if (!perUnit[nama]) perUnit[nama] = { menunggu: 0, diperiksa: 0, selesai: 0, total: 0 };
+    perUnit[nama].total++;
+    if (k.status === "menunggu") perUnit[nama].menunggu++;
+    else if (k.status === "diperiksa" || k.status === "dipanggil") perUnit[nama].diperiksa++;
+    else if (k.status === "selesai") perUnit[nama].selesai++;
+  });
+  const tbodyUnit = document.getElementById("kapTbodyUnit");
+  const namaUnit = Object.keys(perUnit);
+  if (namaUnit.length === 0) {
+    tbodyUnit.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Belum ada kunjungan hari ini.</td></tr>`;
+  } else {
+    tbodyUnit.innerHTML = namaUnit.map(nama => {
+      const u = perUnit[nama];
+      return `<tr><td>${nama}</td><td>${u.menunggu}</td><td>${u.diperiksa}</td><td>${u.selesai}</td><td><strong>${u.total}</strong></td></tr>`;
+    }).join("");
+  }
+
+  // ---- Indikator mutu kunci ----
+  const tbodyMutu = document.getElementById("kapTbodyMutu");
+  if (mutu.length === 0) {
+    tbodyMutu.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Belum ada capaian indikator mutu bulan ini. Isi di Klaster 1 &rarr; Mutu &amp; Keselamatan Pasien.</td></tr>`;
+  } else {
+    tbodyMutu.innerHTML = mutu.map(m => {
+      const im = m.indikator_mutu;
+      const capaian = Number(m.capaian);
+      const target = Number(im.target);
+      const tercapai = capaian >= target;
+      const badge = tercapai ? `<span class="badge badge-selesai">Tercapai</span>` : `<span class="badge badge-batal">Di Bawah Target</span>`;
+      return `<tr><td>${im.nama_indikator}</td><td>${im.jenis === "inm" ? "INM" : "Lokal"}</td><td>${target}${im.satuan}</td><td>${capaian}${im.satuan}</td><td>${badge}</td></tr>`;
+    }).join("");
+  }
+
+  // ---- Alert kritis ----
+  const alertBox = document.getElementById("kapAlertList");
+  let alerts = [];
+  stokKritis.slice(0, 5).forEach(o => {
+    alerts.push(`<div class="kap-alert-row"><span class="ic">💊</span><div><strong>${o.nama_obat}</strong> — stok ${o.stok} (batas minimum ${o.stok_minimum ?? 10})<div class="t">Stok obat kritis</div></div></div>`);
+  });
+  klb.forEach(k => {
+    alerts.push(`<div class="kap-alert-row"><span class="ic">🚨</span><div><strong>${k.judul}</strong> — ${k.jenis_penyakit}, ${k.jumlah_kasus} kasus<div class="t">KLB berstatus Aktif</div></div></div>`);
+  });
+  insiden.forEach(i => {
+    const labelJenis = { kpc: "KPC", knc: "KNC", ktc: "KTC", ktd: "KTD", sentinel: "Sentinel" }[i.jenis_insiden] || i.jenis_insiden.toUpperCase();
+    alerts.push(`<div class="kap-alert-row"><span class="ic">⚠️</span><div><strong>Insiden ${labelJenis}</strong> (grading ${i.grading}) — ${i.tanggal_kejadian}<div class="t">Status: ${i.status}</div></div></div>`);
+  });
+  if (stokKritis.length > 5) alerts.push(`<div class="kap-alert-row"><span class="ic">💊</span><div>...dan ${stokKritis.length - 5} item obat kritis lainnya. Lihat detail di Apotek.</div></div>`);
+
+  alertBox.innerHTML = alerts.length ? alerts.join("") : `<div class="kap-kosong">Tidak ada alert kritis saat ini.</div>`;
+}
+
+// ================================================================
+// APPROVAL LPLPO
+// ================================================================
+async function muatApprovalLplpo() {
+  const pendingBox = document.getElementById("kapLplpoPending");
+  pendingBox.innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const { data: pending, error } = await supabaseClient
+    .from("lplpo")
+    .select("id, periode_bulan, periode_tahun, tanggal_diajukan, petugas_id, profil_pegawai!petugas_id(nama)")
+    .eq("status", "diajukan")
+    .order("tanggal_diajukan", { ascending: true });
+
+  if (error) { pendingBox.innerHTML = `<div class="msg msg-error">Gagal muat: ${error.message}</div>`; return; }
+
+  if (!pending || pending.length === 0) {
+    pendingBox.innerHTML = `<div class="kap-kosong">Tidak ada LPLPO yang menunggu approval.</div>`;
+  } else {
+    const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    pendingBox.innerHTML = pending.map(p => `
+      <div class="kap-appr-card">
+        <div class="kap-appr-head">
+          <div>
+            <h4>LPLPO Periode ${namaBulan[p.periode_bulan]} ${p.periode_tahun}</h4>
+            <div class="sub">Diajukan oleh ${p.profil_pegawai ? p.profil_pegawai.nama : "-"} pada ${p.tanggal_diajukan ? new Date(p.tanggal_diajukan).toLocaleString("id-ID") : "-"}</div>
+          </div>
+          <div class="kap-appr-actions">
+            <button type="button" class="btn-secondary" onclick="lihatDetailLplpo('${p.id}')">Lihat Detail</button>
+            <button type="button" class="btn-secondary" style="color:#c62836; border-color:#c62836;" onclick="tolakLplpo('${p.id}')">Tolak</button>
+            <button type="button" class="btn-primary" onclick="setujuiLplpo('${p.id}')">Setujui</button>
+          </div>
+        </div>
+        <div class="kap-appr-detail" id="kapDetailLplpo-${p.id}"></div>
+      </div>
+    `).join("");
+  }
+
+  await muatRiwayatApprovalLplpo();
+}
+
+async function lihatDetailLplpo(lplpoId) {
+  const box = document.getElementById(`kapDetailLplpo-${lplpoId}`);
+  const sudahTampil = box.classList.contains("show");
+  document.querySelectorAll(".kap-appr-detail").forEach(el => el.classList.remove("show"));
+  if (sudahTampil) return;
+
+  box.innerHTML = "Memuat item...";
+  box.classList.add("show");
+
+  const { data: items, error } = await supabaseClient
+    .from("lplpo_item")
+    .select("nama_item, satuan, jenis_item, rata2_3bulan, sisa_stok_fisik, permintaan")
+    .eq("lplpo_id", lplpoId);
+
+  if (error) { box.innerHTML = `<div class="msg msg-error">Gagal muat item: ${error.message}</div>`; return; }
+  if (!items || items.length === 0) { box.innerHTML = `<div class="kap-kosong">Belum ada item.</div>`; return; }
+
+  box.innerHTML = `
+    <table>
+      <thead><tr><th>Obat/BMHP</th><th>Jenis</th><th>Rata² 3 Bulan</th><th>Sisa Stok</th><th>Diminta</th></tr></thead>
+      <tbody>
+        ${items.map(it => `<tr><td>${it.nama_item}</td><td>${it.jenis_item || "-"}</td><td>${it.rata2_3bulan ?? 0}</td><td>${it.sisa_stok_fisik ?? 0} ${it.satuan || ""}</td><td><strong>${it.permintaan ?? 0}</strong></td></tr>`).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+async function setujuiLplpo(lplpoId) {
+  if (!confirm("Setujui LPLPO ini? Setelah disetujui, Farmasi bisa lanjutkan ke tahap dikirim ke Dinas Kesehatan.")) return;
+  const { error } = await supabaseClient.from("lplpo").update({
+    status: "disetujui_kapus",
+    disetujui_kapus_oleh: profilSaya.id,
+    tanggal_disetujui_kapus: new Date().toISOString(),
+    catatan_kapus: null,
+    updated_at: new Date().toISOString()
+  }).eq("id", lplpoId);
+  if (error) { alert("Gagal menyetujui: " + error.message); return; }
+  await muatApprovalLplpo();
+}
+
+async function tolakLplpo(lplpoId) {
+  const catatan = prompt("Alasan penolakan (wajib diisi, akan dilihat Farmasi):");
+  if (catatan === null) return;
+  if (!catatan.trim()) { alert("Alasan penolakan wajib diisi."); return; }
+  const { error } = await supabaseClient.from("lplpo").update({
+    status: "draft",
+    catatan_kapus: catatan.trim(),
+    updated_at: new Date().toISOString()
+  }).eq("id", lplpoId);
+  if (error) { alert("Gagal menolak: " + error.message); return; }
+  await muatApprovalLplpo();
+}
+
+async function muatRiwayatApprovalLplpo() {
+  const tbody = document.getElementById("kapTbodyRiwayatLplpo");
+  const { data, error } = await supabaseClient
+    .from("lplpo")
+    .select("periode_bulan, periode_tahun, status, tanggal_disetujui_kapus, catatan_kapus")
+    .in("status", ["disetujui_kapus", "disetujui_dinas", "diterima"])
+    .order("periode_tahun", { ascending: false }).order("periode_bulan", { ascending: false })
+    .limit(12);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--muted);">Belum ada riwayat.</td></tr>`; return; }
+
+  const namaBulan = ["", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td>${namaBulan[d.periode_bulan]} ${d.periode_tahun}</td>
+      <td><span class="kap-hist-badge ${d.status}">${d.status.replace(/_/g, " ")}</span></td>
+      <td>${d.tanggal_disetujui_kapus ? new Date(d.tanggal_disetujui_kapus).toLocaleString("id-ID") : "-"}</td>
+      <td>${d.catatan_kapus || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+// ================================================================
+// APPROVAL LAPORAN PENTING
+// ================================================================
+const LABEL_JENIS_LAPORAN_KAPUS = { pkp: "Laporan Kinerja Puskesmas (PKP)", inm: "Indikator Nasional Mutu (INM)", ikp: "Insiden Keselamatan Pasien (IKP)", lb_sp2tp: "Rekap Gabungan LB1–LB4 (SP2TP)", realisasi_anggaran: "Realisasi Anggaran" };
+
+async function muatApprovalLaporan() {
+  const pendingBox = document.getElementById("kapLaporanPending");
+  pendingBox.innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const { data: draftLaporan, error } = await supabaseClient
+    .from("laporan_kirim_dinas")
+    .select("id, jenis_laporan, tahun, bulan, catatan, approval_laporan_kapus(id, disetujui, catatan, created_at)")
+    .eq("status", "draft")
+    .order("tahun", { ascending: false }).order("bulan", { ascending: false });
+
+  if (error) { pendingBox.innerHTML = `<div class="msg msg-error">Gagal muat: ${error.message}</div>`; return; }
+
+  const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+  if (!draftLaporan || draftLaporan.length === 0) {
+    pendingBox.innerHTML = `<div class="kap-kosong">Tidak ada laporan berstatus draft saat ini.</div>`;
+  } else {
+    pendingBox.innerHTML = draftLaporan.map(l => {
+      const reviewTerakhir = (l.approval_laporan_kapus || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+      const infoReview = reviewTerakhir
+        ? `<div class="sub">Review terakhir: <span class="kap-hist-badge ${reviewTerakhir.disetujui ? "approved" : "rejected"}">${reviewTerakhir.disetujui ? "Disetujui" : "Ditolak"}</span> pada ${new Date(reviewTerakhir.created_at).toLocaleString("id-ID")}</div>`
+        : `<div class="sub">Belum pernah direview.</div>`;
+      return `
+        <div class="kap-appr-card">
+          <div class="kap-appr-head">
+            <div>
+              <h4>${LABEL_JENIS_LAPORAN_KAPUS[l.jenis_laporan] || l.jenis_laporan}</h4>
+              <div class="sub">Periode ${namaBulan[l.bulan]} ${l.tahun}</div>
+              ${infoReview}
+            </div>
+            <div class="kap-appr-actions">
+              <button type="button" class="btn-secondary" style="color:#c62836; border-color:#c62836;" onclick="reviewLaporanKapus('${l.id}', false)">Tolak</button>
+              <button type="button" class="btn-primary" onclick="reviewLaporanKapus('${l.id}', true)">Setujui</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  await muatRiwayatReviewLaporan();
+}
+
+async function reviewLaporanKapus(laporanId, disetujui) {
+  let catatan = "";
+  if (!disetujui) {
+    catatan = prompt("Alasan penolakan (wajib diisi):");
+    if (catatan === null) return;
+    if (!catatan.trim()) { alert("Alasan penolakan wajib diisi."); return; }
+  } else {
+    catatan = prompt("Catatan approval (opsional):") || "";
+  }
+
+  const { error } = await supabaseClient.from("approval_laporan_kapus").insert({
+    laporan_id: laporanId,
+    disetujui: disetujui,
+    catatan: catatan.trim() || null,
+    kapus_id: profilSaya.id
+  });
+  if (error) { alert("Gagal simpan review: " + error.message); return; }
+  await muatApprovalLaporan();
+}
+
+async function muatRiwayatReviewLaporan() {
+  const tbody = document.getElementById("kapTbodyRiwayatLaporan");
+  const { data, error } = await supabaseClient
+    .from("approval_laporan_kapus")
+    .select("disetujui, catatan, created_at, laporan_kirim_dinas(jenis_laporan, tahun, bulan)")
+    .order("created_at", { ascending: false })
+    .limit(15);
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Belum ada riwayat review.</td></tr>`; return; }
+
+  const namaBulan = ["", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+  tbody.innerHTML = data.map(d => {
+    const lap = d.laporan_kirim_dinas;
+    return `
+      <tr>
+        <td>${lap ? (LABEL_JENIS_LAPORAN_KAPUS[lap.jenis_laporan] || lap.jenis_laporan) : "-"}</td>
+        <td>${lap ? `${namaBulan[lap.bulan]} ${lap.tahun}` : "-"}</td>
+        <td><span class="kap-hist-badge ${d.disetujui ? "approved" : "rejected"}">${d.disetujui ? "Disetujui" : "Ditolak"}</span></td>
+        <td>${new Date(d.created_at).toLocaleString("id-ID")}</td>
+        <td>${d.catatan || "-"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+</script>
+</body>
+</html>

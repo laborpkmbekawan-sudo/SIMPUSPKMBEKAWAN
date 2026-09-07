@@ -4420,3 +4420,55 @@ create policy "authenticated_select_percobaan_login_gagal" on percobaan_login_ga
 -- ============================================================
 -- SELESAI section 100. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 101. AKUN KEPALA PUSKESMAS — Dashboard Eksekutif + Approval
+--      Berjenjang. Gak ada tabel dashboard baru (semua ditarik
+--      langsung dari tabel yang sudah ada: kunjungan, obat,
+--      kunjungan_ugd, indikator_mutu, capaian_indikator_mutu,
+--      insiden_keselamatan_pasien, klb_kejadian). Yang baru:
+--      (a) gate approval Kepala Puskesmas di alur LPLPO, sebelum
+--          diajukan ke Dinas Kesehatan;
+--      (b) tabel review/endorsement Kepala Puskesmas atas laporan
+--          penting sebelum dikirim ke Dinas (belum mengunci status
+--          pengiriman di Klaster 1 — baru catatan approval, hard-
+--          gate menyusul).
+--      Role 'kepala_puskesmas' gak butuh constraint baru di
+--      profil_pegawai.role (kolomnya cuma text, gak ada CHECK).
+-- ============================================================
+
+-- (a) Sisipkan status 'disetujui_kapus' di antara 'diajukan' dan
+--     'disetujui_dinas'. Alur baru: draft -> diajukan (nunggu
+--     Kapus) -> disetujui_kapus -> disetujui_dinas -> diterima.
+alter table lplpo drop constraint if exists lplpo_status_check;
+alter table lplpo add constraint lplpo_status_check
+  check (status in ('draft', 'diajukan', 'disetujui_kapus', 'disetujui_dinas', 'diterima'));
+
+alter table lplpo add column if not exists disetujui_kapus_oleh uuid references profil_pegawai(id);
+alter table lplpo add column if not exists tanggal_disetujui_kapus timestamptz;
+alter table lplpo add column if not exists catatan_kapus text;
+
+-- (b) Review/endorsement Kepala Puskesmas atas laporan_kirim_dinas
+--     (Klaster 1) sebelum petugas menandai status 'terkirim'.
+create table if not exists approval_laporan_kapus (
+  id uuid primary key default gen_random_uuid(),
+  laporan_id uuid not null references laporan_kirim_dinas(id) on delete cascade,
+  disetujui boolean not null default true,
+  catatan text,
+  kapus_id uuid not null references profil_pegawai(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_approval_laporan_kapus_laporan on approval_laporan_kapus(laporan_id);
+
+alter table approval_laporan_kapus enable row level security;
+drop policy if exists "authenticated_all_approval_laporan_kapus" on approval_laporan_kapus;
+create policy "authenticated_all_approval_laporan_kapus" on approval_laporan_kapus for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_approval_laporan_kapus on approval_laporan_kapus;
+create trigger trg_audit_approval_laporan_kapus after insert or update or delete on approval_laporan_kapus
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 101. Idempotent, aman diulang.
+-- ============================================================
