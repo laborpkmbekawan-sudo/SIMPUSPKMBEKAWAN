@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pemegang Program - SIMPUS Bekawan</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+    </div>
+    <nav>
+      <div class="ph-group-title">Menu Utama</div>
+      <a class="active" id="navDashboard" onclick="gantiSubtabPP('dashboard')">Dashboard</a>
+      <a id="navPerencanaan" onclick="gantiSubtabPP('perencanaan')">Perencanaan (RUK/RPK)</a>
+
+      <div class="ph-group-title">Modul Lain</div>
+      <a href="index.html">Pendaftaran</a>
+      <a href="rekam-medis.html">Rekam Medis</a>
+      <a href="apotek.html">Apotek</a>
+      <a href="ugd.html">UGD</a>
+      <a href="ranap.html">Rawat Inap</a>
+      <a href="klaster1.html">Klaster 1</a>
+      <a href="klaster2.html">Klaster 2</a>
+      <a href="klaster3.html">Klaster 3</a>
+      <a href="klaster4.html">Klaster 4</a>
+      <a href="gigi.html">Poli Gigi</a>
+      <a href="pustu.html">Pustu</a>
+      <a href="pengaturan.html">Pengaturan</a>
+      <a href="kasir.html">Kasir</a>
+      <a href="papan-antrian.html">Papan Antrian</a>
+      <a href="kapus.html">Kepala Puskesmas</a>
+    </nav>
+  </aside>
+
+  <div class="main-wrap">
+
+    <div class="topbar">
+      <h1>Dashboard Pemegang Program</h1>
+      <div class="user-info">
+        <span id="namaUser">Memuat...</span>
+        <button onclick="logout()">Keluar</button>
+      </div>
+    </div>
+
+    <!-- ============ DASHBOARD ============ -->
+    <div id="panelDashboard" class="dash-content">
+
+      <div class="card">
+        <h2>Program yang Saya Pegang</h2>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Centang program yang kamu pegang. Bisa lebih dari satu. Bisa diubah kapan saja.</p>
+        <ul class="checklist-obat" id="listProgramSaya">
+          <li>Memuat...</li>
+        </ul>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="label">Program Dipegang</div>
+          <div class="value" id="ppStatJumlahProgram">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Kegiatan Bulan Ini Terjadwal</div>
+          <div class="value" id="ppStatTerjadwal">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Kegiatan Bulan Ini Terlaksana</div>
+          <div class="value" id="ppStatTerlaksana">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Kegiatan Terlambat</div>
+          <div class="value" id="ppStatTerlambat">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Capaian Target Bulan Berjalan</h2>
+        <table>
+          <thead><tr><th>Program</th><th>Kegiatan Bulan Ini</th><th>Target Sasaran</th><th>Capaian Sasaran</th><th>% Capaian</th></tr></thead>
+          <tbody id="ppTabelCapaian"><tr><td colspan="5">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Alert Kegiatan Terlambat</h2>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Kegiatan RPK yang jadwalnya sudah lewat tapi belum ditandai terlaksana.</p>
+        <table>
+          <thead><tr><th>Program</th><th>Kegiatan</th><th>Jadwal</th><th>Terlambat</th><th>Lokasi</th></tr></thead>
+          <tbody id="ppTabelTerlambat"><tr><td colspan="5">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- ============ PERENCANAAN (RUK/RPK) ============ -->
+    <div id="panelPerencanaan" class="dash-content" style="display:none;">
+
+      <div class="lap-tabs">
+        <div class="lap-tab active" id="ppSub-ruk" onclick="gantiSubPerencanaan('ruk')">RUK (Rencana Usulan Kegiatan)</div>
+        <div class="lap-tab" id="ppSub-rpk" onclick="gantiSubPerencanaan('rpk')">RPK (Rencana Pelaksanaan Kegiatan)</div>
+      </div>
+
+      <!-- ---- RUK ---- -->
+      <div id="ppPanel-ruk">
+        <div class="card">
+          <h2>Ajukan RUK Baru</h2>
+          <div class="grid-2">
+            <div>
+              <label>Program</label>
+              <select id="rukProgram"></select>
+            </div>
+            <div>
+              <label>Tahun</label>
+              <input type="number" id="rukTahun" value="2026">
+            </div>
+          </div>
+          <label>Judul RUK</label>
+          <input type="text" id="rukJudul" placeholder="Contoh: RUK Program Gizi Tahun 2026">
+          <div class="grid-2">
+            <div>
+              <label>Latar Belakang / Identifikasi Masalah</label>
+              <textarea id="rukLatarBelakang" placeholder="Masalah yang ditemukan dari hasil identifikasi/analisis data"></textarea>
+            </div>
+            <div>
+              <label>Tujuan</label>
+              <textarea id="rukTujuan" placeholder="Tujuan program setelah RUK dijalankan"></textarea>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label>Sasaran Kegiatan</label>
+              <input type="text" id="rukSasaran" placeholder="Contoh: 120 ibu hamil di 5 desa">
+            </div>
+            <div>
+              <label>Target Capaian</label>
+              <input type="text" id="rukTarget" placeholder="Contoh: 100% ibu hamil dapat ANC terpadu">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label>Kebutuhan Anggaran (Rp)</label>
+              <input type="number" id="rukAnggaran" placeholder="0">
+            </div>
+            <div>
+              <label>Metode Analisis (opsional)</label>
+              <select id="rukMetode">
+                <option value="">Tidak pakai metode khusus</option>
+                <option value="usg">USG (Urgency-Seriousness-Growth)</option>
+                <option value="fishbone">Fishbone Diagram</option>
+                <option value="lainnya">Lainnya</option>
+              </select>
+            </div>
+          </div>
+          <label>Catatan Analisis (opsional)</label>
+          <textarea id="rukCatatanAnalisis" placeholder="Ringkasan hasil analisis USG/fishbone, kalau dipakai"></textarea>
+          <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+            <button class="btn-primary" onclick="simpanRuk()">Simpan RUK</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Daftar RUK</h2>
+          <table>
+            <thead><tr><th>Tahun</th><th>Program</th><th>Judul</th><th>Target Capaian</th><th>Anggaran</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="ppTabelRuk"><tr><td colspan="7">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ---- RPK ---- -->
+      <div id="ppPanel-rpk" style="display:none;">
+        <div class="card">
+          <h2>Tambah Kegiatan RPK</h2>
+          <div class="grid-2">
+            <div>
+              <label>RUK Terkait (opsional)</label>
+              <select id="rpkRuk" onchange="isiProgramDariRuk()">
+                <option value="">Tanpa RUK / Kegiatan Insidentil</option>
+              </select>
+            </div>
+            <div>
+              <label>Program</label>
+              <select id="rpkProgram"></select>
+            </div>
+          </div>
+          <label>Nama Kegiatan</label>
+          <input type="text" id="rpkNamaKegiatan" placeholder="Contoh: Posyandu Balita Desa Bekawan">
+          <div class="grid-3">
+            <div>
+              <label>Bulan</label>
+              <select id="rpkBulan"></select>
+            </div>
+            <div>
+              <label>Tahun</label>
+              <input type="number" id="rpkTahun" value="2026">
+            </div>
+            <div>
+              <label>Tanggal Jadwal</label>
+              <input type="date" id="rpkTanggal">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label>Lokasi</label>
+              <input type="text" id="rpkLokasi" placeholder="Contoh: Posyandu Melati, Desa Bekawan">
+            </div>
+            <div>
+              <label>Target Sasaran (jumlah orang)</label>
+              <input type="number" id="rpkTargetSasaran" placeholder="0">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label>Sumber Dana</label>
+              <input type="text" id="rpkSumberDana" placeholder="Contoh: BOK Puskesmas T.A 2026">
+            </div>
+            <div>
+              <label>Anggaran (Rp)</label>
+              <input type="number" id="rpkAnggaran" placeholder="0">
+            </div>
+          </div>
+          <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+            <button class="btn-primary" onclick="simpanRpk()">Simpan Kegiatan</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Daftar RPK</h2>
+          <div class="filter-row">
+            <select id="rpkFilterBulan" onchange="muatRpk()"></select>
+            <input type="number" id="rpkFilterTahun" value="2026" style="width:110px;" onchange="muatRpk()">
+          </div>
+          <table>
+            <thead><tr><th>Kegiatan</th><th>Program</th><th>Jadwal</th><th>Lokasi</th><th>Target</th><th>Capaian</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="ppTabelRpk"><tr><td colspan="8">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script src="js/supabaseClient.js"></script>
+<script>
+// ============================================================
+// PEMEGANG PROGRAM — Dashboard + Perencanaan (RUK/RPK)
+// Sudah jalan: self-assign program, dashboard ringkasan/capaian/alert,
+// CRUD RUK, CRUD RPK + tandai terlaksana/tertunda/dibatalkan.
+// Belum dibuat (nanti bertahap): Pelaksanaan Kegiatan (dokumentasi foto
+// & daftar hadir), Monitoring & Evaluasi, Koordinasi Lintas Program,
+// SPJ Kegiatan (4 dokumen + approval berjenjang), Data Terkait Pasien,
+// Laporan Internal/Dinas, Audit/Keamanan.
+// ============================================================
+
+let profilSaya = null;
+let programSayaCache = []; // program_kesehatan yang dipegang pegawai ini
+let semuaProgramCache = [];
+
+const BULAN_NAMA = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+
+(async () => {
+  const session = await wajibLogin();
+  if (!session) return;
+
+  profilSaya = await getProfilSaya();
+  cekAksesHalaman(profilSaya, "pemegang-program.html");
+  sesuaikanTabNav(profilSaya);
+  if (profilSaya) {
+    document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+  }
+
+  isiSelectBulan();
+  const now = new Date();
+  document.getElementById("rpkFilterTahun").value = now.getFullYear();
+  document.getElementById("rukTahun").value = now.getFullYear();
+  document.getElementById("rpkTahun").value = now.getFullYear();
+
+  await muatSemuaProgram();
+  await muatProgramSaya();
+  await muatDashboardPP();
+})();
+
+function isiSelectBulan() {
+  const rpkBulan = document.getElementById("rpkBulan");
+  const filterBulan = document.getElementById("rpkFilterBulan");
+  const now = new Date();
+  filterBulan.innerHTML = `<option value="">Semua Bulan</option>`;
+  BULAN_NAMA.forEach((nm, idx) => {
+    const bulanKe = idx + 1;
+    rpkBulan.innerHTML += `<option value="${bulanKe}" ${bulanKe === now.getMonth()+1 ? "selected" : ""}>${nm}</option>`;
+    filterBulan.innerHTML += `<option value="${bulanKe}" ${bulanKe === now.getMonth()+1 ? "selected" : ""}>${nm}</option>`;
+  });
+}
+
+const SUBTAB_PP = ["dashboard", "perencanaan"];
+function gantiSubtabPP(tab) {
+  SUBTAB_PP.forEach(t => {
+    const panel = document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1));
+    if (panel) panel.style.display = (t === tab) ? "block" : "none";
+    const nav = document.getElementById("nav" + t.charAt(0).toUpperCase() + t.slice(1));
+    if (nav) nav.classList.toggle("active", t === tab);
+  });
+  document.querySelector(".topbar h1").textContent = tab === "dashboard" ? "Dashboard Pemegang Program" : "Perencanaan Program (RUK/RPK)";
+  if (tab === "dashboard") muatDashboardPP();
+  if (tab === "perencanaan") {
+    muatRuk();
+    muatRpk();
+  }
+}
+
+function gantiSubPerencanaan(sub) {
+  ["ruk", "rpk"].forEach(s => {
+    document.getElementById("ppPanel-" + s).style.display = (s === sub) ? "block" : "none";
+    document.getElementById("ppSub-" + s).classList.toggle("active", s === sub);
+  });
+}
+
+// ---------- MASTER PROGRAM & SELF-ASSIGN ----------
+async function muatSemuaProgram() {
+  const { data, error } = await supabaseClient.from("program_kesehatan").select("*").order("nama");
+  if (error) { console.error(error.message); return; }
+  semuaProgramCache = data || [];
+}
+
+async function muatProgramSaya() {
+  const list = document.getElementById("listProgramSaya");
+  const { data, error } = await supabaseClient
+    .from("pemegang_program")
+    .select("id, program_id, aktif, program_kesehatan(id, nama)")
+    .eq("pegawai_id", profilSaya.id)
+    .eq("aktif", true);
+
+  if (error) { list.innerHTML = `<li>Gagal memuat: ${error.message}</li>`; return; }
+  programSayaCache = (data || []).map(d => d.program_kesehatan);
+
+  const idDipegang = new Set(programSayaCache.map(p => p.id));
+  list.innerHTML = semuaProgramCache.map(p => `
+    <li>
+      <label>
+        <input type="checkbox" ${idDipegang.has(p.id) ? "checked" : ""} onchange="toggleProgramSaya('${p.id}', this.checked)">
+        ${p.nama}
+      </label>
+    </li>
+  `).join("") || "<li>Master program kosong.</li>";
+
+  isiSelectProgram();
+  document.getElementById("ppStatJumlahProgram").textContent = programSayaCache.length;
+}
+
+async function toggleProgramSaya(programId, dicentang) {
+  if (dicentang) {
+    const { error } = await supabaseClient.from("pemegang_program")
+      .upsert({ pegawai_id: profilSaya.id, program_id: programId, aktif: true }, { onConflict: "pegawai_id,program_id" });
+    if (error) { alert("Gagal menyimpan: " + error.message); return; }
+  } else {
+    const { error } = await supabaseClient.from("pemegang_program")
+      .update({ aktif: false })
+      .eq("pegawai_id", profilSaya.id)
+      .eq("program_id", programId);
+    if (error) { alert("Gagal menyimpan: " + error.message); return; }
+  }
+  await muatProgramSaya();
+  await muatDashboardPP();
+}
+
+function isiSelectProgram() {
+  const opsi = programSayaCache.length
+    ? programSayaCache.map(p => `<option value="${p.id}">${p.nama}</option>`).join("")
+    : `<option value="">Belum ada program dipegang</option>`;
+  document.getElementById("rukProgram").innerHTML = opsi;
+  document.getElementById("rpkProgram").innerHTML = opsi;
+}
+
+// ---------- DASHBOARD ----------
+async function muatDashboardPP() {
+  if (!programSayaCache.length) {
+    document.getElementById("ppTabelCapaian").innerHTML = `<tr><td colspan="5">Belum ada program dipegang. Centang dulu di atas.</td></tr>`;
+    document.getElementById("ppTabelTerlambat").innerHTML = `<tr><td colspan="5">Belum ada program dipegang.</td></tr>`;
+    document.getElementById("ppStatTerjadwal").textContent = 0;
+    document.getElementById("ppStatTerlaksana").textContent = 0;
+    document.getElementById("ppStatTerlambat").textContent = 0;
+    return;
+  }
+
+  const programIds = programSayaCache.map(p => p.id);
+  const now = new Date();
+  const bulanIni = now.getMonth() + 1;
+  const tahunIni = now.getFullYear();
+  const hariIniStr = now.toISOString().split("T")[0];
+
+  const { data: rpkBulanIni, error: e1 } = await supabaseClient
+    .from("program_rpk")
+    .select("*, program_kesehatan(nama)")
+    .in("program_id", programIds)
+    .eq("bulan", bulanIni)
+    .eq("tahun", tahunIni);
+
+  if (e1) { console.error(e1.message); return; }
+
+  const terjadwal = (rpkBulanIni || []).filter(r => r.status === "terjadwal").length;
+  const terlaksana = (rpkBulanIni || []).filter(r => r.status === "terlaksana").length;
+  document.getElementById("ppStatTerjadwal").textContent = terjadwal;
+  document.getElementById("ppStatTerlaksana").textContent = terlaksana;
+
+  // Capaian per program bulan berjalan
+  const rekapProgram = {};
+  (rpkBulanIni || []).forEach(r => {
+    const key = r.program_id;
+    if (!rekapProgram[key]) rekapProgram[key] = { nama: r.program_kesehatan?.nama || "-", jumlah: 0, target: 0, capaian: 0, adaCapaian: false };
+    rekapProgram[key].jumlah += 1;
+    rekapProgram[key].target += r.target_sasaran || 0;
+    if (r.capaian_sasaran !== null && r.capaian_sasaran !== undefined) {
+      rekapProgram[key].capaian += r.capaian_sasaran;
+      rekapProgram[key].adaCapaian = true;
+    }
+  });
+  const rowsCapaian = Object.values(rekapProgram);
+  document.getElementById("ppTabelCapaian").innerHTML = rowsCapaian.length
+    ? rowsCapaian.map(r => {
+        const persen = r.target > 0 && r.adaCapaian ? Math.round((r.capaian / r.target) * 100) : null;
+        return `<tr>
+          <td>${r.nama}</td>
+          <td>${r.jumlah}</td>
+          <td>${r.target || "-"}</td>
+          <td>${r.adaCapaian ? r.capaian : "-"}</td>
+          <td>${persen !== null ? persen + "%" : "-"}</td>
+        </tr>`;
+      }).join("")
+    : `<tr><td colspan="5">Belum ada kegiatan RPK bulan ini.</td></tr>`;
+
+  // Alert kegiatan terlambat: jadwal sudah lewat, status masih terjadwal
+  const { data: terlambatData, error: e2 } = await supabaseClient
+    .from("program_rpk")
+    .select("*, program_kesehatan(nama)")
+    .in("program_id", programIds)
+    .eq("status", "terjadwal")
+    .lt("jadwal_tanggal", hariIniStr)
+    .not("jadwal_tanggal", "is", null)
+    .order("jadwal_tanggal");
+
+  if (e2) { console.error(e2.message); return; }
+  document.getElementById("ppStatTerlambat").textContent = (terlambatData || []).length;
+  document.getElementById("ppTabelTerlambat").innerHTML = (terlambatData || []).length
+    ? terlambatData.map(r => {
+        const hariTerlambat = Math.floor((now - new Date(r.jadwal_tanggal)) / 86400000);
+        return `<tr>
+          <td>${r.program_kesehatan?.nama || "-"}</td>
+          <td>${r.nama_kegiatan}</td>
+          <td>${formatTanggal(r.jadwal_tanggal)}</td>
+          <td>${hariTerlambat} hari</td>
+          <td>${r.lokasi || "-"}</td>
+        </tr>`;
+      }).join("")
+    : `<tr><td colspan="5">Tidak ada kegiatan terlambat. Aman.</td></tr>`;
+}
+
+function formatTanggal(tgl) {
+  if (!tgl) return "-";
+  return new Date(tgl).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// ---------- RUK ----------
+async function simpanRuk() {
+  const programId = document.getElementById("rukProgram").value;
+  if (!programId) { alert("Pilih program dulu (centang minimal 1 program di Dashboard)."); return; }
+  const judul = document.getElementById("rukJudul").value.trim();
+  if (!judul) { alert("Judul RUK wajib diisi."); return; }
+
+  const payload = {
+    program_id: programId,
+    pegawai_id: profilSaya.id,
+    tahun: parseInt(document.getElementById("rukTahun").value) || new Date().getFullYear(),
+    judul,
+    latar_belakang: document.getElementById("rukLatarBelakang").value.trim() || null,
+    tujuan: document.getElementById("rukTujuan").value.trim() || null,
+    sasaran_kegiatan: document.getElementById("rukSasaran").value.trim() || null,
+    target_capaian: document.getElementById("rukTarget").value.trim() || null,
+    kebutuhan_anggaran: parseFloat(document.getElementById("rukAnggaran").value) || null,
+    metode_analisis: document.getElementById("rukMetode").value || null,
+    catatan_analisis: document.getElementById("rukCatatanAnalisis").value.trim() || null,
+    status: "draft"
+  };
+
+  const { error } = await supabaseClient.from("program_ruk").insert(payload);
+  if (error) { alert("Gagal menyimpan RUK: " + error.message); return; }
+
+  ["rukJudul","rukLatarBelakang","rukTujuan","rukSasaran","rukTarget","rukAnggaran","rukCatatanAnalisis"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("rukMetode").value = "";
+  alert("RUK berhasil disimpan sebagai draft.");
+  await muatRuk();
+}
+
+async function muatRuk() {
+  const tbody = document.getElementById("ppTabelRuk");
+  const programIds = programSayaCache.map(p => p.id);
+  if (!programIds.length) { tbody.innerHTML = `<tr><td colspan="7">Belum ada program dipegang.</td></tr>`; return; }
+
+  const { data, error } = await supabaseClient
+    .from("program_ruk")
+    .select("*, program_kesehatan(nama)")
+    .in("program_id", programIds)
+    .order("tahun", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) { tbody.innerHTML = `<tr><td colspan="7">Gagal memuat: ${error.message}</td></tr>`; return; }
+
+  isiSelectRukUntukRpk(data || []);
+
+  tbody.innerHTML = (data || []).length
+    ? data.map(r => `<tr>
+        <td>${r.tahun}</td>
+        <td>${r.program_kesehatan?.nama || "-"}</td>
+        <td>${r.judul}</td>
+        <td>${r.target_capaian || "-"}</td>
+        <td>${r.kebutuhan_anggaran ? "Rp " + Number(r.kebutuhan_anggaran).toLocaleString("id-ID") : "-"}</td>
+        <td><span class="badge badge-${r.status}">${labelStatusRuk(r.status)}</span></td>
+        <td>${r.status === "draft" ? `<span style="color:var(--primary); cursor:pointer;" onclick="ajukanRuk('${r.id}')">Ajukan</span>` : "-"}</td>
+      </tr>`).join("")
+    : `<tr><td colspan="7">Belum ada RUK.</td></tr>`;
+}
+
+function labelStatusRuk(s) {
+  return { draft: "Draft", diajukan: "Diajukan", disetujui: "Disetujui", ditolak: "Ditolak" }[s] || s;
+}
+
+async function ajukanRuk(id) {
+  if (!confirm("Ajukan RUK ini? Setelah diajukan, tidak bisa diedit lagi.")) return;
+  const { error } = await supabaseClient.from("program_ruk").update({ status: "diajukan" }).eq("id", id);
+  if (error) { alert("Gagal: " + error.message); return; }
+  await muatRuk();
+}
+
+function isiSelectRukUntukRpk(daftarRuk) {
+  const sel = document.getElementById("rpkRuk");
+  const nilaiTerpilih = sel.value;
+  sel.innerHTML = `<option value="">Tanpa RUK / Kegiatan Insidentil</option>` +
+    daftarRuk.map(r => `<option value="${r.id}" data-program="${r.program_id}">${r.tahun} — ${r.judul}</option>`).join("");
+  sel.value = nilaiTerpilih;
+}
+
+function isiProgramDariRuk() {
+  const sel = document.getElementById("rpkRuk");
+  const opt = sel.options[sel.selectedIndex];
+  const programId = opt ? opt.getAttribute("data-program") : null;
+  if (programId) document.getElementById("rpkProgram").value = programId;
+}
+
+// ---------- RPK ----------
+async function simpanRpk() {
+  const programId = document.getElementById("rpkProgram").value;
+  if (!programId) { alert("Pilih program dulu (centang minimal 1 program di Dashboard)."); return; }
+  const namaKegiatan = document.getElementById("rpkNamaKegiatan").value.trim();
+  if (!namaKegiatan) { alert("Nama kegiatan wajib diisi."); return; }
+
+  const payload = {
+    ruk_id: document.getElementById("rpkRuk").value || null,
+    program_id: programId,
+    pegawai_id: profilSaya.id,
+    nama_kegiatan: namaKegiatan,
+    bulan: parseInt(document.getElementById("rpkBulan").value),
+    tahun: parseInt(document.getElementById("rpkTahun").value) || new Date().getFullYear(),
+    jadwal_tanggal: document.getElementById("rpkTanggal").value || null,
+    lokasi: document.getElementById("rpkLokasi").value.trim() || null,
+    target_sasaran: parseInt(document.getElementById("rpkTargetSasaran").value) || null,
+    sumber_dana: document.getElementById("rpkSumberDana").value.trim() || null,
+    anggaran: parseFloat(document.getElementById("rpkAnggaran").value) || null,
+    status: "terjadwal"
+  };
+
+  const { error } = await supabaseClient.from("program_rpk").insert(payload);
+  if (error) { alert("Gagal menyimpan RPK: " + error.message); return; }
+
+  ["rpkNamaKegiatan","rpkTanggal","rpkLokasi","rpkTargetSasaran","rpkSumberDana","rpkAnggaran"].forEach(id => document.getElementById(id).value = "");
+  alert("Kegiatan RPK berhasil disimpan.");
+  await muatRpk();
+  await muatDashboardPP();
+}
+
+async function muatRpk() {
+  const tbody = document.getElementById("ppTabelRpk");
+  const programIds = programSayaCache.map(p => p.id);
+  if (!programIds.length) { tbody.innerHTML = `<tr><td colspan="8">Belum ada program dipegang.</td></tr>`; return; }
+
+  const bulanFilter = document.getElementById("rpkFilterBulan").value;
+  const tahunFilter = document.getElementById("rpkFilterTahun").value;
+
+  let query = supabaseClient
+    .from("program_rpk")
+    .select("*, program_kesehatan(nama)")
+    .in("program_id", programIds)
+    .order("jadwal_tanggal", { ascending: true, nullsFirst: false });
+
+  if (bulanFilter) query = query.eq("bulan", bulanFilter);
+  if (tahunFilter) query = query.eq("tahun", tahunFilter);
+
+  const { data, error } = await query;
+  if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal memuat: ${error.message}</td></tr>`; return; }
+
+  tbody.innerHTML = (data || []).length
+    ? data.map(r => `<tr>
+        <td>${r.nama_kegiatan}</td>
+        <td>${r.program_kesehatan?.nama || "-"}</td>
+        <td>${formatTanggal(r.jadwal_tanggal)}</td>
+        <td>${r.lokasi || "-"}</td>
+        <td>${r.target_sasaran ?? "-"}</td>
+        <td>${r.capaian_sasaran ?? "-"}</td>
+        <td><span class="badge badge-${r.status}">${labelStatusRpk(r.status)}</span></td>
+        <td>${aksiRpk(r)}</td>
+      </tr>`).join("")
+    : `<tr><td colspan="8">Belum ada kegiatan RPK untuk filter ini.</td></tr>`;
+}
+
+function labelStatusRpk(s) {
+  return { terjadwal: "Terjadwal", terlaksana: "Terlaksana", tertunda: "Tertunda", dibatalkan: "Dibatalkan" }[s] || s;
+}
+
+function aksiRpk(r) {
+  if (r.status !== "terjadwal") return "-";
+  return `
+    <span style="color:var(--primary); cursor:pointer; margin-right:8px;" onclick="tandaiTerlaksana('${r.id}')">Tandai Terlaksana</span>
+    <span style="color:#b77900; cursor:pointer; margin-right:8px;" onclick="ubahStatusRpk('${r.id}', 'tertunda')">Tunda</span>
+    <span style="color:#c62836; cursor:pointer;" onclick="ubahStatusRpk('${r.id}', 'dibatalkan')">Batalkan</span>
+  `;
+}
+
+async function tandaiTerlaksana(id) {
+  const capaianStr = prompt("Jumlah sasaran yang terjangkau di kegiatan ini:");
+  if (capaianStr === null) return;
+  const capaian = parseInt(capaianStr);
+  if (isNaN(capaian)) { alert("Isi angka yang valid."); return; }
+
+  const { error } = await supabaseClient.from("program_rpk").update({
+    status: "terlaksana",
+    capaian_sasaran: capaian,
+    realisasi_tanggal: new Date().toISOString().split("T")[0]
+  }).eq("id", id);
+
+  if (error) { alert("Gagal: " + error.message); return; }
+  await muatRpk();
+  await muatDashboardPP();
+}
+
+async function ubahStatusRpk(id, status) {
+  if (!confirm(`Ubah status kegiatan ini jadi "${labelStatusRpk(status)}"?`)) return;
+  const { error } = await supabaseClient.from("program_rpk").update({ status }).eq("id", id);
+  if (error) { alert("Gagal: " + error.message); return; }
+  await muatRpk();
+  await muatDashboardPP();
+}
+</script>
+</body>
+</html>

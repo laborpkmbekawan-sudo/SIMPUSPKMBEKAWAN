@@ -4551,3 +4551,120 @@ create index if not exists idx_rujukan_lab_silab_pasien on rujukan_lab(silab_pas
 -- ============================================================
 -- SELESAI section 103. Idempotent, aman diulang.
 -- ============================================================
+-- ============================================================
+-- 104. AKUN PEMEGANG PROGRAM — Dashboard + Perencanaan (RUK/RPK)
+--      program_kesehatan = master daftar program UKM (Promkes, Gizi, dst).
+--      pemegang_program = penugasan pegawai ke program (bisa >1 program
+--      per pegawai). Pegawai sendiri yang toggle di halaman
+--      pemegang-program.html (self-service, gak nunggu admin dulu).
+--      program_ruk = perencanaan tahunan, program_rpk = breakdown
+--      bulanan dari RUK (atau kegiatan insidentil tanpa RUK).
+--      Kolom realisasi_tanggal/capaian_sasaran di program_rpk dipakai
+--      Dashboard buat hitung capaian & alert kegiatan terlambat, juga
+--      jadi pondasi buat modul Pelaksanaan Kegiatan nanti.
+-- ============================================================
+create table if not exists program_kesehatan (
+  id uuid primary key default gen_random_uuid(),
+  kode text unique not null,
+  nama text not null,
+  kategori text not null default 'lainnya' check (kategori in ('kia','gizi','imunisasi','p2p','promkes','kesling','perkesmas','lainnya')),
+  created_at timestamptz not null default now()
+);
+
+insert into program_kesehatan (kode, nama, kategori) values
+  ('promkes', 'Promosi Kesehatan (Promkes)', 'promkes'),
+  ('kesling', 'Kesehatan Lingkungan (Kesling)', 'kesling'),
+  ('kia', 'Kesehatan Ibu & Anak (KIA)', 'kia'),
+  ('gizi', 'Gizi', 'gizi'),
+  ('p2p_surveilans', 'P2P — Surveilans & Imunisasi', 'imunisasi'),
+  ('p2p_tb', 'P2P — TB', 'p2p'),
+  ('p2p_menular_lain', 'P2P — Penyakit Menular Lainnya', 'p2p'),
+  ('ptm', 'Penyakit Tidak Menular (PTM)', 'p2p'),
+  ('perkesmas', 'Perawatan Kesehatan Masyarakat (Perkesmas)', 'perkesmas'),
+  ('jiwa', 'Kesehatan Jiwa', 'lainnya'),
+  ('uks', 'UKS / Kesehatan Anak Sekolah & Remaja', 'lainnya'),
+  ('lansia', 'Kesehatan Lansia', 'lainnya'),
+  ('kesorga', 'Kesehatan Olahraga', 'lainnya'),
+  ('kesker', 'Kesehatan Kerja', 'lainnya'),
+  ('indera', 'Kesehatan Indera', 'lainnya')
+on conflict (kode) do nothing;
+
+create table if not exists pemegang_program (
+  id uuid primary key default gen_random_uuid(),
+  pegawai_id uuid not null references profil_pegawai(id) on delete cascade,
+  program_id uuid not null references program_kesehatan(id) on delete cascade,
+  aktif boolean not null default true,
+  created_at timestamptz not null default now(),
+  unique (pegawai_id, program_id)
+);
+
+create table if not exists program_ruk (
+  id uuid primary key default gen_random_uuid(),
+  program_id uuid not null references program_kesehatan(id) on delete cascade,
+  pegawai_id uuid not null references profil_pegawai(id) on delete cascade,
+  tahun int not null,
+  judul text not null,
+  latar_belakang text,
+  tujuan text,
+  sasaran_kegiatan text,
+  target_capaian text,
+  kebutuhan_anggaran numeric,
+  metode_analisis text check (metode_analisis in ('usg', 'fishbone', 'lainnya', null)),
+  catatan_analisis text,
+  status text not null default 'draft' check (status in ('draft', 'diajukan', 'disetujui', 'ditolak')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists program_rpk (
+  id uuid primary key default gen_random_uuid(),
+  ruk_id uuid references program_ruk(id) on delete set null,
+  program_id uuid not null references program_kesehatan(id) on delete cascade,
+  pegawai_id uuid not null references profil_pegawai(id) on delete cascade,
+  bulan int not null check (bulan between 1 and 12),
+  tahun int not null,
+  nama_kegiatan text not null,
+  jadwal_tanggal date,
+  lokasi text,
+  target_sasaran int,
+  capaian_sasaran int,
+  sumber_dana text,
+  anggaran numeric,
+  status text not null default 'terjadwal' check (status in ('terjadwal', 'terlaksana', 'tertunda', 'dibatalkan')),
+  realisasi_tanggal date,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_pemegang_program_pegawai on pemegang_program(pegawai_id);
+create index if not exists idx_program_ruk_pegawai on program_ruk(pegawai_id, tahun);
+create index if not exists idx_program_ruk_program on program_ruk(program_id);
+create index if not exists idx_program_rpk_pegawai on program_rpk(pegawai_id, tahun, bulan);
+create index if not exists idx_program_rpk_program on program_rpk(program_id);
+create index if not exists idx_program_rpk_jadwal on program_rpk(jadwal_tanggal, status);
+
+alter table program_kesehatan enable row level security;
+alter table pemegang_program enable row level security;
+alter table program_ruk enable row level security;
+alter table program_rpk enable row level security;
+
+drop policy if exists "authenticated_read_program_kesehatan" on program_kesehatan;
+create policy "authenticated_read_program_kesehatan" on program_kesehatan for select to authenticated using (true);
+drop policy if exists "authenticated_all_pemegang_program" on pemegang_program;
+create policy "authenticated_all_pemegang_program" on pemegang_program for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_program_ruk" on program_ruk;
+create policy "authenticated_all_program_ruk" on program_ruk for all to authenticated using (true) with check (true);
+drop policy if exists "authenticated_all_program_rpk" on program_rpk;
+create policy "authenticated_all_program_rpk" on program_rpk for all to authenticated using (true) with check (true);
+
+drop trigger if exists trg_audit_pemegang_program on pemegang_program;
+create trigger trg_audit_pemegang_program after insert or update or delete on pemegang_program
+  for each row execute function fn_audit_log();
+drop trigger if exists trg_audit_program_ruk on program_ruk;
+create trigger trg_audit_program_ruk after insert or update or delete on program_ruk
+  for each row execute function fn_audit_log();
+drop trigger if exists trg_audit_program_rpk on program_rpk;
+create trigger trg_audit_program_rpk after insert or update or delete on program_rpk
+  for each row execute function fn_audit_log();
+
+-- ============================================================
+-- SELESAI section 104. Idempotent, aman diulang.
+-- ============================================================
