@@ -257,8 +257,14 @@
     </form>
   </div>
 
+  <div class="card" id="cardStatusSilab" style="display:none;">
+    <h2>Status di siLab <span id="silabBadgeStatus"></span></h2>
+    <p style="font-size:12px; color:var(--muted); margin:-6px 0 10px;">Data ditarik langsung dari aplikasi siLab (read-only). Kalau petugas lab kerja di siLab, isi form manual di bawah gak perlu dipakai lagi.</p>
+    <div id="silabHasilBox">Memuat...</div>
+  </div>
+
   <div class="card" id="cardFormHasilLab" style="display:none;">
-    <h2>Input Hasil Laboratorium — <span id="namaPasienLabAktif"></span></h2>
+    <h2>Input Hasil Laboratorium (Manual / Cadangan) — <span id="namaPasienLabAktif"></span></h2>
     <p style="font-size:13px; color:var(--muted); margin-bottom:10px;">Permintaan: <strong id="labJenisDiminta">-</strong></p>
     <div id="msgBoxLab"></div>
     <form id="formHasilLab">
@@ -483,6 +489,7 @@
 </div>
 
 <script src="js/supabaseClient.js"></script>
+<script src="js/silabClient.js"></script>
 <script>
 let kunjunganAktif = null;
 let profilSaya = null;
@@ -1086,15 +1093,34 @@ async function muatRiwayatPemeriksaanKlinis(pasienId, kunjunganIdSekarang) {
     (labPerKunjungan[l.kunjungan_asal_id] = labPerKunjungan[l.kunjungan_asal_id] || []).push(...(l.item_hasil || []));
   });
 
+  // Cek juga rujukan yang hasilnya nyusul dari siLab (belum tentu ada di hasil_lab lokal)
+  const { data: rujukanSilabData } = await supabaseClient
+    .from("rujukan_lab")
+    .select("kunjungan_asal_id, silab_pasien_id, status")
+    .in("kunjungan_asal_id", idKunjungan)
+    .not("silab_pasien_id", "is", null);
+
+  const labSilabPerKunjungan = {};
+  for (const r of (rujukanSilabData || [])) {
+    const hasilSilab = await ambilStatusHasilSilab(r.silab_pasien_id);
+    if (hasilSilab) labSilabPerKunjungan[r.kunjungan_asal_id] = hasilSilab;
+  }
+
   el.innerHTML = punyaRm.map(k => {
     const rm = k.rekam_medis[0];
     const tgl = new Date(k.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
     const obatTxt = (k.resep || []).flatMap(r => (r.daftar_obat || []).map(o => `${o.nama_obat}${o.dosis ? " " + o.dosis : ""}`)).join(", ") || "-";
     const tindakanTxt = (k.tindakan_medis || []).flatMap(t => (t.daftar_tindakan || []).map(x => x.nama_tindakan)).join(", ") || "-";
+    const silabInfo = labSilabPerKunjungan[k.id];
     const labItems = labPerKunjungan[k.id] || [];
-    const labTxt = labItems.length
-      ? labItems.map(it => `${it.nama_pemeriksaan}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}`).join(", ")
-      : "-";
+    let labTxt = "-";
+    if (silabInfo && silabInfo.hasil.length) {
+      labTxt = `[siLab — ${silabInfo.status}] ` + silabInfo.hasil.map(it => `${it.nama}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}`).join(", ");
+    } else if (silabInfo) {
+      labTxt = `[siLab] Status: ${silabInfo.status}, hasil belum diinput.`;
+    } else if (labItems.length) {
+      labTxt = labItems.map(it => `${it.nama_pemeriksaan}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}`).join(", ");
+    }
     return `<div style="padding:6px 0; border-bottom:1px solid #e5e7eb;">
       <strong>${tgl}</strong> — ${k.klaster?.kode || "-"}<br>
       Diagnosa: ${rm.assessment || "-"} (${rm.kode_icd10 || "-"})<br>
@@ -1136,13 +1162,51 @@ async function bukaFormHasilLab(kunjungan) {
   rujukanLabAktif = data;
   document.getElementById("labJenisDiminta").textContent = data.jenis_pemeriksaan;
 
+  await muatStatusSilabUntukRujukan(data);
+
   window.scrollTo({ top: document.getElementById("cardFormHasilLab").offsetTop - 20, behavior: "smooth" });
+}
+
+async function muatStatusSilabUntukRujukan(rujukan) {
+  const cardSilab = document.getElementById("cardStatusSilab");
+  if (!rujukan.silab_pasien_id) {
+    cardSilab.style.display = "none";
+    return;
+  }
+  cardSilab.style.display = "block";
+  document.getElementById("silabBadgeStatus").innerHTML = "";
+  document.getElementById("silabHasilBox").textContent = "Memuat dari siLab...";
+
+  const hasilSilab = await ambilStatusHasilSilab(rujukan.silab_pasien_id);
+  if (!hasilSilab) {
+    document.getElementById("silabHasilBox").innerHTML = `<div class="msg msg-error">Gagal ambil data dari siLab (cek koneksi). Silakan cek langsung di aplikasi siLab, atau pakai form manual di bawah.</div>`;
+    return;
+  }
+
+  const badgeClass = BADGE_STATUS_SILAB[hasilSilab.status] || "badge-menunggu";
+  document.getElementById("silabBadgeStatus").innerHTML = `<span class="badge ${badgeClass}">${hasilSilab.status}</span>`;
+
+  if (!hasilSilab.hasil.length) {
+    document.getElementById("silabHasilBox").innerHTML = `<p style="color:var(--muted); font-size:13px;">Belum ada hasil diinput di siLab. Status: ${hasilSilab.status}.</p>`;
+    return;
+  }
+
+  document.getElementById("silabHasilBox").innerHTML = `
+    <table>
+      <thead><tr><th>Pemeriksaan</th><th>Hasil</th><th>Satuan</th><th>Nilai Rujukan</th><th>Flag</th></tr></thead>
+      <tbody>
+        ${hasilSilab.hasil.map(h => `<tr><td>${h.nama}</td><td>${h.hasil}</td><td>${h.satuan || "-"}</td><td>${h.nilaiRujukan}</td><td>${h.flag}</td></tr>`).join("")}
+      </tbody>
+    </table>
+    ${hasilSilab.status === "Selesai" ? `<p style="font-size:12px; color:var(--muted); margin-top:8px;">Divalidasi oleh: ${hasilSilab.validatedBy || "-"}${hasilSilab.catatanValidasi ? " — Catatan: " + hasilSilab.catatanValidasi : ""}</p>` : ""}
+  `;
 }
 
 function batalkanFormLab() {
   kunjunganLabAktif = null;
   rujukanLabAktif = null;
   document.getElementById("cardFormHasilLab").style.display = "none";
+  document.getElementById("cardStatusSilab").style.display = "none";
 }
 
 function tambahHasilLab() {
@@ -1401,6 +1465,38 @@ document.getElementById("formRM").addEventListener("submit", async (e) => {
     }
 
     pesanLab = ` Pasien otomatis masuk antrian No. ${noAntrianLab} di klaster LK (Laboratorium).`;
+
+    // 3c. Kirim juga permintaannya ke siLab (project terpisah) supaya pasien
+    // bisa langsung diproses di sana (Menunggu -> Validasi -> Selesai) dan
+    // hasilnya kebaca balik di SIMPUS. Kalau gagal kirim, alur SIMPUS tetap
+    // jalan seperti biasa (antrian LK lokal tetap ada sebagai cadangan).
+    const { data: pasienLengkap } = await supabaseClient
+      .from("pasien")
+      .select("nik, no_kk, nama, tanggal_lahir, jenis_kelamin, alamat, no_hp, no_rm")
+      .eq("id", kunjunganAktif.pasien_id)
+      .single();
+
+    if (pasienLengkap) {
+      const asalKlaster = (window._daftarKlaster || []).find(k => k.id === kunjunganAktif.klaster_id);
+      const hasilSilab = await kirimPermintaanLabKeSilab({
+        pasien: pasienLengkap,
+        jenisLabText: jenisLab,
+        asalUnit: asalKlaster ? asalKlaster.nama : "Rekam Medis",
+        dokterPengirim: profilSaya.nama,
+        noRujukanSimpus: noKunjunganLab,
+        penjamin: kunjunganAktif.jenis_bayar === "bpjs" ? "BPJS" : "Umum"
+      });
+
+      if (hasilSilab) {
+        await supabaseClient.from("rujukan_lab").update({
+          silab_pasien_id: hasilSilab.silabPasienId,
+          silab_dikirim_at: new Date().toISOString()
+        }).eq("kunjungan_tujuan_id", kunjunganLab.id);
+        pesanLab += " Permintaan juga sudah terkirim ke siLab.";
+      } else {
+        pesanLab += " (Gagal terkirim ke siLab — cek koneksi, antrian LK lokal tetap tersimpan.)";
+      }
+    }
   }
 
   // 4. Kalau perlu rujukan internal, bikin kunjungan baru di klaster tujuan
