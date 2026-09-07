@@ -77,6 +77,10 @@
       <a id="navGigi" onclick="gantiSubtabKapus('gigi')">Rekap Poli Gigi</a>
       <a id="navMutu" onclick="gantiSubtabKapus('mutu')">Mutu &amp; Keselamatan Pasien</a>
       <a id="navSurveilans" onclick="gantiSubtabKapus('surveilans')">Surveilans &amp; KLB</a>
+      <a id="navRisiko" onclick="gantiSubtabKapus('risiko')">Manajemen Risiko &amp; PPI/K3</a>
+      <a id="navKesling" onclick="gantiSubtabKapus('kesling')">Kesehatan Lingkungan</a>
+      <a id="navAnakRemaja" onclick="gantiSubtabKapus('anakremaja')">Anak Sekolah &amp; Remaja</a>
+      <a id="navLaporanDinas" onclick="gantiSubtabKapus('laporandinas')">Laporan ke Dinas</a>
 
       <div class="ph-group-title">Modul Lain</div>
       <a href="index.html">Pendaftaran</a>
@@ -698,6 +702,143 @@
 
       </div>
 
+      <!-- ============ MANAJEMEN RISIKO & PPI/K3 ============ -->
+      <div id="panelRisiko" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap manajemen risiko & monitoring PPI/K3, read-only. Input tetap di Klaster 1 &rarr; Mutu &amp; Keselamatan Pasien.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">Risiko Skor Tinggi (&ge; 15)</div><div class="value" id="rskTinggi">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Belum Termitigasi</div><div class="value" id="rskBelumMitigasi">0</div></div>
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Capaian PPI Bulan Ini</div><div class="value" id="rskPpiCapaian">0%</div></div>
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Capaian K3 Bulan Ini</div><div class="value" id="rskK3Capaian">0%</div></div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">1</span> Risiko Prioritas (Skor Tertinggi)</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Deskripsi Risiko</th><th>Kategori</th><th>Skor</th><th>Status</th></tr></thead>
+              <tbody id="kapTbodyRisiko"><tr><td colspan="4">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#1c7d7f;">
+          <h2><span class="card-num" style="background:#1c7d7f;">2</span> Monitoring PPI &amp; K3 — Bulan Berjalan</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Kategori</th><th>Item Monitoring</th><th>Target</th><th>Capaian</th><th>Status</th></tr></thead>
+              <tbody id="kapTbodyPpiK3"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============ KESEHATAN LINGKUNGAN ============ -->
+      <div id="panelKesling" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap inspeksi kesehatan lingkungan, read-only. Input tetap di Klaster 4.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Inspeksi (30 Hari)</div><div class="value" id="keslingTotal">0</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">Tidak Memenuhi Syarat</div><div class="value" id="keslingTms">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Belum Ditindaklanjuti</div><div class="value" id="keslingBelumTl">0</div></div>
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">% Memenuhi Syarat</div><div class="value" id="keslingPersenMs">0%</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Rekap per Jenis Inspeksi — 30 Hari Terakhir</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Jenis Inspeksi</th><th>Jumlah</th><th>Memenuhi Syarat</th><th>Tidak Memenuhi Syarat</th><th>Perlu Perbaikan</th></tr></thead>
+              <tbody id="kapTbodyKesling"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">2</span> Perlu Tindak Lanjut</h2>
+          <p style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">Sasaran dengan hasil "Tidak Memenuhi Syarat" atau "Perlu Perbaikan" yang belum selesai ditindaklanjuti.</p>
+          <div id="kapListKeslingTl"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
+      <!-- ============ ANAK SEKOLAH & REMAJA (KLASTER 2 LANJUTAN) ============ -->
+      <div id="panelAnakRemaja" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap Penjaringan Sekolah, Imunisasi BIAS, MTBS/MTBM & Skrining Remaja, read-only. Input tetap di Klaster 2.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Penjaringan Sekolah (30 Hari)</div><div class="value" id="arPenjaringan">0</div></div>
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Imunisasi BIAS (30 Hari)</div><div class="value" id="arBias">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#6a4c93;"><div class="label">Skrining Remaja (30 Hari)</div><div class="value" id="arRemaja">0</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">MTBS/MTBM Klasifikasi Merah (30 Hari)</div><div class="value" id="arMtbsMerah">0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Rekap Imunisasi BIAS per Antigen — 30 Hari Terakhir</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Antigen</th><th>Jumlah</th></tr></thead>
+              <tbody id="kapTbodyBias"><tr><td colspan="2">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#1c7d7f;">
+          <h2><span class="card-num" style="background:#1c7d7f;">2</span> Rekap MTBS/MTBM per Klasifikasi — 30 Hari Terakhir</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Klasifikasi</th><th>Jumlah</th><th>Dirujuk</th></tr></thead>
+              <tbody id="kapTbodyMtbs"><tr><td colspan="3">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">3</span> Kasus MTBS/MTBM Klasifikasi Merah — 30 Hari Terakhir</h2>
+          <div id="kapListMtbsMerah"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
+      <!-- ============ LAPORAN KE DINAS KESEHATAN ============ -->
+      <div id="panelLaporanDinas" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap pengiriman laporan ke Dinas Kesehatan lintas klaster, read-only.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Laporan Terkirim (30 Hari)</div><div class="value" id="ldTerkirim">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Jenis Laporan Aktif</div><div class="value" id="ldJenisAktif">0</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">KLB Belum Lapor W1</div><div class="value" id="ldKlbBelumW1">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Laporan Bulan Ini</div><div class="value" id="ldBulanIni">0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Rekap per Jenis Laporan — 30 Hari Terakhir</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Jenis Laporan</th><th>Jumlah Dikirim</th><th>Terakhir Dikirim</th></tr></thead>
+              <tbody id="kapTbodyLaporanDinas"><tr><td colspan="3">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#1c7d7f;">
+          <h2><span class="card-num" style="background:#1c7d7f;">2</span> Riwayat Pengiriman Terbaru</h2>
+          <div id="kapListLaporanDinas"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">3</span> KLB Aktif Belum Lapor W1</h2>
+          <div id="kapListKlbBelumW1"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </div>
@@ -720,14 +861,14 @@ let profilSaya = null;
 })();
 
 function gantiSubtabKapus(tab) {
-  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm", keuangan: "panelKeuangan", tren: "panelTren", kia: "panelKia", menular: "panelMenular", ranapugd: "panelRanapUgd", klaster3: "panelKlaster3", apotek: "panelApotek", survei: "panelSurvei", gigi: "panelGigi", mutu: "panelMutu", surveilans: "panelSurveilans" };
-  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm", keuangan: "navKeuangan", tren: "navTren", kia: "navKia", menular: "navMenular", ranapugd: "navRanapUgd", klaster3: "navKlaster3", apotek: "navApotek", survei: "navSurvei", gigi: "navGigi", mutu: "navMutu", surveilans: "navSurveilans" };
+  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm", keuangan: "panelKeuangan", tren: "panelTren", kia: "panelKia", menular: "panelMenular", ranapugd: "panelRanapUgd", klaster3: "panelKlaster3", apotek: "panelApotek", survei: "panelSurvei", gigi: "panelGigi", mutu: "panelMutu", surveilans: "panelSurveilans", risiko: "panelRisiko", kesling: "panelKesling", anakremaja: "panelAnakRemaja", laporandinas: "panelLaporanDinas" };
+  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm", keuangan: "navKeuangan", tren: "navTren", kia: "navKia", menular: "navMenular", ranapugd: "navRanapUgd", klaster3: "navKlaster3", apotek: "navApotek", survei: "navSurvei", gigi: "navGigi", mutu: "navMutu", surveilans: "navSurveilans", risiko: "navRisiko", kesling: "navKesling", anakremaja: "navAnakRemaja", laporandinas: "navLaporanDinas" };
   Object.values(panelMap).forEach(id => document.getElementById(id).style.display = "none");
   Object.values(navMap).forEach(id => document.getElementById(id).classList.remove("active"));
   document.getElementById(panelMap[tab]).style.display = "block";
   document.getElementById(navMap[tab]).classList.add("active");
 
-  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas", keuangan: "Laporan Keuangan", tren: "Tren Kunjungan", kia: "Program KIA", menular: "Program Penyakit Menular", ranapugd: "Rekap Rawat Inap & UGD", klaster3: "Program Dewasa & Lansia", apotek: "Rekap Apotek", survei: "Rekap Survei Kepuasan", gigi: "Rekap Poli Gigi", mutu: "Mutu & Keselamatan Pasien", surveilans: "Surveilans & KLB" };
+  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas", keuangan: "Laporan Keuangan", tren: "Tren Kunjungan", kia: "Program KIA", menular: "Program Penyakit Menular", ranapugd: "Rekap Rawat Inap & UGD", klaster3: "Program Dewasa & Lansia", apotek: "Rekap Apotek", survei: "Rekap Survei Kepuasan", gigi: "Rekap Poli Gigi", mutu: "Mutu & Keselamatan Pasien", surveilans: "Surveilans & KLB", risiko: "Manajemen Risiko & PPI/K3", kesling: "Kesehatan Lingkungan", anakremaja: "Anak Sekolah & Remaja", laporandinas: "Laporan ke Dinas Kesehatan" };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Kepala Puskesmas";
 
   if (tab === "approval") muatApprovalLplpo();
@@ -744,6 +885,10 @@ function gantiSubtabKapus(tab) {
   if (tab === "gigi") muatRekapGigi();
   if (tab === "mutu") muatRekapMutu();
   if (tab === "surveilans") muatRekapSurveilans();
+  if (tab === "risiko") muatRekapRisiko();
+  if (tab === "kesling") muatRekapKesling();
+  if (tab === "anakremaja") muatRekapAnakRemaja();
+  if (tab === "laporandinas") muatRekapLaporanDinas();
 }
 
 function gantiTabApproval(tab) {
@@ -2172,6 +2317,206 @@ async function muatRekapSurveilans() {
   } else {
     document.getElementById("kapListTindakanKlb").innerHTML = `<div class="kap-kosong">Belum ada kejadian KLB tercatat.</div>`;
   }
+}
+
+// ================================================================
+// REKAP MANAJEMEN RISIKO & PPI/K3
+// ================================================================
+async function muatRekapRisiko() {
+  document.getElementById("kapTbodyRisiko").innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+  document.getElementById("kapTbodyPpiK3").innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const tahunIni = new Date().getFullYear();
+  const bulanIni = new Date().getMonth() + 1;
+
+  const [risikoRes, ppiK3Res] = await Promise.all([
+    supabaseClient.from("manajemen_risiko").select("id, kategori, deskripsi_risiko, skor_risiko, status").order("skor_risiko", { ascending: false }),
+    supabaseClient.from("monitoring_ppi_k3").select("id, kategori, item_monitoring, target, capaian").eq("tahun", tahunIni).eq("bulan", bulanIni)
+  ]);
+
+  const risiko = risikoRes.data || [];
+  const ppiK3 = ppiK3Res.data || [];
+
+  // ---- KPI ----
+  const risikoTinggi = risiko.filter(r => r.skor_risiko >= 15);
+  document.getElementById("rskTinggi").textContent = risikoTinggi.length;
+  document.getElementById("rskBelumMitigasi").textContent = risiko.filter(r => r.status === "teridentifikasi").length;
+
+  const ppi = ppiK3.filter(p => p.kategori === "ppi");
+  const k3 = ppiK3.filter(p => p.kategori === "k3");
+  const rataPpi = ppi.length ? ppi.reduce((sum, p) => sum + Number(p.capaian || 0), 0) / ppi.length : 0;
+  const rataK3 = k3.length ? k3.reduce((sum, p) => sum + Number(p.capaian || 0), 0) / k3.length : 0;
+  document.getElementById("rskPpiCapaian").textContent = `${rataPpi.toFixed(1)}%`;
+  document.getElementById("rskK3Capaian").textContent = `${rataK3.toFixed(1)}%`;
+
+  // ---- Tabel risiko prioritas (top 10) ----
+  const labelKategori = { klinis: "Klinis", non_klinis: "Non-Klinis", ppi: "PPI", k3: "K3" };
+  const labelStatus = { teridentifikasi: "Teridentifikasi", mitigasi: "Mitigasi", terkendali: "Terkendali" };
+  const top10 = risiko.slice(0, 10);
+  document.getElementById("kapTbodyRisiko").innerHTML = top10.length
+    ? top10.map(r => `<tr><td>${r.deskripsi_risiko}</td><td>${labelKategori[r.kategori] || r.kategori}</td><td>${r.skor_risiko}</td><td>${labelStatus[r.status] || r.status}</td></tr>`).join("")
+    : `<tr><td colspan="4">Belum ada risiko yang teridentifikasi.</td></tr>`;
+
+  // ---- Tabel PPI/K3 ----
+  document.getElementById("kapTbodyPpiK3").innerHTML = ppiK3.length
+    ? ppiK3.map(p => {
+        const cap = Number(p.capaian);
+        const target = Number(p.target);
+        const tercapai = cap >= target;
+        const badge = tercapai ? `<span class="badge badge-selesai">Tercapai</span>` : `<span class="badge badge-batal">Di Bawah Target</span>`;
+        return `<tr><td>${p.kategori === "ppi" ? "PPI" : "K3"}</td><td>${p.item_monitoring}</td><td>${target}%</td><td>${cap}%</td><td>${badge}</td></tr>`;
+      }).join("")
+    : `<tr><td colspan="5">Belum ada monitoring PPI/K3 bulan ini.</td></tr>`;
+}
+
+// ================================================================
+// REKAP KESEHATAN LINGKUNGAN
+// ================================================================
+async function muatRekapKesling() {
+  document.getElementById("kapTbodyKesling").innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+  document.getElementById("kapListKeslingTl").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const tigaPuluhHariLalu = new Date(); tigaPuluhHariLalu.setDate(tigaPuluhHariLalu.getDate() - 29);
+  const batas30 = tigaPuluhHariLalu.toISOString().slice(0, 10);
+
+  const { data, error } = await supabaseClient
+    .from("inspeksi_kesling")
+    .select("id, tanggal, jenis_inspeksi, nama_sasaran, hasil_penilaian, tindak_lanjut_status, rekomendasi")
+    .gte("tanggal", batas30)
+    .order("tanggal", { ascending: false });
+
+  const kesling = (!error && data) || [];
+
+  // ---- KPI ----
+  document.getElementById("keslingTotal").textContent = kesling.length;
+  const tms = kesling.filter(k => k.hasil_penilaian === "Tidak Memenuhi Syarat");
+  document.getElementById("keslingTms").textContent = tms.length;
+  document.getElementById("keslingBelumTl").textContent = kesling.filter(k => k.tindak_lanjut_status === "Belum Ditindaklanjuti").length;
+  const ms = kesling.filter(k => k.hasil_penilaian === "Memenuhi Syarat").length;
+  document.getElementById("keslingPersenMs").textContent = kesling.length ? `${Math.round((ms / kesling.length) * 100)}%` : "0%";
+
+  // ---- Rekap per jenis inspeksi ----
+  const jenisList = ["Sarana Air Minum", "Sanitasi Rumah Tangga", "TTU (Tempat-Tempat Umum)", "TPM (Tempat Pengelolaan Makanan)", "Pengendalian Vektor", "Zoonosis (Gigitan Hewan/Rabies)"];
+  const adaJenis = jenisList.filter(j => kesling.some(k => k.jenis_inspeksi === j));
+  document.getElementById("kapTbodyKesling").innerHTML = adaJenis.length
+    ? adaJenis.map(j => {
+        const grup = kesling.filter(k => k.jenis_inspeksi === j);
+        const msJ = grup.filter(k => k.hasil_penilaian === "Memenuhi Syarat").length;
+        const tmsJ = grup.filter(k => k.hasil_penilaian === "Tidak Memenuhi Syarat").length;
+        const perbaikan = grup.filter(k => k.hasil_penilaian === "Perlu Perbaikan").length;
+        return `<tr><td>${j}</td><td>${grup.length}</td><td>${msJ}</td><td>${tmsJ}</td><td>${perbaikan}</td></tr>`;
+      }).join("")
+    : `<tr><td colspan="5">Belum ada inspeksi dalam 30 hari terakhir.</td></tr>`;
+
+  // ---- Perlu tindak lanjut ----
+  const perluTl = kesling.filter(k => ["Tidak Memenuhi Syarat", "Perlu Perbaikan"].includes(k.hasil_penilaian) && k.tindak_lanjut_status !== "Selesai");
+  const listBox = document.getElementById("kapListKeslingTl");
+  listBox.innerHTML = perluTl.length
+    ? perluTl.map(k => `<div class="kap-alert-row"><span class="ic">🏚️</span><div><strong>${k.nama_sasaran}</strong> — ${k.jenis_inspeksi}<div class="t">${k.hasil_penilaian} · Tindak lanjut: ${k.tindak_lanjut_status} · ${new Date(k.tanggal).toLocaleDateString("id-ID")}</div></div></div>`).join("")
+    : `<div class="kap-kosong">Tidak ada sasaran yang perlu tindak lanjut saat ini.</div>`;
+}
+
+// ================================================================
+// REKAP ANAK SEKOLAH & REMAJA (KLASTER 2 LANJUTAN)
+// ================================================================
+async function muatRekapAnakRemaja() {
+  document.getElementById("kapTbodyBias").innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+  document.getElementById("kapTbodyMtbs").innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+  document.getElementById("kapListMtbsMerah").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const tigaPuluhHariLalu = new Date(); tigaPuluhHariLalu.setDate(tigaPuluhHariLalu.getDate() - 29);
+  const batas30 = tigaPuluhHariLalu.toISOString().slice(0, 10);
+
+  const [penjaringanRes, biasRes, remajaRes, mtbsRes] = await Promise.all([
+    supabaseClient.from("penjaringan_sekolah").select("id, tanggal").gte("tanggal", batas30),
+    supabaseClient.from("imunisasi_bias").select("id, tanggal, antigen").gte("tanggal", batas30),
+    supabaseClient.from("skrining_remaja").select("id, tanggal").gte("tanggal", batas30),
+    supabaseClient.from("mtbs_mtbm").select("id, tanggal, klasifikasi, dirujuk, pasien(nama)").gte("tanggal", batas30)
+  ]);
+
+  const penjaringan = penjaringanRes.data || [];
+  const bias = biasRes.data || [];
+  const remaja = remajaRes.data || [];
+  const mtbs = mtbsRes.data || [];
+
+  // ---- KPI ----
+  document.getElementById("arPenjaringan").textContent = penjaringan.length;
+  document.getElementById("arBias").textContent = bias.length;
+  document.getElementById("arRemaja").textContent = remaja.length;
+  const mtbsMerah = mtbs.filter(m => m.klasifikasi === "Merah");
+  document.getElementById("arMtbsMerah").textContent = mtbsMerah.length;
+
+  // ---- Rekap BIAS per antigen ----
+  const antigenList = ["Campak-Rubella/MR (Kelas 1)", "DT (Kelas 1)", "Td (Kelas 2)", "Td (Kelas 5)"];
+  const adaAntigen = antigenList.filter(a => bias.some(b => b.antigen === a));
+  document.getElementById("kapTbodyBias").innerHTML = adaAntigen.length
+    ? adaAntigen.map(a => `<tr><td>${a}</td><td>${bias.filter(b => b.antigen === a).length}</td></tr>`).join("")
+    : `<tr><td colspan="2">Belum ada imunisasi BIAS dalam 30 hari terakhir.</td></tr>`;
+
+  // ---- Rekap MTBS/MTBM per klasifikasi ----
+  const klasifikasiList = ["Hijau", "Kuning", "Merah"];
+  document.getElementById("kapTbodyMtbs").innerHTML = klasifikasiList.map(k => {
+    const grup = mtbs.filter(m => m.klasifikasi === k);
+    const dirujuk = grup.filter(m => m.dirujuk).length;
+    return `<tr><td>${k}</td><td>${grup.length}</td><td>${dirujuk}</td></tr>`;
+  }).join("");
+
+  // ---- List MTBS/MTBM merah ----
+  const listBox = document.getElementById("kapListMtbsMerah");
+  listBox.innerHTML = mtbsMerah.length
+    ? mtbsMerah.map(m => `<div class="kap-alert-row"><span class="ic">🔴</span><div><strong>${m.pasien?.nama || "-"}</strong> — Klasifikasi Merah${m.dirujuk ? " (Dirujuk)" : ""}<div class="t">${new Date(m.tanggal).toLocaleDateString("id-ID")}</div></div></div>`).join("")
+    : `<div class="kap-kosong">Tidak ada kasus MTBS/MTBM klasifikasi merah dalam 30 hari terakhir.</div>`;
+}
+
+// ================================================================
+// REKAP LAPORAN KE DINAS KESEHATAN
+// ================================================================
+async function muatRekapLaporanDinas() {
+  document.getElementById("kapTbodyLaporanDinas").innerHTML = `<tr><td colspan="3">Memuat...</td></tr>`;
+  document.getElementById("kapListLaporanDinas").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+  document.getElementById("kapListKlbBelumW1").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const tigaPuluhHariLalu = new Date(); tigaPuluhHariLalu.setDate(tigaPuluhHariLalu.getDate() - 29);
+  const batas30 = tigaPuluhHariLalu.toISOString().slice(0, 10);
+  const bulanIni = new Date().toISOString().slice(0, 7);
+
+  const [laporanRes, klbRes] = await Promise.all([
+    supabaseClient.from("laporan_dinas_kirim").select("id, jenis_laporan, periode_label, tanggal_kirim, catatan").gte("tanggal_kirim", batas30).order("tanggal_kirim", { ascending: false }),
+    supabaseClient.from("klb_kejadian").select("id, judul, jenis_penyakit, w1_dilaporkan").eq("status", "Aktif").eq("w1_dilaporkan", false)
+  ]);
+
+  const laporan = laporanRes.data || [];
+  const klbBelumW1 = klbRes.data || [];
+
+  // ---- KPI ----
+  document.getElementById("ldTerkirim").textContent = laporan.length;
+  const jenisUnik = new Set(laporan.map(l => l.jenis_laporan));
+  document.getElementById("ldJenisAktif").textContent = jenisUnik.size;
+  document.getElementById("ldKlbBelumW1").textContent = klbBelumW1.length;
+  document.getElementById("ldBulanIni").textContent = laporan.filter(l => l.tanggal_kirim.startsWith(bulanIni)).length;
+
+  // ---- Rekap per jenis laporan ----
+  const rekapJenis = {};
+  laporan.forEach(l => {
+    if (!rekapJenis[l.jenis_laporan]) rekapJenis[l.jenis_laporan] = { jumlah: 0, terakhir: l.tanggal_kirim };
+    rekapJenis[l.jenis_laporan].jumlah++;
+    if (l.tanggal_kirim > rekapJenis[l.jenis_laporan].terakhir) rekapJenis[l.jenis_laporan].terakhir = l.tanggal_kirim;
+  });
+  const jenisList = Object.keys(rekapJenis).sort();
+  document.getElementById("kapTbodyLaporanDinas").innerHTML = jenisList.length
+    ? jenisList.map(j => `<tr><td>${j}</td><td>${rekapJenis[j].jumlah}</td><td>${new Date(rekapJenis[j].terakhir).toLocaleDateString("id-ID")}</td></tr>`).join("")
+    : `<tr><td colspan="3">Belum ada laporan yang dikirim dalam 30 hari terakhir.</td></tr>`;
+
+  // ---- Riwayat terbaru ----
+  const terbaru = laporan.slice(0, 15);
+  document.getElementById("kapListLaporanDinas").innerHTML = terbaru.length
+    ? terbaru.map(l => `<div class="kap-alert-row"><span class="ic">📤</span><div><strong>${l.jenis_laporan}</strong>${l.periode_label ? " — " + l.periode_label : ""}<div class="t">${l.catatan || "-"} · ${new Date(l.tanggal_kirim).toLocaleDateString("id-ID")}</div></div></div>`).join("")
+    : `<div class="kap-kosong">Belum ada riwayat pengiriman laporan.</div>`;
+
+  // ---- KLB belum lapor W1 ----
+  document.getElementById("kapListKlbBelumW1").innerHTML = klbBelumW1.length
+    ? klbBelumW1.map(k => `<div class="kap-alert-row"><span class="ic">🚨</span><div><strong>${k.judul}</strong> — ${k.jenis_penyakit}<div class="t">Belum lapor Formulir W1 ke Dinas Kesehatan</div></div></div>`).join("")
+    : `<div class="kap-kosong">Semua KLB aktif sudah lapor W1.</div>`;
 }
 </script>
 </body>
