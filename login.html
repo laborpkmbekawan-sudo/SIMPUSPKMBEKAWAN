@@ -207,24 +207,57 @@
         </div>
       </div>
       <div class="brand-divider"></div>
-      <div class="puskesmas-name">Puskesmas Bekawan</div>
+      <div class="puskesmas-name">UPTD Puskesmas Bekawan</div>
       <div class="tagline">Melayani dengan Hati,<br>Menuju Masyarakat Sehat</div>
     </div>
 
     <div class="hero-illustration">
       <svg viewBox="0 0 600 380" preserveAspectRatio="xMidYMax slice">
+        <defs>
+          <pattern id="dotGrid" width="26" height="26" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="2" fill="#0f7a45" opacity="0.18"/>
+          </pattern>
+          <linearGradient id="blobGrad1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1f8f5c"/>
+            <stop offset="100%" stop-color="#0f5c3c"/>
+          </linearGradient>
+          <linearGradient id="blobGrad2" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stop-color="#16a36f"/>
+            <stop offset="100%" stop-color="#0f7a45"/>
+          </linearGradient>
+        </defs>
+
+        <!-- ground waves -->
         <path d="M0,300 C120,260 200,340 320,300 C440,260 520,320 600,290 L600,380 L0,380 Z" fill="#0f5c3c"/>
         <path d="M0,320 C140,290 240,360 360,320 C460,290 540,340 600,310 L600,380 L0,380 Z" fill="#0f7a45"/>
-        <g>
-          <polygon points="150,190 300,120 450,190" fill="#1f8f5c"/>
-          <rect x="170" y="188" width="260" height="120" fill="#f3f8f3" stroke="#d8e6dd" stroke-width="2"/>
-          <rect x="270" y="150" width="60" height="18" fill="#0f5c3c"/>
-          <rect x="185" y="215" width="55" height="55" fill="#dfeee6" stroke="#bcd6c6" stroke-width="2"/>
-          <rect x="272" y="215" width="55" height="93" fill="#dfeee6" stroke="#bcd6c6" stroke-width="2"/>
-          <rect x="360" y="215" width="55" height="55" fill="#dfeee6" stroke="#bcd6c6" stroke-width="2"/>
-          <rect x="296" y="98" width="6" height="55" fill="#9aa8a2"/>
-          <path d="M302,98 L332,108 L302,118 Z" fill="#d94b4b"/>
-          <polygon points="200,110 300,60 400,110" fill="none" stroke="#1f8f5c" stroke-width="5" opacity="0.35"/>
+
+        <!-- dot grid backdrop -->
+        <rect x="40" y="30" width="520" height="230" fill="url(#dotGrid)"/>
+
+        <!-- soft floating blobs -->
+        <circle cx="130" cy="120" r="46" fill="url(#blobGrad2)" opacity="0.9"/>
+        <circle cx="470" cy="90" r="34" fill="url(#blobGrad1)" opacity="0.85"/>
+        <circle cx="500" cy="210" r="26" fill="#bfe3c7" opacity="0.9"/>
+        <circle cx="90" cy="220" r="20" fill="#bfe3c7" opacity="0.9"/>
+
+        <!-- center medallion card -->
+        <g transform="translate(300,150)">
+          <circle r="86" fill="#ffffff" stroke="#d8ecdf" stroke-width="3"/>
+          <circle r="66" fill="url(#blobGrad2)"/>
+          <g transform="translate(-30,-30)" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round">
+            <rect x="18" y="0" width="24" height="60" rx="6"/>
+            <rect x="0" y="18" width="60" height="24" rx="6"/>
+          </g>
+        </g>
+
+        <!-- small icon chips -->
+        <g transform="translate(150,255)">
+          <circle r="26" fill="#ffffff" stroke="#d8ecdf" stroke-width="2"/>
+          <path d="M-9,4 C-9,-4 -1,-8 0,-2 C1,-8 9,-4 9,4 C9,9 3,13 0,16 C-3,13 -9,9 -9,4 Z" fill="#e2534b"/>
+        </g>
+        <g transform="translate(450,255)">
+          <circle r="26" fill="#ffffff" stroke="#d8ecdf" stroke-width="2"/>
+          <path d="M-12,2 L-5,2 L-2,-8 L3,10 L6,2 L12,2" fill="none" stroke="#0f7a45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </g>
       </svg>
     </div>
@@ -248,7 +281,7 @@
   <!-- RIGHT: form -->
   <div class="login-form-side">
     <h2>Selamat Datang</h2>
-    <p class="welcome-sub">Silakan masuk ke akun Anda untuk mengakses Sistem Informasi Puskesmas Bekawan</p>
+    <p class="welcome-sub">Silakan masuk ke akun Anda untuk mengakses Sistem Informasi UPTD Puskesmas Bekawan</p>
 
     <div id="msgBox"></div>
 
@@ -276,7 +309,7 @@
 
     <div class="login-footer">
       <div class="links">
-        <span>Puskesmas Bekawan</span> <span class="sep">|</span> Kabupaten Indragiri Hilir <span class="sep">|</span> Provinsi Riau
+        <span>UPTD Puskesmas Bekawan</span> <span class="sep">|</span> Kabupaten Indragiri Hilir <span class="sep">|</span> Provinsi Riau
       </div>
       <div>&copy; 2025. Semua hak cipta dilindungi.</div>
     </div>
