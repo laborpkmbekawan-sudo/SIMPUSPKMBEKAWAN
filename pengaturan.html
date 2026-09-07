@@ -6,306 +6,251 @@
 <title>Pengaturan - SIMPUS Bekawan</title>
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#123653;--navy-2:#0e2940;--teal:#0f9f9a;--teal-soft:#e8f7f6;--bg:#f4f7fa;--card:#fff;--text:#17324a;--muted:#718096;--border:#e2e8f0;--shadow:0 8px 24px rgba(20,45,70,.07);--radius:14px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.5}.sidebar{position:fixed;z-index:40;inset:0 auto 0 0;width:258px;background:linear-gradient(180deg,#102f49 0%,#0b273d 100%);color:#fff;display:flex;flex-direction:column;box-shadow:8px 0 28px rgba(9,31,48,.12)}.brand{height:82px;display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.09)}.brand-logo{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#19b7b0,#0c817f);display:grid;place-items:center;font-size:21px;font-weight:800;box-shadow:0 6px 18px rgba(0,0,0,.16)}.brand-name{font-size:18px;font-weight:800;letter-spacing:.4px}.brand-sub{font-size:9px;color:#b9cbd9;letter-spacing:.35px;margin-top:1px}.sidebar-scroll{overflow:auto;padding:15px 12px 10px;flex:1}.sidebar-scroll::-webkit-scrollbar{width:4px}.sidebar-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:9px}.nav-label{font-size:9.5px;letter-spacing:1px;color:#7891a4;font-weight:800;padding:13px 10px 7px}.tab-nav{display:flex;flex-direction:column;gap:3px}.tab-nav a{display:flex!important;align-items:center;gap:11px;color:#c8d7e2!important;text-decoration:none!important;padding:9px 11px;border-radius:9px;font-size:12.5px;font-weight:600;transition:.18s}.tab-nav a:hover{background:rgba(255,255,255,.07);color:#fff!important}.tab-nav a.active{background:linear-gradient(90deg,rgba(15,159,154,.25),rgba(15,159,154,.08));color:#fff!important;box-shadow:inset 3px 0 0 #2bc4bd}.nav-icon{width:22px;text-align:center;color:#91aabc;font-size:13px;font-weight:700}.tab-nav a.active .nav-icon{color:#5ee1db}.sidebar-footer{padding:13px 17px 15px;border-top:1px solid rgba(255,255,255,.08)}.system-status{display:flex;align-items:center;gap:8px;font-size:11px;color:#c9d9e5}.status-dot{width:7px;height:7px;border-radius:50%;background:#35d0a3;box-shadow:0 0 0 4px rgba(53,208,163,.12)}.sidebar-version{font-size:9.5px;color:#6f899c;margin-top:7px}.topbar{position:fixed;z-index:30;left:258px;right:0;top:0;height:82px;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 31px}.topbar-left{display:flex;align-items:center;gap:13px}.eyebrow{font-size:9px;font-weight:800;letter-spacing:1px;color:#8a9bab;margin-bottom:2px}.topbar h1{font-size:20px;margin:0;color:var(--navy);letter-spacing:-.2px}.user-info{display:flex;align-items:center;gap:10px}.user-avatar{width:36px;height:36px;border-radius:10px;background:var(--teal-soft);color:#0b7774;display:grid;place-items:center;font-weight:800}.user-copy{display:flex;flex-direction:column;min-width:130px}.user-copy strong{font-size:12px;color:var(--navy)}.user-copy span{font-size:10px;color:var(--muted)}.logout-btn{border:0;background:#edf2f7;color:#39536b;font-weight:700;border-radius:8px;padding:8px 13px;cursor:pointer}.logout-btn:hover{background:#e2e8f0}.mobile-menu{display:none;border:0;background:#edf2f7;color:var(--navy);width:38px;height:38px;border-radius:9px;font-size:18px}.main-content{margin-left:258px;padding:112px 31px 35px;max-width:1500px}.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}.breadcrumb{font-size:11px;color:#8b9aaa;margin-bottom:5px}.breadcrumb span{padding:0 6px;color:#c0c9d2}.page-head h2{margin:0;color:var(--navy);font-size:25px;letter-spacing:-.5px}.page-head p{margin:4px 0 0;color:var(--muted);font-size:12px}.page-chip{font-size:11px;font-weight:700;color:#18756f;background:#e8f7f5;border:1px solid #ccece9;padding:8px 12px;border-radius:20px;white-space:nowrap}.page-chip span{font-size:8px;margin-right:5px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:23px;margin-bottom:18px}.section-head{display:flex;align-items:flex-start;gap:13px;margin-bottom:20px}.section-icon{flex:0 0 40px;width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-weight:800;color:#fff;font-size:17px}.section-icon.security{background:#245a7c}.section-icon.request{background:#7653a6}.section-icon.users{background:#315a7c}.section-icon.add{background:#2f9e69}.section-icon.edit{background:#c36b3b}.section-icon.tariff{background:#0f8e89;font-size:12px}.section-head h2{font-size:16px;margin:0 0 2px;color:var(--navy)}.section-head p{margin:0;color:var(--muted);font-size:11.5px}.form-grid{display:grid;gap:14px}.form-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.form-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.span-2{grid-column:span 2}.span-3{grid-column:span 3}label{display:block;font-size:11.5px;font-weight:700;color:#29455e;margin-bottom:6px}label span{color:#dc5b5b}input,select,textarea{width:100%;border:1px solid #d5dee7;background:#fff;color:#233f57;border-radius:8px;padding:10px 11px;font:inherit;font-size:12.5px;outline:none;transition:.16s}input,select{height:40px}textarea{min-height:76px;resize:vertical}input:focus,select:focus,textarea:focus{border-color:#62b8b3;box-shadow:0 0 0 3px rgba(15,159,154,.1)}small,.helper{display:block;color:var(--muted);font-size:10.5px;margin-top:5px}.input-wrap{position:relative}.input-wrap span{position:absolute;right:11px;top:10px;color:#a0acb8;font-size:10px;letter-spacing:1px}.form-actions{display:flex;gap:8px;align-items:center;margin-top:4px}.btn-primary,.btn-secondary{border:0;border-radius:8px;padding:9px 14px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;transition:.18s}.btn-primary{background:var(--navy);color:#fff;box-shadow:0 4px 10px rgba(18,54,83,.14)}.btn-primary:hover{background:#0d2b44;transform:translateY(-1px)}.btn-secondary{background:#edf2f7;color:#38536b}.btn-secondary:hover{background:#e2e8f0}.modern-tabs,.filter-row{display:flex;gap:5px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:17px}.lap-tab{border:1px solid transparent;background:transparent;color:#63788c;padding:8px 12px;border-radius:8px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer}.lap-tab:hover{background:#f4f7fa}.lap-tab.active{background:#e9f6f5;color:#0c7f7b;border-color:#cceae8}.tab-panel form{margin-bottom:5px}.history-head{display:flex;justify-content:space-between;align-items:end;margin:22px 0 9px;padding-top:16px;border-top:1px solid #edf1f4}.history-head h3{font-size:13px;color:var(--navy);margin:0}.history-head span{font-size:10.5px;color:var(--muted)}.table-card{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff}.tbl-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:720px}th{background:#f7f9fb;color:#667b8f;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.35px;font-weight:800;padding:10px 11px;border-bottom:1px solid var(--border);white-space:nowrap}td{padding:10px 11px;border-bottom:1px solid #edf1f4;font-size:11.5px;color:#314d63;vertical-align:middle}tbody tr:hover{background:#fbfcfd}tbody tr:last-child td{border-bottom:0}.badge{display:inline-flex;align-items:center;border-radius:20px;padding:4px 8px;font-size:9.5px;font-weight:800;white-space:nowrap}.badge-selesai{background:#e5f7ee;color:#1e8758}.badge-batal{background:#fdebed;color:#bd4b5b}.badge-menunggu{background:#fff4dc;color:#a36b08}.admin-divider{display:flex;align-items:center;gap:12px;margin:27px 3px 15px;color:#8a9aaa;font-size:9px;font-weight:900;letter-spacing:1.2px}.admin-divider:after{content:"";height:1px;background:#dce4eb;flex:1}.admin-card{border-top:3px solid #dfe8ef}.subsection{border-top:1px solid #edf1f4;padding-top:18px;margin-top:20px}.subsection h3{margin:0 0 12px;color:var(--navy);font-size:13px}.subtle{font-weight:500;color:var(--muted);font-size:10.5px;margin-left:4px}.inline-action{display:flex;gap:7px}.inline-action input{flex:1}.close-card{margin-left:auto;border:0;background:#f1f4f7;color:#617487;padding:7px 10px;border-radius:7px;font-size:10.5px;font-weight:700;cursor:pointer}.filter-row{border-bottom:0;margin-bottom:14px;padding-bottom:0}.tariff-form{background:#f8fafc;border:1px solid #e8edf2;border-radius:10px;padding:17px}.tariff-form h3{font-size:13px}.msg{padding:10px 12px;border-radius:8px;margin-bottom:13px;font-size:11.5px;font-weight:600}.msg-success{background:#e9f8f0;color:#1e7c55;border:1px solid #cceedd}.msg-error{background:#fff0f1;color:#b44555;border:1px solid #f2d2d6}.page-footer{text-align:center;color:#9aa8b5;font-size:10px;padding:12px 0 3px}.sidebar-overlay{display:none}
+@media(max-width:1000px){.sidebar{width:230px}.topbar{left:230px;padding:0 20px}.main-content{margin-left:230px;padding-left:20px;padding-right:20px}.form-grid.three{grid-template-columns:repeat(2,minmax(0,1fr))}.span-3{grid-column:span 2}.user-copy{display:none}}
+@media(max-width:760px){.sidebar{transform:translateX(-100%);transition:transform .22s ease;width:258px}.sidebar.open{transform:translateX(0)}.sidebar-overlay{position:fixed;inset:0;background:rgba(7,24,37,.42);z-index:35}.sidebar-overlay.show{display:block}.topbar{left:0;height:72px;padding:0 15px}.mobile-menu{display:block}.topbar h1{font-size:17px}.eyebrow{font-size:7.5px}.user-avatar{width:32px;height:32px}.logout-btn{padding:7px 9px;font-size:10px}.main-content{margin-left:0;padding:94px 14px 25px}.page-head{align-items:flex-start;flex-direction:column;margin-bottom:16px}.page-chip{align-self:flex-start}.page-head h2{font-size:22px}.card{padding:17px;margin-bottom:14px}.form-grid.two,.form-grid.three{grid-template-columns:1fr}.span-2,.span-3{grid-column:auto}.section-head{gap:10px}.section-icon{width:36px;height:36px;flex-basis:36px}.section-head h2{font-size:14px}.password-form .form-actions{margin-top:0}.form-actions{flex-wrap:wrap}.btn-primary,.btn-secondary{padding:9px 12px}.brand{height:72px}.filter-row{overflow-x:auto;flex-wrap:nowrap;padding-bottom:5px}.filter-row .lap-tab{white-space:nowrap}.user-info{gap:7px}.user-copy{display:none}}
+</style>
+<script>
+function toggleSidebar(open){const s=document.querySelector('.sidebar'),o=document.getElementById('sidebarOverlay');if(!s||!o)return;s.classList.toggle('open',open);o.classList.toggle('show',open)}
+document.addEventListener('click',e=>{const a=e.target.closest('.tab-nav a');if(a&&window.innerWidth<=760)toggleSidebar(false)});
+const _oldSetNama = setInterval(()=>{const el=document.getElementById('namaUser'),av=document.getElementById('avatarUser');if(el&&av&&el.textContent&&el.textContent!=='Memuat...'){av.textContent=el.textContent.trim().charAt(0).toUpperCase()||'U';clearInterval(_oldSetNama)}},500);
+</script>
+
 </head>
 <body>
 
-<div class="topbar">
-  <h1>SIMPUS UPTD PUSKESMAS BEKAWAN — Pengaturan</h1>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-logo">S</div>
+    <div>
+      <div class="brand-name">SIMPUS</div>
+      <div class="brand-sub">UPTD PUSKESMAS BEKAWAN</div>
+    </div>
+  </div>
+
+  <div class="sidebar-scroll">
+    <div class="nav-label">MENU UTAMA</div>
+    <nav class="tab-nav" aria-label="Navigasi utama">
+      <a href="index.html"><span class="nav-icon">⌂</span><span>Pendaftaran</span></a>
+      <a href="rekam-medis.html"><span class="nav-icon">▣</span><span>Rekam Medis</span></a>
+    </nav>
+
+    <div class="nav-label">PELAYANAN</div>
+    <nav class="tab-nav nav-group">
+      <a href="apotek.html"><span class="nav-icon">✚</span><span>Apotek</span></a>
+      <a href="ugd.html"><span class="nav-icon">＋</span><span>UGD</span></a>
+      <a href="ranap.html"><span class="nav-icon">▤</span><span>Rawat Inap</span></a>
+      <a href="gigi.html"><span class="nav-icon">◉</span><span>Poli Gigi</span></a>
+      <a href="kasir.html"><span class="nav-icon">▤</span><span>Kasir</span></a>
+      <a href="papan-antrian.html"><span class="nav-icon">☷</span><span>Papan Antrian</span></a>
+    </nav>
+
+    <div class="nav-label">PROGRAM & KLASTER</div>
+    <nav class="tab-nav nav-group">
+      <a href="klaster1.html"><span class="nav-icon">01</span><span>Klaster 1</span></a>
+      <a href="klaster2.html"><span class="nav-icon">02</span><span>Klaster 2</span></a>
+      <a href="klaster3.html"><span class="nav-icon">03</span><span>Klaster 3</span></a>
+      <a href="klaster4.html"><span class="nav-icon">04</span><span>Klaster 4</span></a>
+    </nav>
+
+    <div class="nav-label">JARINGAN & PROGRAM</div>
+    <nav class="tab-nav nav-group">
+      <a href="pustu.html"><span class="nav-icon">⌖</span><span>Pustu</span></a>
+      <a href="pemegang-program.html"><span class="nav-icon">▦</span><span>Pemegang Program</span></a>
+    </nav>
+
+    <div class="nav-label">MANAJEMEN</div>
+    <nav class="tab-nav nav-group">
+      <a href="pengaturan.html" class="active"><span class="nav-icon">⚙</span><span>Pengaturan</span></a>
+      <a href="kapus.html"><span class="nav-icon">♙</span><span>Kepala Puskesmas</span></a>
+    </nav>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="system-status"><span class="status-dot"></span><span>Sistem aktif</span></div>
+    <div class="sidebar-version">SIMPUS Bekawan • v1.0</div>
+  </div>
+</aside>
+
+<!-- MOBILE OVERLAY -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="mobile-menu" type="button" onclick="toggleSidebar(true)" aria-label="Buka menu">☰</button>
+    <div>
+      <div class="eyebrow">SISTEM INFORMASI MANAJEMEN PUSKESMAS</div>
+      <h1>Pengaturan</h1>
+    </div>
+  </div>
   <div class="user-info">
-    <span id="namaUser">Memuat...</span>
-    <button onclick="logout()">Keluar</button>
+    <div class="user-avatar" id="avatarUser">U</div>
+    <div class="user-copy">
+      <strong id="namaUser">Memuat...</strong>
+      <span>Pengguna SIMPUS</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Keluar</button>
   </div>
-</div>
+</header>
 
-<div class="container">
-
-  <div class="tab-nav">
-    <a href="index.html">Pendaftaran</a>
-    <a href="rekam-medis.html">Rekam Medis</a>
-    <a href="apotek.html">Apotek</a>
-    <a href="ugd.html">UGD</a>
-    <a href="ranap.html">Rawat Inap</a>
-    <a href="klaster1.html">Klaster 1</a>
-    <a href="klaster2.html">Klaster 2</a>
-    <a href="klaster3.html">Klaster 3</a>
-    <a href="klaster4.html">Klaster 4</a>
-    <a href="gigi.html">Poli Gigi</a>
-    <a href="pustu.html">Pustu</a>
-    <a href="pengaturan.html" class="active">Pengaturan</a>
-    <a href="kasir.html">Kasir</a>
-    <a href="papan-antrian.html">Papan Antrian</a>
-    <a href="kapus.html">Kepala Puskesmas</a>
-    <a href="pemegang-program.html">Pemegang Program</a>
+<main class="main-content">
+  <div class="page-head">
+    <div>
+      <div class="breadcrumb">Beranda <span>/</span> Pengaturan</div>
+      <h2>Pengaturan Sistem</h2>
+      <p>Kelola keamanan akun, pengajuan administrasi, pengguna, hak akses, dan master tarif.</p>
+    </div>
+    <div class="page-chip"><span>●</span> Terhubung ke sistem</div>
   </div>
 
-  <div class="card">
-    <h2>Password Saya</h2>
+  <!-- PASSWORD -->
+  <section class="card settings-card">
+    <div class="section-head">
+      <div class="section-icon security">⌕</div>
+      <div>
+        <h2>Keamanan Akun</h2>
+        <p>Perbarui password akun Anda secara berkala untuk menjaga keamanan akses.</p>
+      </div>
+    </div>
     <div id="msgBoxSendiri"></div>
-    <form id="formGantiPasswordSendiri">
-      <label>Password Baru (minimal 6 karakter)</label>
-      <input type="password" id="passwordBaruSendiri" required minlength="6">
-      <label>Ulangi Password Baru</label>
-      <input type="password" id="passwordUlangSendiri" required minlength="6">
-      <button type="submit" class="btn-primary">Simpan Password</button>
+    <form id="formGantiPasswordSendiri" class="form-grid password-form">
+      <div>
+        <label for="passwordBaruSendiri">Password Baru <span>*</span></label>
+        <div class="input-wrap"><input type="password" id="passwordBaruSendiri" required minlength="6" placeholder="Minimal 6 karakter"><span>•••</span></div>
+      </div>
+      <div>
+        <label for="passwordUlangSendiri">Ulangi Password Baru <span>*</span></label>
+        <div class="input-wrap"><input type="password" id="passwordUlangSendiri" required minlength="6" placeholder="Masukkan ulang password"><span>•••</span></div>
+      </div>
+      <div class="form-actions"><button type="submit" class="btn-primary">Simpan Password</button></div>
     </form>
-  </div>
+  </section>
 
-  <div class="card" style="--accent:#6a4c93;">
-    <h2><span class="card-num" style="background:#6a4c93;">🗂</span> Pengajuan Cuti/Izin &amp; Surat Tugas</h2>
-    <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Ajukan cuti/izin atau surat tugas dinas luar. Persetujuan dilakukan oleh Kepala Puskesmas.</p>
+  <!-- PENGAJUAN -->
+  <section class="card settings-card">
+    <div class="section-head">
+      <div class="section-icon request">✎</div>
+      <div>
+        <h2>Pengajuan Cuti, Izin & Surat Tugas</h2>
+        <p>Ajukan administrasi kepegawaian. Persetujuan dilakukan oleh Kepala Puskesmas.</p>
+      </div>
+    </div>
 
-    <div style="display:flex; gap:6px; margin-bottom:14px; border-bottom:2px solid var(--border);">
-      <button type="button" class="lap-tab active" id="pjSub-cuti" onclick="gantiSubPengajuan('cuti')">Cuti/Izin</button>
+    <div class="modern-tabs">
+      <button type="button" class="lap-tab active" id="pjSub-cuti" onclick="gantiSubPengajuan('cuti')">Cuti / Izin</button>
       <button type="button" class="lap-tab" id="pjSub-tugas" onclick="gantiSubPengajuan('tugas')">Surat Tugas</button>
     </div>
 
-    <!-- ===== Sub: Cuti/Izin ===== -->
-    <div id="pjTabCuti">
+    <div id="pjTabCuti" class="tab-panel">
       <div id="msgPjCuti"></div>
       <form id="formPengajuanCuti">
-        <label>Jenis *</label>
-        <select id="pjcJenis" required>
-          <option value="cuti_tahunan">Cuti Tahunan</option>
-          <option value="cuti_sakit">Cuti Sakit</option>
-          <option value="izin">Izin</option>
-          <option value="cuti_melahirkan">Cuti Melahirkan</option>
-          <option value="lainnya">Lainnya</option>
-        </select>
-        <div class="grid-2">
-          <div><label>Tanggal Mulai *</label><input type="date" id="pjcMulai" required></div>
-          <div><label>Tanggal Selesai *</label><input type="date" id="pjcSelesai" required></div>
+        <div class="form-grid three">
+          <div><label for="pjcJenis">Jenis <span>*</span></label><select id="pjcJenis" required><option value="cuti_tahunan">Cuti Tahunan</option><option value="cuti_sakit">Cuti Sakit</option><option value="izin">Izin</option><option value="cuti_melahirkan">Cuti Melahirkan</option><option value="lainnya">Lainnya</option></select></div>
+          <div><label for="pjcMulai">Tanggal Mulai <span>*</span></label><input type="date" id="pjcMulai" required></div>
+          <div><label for="pjcSelesai">Tanggal Selesai <span>*</span></label><input type="date" id="pjcSelesai" required></div>
         </div>
-        <label>Alasan</label>
-        <textarea id="pjcAlasan" rows="2"></textarea>
-        <button type="submit" class="btn-primary">Ajukan Cuti/Izin</button>
+        <label for="pjcAlasan">Alasan</label><textarea id="pjcAlasan" rows="3" placeholder="Tuliskan alasan pengajuan (opsional)"></textarea>
+        <button type="submit" class="btn-primary">Ajukan Cuti / Izin</button>
       </form>
 
-      <h3 style="font-size:13.5px; color:var(--navy); margin:18px 0 8px;">Riwayat Pengajuan Saya</h3>
-      <div class="tbl-wrap" style="overflow:auto;">
-        <table>
-          <thead><tr><th>Jenis</th><th>Tanggal</th><th>Hari</th><th>Status</th><th>Catatan Kapus</th></tr></thead>
-          <tbody id="tabelRiwayatCuti"><tr><td colspan="5">Memuat...</td></tr></tbody>
-        </table>
-      </div>
+      <div class="history-head"><div><h3>Riwayat Pengajuan Saya</h3><span>Daftar pengajuan cuti/izin yang pernah dikirim.</span></div></div>
+      <div class="table-card"><div class="tbl-wrap"><table><thead><tr><th>Jenis</th><th>Tanggal</th><th>Hari</th><th>Status</th><th>Catatan Kapus</th></tr></thead><tbody id="tabelRiwayatCuti"><tr><td colspan="5">Memuat...</td></tr></tbody></table></div></div>
     </div>
 
-    <!-- ===== Sub: Surat Tugas ===== -->
-    <div id="pjTabTugas" style="display:none;">
+    <div id="pjTabTugas" class="tab-panel" style="display:none;">
       <div id="msgPjTugas"></div>
       <form id="formPengajuanTugas">
-        <label>Perihal *</label>
-        <input type="text" id="pjtPerihal" required>
-        <label>Tempat Tugas</label>
-        <input type="text" id="pjtTempat">
-        <div class="grid-2">
-          <div><label>Tanggal Mulai *</label><input type="date" id="pjtMulai" required></div>
-          <div><label>Tanggal Selesai *</label><input type="date" id="pjtSelesai" required></div>
+        <div class="form-grid three">
+          <div class="span-2"><label for="pjtPerihal">Perihal <span>*</span></label><input type="text" id="pjtPerihal" required placeholder="Contoh: Dinas luar / pelatihan"></div>
+          <div><label for="pjtTempat">Tempat Tugas</label><input type="text" id="pjtTempat" placeholder="Lokasi kegiatan"></div>
+          <div><label for="pjtMulai">Tanggal Mulai <span>*</span></label><input type="date" id="pjtMulai" required></div>
+          <div><label for="pjtSelesai">Tanggal Selesai <span>*</span></label><input type="date" id="pjtSelesai" required></div>
         </div>
-        <label>Keterangan</label>
-        <textarea id="pjtKeterangan" rows="2"></textarea>
+        <label for="pjtKeterangan">Keterangan</label><textarea id="pjtKeterangan" rows="3" placeholder="Keterangan tambahan (opsional)"></textarea>
         <button type="submit" class="btn-primary">Ajukan Surat Tugas</button>
       </form>
 
-      <h3 style="font-size:13.5px; color:var(--navy); margin:18px 0 8px;">Riwayat Pengajuan Saya</h3>
-      <div class="tbl-wrap" style="overflow:auto;">
-        <table>
-          <thead><tr><th>Perihal</th><th>Tempat</th><th>Tanggal</th><th>Status</th><th>Catatan Kapus</th></tr></thead>
-          <tbody id="tabelRiwayatTugas"><tr><td colspan="5">Memuat...</td></tr></tbody>
-        </table>
-      </div>
+      <div class="history-head"><div><h3>Riwayat Pengajuan Saya</h3><span>Daftar surat tugas yang pernah dikirim.</span></div></div>
+      <div class="table-card"><div class="tbl-wrap"><table><thead><tr><th>Perihal</th><th>Tempat</th><th>Tanggal</th><th>Status</th><th>Catatan Kapus</th></tr></thead><tbody id="tabelRiwayatTugas"><tr><td colspan="5">Memuat...</td></tr></tbody></table></div></div>
     </div>
-  </div>
+  </section>
 
-  <!-- ============ MANAJEMEN USER & AKSES (admin only) ============ -->
+  <!-- ADMIN ONLY -->
   <div id="blokUserAkses" style="display:none;">
+    <div class="admin-divider"><span>ADMINISTRATOR</span></div>
 
-    <div class="card" style="--accent:#173b5e;">
-      <h2><span class="card-num" style="background:#173b5e;">👤</span> Kelola Akun &amp; Role</h2>
-      <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Tambah/edit/nonaktifkan akun, atur role, klaster utama, klaster tambahan, hak akses granular (RBAC), dan reset password — semua pegawai lintas klaster.</p>
+    <section class="card settings-card admin-card">
+      <div class="section-head">
+        <div class="section-icon users">♙</div>
+        <div>
+          <h2>Kelola Akun & Hak Akses</h2>
+          <p>Tambah, edit, nonaktifkan akun, atur role, klaster, Pustu, dan hak akses granular (RBAC).</p>
+        </div>
+      </div>
       <div id="msgBoxAdmin"></div>
+      <div class="table-card"><div class="tbl-wrap"><table><thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Klaster Utama</th><th>Lokasi Pustu</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tabelPegawai"><tr><td colspan="7">Memuat...</td></tr></tbody></table></div></div>
+    </section>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Nama</th><th>Email</th><th>Role</th><th>Klaster Utama</th><th>Lokasi Pustu</th><th>Status</th><th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="tabelPegawai"><tr><td colspan="7">Memuat...</td></tr></tbody>
-      </table>
-    </div>
-
-    <div class="card" style="--accent:#2f9e5c;">
-      <h2><span class="card-num" style="background:#2f9e5c;">＋</span> Tambah Pegawai Baru</h2>
+    <section class="card settings-card admin-card">
+      <div class="section-head">
+        <div class="section-icon add">＋</div>
+        <div>
+          <h2>Tambah Pegawai Baru</h2>
+          <p>Buat akun baru dan tentukan role serta penempatan awal pegawai.</p>
+        </div>
+      </div>
       <form id="formPegawaiBaru">
-        <div class="grid-2">
-          <div><label>Nama *</label><input type="text" id="npNama" required></div>
-          <div><label>NIP</label><input type="text" id="npNip"></div>
-        </div>
-        <div class="grid-2">
-          <div><label>Email *</label><input type="email" id="npEmail" required></div>
-          <div><label>Password Awal *</label><input type="password" id="npPassword" required minlength="6"></div>
-        </div>
-        <div class="grid-2">
-          <div>
-            <label>Role *</label>
-            <select id="npRole" required>
-              <option value="petugas">Petugas (Pendaftaran)</option>
-              <option value="staff">Staff (Pendaftaran)</option>
-              <option value="dokter">Dokter</option>
-              <option value="perawat">Perawat</option>
-              <option value="bidan">Bidan</option>
-              <option value="farmasi">Farmasi (Apotek)</option>
-              <option value="kepala_puskesmas">Kepala Puskesmas</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <div>
-            <label>Klaster Utama</label>
-            <select id="npKlaster"><option value="">- Tidak ada -</option></select>
-          </div>
-        </div>
-        <div class="grid-2">
-          <div>
-            <label>Lokasi Pustu</label>
-            <select id="npPustu"><option value="">- Bukan staff Pustu -</option></select>
-            <p style="font-size:11px; color:var(--muted); margin:4px 0 0;">Isi kalau pegawai ini ditugaskan di Pustu/Poskesdes/Polindes. Akunnya nanti cuma bisa buka halaman Pustu, gak ikut akses Klaster/Rekam Medis Induk.</p>
-          </div>
+        <div class="form-grid two">
+          <div><label for="npNama">Nama <span>*</span></label><input type="text" id="npNama" required placeholder="Nama lengkap"></div>
+          <div><label for="npNip">NIP</label><input type="text" id="npNip" placeholder="Nomor Induk Pegawai"></div>
+          <div><label for="npEmail">Email <span>*</span></label><input type="email" id="npEmail" required placeholder="email@puskesmas.go.id"></div>
+          <div><label for="npPassword">Password Awal <span>*</span></label><input type="password" id="npPassword" required minlength="6" placeholder="Minimal 6 karakter"></div>
+          <div><label for="npRole">Role <span>*</span></label><select id="npRole" required><option value="petugas">Petugas (Pendaftaran)</option><option value="staff">Staff (Pendaftaran)</option><option value="dokter">Dokter</option><option value="perawat">Perawat</option><option value="bidan">Bidan</option><option value="farmasi">Farmasi (Apotek)</option><option value="kepala_puskesmas">Kepala Puskesmas</option><option value="admin">Admin</option></select></div>
+          <div><label for="npKlaster">Klaster Utama</label><select id="npKlaster"><option value="">- Tidak ada -</option></select></div>
+          <div class="span-2"><label for="npPustu">Lokasi Pustu</label><select id="npPustu"><option value="">- Bukan staff Pustu -</option></select><small>Isi jika pegawai ditugaskan di Pustu/Poskesdes/Polindes.</small></div>
         </div>
         <button type="submit" class="btn-primary">Tambah Pegawai</button>
       </form>
-    </div>
+    </section>
 
-    <!-- Modal sederhana buat edit satu pegawai (akun, role, klaster, hak akses) -->
-    <div class="card" id="cardEditPegawai" style="display:none; --accent:#e0793c;">
-      <h2><span class="card-num" style="background:#e0793c;">✎</span> Edit Pegawai: <span id="editNamaLabel"></span></h2>
+    <section class="card settings-card admin-card" id="cardEditPegawai" style="display:none;">
+      <div class="section-head">
+        <div class="section-icon edit">✎</div>
+        <div><h2>Edit Pegawai: <span id="editNamaLabel"></span></h2><p>Perbarui akun, role, klaster, status, dan hak akses pegawai.</p></div>
+        <button type="button" class="close-card" onclick="tutupEdit()">Tutup</button>
+      </div>
       <div id="msgBoxEdit"></div>
 
-      <h3 style="font-size:14px; color:var(--navy); margin:12px 0 8px;">Akun</h3>
-      <div class="grid-2">
-        <div>
-          <label>Email</label>
-          <div style="display:flex; gap:8px;">
-            <input type="email" id="editEmail" style="margin-bottom:0;">
-            <button type="button" class="btn-secondary" onclick="simpanEmail()">Simpan</button>
-          </div>
-        </div>
-        <div>
-          <label>Reset Password</label>
-          <div style="display:flex; gap:8px;">
-            <input type="password" id="editPasswordBaru" placeholder="Password baru" minlength="6" style="margin-bottom:0;">
-            <button type="button" class="btn-secondary" onclick="resetPasswordPegawai()">Reset</button>
-          </div>
-        </div>
+      <div class="subsection"><h3>Akun</h3><div class="form-grid two"><div><label>Email</label><div class="inline-action"><input type="email" id="editEmail"><button type="button" class="btn-secondary" onclick="simpanEmail()">Simpan</button></div></div><div><label>Reset Password</label><div class="inline-action"><input type="password" id="editPasswordBaru" placeholder="Password baru" minlength="6"><button type="button" class="btn-secondary" onclick="resetPasswordPegawai()">Reset</button></div></div></div></div>
+
+      <div class="subsection"><h3>Role, Klaster & Status</h3><div class="form-grid three"><div><label>Role</label><select id="editRole"><option value="petugas">Petugas</option><option value="staff">Staff</option><option value="dokter">Dokter</option><option value="perawat">Perawat</option><option value="bidan">Bidan</option><option value="farmasi">Farmasi</option><option value="klaster1">Klaster 1 (khusus, akses cuma Klaster 1)</option><option value="kepala_puskesmas">Kepala Puskesmas</option><option value="admin">Admin</option></select></div><div><label>Klaster Utama</label><select id="editKlaster"><option value="">- Tidak ada -</option></select></div><div><label>Status Akun</label><select id="editAktif"><option value="true">Aktif</option><option value="false">Nonaktif</option></select></div><div class="span-3"><label>Lokasi Pustu</label><select id="editPustu"><option value="">- Bukan staff Pustu -</option></select><small>Isi jika pegawai ditugaskan di Pustu/Poskesdes/Polindes.</small></div></div><button type="button" class="btn-primary" onclick="simpanProfilPegawai()">Simpan Role / Klaster / Status</button></div>
+
+      <div class="subsection"><h3>Klaster Tambahan <span class="subtle">Akses lintas klaster</span></h3><div id="daftarKlasterTambahan"></div><button type="button" class="btn-secondary" onclick="tambahBarisKlaster()">＋ Klaster Tambahan</button></div>
+      <div class="subsection"><h3>Hak Akses Modul (RBAC) <span class="subtle">Opsional</span></h3><p class="helper">Contoh modul_kode: <code>rekam_medis</code> untuk akses Rekam Medis atau <code>manajemen</code> untuk akses Klaster 1 lintas role.</p><div id="daftarHakAkses"></div><button type="button" class="btn-secondary" onclick="tambahBarisHakAkses()">＋ Hak Akses</button></div>
+      <div class="form-actions"><button type="button" class="btn-primary" onclick="simpanAkses()">Simpan Klaster & Hak Akses</button><button type="button" class="btn-secondary" onclick="tutupEdit()">Tutup</button></div>
+    </section>
+
+    <section class="card settings-card admin-card" id="cardTarif" style="display:none;">
+      <div class="section-head">
+        <div class="section-icon tariff">Rp</div>
+        <div><h2>Master Tarif Umum</h2><p>Kelola tarif layanan pasien Umum & BPJS yang digunakan pada transaksi pelayanan.</p></div>
       </div>
-
-      <h3 style="font-size:14px; color:var(--navy); margin:16px 0 8px;">Role &amp; Klaster Utama</h3>
-      <div class="grid-3">
-        <div>
-          <label>Role</label>
-          <select id="editRole">
-            <option value="petugas">Petugas</option>
-            <option value="staff">Staff</option>
-            <option value="dokter">Dokter</option>
-            <option value="perawat">Perawat</option>
-            <option value="bidan">Bidan</option>
-            <option value="farmasi">Farmasi</option>
-            <option value="klaster1">Klaster 1 (khusus, akses cuma Klaster 1)</option>
-            <option value="kepala_puskesmas">Kepala Puskesmas</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <div>
-          <label>Klaster Utama</label>
-          <select id="editKlaster"><option value="">- Tidak ada -</option></select>
-        </div>
-        <div>
-          <label>Status Akun</label>
-          <select id="editAktif">
-            <option value="true">Aktif</option>
-            <option value="false">Nonaktif</option>
-          </select>
-        </div>
+      <div id="msgBoxTarif"></div>
+      <div class="filter-row">
+        <button type="button" class="lap-tab active" id="tarifFilter-Semua" onclick="filterTarif('Semua')">Semua</button><button type="button" class="lap-tab" id="tarifFilter-Administrasi" onclick="filterTarif('Administrasi')">Administrasi</button><button type="button" class="lap-tab" id="tarifFilter-Konsultasi" onclick="filterTarif('Konsultasi')">Konsultasi</button><button type="button" class="lap-tab" id="tarifFilter-Pemeriksaan" onclick="filterTarif('Pemeriksaan')">Pemeriksaan</button><button type="button" class="lap-tab" id="tarifFilter-Tindakan" onclick="filterTarif('Tindakan')">Tindakan</button><button type="button" class="lap-tab" id="tarifFilter-KiaKb" onclick="filterTarif('KIA & KB')">KIA & KB</button><button type="button" class="lap-tab" id="tarifFilter-GigiMulut" onclick="filterTarif('Gigi & Mulut')">Gigi & Mulut</button><button type="button" class="lap-tab" id="tarifFilter-Laboratorium" onclick="filterTarif('Laboratorium')">Laboratorium</button>
       </div>
-      <div class="grid-2">
-        <div>
-          <label>Lokasi Pustu</label>
-          <select id="editPustu"><option value="">- Bukan staff Pustu -</option></select>
-          <p style="font-size:11px; color:var(--muted); margin:4px 0 0;">Isi kalau pegawai ini ditugaskan di Pustu/Poskesdes/Polindes. Akunnya nanti cuma bisa buka halaman Pustu.</p>
-        </div>
-      </div>
-      <button type="button" class="btn-primary" onclick="simpanProfilPegawai()">Simpan Role/Klaster/Status</button>
+      <div class="table-card"><div class="tbl-wrap"><table><thead><tr><th>Kategori</th><th>Nama Layanan</th><th>Tarif Umum</th><th>Tarif BPJS</th><th>Dasar Hukum</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tabelTarif"><tr><td colspan="7">Memuat...</td></tr></tbody></table></div></div>
 
-      <h3 style="font-size:14px; color:var(--navy); margin:20px 0 8px;">Klaster Tambahan (akses lintas klaster)</h3>
-      <div id="daftarKlasterTambahan"></div>
-      <button type="button" class="btn-secondary" onclick="tambahBarisKlaster()">+ Klaster Tambahan</button>
-
-      <h3 style="font-size:14px; color:var(--navy); margin:20px 0 8px;">Hak Akses Modul (RBAC) — opsional, misal buat Kapus/KTU/Bendahara BOK lintas peran</h3>
-      <p style="font-size:11.5px; color:var(--muted); margin-bottom:8px;">Contoh modul_kode: <code>rekam_medis</code> (akses Rekam Medis walau role dasar bukan nakes), <code>manajemen</code> (akses halaman Klaster 1 walau role dasar bukan admin).</p>
-      <div id="daftarHakAkses"></div>
-      <button type="button" class="btn-secondary" onclick="tambahBarisHakAkses()">+ Hak Akses</button>
-
-      <div style="margin-top:16px;">
-        <button type="button" class="btn-primary" onclick="simpanAkses()">Simpan Klaster Tambahan &amp; Hak Akses</button>
-        <button type="button" class="btn-secondary" onclick="tutupEdit()">Tutup</button>
-      </div>
-    </div>
-
+      <div class="subsection tariff-form"><h3 id="tarifFormTitle">Tambah / Edit Tarif</h3><input type="hidden" id="tarifEditId"><div class="form-grid three"><div><label>Kategori <span>*</span></label><select id="tarifKategori" required><option value="Administrasi">Administrasi</option><option value="Konsultasi">Konsultasi</option><option value="Pemeriksaan">Pemeriksaan</option><option value="Tindakan">Tindakan</option><option value="KIA & KB">KIA & KB</option><option value="Gigi & Mulut">Gigi & Mulut</option><option value="Laboratorium">Laboratorium</option></select></div><div class="span-2"><label>Nama Layanan <span>*</span></label><input type="text" id="tarifNama" required placeholder="Mis. Jahit Luka (per jahitan)"></div><div><label>Status</label><select id="tarifAktif"><option value="true">Aktif</option><option value="false">Nonaktif</option></select></div><div><label>Tarif Umum (Rp) <span>*</span></label><input type="number" id="tarifUmum" required min="0" step="500"></div><div><label>Tarif BPJS (Rp)</label><input type="number" id="tarifBpjs" min="0" step="500" value="0"></div><div class="span-3"><label>Keterangan</label><input type="text" id="tarifKeterangan" placeholder="Opsional, mis. Ditanggung kapitasi BPJS FKTP"></div><div class="span-3"><label>Dasar Hukum</label><input type="text" id="tarifDasarHukum" placeholder="Contoh: Perbup / SK resmi yang berlaku"></div></div><button type="button" class="btn-primary" onclick="simpanTarif()">Simpan Tarif</button><button type="button" class="btn-secondary" id="btnBatalEditTarif" style="display:none;" onclick="batalEditTarif()">Batal Edit</button></div>
+    </section>
   </div>
 
-  <!-- ============ MASTER TARIF (admin only) ============ -->
-  <div class="card" id="cardTarif" style="display:none;">
-    <h2>Master Tarif Umum <span style="font-weight:400; font-size:12px; color:#6b7280;">(harga layanan buat pasien Umum &amp; BPJS — otomatis muncul saat dokter/perawat/bidan input pemeriksaan, tindakan, resep, atau lab)</span></h2>
-    <div id="msgBoxTarif"></div>
-
-    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
-      <button type="button" class="lap-tab active" id="tarifFilter-Semua" onclick="filterTarif('Semua')">Semua</button>
-      <button type="button" class="lap-tab" id="tarifFilter-Administrasi" onclick="filterTarif('Administrasi')">Administrasi</button>
-      <button type="button" class="lap-tab" id="tarifFilter-Konsultasi" onclick="filterTarif('Konsultasi')">Konsultasi</button>
-      <button type="button" class="lap-tab" id="tarifFilter-Pemeriksaan" onclick="filterTarif('Pemeriksaan')">Pemeriksaan</button>
-      <button type="button" class="lap-tab" id="tarifFilter-Tindakan" onclick="filterTarif('Tindakan')">Tindakan</button>
-      <button type="button" class="lap-tab" id="tarifFilter-KiaKb" onclick="filterTarif('KIA & KB')">KIA &amp; KB</button>
-      <button type="button" class="lap-tab" id="tarifFilter-GigiMulut" onclick="filterTarif('Gigi & Mulut')">Gigi &amp; Mulut</button>
-      <button type="button" class="lap-tab" id="tarifFilter-Laboratorium" onclick="filterTarif('Laboratorium')">Laboratorium</button>
-    </div>
-
-    <table>
-      <thead><tr><th>Kategori</th><th>Nama Layanan</th><th>Tarif Umum (Rp)</th><th>Tarif BPJS (Rp)</th><th>Dasar Hukum</th><th>Status</th><th>Aksi</th></tr></thead>
-      <tbody id="tabelTarif"><tr><td colspan="7">Memuat...</td></tr></tbody>
-    </table>
-
-    <h2 style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:16px;">Tambah / Edit Tarif</h2>
-    <input type="hidden" id="tarifEditId">
-    <div class="grid-3">
-      <div>
-        <label>Kategori *</label>
-        <select id="tarifKategori" required>
-          <option value="Administrasi">Administrasi</option>
-          <option value="Konsultasi">Konsultasi</option>
-          <option value="Pemeriksaan">Pemeriksaan</option>
-          <option value="Tindakan">Tindakan</option>
-          <option value="KIA & KB">KIA &amp; KB</option>
-          <option value="Gigi & Mulut">Gigi &amp; Mulut</option>
-          <option value="Laboratorium">Laboratorium</option>
-        </select>
-      </div>
-      <div><label>Nama Layanan *</label><input type="text" id="tarifNama" required placeholder="mis. Jahit Luka (per jahitan)"></div>
-      <div><label>Status</label>
-        <select id="tarifAktif"><option value="true">Aktif</option><option value="false">Nonaktif</option></select>
-      </div>
-    </div>
-    <div class="grid-2">
-      <div><label>Tarif Umum (Rp) *</label><input type="number" id="tarifUmum" required min="0" step="500"></div>
-      <div><label>Tarif BPJS (Rp)</label><input type="number" id="tarifBpjs" min="0" step="500" value="0"></div>
-    </div>
-    <label>Keterangan</label>
-    <input type="text" id="tarifKeterangan" placeholder="Opsional, mis. Ditanggung kapitasi BPJS FKTP">
-    <label>Dasar Hukum</label>
-    <input type="text" id="tarifDasarHukum" placeholder="mis. Perbup Inhil No. X Tahun 2024 / SK Direktur BLUD No. Y — wajib diedit tiap ada revisi tarif resmi">
-    <button type="button" class="btn-primary" onclick="simpanTarif()">Simpan Tarif</button>
-    <button type="button" class="btn-secondary" id="btnBatalEditTarif" style="display:none;" onclick="batalEditTarif()">Batal Edit</button>
-  </div>
-
-</div>
+  <footer class="page-footer">SIMPUS UPTD Puskesmas Bekawan • Halaman Pengaturan</footer>
+</main>
 
 <script src="js/supabaseClient.js"></script>
 <script>
@@ -774,4 +719,6 @@ document.getElementById("formPengajuanTugas").addEventListener("submit", async (
 </script>
 
 </body>
+</html>
+
 </html>
