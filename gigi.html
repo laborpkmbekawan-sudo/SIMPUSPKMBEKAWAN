@@ -8,14 +8,32 @@
 <link rel="stylesheet" href="css/tampilan-baru.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* ================= Poli Gigi & Mulut (skema Cyan/Merah, konsisten sama modul lain) ================= */
-.dash-content, .topbar { --navy:#0f2942; --navy-2:#173b5e; --teal-a:#1c7d7f; --teal-2:#26a3a0; --orange:#e0793c; --red:#c0503f; --green:#2f9e5c; --cyan:#1a7fa0; }
+/* ================= Poli Gigi & Mulut (tema terang, senada referensi baru) ================= */
+.dash-content, .topbar { --navy:#0b3b2e; --navy-2:#0f7a45; --teal-a:#1c7d7f; --teal-2:#16a36f; --orange:#e0793c; --red:#c0503f; --green:#2f9e5c; --cyan:#1a7fa0; }
 
-.sidebar { background: linear-gradient(180deg, #0e3a4a 0%, #1a7fa0 100%) !important; }
-.sidebar nav a.active { border-left: 3px solid #c0503f !important; background: rgba(255,255,255,.09) !important; }
-.sidebar nav a:hover { background: rgba(255,255,255,.06) !important; }
-.topbar h1 { color: var(--navy); }
-.ph-group-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.5); text-transform: uppercase; padding: 14px 18px 4px; }
+.sidebar { background:#ffffff !important; border-right:1px solid #e1e8e3; box-shadow:none !important; }
+.sidebar .brand { border-bottom:1px solid #e1e8e3; }
+.sidebar .brand .dot { background:#16a36f !important; }
+.sidebar .brand strong { color:#0b3b2e !important; }
+
+.sidebar nav a { color:#3d4a44 !important; }
+.sidebar nav a:hover { background:#eefaf3 !important; color:#0b3b2e !important; }
+.sidebar nav a.active { background:#e6f6ec !important; border-left:3px solid #16a36f !important; color:#0b3b2e !important; }
+.sidebar nav a .nav-ic { width:15px; height:15px; margin-right:8px; vertical-align:-3px; opacity:.75; }
+.sidebar nav a.active .nav-ic { opacity:1; }
+
+.ph-group-title { color:#8a978f !important; cursor:pointer; display:flex; align-items:center; justify-content:space-between; user-select:none; }
+.ph-group-title .chev { font-size:10px; transition:transform .18s ease; opacity:.7; }
+.ph-group-title.closed .chev { transform:rotate(-90deg); }
+.ph-group-body { overflow:hidden; max-height:700px; transition:max-height .22s ease; }
+.ph-group-body.closed { max-height:0; }
+
+.topbar { background:#ffffff !important; border-bottom:1px solid #e1e8e3; }
+.topbar h1 { color:#0b3b2e; display:flex; align-items:center; gap:10px; }
+.topbar h1::before { content:"🦷"; display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:9px; background:#16a36f; font-size:16px; }
+.topbar .user-info span#namaUser { font-weight:700; color:#0b3b2e; }
+.topbar button { background:#16a36f !important; }
+.topbar button:hover { background:#0f7a45 !important; }
 
 .dash-content .card { border-left: 4px solid var(--accent, var(--teal-2)); }
 .dash-content .card h2 { display: flex; align-items: center; gap: 8px; }
@@ -25,9 +43,10 @@
 .gg-segera .t { font-size: 14px; font-weight: 700; color: var(--navy-2); margin-bottom: 6px; }
 
 .gg-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
-.gg-stat-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; border-left:4px solid var(--accent,#999); }
-.gg-stat-card .label { font-size:11.5px; color:var(--muted); margin-bottom:6px; }
-.gg-stat-card .value { font-size:24px; font-weight:700; color:#111827; }
+.gg-stat-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px 18px; border-left:none !important; display:flex; align-items:center; gap:14px; }
+.gg-stat-card .badge-ic { width:44px; height:44px; border-radius:12px; background:var(--accent,#999); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:20px; color:#fff; }
+.gg-stat-card .label { font-size:11.5px; color:var(--muted); margin-bottom:4px; }
+.gg-stat-card .value { font-size:22px; font-weight:800; color:#111827; }
 
 .tag-status-gg { font-size:10px; padding:2px 8px; border-radius:5px; font-weight:700; background:#eef3fb; color:var(--navy-2); }
 .tag-status-gg.selesai { background:#e6f7ee; color:#16865c; }
@@ -66,37 +85,45 @@
 
     <nav>
     <div class="ph-group-title">Poli Gigi &amp; Mulut (Lintas Klaster)</div>
-    <a class="active" id="navDashboard" onclick="gantiSubtabGG('dashboard')">Dashboard</a>
+    <a class="active" id="navDashboard" onclick="gantiSubtabGG('dashboard')"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>Dashboard</a>
 
-    <div class="ph-group-title">Pelayanan</div>
-    <a id="navPeriksa" onclick="gantiSubtabGG('periksa')">Pemeriksaan Gigi &amp; Mulut</a>
-    <a id="navTindakan" onclick="gantiSubtabGG('tindakan')">Tindakan</a>
-    <a id="navPromotif" onclick="gantiSubtabGG('promotif')">Promotif &amp; Preventif</a>
+    <div class="ph-group-title" onclick="toggleGroup(this)">Pelayanan <span class="chev">▾</span></div>
+    <div class="ph-group-body">
+    <a id="navPeriksa" onclick="gantiSubtabGG('periksa')"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M8 2v4M16 2v4M3 10h18M8 15h.01M12 15h.01M16 15h.01"/></svg>Pemeriksaan Gigi &amp; Mulut</a>
+    <a id="navTindakan" onclick="gantiSubtabGG('tindakan')"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v6M12 16v6M4.9 4.9l4.2 4.2M14.9 14.9l4.2 4.2M2 12h6M16 12h6M4.9 19.1l4.2-4.2M14.9 9.1l4.2-4.2"/></svg>Tindakan</a>
+    <a id="navPromotif" onclick="gantiSubtabGG('promotif')"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Promotif &amp; Preventif</a>
+    </div>
 
-    <div class="ph-group-title">Data &amp; Rujukan</div>
-    <a id="navRujukan" onclick="gantiSubtabGG('rujukan')">Rujukan &amp; Permintaan Lab</a>
-    <a id="navRm" onclick="gantiSubtabGG('rm')">Rekam Medis &amp; Resep</a>
+    <div class="ph-group-title" onclick="toggleGroup(this)">Data &amp; Rujukan <span class="chev">▾</span></div>
+    <div class="ph-group-body">
+    <a id="navRujukan" onclick="gantiSubtabGG('rujukan')"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Rujukan &amp; Permintaan Lab</a>
+    <a id="navRm" onclick="gantiSubtabGG('rm')"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>Rekam Medis &amp; Resep</a>
+    </div>
 
-    <div class="ph-group-title">Laporan &amp; Audit</div>
-    <a id="navLaporanInternal" onclick="gantiSubtabGG('laporan-internal')">Laporan Internal</a>
-    <a id="navLaporanDinas" onclick="gantiSubtabGG('laporan-dinas')">Laporan ke Dinas Kesehatan</a>
-    <a id="navAudit" onclick="gantiSubtabGG('audit')">Audit / Keamanan</a>
+    <div class="ph-group-title" onclick="toggleGroup(this)">Laporan &amp; Audit <span class="chev">▾</span></div>
+    <div class="ph-group-body">
+    <a id="navLaporanInternal" onclick="gantiSubtabGG('laporan-internal')"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>Laporan Internal</a>
+    <a id="navLaporanDinas" onclick="gantiSubtabGG('laporan-dinas')"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7z"/></svg>Laporan ke Dinas Kesehatan</a>
+    <a id="navAudit" onclick="gantiSubtabGG('audit')"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 5v6c0 5.5 3.4 9 8 11 4.6-2 8-5.5 8-11V5z"/></svg>Audit / Keamanan</a>
+    </div>
 
-    <div class="ph-group-title">Modul Lain</div>
-    <a href="index.html">Pendaftaran</a>
-    <a href="rekam-medis.html">Rekam Medis</a>
-    <a href="apotek.html">Apotek</a>
-    <a href="ugd.html">UGD</a>
-    <a href="ranap.html">Rawat Inap</a>
-    <a href="klaster1.html">Klaster 1</a>
-    <a href="klaster2.html">Klaster 2</a>
-    <a href="klaster3.html">Klaster 3</a>
-    <a href="klaster4.html">Klaster 4</a>
-    <a href="pustu.html">Pustu</a>
-    <a href="pengaturan.html">Pengaturan</a>
-    <a href="kasir.html">Kasir</a>
-          <a href="papan-antrian.html">Papan Antrian</a>
-    <a href="kapus.html">Kepala Puskesmas</a>
+    <div class="ph-group-title closed" onclick="toggleGroup(this)">Modul Lain <span class="chev">▾</span></div>
+    <div class="ph-group-body closed">
+    <a href="index.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M1 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M19 8v6M22 11h-6"/></svg>Pendaftaran</a>
+    <a href="rekam-medis.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Rekam Medis</a>
+    <a href="apotek.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="9" width="18" height="12" rx="2"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>Apotek</a>
+    <a href="ugd.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>UGD</a>
+    <a href="ranap.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 18h18M3 18v2M21 18v2M3 12V8a2 2 0 0 1 2-2h6v6"/></svg>Rawat Inap</a>
+    <a href="klaster1.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M1 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/></svg>Klaster 1</a>
+    <a href="klaster2.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12s2.5-7 9-7 9 7 9 7-2.5 7-9 7-9-7-9-7z"/><circle cx="12" cy="12" r="3"/></svg>Klaster 2</a>
+    <a href="klaster3.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 5v6c0 5.5 3.4 9 8 11 4.6-2 8-5.5 8-11V5z"/></svg>Klaster 3</a>
+    <a href="klaster4.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Klaster 4</a>
+    <a href="pustu.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>Pustu</a>
+    <a href="pengaturan.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Pengaturan</a>
+    <a href="kasir.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>Kasir</a>
+    <a href="papan-antrian.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Papan Antrian</a>
+    <a href="kapus.html"><svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/><path d="m9 12 2 2 4-4"/></svg>Kepala Puskesmas</a>
+    </div>
     </nav>
   </aside>
 
@@ -119,16 +146,16 @@
 
         <div class="gg-stat-grid">
           <div class="gg-stat-card" style="--accent:#1a7fa0;">
-            <div class="label">Pemeriksaan Gigi Hari Ini</div>
-            <div class="value" id="statPeriksaGG">0</div>
+            <div class="badge-ic">🦷</div>
+            <div><div class="label">Pemeriksaan Gigi Hari Ini</div><div class="value" id="statPeriksaGG">0</div></div>
           </div>
           <div class="gg-stat-card" style="--accent:#e0793c;">
-            <div class="label">Tindakan Hari Ini</div>
-            <div class="value" id="statTindakanGG">0</div>
+            <div class="badge-ic">🩺</div>
+            <div><div class="label">Tindakan Hari Ini</div><div class="value" id="statTindakanGG">0</div></div>
           </div>
           <div class="gg-stat-card" style="--accent:#c0503f;">
-            <div class="label">Alert Kontrol Lanjutan</div>
-            <div class="value">-</div>
+            <div class="badge-ic">⚠️</div>
+            <div><div class="label">Alert Kontrol Lanjutan</div><div class="value">-</div></div>
           </div>
         </div>
 
@@ -614,6 +641,15 @@ let profilSaya = null;
 
   await muatDashboardGG();
 })();
+
+// ---------- Accordion menu sidebar ----------
+function toggleGroup(el) {
+  el.classList.toggle("closed");
+  const body = el.nextElementSibling;
+  if (body && body.classList.contains("ph-group-body")) {
+    body.classList.toggle("closed");
+  }
+}
 
 // ---------- Sub-tab nav ----------
 const SUBTAB_GG = ["dashboard", "periksa", "tindakan", "promotif", "rujukan", "rm", "laporan-internal", "laporan-dinas", "audit"];
