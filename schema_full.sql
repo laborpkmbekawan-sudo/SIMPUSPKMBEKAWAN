@@ -4668,3 +4668,20 @@ create trigger trg_audit_program_rpk after insert or update or delete on program
 -- ============================================================
 -- SELESAI section 104. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 105. INTEGRASI SILAB — kolom jembatan di rujukan_lab_k3
+--      (Klaster 3, sama konsepnya kayak section 103 di rujukan_lab)
+--      Sebelumnya diberi nomor 104, direnumber jadi 105 karena
+--      104 sudah dipakai fitur Akun Pemegang Program.
+--      Idempotent, aman diulang.
+-- ============================================================
+
+alter table rujukan_lab_k3 add column if not exists silab_pasien_id uuid;
+alter table rujukan_lab_k3 add column if not exists silab_dikirim_at timestamptz;
+
+create index if not exists idx_rujukan_lab_k3_silab_pasien on rujukan_lab_k3(silab_pasien_id);
+
+-- ============================================================
+-- SELESAI section 105. Idempotent, aman diulang.
+-- ============================================================

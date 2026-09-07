@@ -113,7 +113,6 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
     <a href="gigi.html">Poli Gigi</a>
           <a href="papan-antrian.html">Papan Antrian</a>
     <a href="kapus.html">Kepala Puskesmas</a>
-    <a href="pemegang-program.html">Pemegang Program</a>
     </nav>
   </aside>
 
@@ -760,6 +759,7 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
 </div>
 
 <script src="js/supabaseClient.js"></script>
+<script src="js/silabClient.js"></script>
 <script>
 let profilSaya = null;
 let pasienTerpilihUgd = null;
@@ -1123,7 +1123,7 @@ async function pilihPasienTindakan(kunjunganUgdId) {
   const [{ data: kData }, { data: tindData }, { data: citoData }] = await Promise.all([
     supabaseClient.from("kunjungan").select("kesadaran, gcs, saturasi_o2, tekanan_darah, nadi, respirasi, suhu").eq("id", p.kunjungan_id).single(),
     supabaseClient.from("tindakan_medis").select("daftar_tindakan, created_at, profil_pegawai:petugas_id(nama)").eq("kunjungan_id", p.kunjungan_id).order("created_at", { ascending: false }),
-    supabaseClient.from("rujukan_lab").select("jenis_pemeriksaan, status, is_cito, created_at").eq("kunjungan_asal_id", p.kunjungan_id).order("created_at", { ascending: false })
+    supabaseClient.from("rujukan_lab").select("jenis_pemeriksaan, status, is_cito, created_at, silab_pasien_id").eq("kunjungan_asal_id", p.kunjungan_id).order("created_at", { ascending: false })
   ]);
 
   const { data: ugdData } = await supabaseClient.from("kunjungan_ugd").select("diagnosis_kerja").eq("id", p.id).single();
@@ -1153,11 +1153,28 @@ async function pilihPasienTindakan(kunjunganUgdId) {
   if (!citoData || !citoData.length) {
     citoDiv.innerHTML = "";
   } else {
-    citoDiv.innerHTML = `<h2 style="margin-top:14px; font-size:13px;">Riwayat Permintaan Cito</h2>` + citoData.map(c => `
+    citoDiv.innerHTML = `<h2 style="margin-top:14px; font-size:13px;">Riwayat Permintaan Cito</h2>` +
+      `<div id="riwayatCitoList">Memuat hasil siLab...</div>`;
+
+    const barisCito = await Promise.all(citoData.map(async c => {
+      let hasilTxt = "";
+      if (c.silab_pasien_id) {
+        const h = await ambilStatusHasilSilab(c.silab_pasien_id);
+        if (h && h.hasil.length) {
+          hasilTxt = `<br><span class="badge ${BADGE_STATUS_SILAB[h.status] || "badge-menunggu"}">${h.status}</span> ` +
+            h.hasil.map(it => `${it.nama}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}`).join(", ");
+        } else if (h) {
+          hasilTxt = `<br><span class="badge ${BADGE_STATUS_SILAB[h.status] || "badge-menunggu"}">${h.status}</span> Belum ada hasil dari siLab.`;
+        }
+      }
+      return `
       <div style="font-size:12.5px; padding:8px 0; border-bottom:1px dashed var(--border);">
         ${jamSingkat(c.created_at)} — ${c.jenis_pemeriksaan} — <span class="badge-status-ugd ${c.status === "selesai" ? "pulang" : "baru"}">${c.status === "selesai" ? "Selesai" : "Menunggu"}</span>
+        ${hasilTxt}
       </div>
-    `).join("");
+    `;
+    }));
+    document.getElementById("riwayatCitoList").innerHTML = barisCito.join("");
   }
 }
 
@@ -1295,7 +1312,35 @@ async function ajukanCito() {
     if (err) { peringatan = " (Peringatan: gagal catat sebagian tagihan lab — cek Master Tarif/koneksi.)"; break; }
   }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Permintaan cito diajukan — antrian No. ${noAntrianLab} di Laboratorium.${peringatan}</div>`;
+  // Kirim juga ke siLab (project terpisah), ditandai CITO/prioritas.
+  const { data: pasienLengkap } = await supabaseClient
+    .from("pasien")
+    .select("nik, no_kk, nama, tanggal_lahir, jenis_kelamin, alamat, no_hp, no_rm")
+    .eq("id", kunjunganTerpilihTindakan.pasien_id)
+    .single();
+
+  let pesanSilab = "";
+  if (pasienLengkap) {
+    const hasilSilab = await kirimPermintaanLabKeSilab({
+      pasien: pasienLengkap,
+      jenisLabText: jenis,
+      asalUnit: "UGD (CITO)",
+      dokterPengirim: profilSaya?.nama || "",
+      noRujukanSimpus: noKunjunganLab,
+      penjamin: p.kunjungan?.jenis_bayar === "bpjs" ? "BPJS" : "Umum"
+    });
+    if (hasilSilab) {
+      await supabaseClient.from("rujukan_lab").update({
+        silab_pasien_id: hasilSilab.silabPasienId,
+        silab_dikirim_at: new Date().toISOString()
+      }).eq("kunjungan_tujuan_id", kunjunganLab.id);
+      pesanSilab = " Permintaan CITO juga sudah terkirim ke siLab.";
+    } else {
+      pesanSilab = " (Gagal terkirim ke siLab — cek koneksi, antrian LK lokal tetap tersimpan.)";
+    }
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Permintaan cito diajukan — antrian No. ${noAntrianLab} di Laboratorium.${peringatan}${pesanSilab}</div>`;
   document.getElementById("tindJenisCito").value = "";
   document.querySelectorAll(".citoTarifItem").forEach(cb => cb.checked = false);
   await pilihPasienTindakan(kunjunganTerpilihTindakan.id);
