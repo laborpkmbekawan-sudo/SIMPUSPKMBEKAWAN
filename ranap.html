@@ -100,7 +100,6 @@ tr.ranap-row-clickable:hover td { background:#f7fafb; }
     <a href="kasir.html">Kasir</a>
           <a href="papan-antrian.html">Papan Antrian</a>
     <a href="kapus.html">Kepala Puskesmas</a>
-    <a href="pemegang-program.html">Pemegang Program</a>
     </nav>
   </aside>
 
@@ -537,8 +536,8 @@ tr.ranap-row-clickable:hover td { background:#f7fafb; }
           <button class="btn-primary" onclick="simpanLabRanap()">Ajukan Permintaan Lab</button>
 
           <table style="margin-top:14px;">
-            <thead><tr><th>Waktu</th><th>Jenis Pemeriksaan</th><th>Prioritas</th><th>Status</th></tr></thead>
-            <tbody id="tabelLabRanap"><tr><td colspan="4">Pilih pasien dulu.</td></tr></tbody>
+            <thead><tr><th>Waktu</th><th>Jenis Pemeriksaan</th><th>Prioritas</th><th>Status</th><th>Hasil (siLab)</th></tr></thead>
+            <tbody id="tabelLabRanap"><tr><td colspan="5">Pilih pasien dulu.</td></tr></tbody>
           </table>
         </div>
 
@@ -885,6 +884,7 @@ tr.ranap-row-clickable:hover td { background:#f7fafb; }
 </div>
 
 <script src="js/supabaseClient.js"></script>
+<script src="js/silabClient.js"></script>
 <script>
 let profilSaya = null;
 let pasienTerpilihAdmisi = null;
@@ -1618,18 +1618,36 @@ function toggleJenisRujukanRanap() {
 async function muatRiwayatLabRanap(kunjunganRanapId) {
   const p = pasienAktifCacheRjkRanap.find(x => x.id === kunjunganRanapId);
   const tbody = document.getElementById("tabelLabRanap");
-  if (!p) { tbody.innerHTML = `<tr><td colspan="4">Data pasien tidak ditemukan.</td></tr>`; return; }
+  if (!p) { tbody.innerHTML = `<tr><td colspan="5">Data pasien tidak ditemukan.</td></tr>`; return; }
 
   const { data, error } = await supabaseClient
     .from("rujukan_lab")
-    .select("jenis_pemeriksaan, is_cito, status, created_at")
+    .select("jenis_pemeriksaan, is_cito, status, created_at, silab_pasien_id")
     .eq("kunjungan_asal_id", p.kunjungan_id)
     .order("created_at", { ascending: false });
 
-  if (error) { tbody.innerHTML = `<tr><td colspan="4">Gagal muat: ${error.message}</td></tr>`; return; }
-  tbody.innerHTML = !data.length
-    ? `<tr><td colspan="4">Belum ada permintaan lab.</td></tr>`
-    : data.map(l => `<tr><td>${jamSingkatRanap(l.created_at)}</td><td>${l.jenis_pemeriksaan}</td><td>${l.is_cito ? "Cito" : "Reguler"}</td><td><span class="badge-status-ranap ${l.status === "selesai" ? "pulang" : "baru"}">${l.status === "selesai" ? "Selesai" : "Menunggu"}</span></td></tr>`).join("");
+  if (error) { tbody.innerHTML = `<tr><td colspan="5">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="5">Belum ada permintaan lab.</td></tr>`; return; }
+
+  tbody.innerHTML = `<tr><td colspan="5">Memuat hasil siLab...</td></tr>`;
+
+  const baris = await Promise.all(data.map(async l => {
+    let hasilTxt = "-";
+    if (l.silab_pasien_id) {
+      const h = await ambilStatusHasilSilab(l.silab_pasien_id);
+      if (h && h.hasil.length) {
+        hasilTxt = `<span class="badge ${BADGE_STATUS_SILAB[h.status] || "badge-menunggu"}">${h.status}</span> ` +
+          h.hasil.map(it => `${it.nama}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}`).join(", ");
+      } else if (h) {
+        hasilTxt = `<span class="badge ${BADGE_STATUS_SILAB[h.status] || "badge-menunggu"}">${h.status}</span> Belum ada hasil.`;
+      } else {
+        hasilTxt = `<span style="color:var(--muted);">Gagal ambil dari siLab.</span>`;
+      }
+    }
+    return `<tr><td>${jamSingkatRanap(l.created_at)}</td><td>${l.jenis_pemeriksaan}</td><td>${l.is_cito ? "Cito" : "Reguler"}</td><td><span class="badge-status-ranap ${l.status === "selesai" ? "pulang" : "baru"}">${l.status === "selesai" ? "Selesai" : "Menunggu"}</span></td><td>${hasilTxt}</td></tr>`;
+  }));
+
+  tbody.innerHTML = baris.join("");
 }
 
 async function simpanLabRanap() {
@@ -1677,7 +1695,36 @@ async function simpanLabRanap() {
 
   if (errRl) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan permintaan lab: ${errRl.message}</div>`; return; }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Permintaan lab diajukan — antrian No. ${noAntrian} di Laboratorium.</div>`;
+  // Kirim juga ke siLab (project terpisah) supaya diproses di sana &
+  // hasilnya kebaca balik di sini.
+  const { data: pasienLengkap } = await supabaseClient
+    .from("pasien")
+    .select("nik, no_kk, nama, tanggal_lahir, jenis_kelamin, alamat, no_hp, no_rm")
+    .eq("id", p.pasien_id)
+    .single();
+
+  let pesanSilab = "";
+  if (pasienLengkap) {
+    const hasilSilab = await kirimPermintaanLabKeSilab({
+      pasien: pasienLengkap,
+      jenisLabText: jenis,
+      asalUnit: isCito ? "Rawat Inap (CITO)" : "Rawat Inap",
+      dokterPengirim: profilSaya?.nama || "",
+      noRujukanSimpus: noKunjungan,
+      penjamin: p.kunjungan?.jenis_bayar === "bpjs" ? "BPJS" : "Umum"
+    });
+    if (hasilSilab) {
+      await supabaseClient.from("rujukan_lab").update({
+        silab_pasien_id: hasilSilab.silabPasienId,
+        silab_dikirim_at: new Date().toISOString()
+      }).eq("kunjungan_tujuan_id", kunjunganLab.id);
+      pesanSilab = " Permintaan juga sudah terkirim ke siLab.";
+    } else {
+      pesanSilab = " (Gagal terkirim ke siLab — cek koneksi, antrian LK lokal tetap tersimpan.)";
+    }
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Permintaan lab diajukan — antrian No. ${noAntrian} di Laboratorium.${pesanSilab}</div>`;
   document.getElementById("rjkRanapJenisLab").value = "";
   document.getElementById("rjkRanapLabCito").checked = false;
   await muatRiwayatLabRanap(kunjunganRanapId);
