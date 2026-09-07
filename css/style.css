@@ -171,6 +171,14 @@ tr:hover td { background: #fafcfc; }
 .badge-narkotika { background: #fce7f3; color: #9d174d; }
 .badge-psikotropika { background: #ede9fe; color: #5b21b6; }
 .badge-keras { background: #fff4d6; color: #b77900; }
+.badge-draft { background: #f0f5f6; color: #66808c; }
+.badge-diajukan { background: #fff4d6; color: #b77900; }
+.badge-disetujui { background: #e5f7ef; color: #16865c; }
+.badge-ditolak { background: #fde7e9; color: #c62836; }
+.badge-terjadwal { background: #e8f1ff; color: #216ac5; }
+.badge-terlaksana { background: #e5f7ef; color: #16865c; }
+.badge-tertunda { background: #fff4d6; color: #b77900; }
+.badge-dibatalkan { background: #fde7e9; color: #c62836; }
 
 .msg { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 14px; }
 .msg-error { background: #fee2e2; color: #991b1b; }

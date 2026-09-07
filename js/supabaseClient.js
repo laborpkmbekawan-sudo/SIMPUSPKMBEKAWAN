@@ -208,14 +208,15 @@ async function panggilAdmin(action, payload) {
 // akses ke rekam-medis.html, walau role dasarnya bukan dokter/perawat/bidan.
 // ============================================================
 const AKSES_HALAMAN = {
-  admin: ["index.html", "rekam-medis.html", "apotek.html", "ugd.html", "ranap.html", "klaster1.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "kasir.html", "papan-antrian.html", "pustu.html", "kapus.html"],
+  admin: ["index.html", "rekam-medis.html", "apotek.html", "ugd.html", "ranap.html", "klaster1.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "kasir.html", "papan-antrian.html", "pustu.html", "kapus.html", "pemegang-program.html"],
   petugas: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html", "papan-antrian.html"],
   staff: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html", "papan-antrian.html"],
   dokter: ["rekam-medis.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
   perawat: ["rekam-medis.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
   bidan: ["rekam-medis.html", "ugd.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
   farmasi: ["apotek.html", "pengaturan.html", "papan-antrian.html"],
-  kepala_puskesmas: ["kapus.html"]
+  kepala_puskesmas: ["kapus.html"],
+  pemegang_program: ["pemegang-program.html"]
 };
 
 // Peta modul_kode (di tabel hak_akses) -> halaman .html yang dibuka.
@@ -238,7 +239,8 @@ const MODUL_KE_HALAMAN = {
   kasir: "kasir.html",
   pengaturan: "pengaturan.html",
   papan_antrian: "papan-antrian.html",
-  kapus: "kapus.html"
+  kapus: "kapus.html",
+  pemegang_program: "pemegang-program.html"
 };
 
 // Hitung daftar halaman yang boleh diakses profil ini: role dasar + tambahan
