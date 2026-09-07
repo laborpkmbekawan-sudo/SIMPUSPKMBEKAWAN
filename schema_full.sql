@@ -4700,3 +4700,24 @@ create index if not exists idx_rujukan_lab_k4_silab_pasien on rujukan_lab_k4(sil
 -- ============================================================
 -- SELESAI section 106. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 107. INTEGRASI SILAB — kolom jembatan di lab_bumil_pustu
+--      (Pustu, Lab Bumil Tripel Eliminasi: HBsAg/HIV/Sifilis)
+--      Catatan: ini tes KUALITATIF (Reaktif/Non-Reaktif), beda dari
+--      pemeriksaan kuantitatif biasa yang jadi dasar desain siLab.
+--      Hasil tetap bisa kekirim & kebaca (siLab simpan hasil sebagai
+--      teks bebas), tapi nama parameternya baru kebaca rapi di siLab
+--      kalau HBsAg/HIV/Sifilis sudah ditambahin ke master Parameter
+--      siLab (dilakukan manual sekali oleh admin siLab, di luar SIMPUS).
+--      Idempotent, aman diulang.
+-- ============================================================
+
+alter table lab_bumil_pustu add column if not exists silab_pasien_id uuid;
+alter table lab_bumil_pustu add column if not exists silab_dikirim_at timestamptz;
+
+create index if not exists idx_lab_bumil_pustu_silab_pasien on lab_bumil_pustu(silab_pasien_id);
+
+-- ============================================================
+-- SELESAI section 107. Idempotent, aman diulang.
+-- ============================================================

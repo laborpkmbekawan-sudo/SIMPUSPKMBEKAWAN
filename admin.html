@@ -4,262 +4,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Admin - SIMPUS Bekawan</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  :root{
-    --ink:#12261F;
-    --ink-2:#1D3A2E;
-    --paper:#EEF2ED;
-    --card:#FFFFFF;
-    --line:#D7E0D6;
-    --brass:#A9762C;
-    --brass-soft:#F1E4CE;
-    --teal:#1F6F5C;
-    --teal-soft:#E3EFE9;
-    --text:#17241D;
-    --text-muted:#5B6B60;
-    --red:#B23A2E;
-    --red-soft:#F7E7E4;
-  }
-  *{ box-sizing:border-box; }
-  body{
-    margin:0;
-    background:var(--paper);
-    color:var(--text);
-    font-family:'Public Sans', sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  h1,h2,h3,.display{ font-family:'Fraunces', serif; }
-
-  /* ---------- Plang / bar atas ---------- */
-  .plang{
-    background:var(--ink);
-    color:#fff;
-    border-bottom:3px solid var(--brass);
-    padding:16px 32px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:16px;
-    flex-wrap:wrap;
-  }
-  .plang .brand{ display:flex; align-items:center; gap:12px; }
-  .plang .dot{
-    width:14px; height:14px; border-radius:50%;
-    background:var(--brass); flex:none;
-  }
-  .plang .brand-text .nama-instansi{
-    font-weight:700; letter-spacing:.03em; font-size:14px;
-  }
-  .plang .brand-text .sub{
-    font-size:11.5px; color:#c9d6cf; margin-top:1px;
-  }
-  .plang .akun{ display:flex; align-items:center; gap:12px; }
-  .plang .avatar{
-    width:32px; height:32px; border-radius:50%;
-    background:var(--brass); color:var(--ink);
-    display:flex; align-items:center; justify-content:center;
-    font-weight:700; font-size:13px; flex:none;
-  }
-  .plang .akun-text{ font-size:12.5px; line-height:1.3; }
-  .plang .akun-text .nama{ font-weight:600; }
-  .plang .akun-text .peran{ color:#c9d6cf; }
-  .plang button{
-    background:transparent;
-    border:1px solid rgba(255,255,255,.35);
-    color:#fff;
-    padding:7px 14px;
-    border-radius:6px;
-    font-family:'Public Sans', sans-serif;
-    font-size:12.5px;
-    cursor:pointer;
-  }
-  .plang button:hover{ background:rgba(255,255,255,.1); }
-
-  /* ---------- Wrapper konten ---------- */
-  .board{ max-width:900px; margin:0 auto; padding:36px 24px 64px; }
-
-  .tanggal{ font-size:13px; color:var(--text-muted); margin-bottom:2px; }
-  .board h1{
-    font-weight:500; font-size:30px; margin:0 0 22px;
-    color:var(--ink-2);
-  }
-
-  /* ---------- Stat chips ---------- */
-  .stat-row{
-    display:grid;
-    grid-template-columns:1.3fr 1fr 1fr;
-    gap:14px;
-    margin-bottom:36px;
-  }
-  .stat-chip{
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:16px 18px;
-  }
-  .stat-chip.hero{ background:var(--teal-soft); border-color:var(--teal); }
-  .stat-chip .label{
-    font-size:11.5px; color:var(--text-muted);
-    text-transform:none; letter-spacing:.01em;
-  }
-  .stat-chip .num{
-    font-family:'Fraunces', serif;
-    font-weight:500;
-    margin-top:4px;
-  }
-  .stat-chip.hero .num{ font-size:40px; color:var(--ink-2); }
-  .stat-chip:not(.hero) .num{ font-size:26px; color:var(--ink-2); }
-
-  /* ---------- Ledger wilayah kerja ---------- */
-  .section-title{
-    font-size:12px; font-weight:700; color:var(--text-muted);
-    letter-spacing:.06em; margin:0 0 10px;
-    padding-bottom:6px; border-bottom:1px solid var(--line);
-  }
-  .ledger{ margin-bottom:36px; }
-  .ledger-row{
-    display:flex; align-items:baseline; gap:8px;
-    padding:9px 2px;
-    border-bottom:1px dotted var(--line);
-    font-size:14px;
-  }
-  .ledger-row:last-child{ border-bottom:none; }
-  .ledger-row .nama-lokasi{ flex:none; color:var(--text); }
-  .ledger-row .leader{
-    flex:1; border-bottom:1px dotted var(--line);
-    position:relative; top:-4px;
-  }
-  .ledger-row .jumlah{
-    flex:none; font-variant-numeric:tabular-nums;
-    font-weight:600; color:var(--ink-2); min-width:90px; text-align:right;
-  }
-
-  /* ---------- Modul launcher (gaya direktori) ---------- */
-  .modul-group{ margin-bottom:30px; }
-  .modul-list{ background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
-  .modul-row{
-    display:flex; align-items:center; gap:14px;
-    padding:13px 16px;
-    text-decoration:none; color:var(--text);
-    border-bottom:1px solid var(--line);
-    transition:background .12s ease;
-  }
-  .modul-row:last-child{ border-bottom:none; }
-  .modul-row:hover{ background:var(--brass-soft); }
-  .modul-row:hover .panah{ transform:translateX(3px); }
-  .modul-row .ikon{ font-size:18px; flex:none; width:22px; text-align:center; }
-  .modul-row .teks{ flex:1; min-width:0; }
-  .modul-row .teks .nama{ font-weight:600; font-size:14px; }
-  .modul-row .teks .ket{ font-size:12px; color:var(--text-muted); margin-top:1px; }
-  .modul-row .panah{ flex:none; color:var(--brass); transition:transform .12s ease; }
-
-  footer{
-    text-align:center; font-size:11.5px; color:var(--text-muted);
-    padding:20px 0 10px;
-  }
-
-  @media (max-width:640px){
-    .plang{ padding:14px 18px; }
-    .board{ padding:26px 16px 48px; }
-    .stat-row{ grid-template-columns:1fr; }
-    .board h1{ font-size:24px; }
-  }
+<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{--navy:#102f49;--navy2:#163c5b;--teal:#0d9d86;--teal2:#087966;--soft:#e9f8f4;--bg:#f4f7f8;--card:#fff;--line:#e1e8ec;--text:#18384a;--muted:#718795;--shadow:0 6px 20px rgba(24,56,74,.07)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,Arial,sans-serif;color:var(--text);background:var(--bg)}button,a{font:inherit}a{text-decoration:none;color:inherit}
+.app{min-height:100vh;display:flex}.sidebar{width:250px;flex:0 0 250px;background:linear-gradient(180deg,var(--navy),#0d2941);color:#dce9f1;position:fixed;inset:0 auto 0 0;z-index:30;display:flex;flex-direction:column;box-shadow:5px 0 18px rgba(12,35,53,.08)}
+.brand{height:84px;padding:18px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08)}.logo{width:43px;height:43px;border:2px solid #66d5c1;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#66d5c1;position:relative;flex:none}.logo:before,.logo:after{content:"";position:absolute;background:#66d5c1;border-radius:2px}.logo:before{width:22px;height:8px}.logo:after{height:22px;width:8px}.brand-text strong{display:block;color:#fff;font-size:15px;line-height:1.15}.brand-text span{display:block;color:#9fb8c8;font-size:10px;margin-top:4px}
+.nav{padding:18px 10px 24px;overflow:auto;flex:1}.nav-label{color:#7190a4;font-size:10px;font-weight:800;letter-spacing:.08em;padding:0 12px 8px;margin-top:12px}.nav-label:first-child{margin-top:0}.nav-item,.nav-toggle{width:100%;border:0;background:transparent;color:#dbe8ef;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;cursor:pointer;text-align:left;font-size:12.5px;font-weight:600;margin:2px 0}.nav-item:hover,.nav-toggle:hover{background:rgba(255,255,255,.07);color:#fff}.nav-item.active{background:rgba(38,91,123,.75);color:#fff;border-left:3px solid #17b99d;padding-left:9px}.nav-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:#9fc0d0;flex:none}.nav-item.active .nav-icon{color:#5ee0c7}.nav-toggle .chev{margin-left:auto;transition:.2s}.nav-toggle.open .chev{transform:rotate(180deg)}.nav-sub{display:none;padding:0 0 4px 34px}.nav-sub.open{display:block}.nav-sub a{display:block;padding:8px 10px;color:#a9bfcc;font-size:11.5px;border-radius:6px;margin:1px 0}.nav-sub a:hover{background:rgba(255,255,255,.06);color:#fff}.sidebar-bottom{padding:13px 16px;border-top:1px solid rgba(255,255,255,.08);color:#7893a5;font-size:10px;line-height:1.5}
+.main{margin-left:250px;min-width:0;flex:1}.topbar{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;z-index:20}.page-heading small{display:block;color:var(--muted);font-size:10.5px;margin-bottom:3px}.page-heading strong{font-size:18px;color:var(--navy);font-weight:800}.account{display:flex;align-items:center;gap:12px}.avatar{width:38px;height:38px;border-radius:50%;background:var(--soft);color:var(--teal2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;border:1px solid #c8ece4}.account-info{line-height:1.25}.account-info .name{font-size:12px;font-weight:700;color:var(--navy)}.account-info .role{font-size:10px;color:var(--muted);margin-top:3px}.btn-logout{border:1px solid #d8e2e7;background:#fff;color:#526b79;padding:8px 13px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer}.btn-logout:hover{background:#f5f8f9;color:var(--navy)}
+.content{padding:27px 30px 40px;max-width:1500px;margin:auto}.welcome{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;gap:20px}.welcome h1{margin:0;color:var(--navy);font-size:25px;line-height:1.2}.welcome p{margin:7px 0 0;color:var(--muted);font-size:12px}.date-pill{padding:9px 13px;border:1px solid var(--line);background:#fff;border-radius:8px;color:#58717f;font-size:11px;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:17px 18px;box-shadow:var(--shadow);min-height:112px}.stat-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.stat-label{font-size:11px;color:var(--muted);font-weight:600}.stat-icon{width:32px;height:32px;border-radius:9px;background:var(--soft);color:var(--teal2);display:flex;align-items:center;justify-content:center;font-size:15px}.stat-num{font-size:28px;color:var(--navy);font-weight:800;margin-top:12px;line-height:1}.stat-note{font-size:9.5px;color:#8ba0aa;margin-top:7px}.stat.primary{background:linear-gradient(135deg,#0e9f87,#087965);border-color:transparent}.stat.primary .stat-label,.stat.primary .stat-num,.stat.primary .stat-note{color:#fff}.stat.primary .stat-icon{background:rgba(255,255,255,.15);color:#fff}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:18px}.card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}.card-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}.card-title{font-size:13px;font-weight:800;color:var(--navy)}.card-sub{font-size:10px;color:var(--muted);margin-top:3px}.card-body{padding:0 18px 16px}.table{width:100%;border-collapse:collapse}.table th{text-align:left;padding:12px 8px;background:#f7f9fa;color:#6e8591;font-size:9.5px;letter-spacing:.04em;font-weight:800}.table td{padding:13px 8px;border-bottom:1px solid #edf1f3;font-size:11.5px;color:#385766}.table tr:last-child td{border-bottom:0}.table td:last-child{text-align:right;font-weight:800;color:var(--navy)}.status{display:inline-flex;padding:4px 8px;border-radius:999px;background:var(--soft);color:var(--teal2);font-size:9px;font-weight:700}.quick-list{display:grid;gap:9px}.quick{display:flex;align-items:center;gap:11px;padding:10px 11px;border:1px solid #e8eef1;border-radius:9px;background:#fbfcfc;transition:.15s}.quick:hover{border-color:#bfe4dc;background:#f3fbf8;transform:translateX(2px)}.quick-icon{width:34px;height:34px;border-radius:8px;background:#edf7f5;color:var(--teal2);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}.quick strong{display:block;font-size:11px;color:var(--navy)}.quick span{display:block;font-size:9.5px;color:var(--muted);margin-top:3px}.quick-arrow{margin-left:auto;color:#9ab0bb;font-size:14px}.modules{margin-top:18px}.module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;padding:18px}.module{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff;transition:.15s;display:flex;gap:12px;align-items:flex-start}.module:hover{border-color:#bfe4dc;box-shadow:0 5px 15px rgba(10,120,100,.07);transform:translateY(-1px)}.module .micon{width:35px;height:35px;border-radius:9px;background:#f0f7f6;color:var(--teal2);display:flex;align-items:center;justify-content:center;flex:none;font-size:14px;font-weight:700}.module strong{display:block;font-size:11px;color:var(--navy)}.module span{display:block;font-size:9.5px;color:var(--muted);margin-top:4px;line-height:1.45}footer{text-align:center;color:#91a3ac;font-size:9.5px;padding:22px 0 4px}.mobile-menu{display:none;border:0;background:#fff;color:var(--navy);font-size:21px;cursor:pointer}.overlay{display:none}
+@media(max-width:1100px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.module-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.sidebar{transform:translateX(-100%);transition:.22s}.sidebar.show{transform:translateX(0)}.main{margin-left:0}.mobile-menu{display:block}.topbar{padding:0 17px;height:64px}.page-heading small{display:none}.page-heading strong{font-size:16px}.account-info{display:none}.content{padding:20px 16px 32px}.welcome{align-items:flex-start;flex-direction:column}.welcome h1{font-size:22px}.stats{grid-template-columns:1fr 1fr;gap:10px}.stat{min-height:100px;padding:14px}.stat-num{font-size:24px}.module-grid{grid-template-columns:1fr}.overlay.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:25}}@media(max-width:480px){.stats{grid-template-columns:1fr}.date-pill{display:none}.btn-logout{padding:7px 9px}}
 </style>
 </head>
-<body>
-
-<div class="plang">
-  <div class="brand">
-    <span class="dot"></span>
-    <div class="brand-text">
-      <div class="nama-instansi">UPTD PUSKESMAS BEKAWAN</div>
-      <div class="sub">Sistem Informasi Manajemen Puskesmas &mdash; Dashboard Admin</div>
-    </div>
-  </div>
-  <div class="akun">
-    <div class="avatar" id="avatarAdmin">A</div>
-    <div class="akun-text">
-      <div class="nama" id="namaUser">Memuat...</div>
-      <div class="peran">Administrator Sistem</div>
-    </div>
-    <button onclick="logout()">Keluar</button>
-  </div>
-</div>
-
-<div class="board">
-
-  <div class="tanggal" id="tanggalHariIni">&nbsp;</div>
-  <h1>Ringkasan operasional hari ini</h1>
-
-  <div class="stat-row">
-    <div class="stat-chip hero">
-      <div class="label">Total kunjungan hari ini &mdash; seluruh wilayah kerja</div>
-      <div class="num" id="statTotalKunjungan">&ndash;</div>
-    </div>
-    <div class="stat-chip">
-      <div class="label">Pasien terdaftar</div>
-      <div class="num" id="statPasien">&ndash;</div>
-    </div>
-    <div class="stat-chip">
-      <div class="label">Pegawai aktif</div>
-      <div class="num" id="statPegawai">&ndash;</div>
-    </div>
-  </div>
-
-  <div class="ledger">
-    <div class="section-title">KUNJUNGAN HARI INI PER WILAYAH KERJA</div>
-    <div id="ledgerWilayah">
-      <div class="ledger-row"><span class="nama-lokasi">Memuat data&hellip;</span><span class="leader"></span><span class="jumlah"></span></div>
-    </div>
-  </div>
-
-  <div class="modul-group">
-    <div class="section-title">PELAYANAN LANGSUNG</div>
-    <div class="modul-list">
-      <a class="modul-row" href="index.html"><span class="ikon">🧾</span><span class="teks"><div class="nama">Pendaftaran</div><div class="ket">Loket, antrian, dan skrining awal pasien</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="rekam-medis.html"><span class="ikon">📋</span><span class="teks"><div class="nama">Rekam Medis</div><div class="ket">Catatan SOAP, resep, dan riwayat berobat</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="ugd.html"><span class="ikon">🚑</span><span class="teks"><div class="nama">UGD</div><div class="ket">Triase dan tindakan gawat darurat</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="ranap.html"><span class="ikon">🛏️</span><span class="teks"><div class="nama">Rawat Inap</div><div class="ket">Pemberian obat terjadwal dan berkas klaim BPJS</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="apotek.html"><span class="ikon">💊</span><span class="teks"><div class="nama">Apotek</div><div class="ket">Resep, stok obat, dan laporan LPLPO</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="gigi.html"><span class="ikon">🦷</span><span class="teks"><div class="nama">Poli Gigi</div><div class="ket">Periksa dan tindakan gigi</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="kasir.html"><span class="ikon">💳</span><span class="teks"><div class="nama">Kasir</div><div class="ket">Tagihan dan pembayaran pasien</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="papan-antrian.html"><span class="ikon">📺</span><span class="teks"><div class="nama">Papan Antrian</div><div class="ket">Layar nomor antrian untuk ruang tunggu</div></span><span class="panah">→</span></a>
-    </div>
-  </div>
-
-  <div class="modul-group">
-    <div class="section-title">PROGRAM KESEHATAN MASYARAKAT</div>
-    <div class="modul-list">
-      <a class="modul-row" href="klaster1.html"><span class="ikon">🗂️</span><span class="teks"><div class="nama">Klaster 1 &mdash; Administrasi &amp; Manajemen</div><div class="ket">Surat, keuangan, kepegawaian, dan mutu</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="klaster2.html"><span class="ikon">🧑</span><span class="teks"><div class="nama">Klaster 2 &mdash; Ibu, Anak &amp; Remaja</div><div class="ket">Imunisasi, MTBS, posyandu, dan PKPR</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="klaster3.html"><span class="ikon">💪</span><span class="teks"><div class="nama">Klaster 3 &mdash; Usia Dewasa &amp; Lansia</div><div class="ket">Register, rujukan, dan rekam medis program</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="klaster4.html"><span class="ikon">🩹</span><span class="teks"><div class="nama">Klaster 4 &mdash; Penyakit Menular</div><div class="ket">Program TB, SKDR, dan penyelidikan epidemiologi</div></span><span class="panah">→</span></a>
-    </div>
-  </div>
-
-  <div class="modul-group">
-    <div class="section-title">JARINGAN &amp; PROGRAM</div>
-    <div class="modul-list">
-      <a class="modul-row" href="pustu.html"><span class="ikon">🏥</span><span class="teks"><div class="nama">Pustu</div><div class="ket">Pelayanan dan stok obat di 4 lokasi pustu</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="pemegang-program.html"><span class="ikon">📌</span><span class="teks"><div class="nama">Pemegang Program</div><div class="ket">Ringkasan capaian program per pemegang</div></span><span class="panah">→</span></a>
-    </div>
-  </div>
-
-  <div class="modul-group">
-    <div class="section-title">MANAJEMEN &amp; EKSEKUTIF</div>
-    <div class="modul-list">
-      <a class="modul-row" href="pengaturan.html"><span class="ikon">⚙️</span><span class="teks"><div class="nama">Pengaturan</div><div class="ket">Master data, tarif, pegawai, dan cuti/izin</div></span><span class="panah">→</span></a>
-      <a class="modul-row" href="kapus.html"><span class="ikon">🧭</span><span class="teks"><div class="nama">Kepala Puskesmas</div><div class="ket">Kinerja, keuangan, dan approval</div></span><span class="panah">→</span></a>
-    </div>
-  </div>
-
-  <footer>SIMPUS UPTD Puskesmas Bekawan &middot; Dashboard Admin</footer>
-
-</div>
-
+<body><div class="app">
+<aside class="sidebar" id="sidebar">
+<div class="brand"><div class="logo"></div><div class="brand-text"><strong>SIMPUS BEKAWAN</strong><span>Sistem Informasi Manajemen Puskesmas</span></div></div>
+<nav class="nav">
+<div class="nav-label">MENU UTAMA</div><a class="nav-item active" href="admin.html"><span class="nav-icon">⌂</span><span>Dashboard</span></a>
+<button class="nav-toggle" type="button" data-menu="pelayanan"><span class="nav-icon">▣</span><span>Pelayanan</span><span class="chev">⌄</span></button><div class="nav-sub" id="pelayanan"><a href="index.html">Pendaftaran</a><a href="rekam-medis.html">Rekam Medis</a><a href="ugd.html">UGD</a><a href="ranap.html">Rawat Inap</a><a href="apotek.html">Apotek</a><a href="gigi.html">Poli Gigi</a><a href="kasir.html">Kasir</a><a href="papan-antrian.html">Papan Antrian</a></div>
+<div class="nav-label">PROGRAM & KLASTER</div><button class="nav-toggle" type="button" data-menu="klaster"><span class="nav-icon">▦</span><span>Klaster</span><span class="chev">⌄</span></button><div class="nav-sub" id="klaster"><a href="klaster1.html">Klaster 1 — Administrasi & Manajemen</a><a href="klaster2.html">Klaster 2 — Ibu, Anak & Remaja</a><a href="klaster3.html">Klaster 3 — Usia Dewasa & Lansia</a><a href="klaster4.html">Klaster 4 — Penyakit Menular</a></div>
+<button class="nav-toggle" type="button" data-menu="jaringan"><span class="nav-icon">⌘</span><span>Jaringan & Program</span><span class="chev">⌄</span></button><div class="nav-sub" id="jaringan"><a href="pustu.html">Pustu</a><a href="pemegang-program.html">Pemegang Program</a></div>
+<div class="nav-label">MANAJEMEN</div><button class="nav-toggle" type="button" data-menu="manajemen"><span class="nav-icon">⚙</span><span>Manajemen Sistem</span><span class="chev">⌄</span></button><div class="nav-sub" id="manajemen"><a href="pengaturan.html">Pengaturan</a><a href="kapus.html">Kepala Puskesmas</a></div>
+</nav><div class="sidebar-bottom">Admin utama memiliki akses ke seluruh modul SIMPUS.<br>UPTD Puskesmas Bekawan</div></aside>
+<div class="overlay" id="overlay"></div>
+<main class="main"><header class="topbar"><div style="display:flex;align-items:center;gap:13px"><button class="mobile-menu" id="mobileMenu">☰</button><div class="page-heading"><small>SIMPUS / Admin</small><strong>Dashboard Utama</strong></div></div><div class="account"><div class="avatar" id="avatarAdmin">A</div><div class="account-info"><div class="name" id="namaUser">Memuat...</div><div class="role">Administrator Sistem</div></div><button class="btn-logout" onclick="logout()">Keluar</button></div></header>
+<section class="content"><div class="welcome"><div><h1>Ringkasan Operasional</h1><p>Ikhtisar aktivitas SIMPUS UPTD Puskesmas Bekawan untuk seluruh wilayah kerja.</p></div><div class="date-pill" id="tanggalHariIni">&nbsp;</div></div>
+<div class="stats"><div class="stat primary"><div class="stat-top"><div class="stat-label">Total kunjungan hari ini</div><div class="stat-icon">↗</div></div><div class="stat-num" id="statTotalKunjungan">–</div><div class="stat-note">Seluruh wilayah kerja</div></div><div class="stat"><div class="stat-top"><div class="stat-label">Pasien terdaftar</div><div class="stat-icon">♙</div></div><div class="stat-num" id="statPasien">–</div><div class="stat-note">Total data pasien</div></div><div class="stat"><div class="stat-top"><div class="stat-label">Pegawai aktif</div><div class="stat-icon">♟</div></div><div class="stat-num" id="statPegawai">–</div><div class="stat-note">Data pegawai aktif</div></div><div class="stat"><div class="stat-top"><div class="stat-label">Wilayah Pustu</div><div class="stat-icon">⌂</div></div><div class="stat-num" id="statPustu">–</div><div class="stat-note">Pustu aktif terdaftar</div></div></div>
+<div class="grid"><section class="card"><div class="card-head"><div><div class="card-title">Kunjungan Hari Ini per Wilayah Kerja</div><div class="card-sub">Distribusi kunjungan Puskesmas Induk dan Pustu</div></div><span class="status">Live data</span></div><div class="card-body"><table class="table"><thead><tr><th>WILAYAH KERJA</th><th>STATUS</th><th style="text-align:right">KUNJUNGAN</th></tr></thead><tbody id="ledgerWilayah"><tr><td colspan="3">Memuat data…</td></tr></tbody></table></div></section>
+<section class="card"><div class="card-head"><div><div class="card-title">Akses Cepat</div><div class="card-sub">Modul yang sering digunakan</div></div></div><div class="card-body" style="padding-top:14px"><div class="quick-list"><a class="quick" href="index.html"><div class="quick-icon">▣</div><div><strong>Pendaftaran</strong><span>Loket & antrian pasien</span></div><div class="quick-arrow">›</div></a><a class="quick" href="rekam-medis.html"><div class="quick-icon">▤</div><div><strong>Rekam Medis</strong><span>Catatan dan riwayat pasien</span></div><div class="quick-arrow">›</div></a><a class="quick" href="apotek.html"><div class="quick-icon">✚</div><div><strong>Apotek</strong><span>Resep & stok obat</span></div><div class="quick-arrow">›</div></a><a class="quick" href="pustu.html"><div class="quick-icon">⌂</div><div><strong>Pustu</strong><span>Jaringan pelayanan</span></div><div class="quick-arrow">›</div></a></div></div></section></div>
+<section class="card modules"><div class="card-head"><div><div class="card-title">Seluruh Modul SIMPUS</div><div class="card-sub">Admin utama memiliki akses ke seluruh fitur yang tersedia</div></div></div><div class="module-grid"><a class="module" href="ugd.html"><div class="micon">⚕</div><div><strong>UGD</strong><span>Triase dan tindakan gawat darurat</span></div></a><a class="module" href="ranap.html"><div class="micon">▰</div><div><strong>Rawat Inap</strong><span>Pelayanan pasien rawat inap</span></div></a><a class="module" href="gigi.html"><div class="micon">◇</div><div><strong>Poli Gigi</strong><span>Pemeriksaan dan tindakan gigi</span></div></a><a class="module" href="kasir.html"><div class="micon">Rp</div><div><strong>Kasir</strong><span>Tagihan dan pembayaran pasien</span></div></a><a class="module" href="papan-antrian.html"><div class="micon">▥</div><div><strong>Papan Antrian</strong><span>Tampilan nomor antrian ruang tunggu</span></div></a><a class="module" href="klaster1.html"><div class="micon">01</div><div><strong>Klaster 1</strong><span>Administrasi dan manajemen</span></div></a><a class="module" href="klaster2.html"><div class="micon">02</div><div><strong>Klaster 2</strong><span>Ibu, anak dan remaja</span></div></a><a class="module" href="klaster3.html"><div class="micon">03</div><div><strong>Klaster 3</strong><span>Usia dewasa dan lansia</span></div></a><a class="module" href="klaster4.html"><div class="micon">04</div><div><strong>Klaster 4</strong><span>Penyakit menular</span></div></a><a class="module" href="pemegang-program.html"><div class="micon">●</div><div><strong>Pemegang Program</strong><span>Ringkasan capaian program</span></div></a><a class="module" href="pengaturan.html"><div class="micon">⚙</div><div><strong>Pengaturan</strong><span>Master data dan pengaturan sistem</span></div></a><a class="module" href="kapus.html"><div class="micon">★</div><div><strong>Kepala Puskesmas</strong><span>Kinerja, keuangan dan approval</span></div></a></div></section><footer>SIMPUS UPTD Puskesmas Bekawan · Dashboard Admin</footer></section></main></div>
 <script src="js/supabaseClient.js"></script>
 <script>
 (async function () {
@@ -332,6 +107,5 @@ async function muatRingkasan() {
   `).join("");
 }
 </script>
-
 </body>
 </html>

@@ -95,7 +95,6 @@
     <a href="kasir.html">Kasir</a>
     <a href="papan-antrian.html">Papan Antrian</a>
     <a href="kapus.html">Kepala Puskesmas</a>
-    <a href="pemegang-program.html">Pemegang Program</a>
     </nav>
   </aside>
 
@@ -700,8 +699,8 @@
         <div class="card" style="--accent:#173b5e;">
           <h2><span class="card-num" style="background:#173b5e;">▤</span> Daftar Sampel & Status</h2>
           <table>
-            <thead><tr><th>Tanggal Ambil</th><th>Pasien</th><th>Usia Kehamilan</th><th>Status</th><th>HBsAg</th><th>HIV</th><th>Sifilis</th><th>Aksi</th></tr></thead>
-            <tbody id="tabelLabBumil"><tr><td colspan="8">Memuat...</td></tr></tbody>
+            <thead><tr><th>Tanggal Ambil</th><th>Pasien</th><th>Usia Kehamilan</th><th>Status</th><th>HBsAg</th><th>HIV</th><th>Sifilis</th><th>Hasil (siLab)</th><th>Aksi</th></tr></thead>
+            <tbody id="tabelLabBumil"><tr><td colspan="9">Memuat...</td></tr></tbody>
           </table>
         </div>
 
@@ -909,6 +908,7 @@
 </div>
 
 <script src="js/supabaseClient.js"></script>
+<script src="js/silabClient.js"></script>
 <script>
 let profilSaya = null;
 let pustuAktifId = null;
@@ -1881,15 +1881,15 @@ async function simpanLabBumil() {
 
 async function muatDaftarLabBumil() {
   const tbody = document.getElementById("tabelLabBumil");
-  if (!pustuAktifId) { tbody.innerHTML = `<tr><td colspan="8">Belum ada Pustu aktif.</td></tr>`; return; }
-  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
+  if (!pustuAktifId) { tbody.innerHTML = `<tr><td colspan="9">Belum ada Pustu aktif.</td></tr>`; return; }
+  tbody.innerHTML = `<tr><td colspan="9">Memuat...</td></tr>`;
 
   const { data, error } = await supabaseClient.from("lab_bumil_pustu")
-    .select("id, pasien_id, tanggal_ambil_sampel, usia_kehamilan_minggu, status, hasil_hbsag, hasil_hiv, hasil_sifilis, pasien:pasien_id(nama, no_rm)")
+    .select("id, pasien_id, tanggal_ambil_sampel, usia_kehamilan_minggu, status, hasil_hbsag, hasil_hiv, hasil_sifilis, silab_pasien_id, pasien:pasien_id(nama, no_rm)")
     .eq("pustu_id", pustuAktifId).order("tanggal_ambil_sampel", { ascending: false }).limit(50);
 
-  if (error) { tbody.innerHTML = `<tr><td colspan="8">Gagal muat: ${error.message}</td></tr>`; return; }
-  if (!data.length) { tbody.innerHTML = `<tr><td colspan="8">Belum ada sampel Lab Bumil tercatat.</td></tr>`; return; }
+  if (error) { tbody.innerHTML = `<tr><td colspan="9">Gagal muat: ${error.message}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="9">Belum ada sampel Lab Bumil tercatat.</td></tr>`; return; }
 
   catatLogAksesLabBumilBatch(data.map(r => ({ id: r.id, pasien_id: r.pasien_id })));
 
@@ -1897,7 +1897,20 @@ async function muatDaftarLabBumil() {
   const labelStatus = { sampel_diambil: "Sampel Diambil", dikirim_ke_induk: "Dikirim ke Induk", hasil_selesai: "Hasil Selesai" };
   const badgeHasil = h => h === "belum_diperiksa" ? "-" : h === "reaktif" ? `<span class="badge badge-stok-rendah">Reaktif</span>` : `<span class="badge badge-selesai">Non-Reaktif</span>`;
 
-  tbody.innerHTML = data.map(r => `
+  tbody.innerHTML = `<tr><td colspan="9">Memuat hasil siLab...</td></tr>`;
+
+  const baris = await Promise.all(data.map(async r => {
+    let hasilSilabTxt = "-";
+    if (r.silab_pasien_id && r.status !== "hasil_selesai") {
+      const h = await ambilStatusHasilSilab(r.silab_pasien_id);
+      if (h) {
+        hasilSilabTxt = `<span class="badge ${BADGE_STATUS_SILAB[h.status] || "badge-menunggu"}">${h.status}</span>` +
+          (h.hasil.length ? " " + h.hasil.map(it => `${it.nama}: ${it.hasil}`).join(", ") : "");
+      }
+    } else if (r.status === "hasil_selesai") {
+      hasilSilabTxt = `<span style="color:var(--muted);">Sudah final di SIMPUS</span>`;
+    }
+    return `
     <tr>
       <td>${new Date(r.tanggal_ambil_sampel).toLocaleDateString("id-ID")}</td>
       <td>${r.pasien ? r.pasien.nama : "-"} ${r.pasien && r.pasien.no_rm ? `(${r.pasien.no_rm})` : ""}</td>
@@ -1906,15 +1919,51 @@ async function muatDaftarLabBumil() {
       <td>${badgeHasil(r.hasil_hbsag)}</td>
       <td>${badgeHasil(r.hasil_hiv)}</td>
       <td>${badgeHasil(r.hasil_sifilis)}</td>
+      <td>${hasilSilabTxt}</td>
       <td>${r.status === "sampel_diambil" ? `<button class="btn-secondary" onclick="tandaiDikirimLabBumil('${r.id}')">Tandai Dikirim</button>` : "-"}</td>
     </tr>
-  `).join("");
+  `;
+  }));
+
+  tbody.innerHTML = baris.join("");
 }
 
 async function tandaiDikirimLabBumil(id) {
   const { error } = await supabaseClient.from("lab_bumil_pustu")
     .update({ status: "dikirim_ke_induk", tanggal_kirim: new Date().toISOString().split("T")[0] }).eq("id", id);
   if (error) { alert("Gagal update status: " + error.message); return; }
+
+  // Kirim juga ke siLab (project terpisah) supaya petugas lab di Induk bisa
+  // langsung liat/proses di sana. Catatan: ini tes kualitatif (Reaktif/Non-
+  // Reaktif), beda dari pemeriksaan kuantitatif biasa — kalau parameter
+  // HBsAg/HIV/Sifilis belum ada di master Parameter siLab, hasilnya tetap
+  // kekirim tapi nama parameternya mungkin belum kebaca rapi di siLab
+  // (perlu ditambahin manual sekali di sana oleh admin siLab).
+  const { data: rec } = await supabaseClient.from("lab_bumil_pustu").select("pasien_id").eq("id", id).single();
+  if (rec) {
+    const { data: pasienLengkap } = await supabaseClient
+      .from("pasien")
+      .select("nik, no_kk, nama, tanggal_lahir, jenis_kelamin, alamat, no_hp, no_rm")
+      .eq("id", rec.pasien_id)
+      .single();
+    if (pasienLengkap) {
+      const hasilSilab = await kirimPermintaanLabKeSilab({
+        pasien: pasienLengkap,
+        jenisLabText: "HBsAg, HIV, Sifilis (Tripel Eliminasi)",
+        asalUnit: `Pustu ${pustuAktifNama || "-"} (Bumil - Tripel Eliminasi)`,
+        dokterPengirim: profilSaya?.nama || "",
+        noRujukanSimpus: `PUSTU-${id.slice(0, 8).toUpperCase()}`,
+        penjamin: "Umum"
+      });
+      if (hasilSilab) {
+        await supabaseClient.from("lab_bumil_pustu").update({
+          silab_pasien_id: hasilSilab.silabPasienId,
+          silab_dikirim_at: new Date().toISOString()
+        }).eq("id", id);
+      }
+    }
+  }
+
   await muatDaftarLabBumil();
 }
 
