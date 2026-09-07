@@ -70,6 +70,7 @@
       <a id="navTren" onclick="gantiSubtabKapus('tren')">Tren Kunjungan</a>
       <a id="navKia" onclick="gantiSubtabKapus('kia')">Program KIA</a>
       <a id="navMenular" onclick="gantiSubtabKapus('menular')">Program Penyakit Menular</a>
+      <a id="navRanapUgd" onclick="gantiSubtabKapus('ranapugd')">Rekap Ranap &amp; UGD</a>
 
       <div class="ph-group-title">Modul Lain</div>
       <a href="index.html">Pendaftaran</a>
@@ -426,6 +427,46 @@
 
       </div>
 
+      <!-- ============ REKAP RAWAT INAP & UGD ============ -->
+      <div id="panelRanapUgd" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Kapasitas tempat tidur & kasus berat, read-only. Input tetap di modul Rawat Inap & UGD.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">BOR (Bed Occupancy Rate)</div><div class="value" id="ruBor">0%</div></div>
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Bed Terisi / Total</div><div class="value" id="ruBedTerisi">0/0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Pasien Ranap Aktif</div><div class="value" id="ruRanapAktif">0</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">Kasus Berat Aktif</div><div class="value" id="ruKasusBerat">0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Kapasitas Tempat Tidur per Ruang</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Ruang</th><th>Total Bed</th><th>Terisi</th><th>Kosong</th><th>Maintenance</th><th>BOR Ruang</th></tr></thead>
+              <tbody id="kapTbodyBed"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#6a4c93;">
+          <h2><span class="card-num" style="background:#6a4c93;">2</span> Rekap Triase UGD — 30 Hari Terakhir</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Triase</th><th>Jumlah Kasus</th><th>Dirujuk</th><th>Meninggal</th></tr></thead>
+              <tbody id="kapTbodyTriase"><tr><td colspan="4">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">3</span> Kasus Berat Aktif — Ranap &amp; UGD</h2>
+          <p style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">UGD triase merah/hitam yang masih aktif, dan pasien ranap dengan kondisi kritis (kesadaran menurun, saturasi rendah, atau status dirujuk/meninggal).</p>
+          <div id="kapListKasusBerat"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </div>
@@ -448,14 +489,14 @@ let profilSaya = null;
 })();
 
 function gantiSubtabKapus(tab) {
-  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm", keuangan: "panelKeuangan", tren: "panelTren", kia: "panelKia", menular: "panelMenular" };
-  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm", keuangan: "navKeuangan", tren: "navTren", kia: "navKia", menular: "navMenular" };
+  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm", keuangan: "panelKeuangan", tren: "panelTren", kia: "panelKia", menular: "panelMenular", ranapugd: "panelRanapUgd" };
+  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm", keuangan: "navKeuangan", tren: "navTren", kia: "navKia", menular: "navMenular", ranapugd: "navRanapUgd" };
   Object.values(panelMap).forEach(id => document.getElementById(id).style.display = "none");
   Object.values(navMap).forEach(id => document.getElementById(id).classList.remove("active"));
   document.getElementById(panelMap[tab]).style.display = "block";
   document.getElementById(navMap[tab]).classList.add("active");
 
-  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas", keuangan: "Laporan Keuangan", tren: "Tren Kunjungan", kia: "Program KIA", menular: "Program Penyakit Menular" };
+  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas", keuangan: "Laporan Keuangan", tren: "Tren Kunjungan", kia: "Program KIA", menular: "Program Penyakit Menular", ranapugd: "Rekap Rawat Inap & UGD" };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Kepala Puskesmas";
 
   if (tab === "approval") muatApprovalLplpo();
@@ -465,6 +506,7 @@ function gantiSubtabKapus(tab) {
   if (tab === "tren") muatTrenKunjungan();
   if (tab === "kia") muatProgramKia();
   if (tab === "menular") muatProgramMenular();
+  if (tab === "ranapugd") muatRekapRanapUgd();
 }
 
 function gantiTabApproval(tab) {
@@ -1433,6 +1475,116 @@ async function muatProgramMenular() {
   listBox.innerHTML = rujuk.length
     ? rujuk.map(r => `<div class="kap-alert-row"><span class="ic">🚑</span><div><strong>${r.nama}</strong> — ${r.program}<div class="t">${new Date(r.tanggal).toLocaleDateString("id-ID")}</div></div></div>`).join("")
     : `<div class="kap-kosong">Tidak ada kasus yang perlu rujuk RS dalam 30 hari terakhir.</div>`;
+}
+
+// ================================================================
+// REKAP RAWAT INAP & UGD — KAPASITAS & KASUS BERAT
+// ================================================================
+function ruParseSaturasi(txt) {
+  if (!txt) return null;
+  const m = String(txt).match(/(\d+(\.\d+)?)/);
+  return m ? parseFloat(m[1]) : null;
+}
+function ruParseGcs(txt) {
+  if (!txt) return null;
+  const m = String(txt).match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+async function muatRekapRanapUgd() {
+  document.getElementById("kapTbodyBed").innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+  document.getElementById("kapTbodyTriase").innerHTML = `<tr><td colspan="4">Memuat...</td></tr>`;
+  document.getElementById("kapListKasusBerat").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const tigaPuluhHariLalu = new Date(); tigaPuluhHariLalu.setDate(tigaPuluhHariLalu.getDate() - 29);
+  const batas30 = tigaPuluhHariLalu.toISOString();
+
+  const [bedRes, ranapRes, ugdRes] = await Promise.all([
+    supabaseClient.from("bed_rawat").select("id, ruang, nomor_bed, status"),
+    supabaseClient.from("kunjungan_ranap").select("id, status_ranap, tanggal_masuk, pasien(nama), kunjungan(kesadaran, gcs, saturasi_o2)"),
+    supabaseClient.from("kunjungan_ugd").select("id, status_ugd, triase_warna, waktu_triase, created_at, pasien(nama)")
+  ]);
+
+  const bed = bedRes.data || [];
+  const ranap = ranapRes.data || [];
+  const ugd = ugdRes.data || [];
+
+  // ---- KPI Bed & Ranap ----
+  const totalBed = bed.length;
+  const bedTerisi = bed.filter(b => b.status === "terisi").length;
+  const bor = totalBed ? Math.round((bedTerisi / totalBed) * 1000) / 10 : 0;
+  document.getElementById("ruBor").textContent = `${bor}%`;
+  document.getElementById("ruBedTerisi").textContent = `${bedTerisi}/${totalBed}`;
+
+  const ranapAktif = ranap.filter(r => ["baru", "dirawat", "rencana_pulang"].includes(r.status_ranap));
+  document.getElementById("ruRanapAktif").textContent = ranapAktif.length;
+
+  // ---- Kasus berat: Ranap aktif dgn kondisi kritis ----
+  const ranapBerat = ranapAktif.filter(r => {
+    const k = r.kunjungan || {};
+    const sat = ruParseSaturasi(k.saturasi_o2);
+    const gcs = ruParseGcs(k.gcs);
+    const kesadaranTurun = k.kesadaran && !/^compos mentis$/i.test(k.kesadaran.trim());
+    return kesadaranTurun || (sat !== null && sat < 95) || (gcs !== null && gcs < 13);
+  });
+
+  // ---- Kasus berat: UGD aktif triase merah/hitam ----
+  const ugdBerat = ugd.filter(u => ["baru", "ditangani", "observasi"].includes(u.status_ugd) && ["merah", "hitam"].includes(u.triase_warna));
+
+  document.getElementById("ruKasusBerat").textContent = ranapBerat.length + ugdBerat.length;
+
+  // ---- Tabel Kapasitas Bed per Ruang ----
+  const ruangMap = {};
+  bed.forEach(b => {
+    if (!ruangMap[b.ruang]) ruangMap[b.ruang] = { total: 0, terisi: 0, kosong: 0, maintenance: 0 };
+    ruangMap[b.ruang].total++;
+    if (b.status === "terisi") ruangMap[b.ruang].terisi++;
+    else if (b.status === "maintenance") ruangMap[b.ruang].maintenance++;
+    else ruangMap[b.ruang].kosong++;
+  });
+  const ruangList = Object.keys(ruangMap).sort();
+  document.getElementById("kapTbodyBed").innerHTML = ruangList.length
+    ? ruangList.map(rg => {
+        const d = ruangMap[rg];
+        const borRuang = d.total ? Math.round((d.terisi / d.total) * 1000) / 10 : 0;
+        return `<tr><td>${rg}</td><td>${d.total}</td><td>${d.terisi}</td><td>${d.kosong}</td><td>${d.maintenance}</td><td>${borRuang}%</td></tr>`;
+      }).join("")
+    : `<tr><td colspan="6">Belum ada data tempat tidur.</td></tr>`;
+
+  // ---- Tabel Rekap Triase UGD (30 hari) ----
+  const ugd30 = ugd.filter(u => (u.waktu_triase || u.created_at) >= batas30);
+  const warnaList = ["merah", "kuning", "hijau", "hitam"];
+  document.getElementById("kapTbodyTriase").innerHTML = warnaList.map(w => {
+    const grup = ugd30.filter(u => u.triase_warna === w);
+    const dirujuk = grup.filter(u => u.status_ugd === "dirujuk").length;
+    const meninggal = grup.filter(u => u.status_ugd === "meninggal").length;
+    const label = w.charAt(0).toUpperCase() + w.slice(1);
+    return `<tr><td>${label}</td><td>${grup.length}</td><td>${dirujuk}</td><td>${meninggal}</td></tr>`;
+  }).join("");
+
+  // ---- Daftar Kasus Berat Aktif (gabungan) ----
+  let kasus = [];
+  ugdBerat.forEach(u => kasus.push({
+    nama: u.pasien?.nama || "-", sumber: "UGD",
+    ket: `Triase ${u.triase_warna === "hitam" ? "Hitam (Meninggal saat tiba/DOA)" : "Merah (Gawat Darurat)"}`,
+    waktu: u.waktu_triase || u.created_at
+  }));
+  ranapBerat.forEach(r => {
+    const k = r.kunjungan || {};
+    const detail = [];
+    if (k.kesadaran && !/^compos mentis$/i.test(k.kesadaran.trim())) detail.push(`Kesadaran: ${k.kesadaran}`);
+    const sat = ruParseSaturasi(k.saturasi_o2);
+    if (sat !== null && sat < 95) detail.push(`Saturasi O2: ${k.saturasi_o2}`);
+    const gcs = ruParseGcs(k.gcs);
+    if (gcs !== null && gcs < 13) detail.push(`GCS: ${k.gcs}`);
+    kasus.push({ nama: r.pasien?.nama || "-", sumber: "Ranap", ket: detail.join(", ") || "Kondisi kritis", waktu: r.tanggal_masuk });
+  });
+  kasus.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+
+  const listBox = document.getElementById("kapListKasusBerat");
+  listBox.innerHTML = kasus.length
+    ? kasus.map(k => `<div class="kap-alert-row"><span class="ic">${k.sumber === "UGD" ? "🚨" : "🛏️"}</span><div><strong>${k.nama}</strong> — ${k.sumber}<div class="t">${k.ket} · ${new Date(k.waktu).toLocaleString("id-ID")}</div></div></div>`).join("")
+    : `<div class="kap-kosong">Tidak ada kasus berat aktif saat ini.</div>`;
 }
 </script>
 </body>
