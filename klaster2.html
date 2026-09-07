@@ -1404,8 +1404,8 @@
         <div class="card" style="--accent:#26a3a0;">
           <h2>Riwayat Permintaan Lab Klaster 2 Terbaru</h2>
           <table>
-            <thead><tr><th>Tanggal</th><th>Pasien</th><th>Jenis Pemeriksaan</th><th>Status</th></tr></thead>
-            <tbody id="tabelRiwayatLabUmum"><tr><td colspan="4">Memuat...</td></tr></tbody>
+            <thead><tr><th>Tanggal</th><th>Pasien</th><th>Jenis Pemeriksaan</th><th>Status</th><th>Hasil (siLab)</th></tr></thead>
+            <tbody id="tabelRiwayatLabUmum"><tr><td colspan="5">Memuat...</td></tr></tbody>
           </table>
         </div>
 
@@ -1617,6 +1617,7 @@
 </div>
 
 <script src="js/supabaseClient.js"></script>
+<script src="js/silabClient.js"></script>
 <script>
 let profilSaya = null;
 let pasienTerpilihHamil = null;
@@ -3380,7 +3381,29 @@ async function ajukanLabUmum() {
 
   if (errRl) { msgBox.innerHTML = `<div class="msg msg-error">Gagal simpan permintaan lab: ${errRl.message}</div>`; return; }
 
-  msgBox.innerHTML = `<div class="msg msg-success">Permintaan lab diajukan — antrian No. ${noAntrianLab} di Laboratorium.</div>`;
+  // Kirim juga ke siLab (project terpisah) supaya diproses di sana & hasilnya
+  // kebaca balik di sini. Kalau gagal kirim, antrian LK lokal tetap tersimpan.
+  const hasilSilab = await kirimPermintaanLabKeSilab({
+    pasien: pasienTerpilihRjkUmum,
+    jenisLabText: jenis,
+    asalUnit: "Klaster 2 - Ibu dan Anak",
+    dokterPengirim: profilSaya?.nama || "",
+    noRujukanSimpus: noKunjunganLab,
+    penjamin: pasienTerpilihRjkUmum.status_bpjs === "aktif" ? "BPJS" : "Umum"
+  });
+
+  let pesanSilab = "";
+  if (hasilSilab) {
+    await supabaseClient.from("rujukan_lab").update({
+      silab_pasien_id: hasilSilab.silabPasienId,
+      silab_dikirim_at: new Date().toISOString()
+    }).eq("kunjungan_tujuan_id", kunjunganLab.id);
+    pesanSilab = " Permintaan juga sudah terkirim ke siLab.";
+  } else {
+    pesanSilab = " (Gagal terkirim ke siLab — cek koneksi, antrian LK lokal tetap tersimpan.)";
+  }
+
+  msgBox.innerHTML = `<div class="msg msg-success">Permintaan lab diajukan — antrian No. ${noAntrianLab} di Laboratorium.${pesanSilab}</div>`;
   document.getElementById("labUmumJenis").value = "";
   await muatRiwayatRjkLabUmum();
 }
@@ -3417,16 +3440,36 @@ async function muatRiwayatRjkLabUmum() {
     .order("created_at", { ascending: false })
     .limit(30);
 
-  if (errLab) { tbodyLab.innerHTML = `<tr><td colspan="4">Gagal muat: ${errLab.message}</td></tr>`; return; }
+  if (errLab) { tbodyLab.innerHTML = `<tr><td colspan="5">Gagal muat: ${errLab.message}</td></tr>`; return; }
   const filteredLab = (dataLab || []).filter(r => r.kunjungan_asal?.klaster_id === k2Id);
-  tbodyLab.innerHTML = filteredLab.length ? filteredLab.map(r => `
-    <tr>
-      <td>${new Date(r.created_at).toLocaleDateString("id-ID")}</td>
-      <td>${r.kunjungan_asal?.pasien?.nama || "-"}</td>
-      <td>${r.jenis_pemeriksaan}</td>
-      <td><span class="badge badge-${r.status === "selesai" ? "selesai" : "menunggu"}">${r.status}</span></td>
-    </tr>
-  `).join("") : `<tr><td colspan="4">Belum ada permintaan lab tercatat.</td></tr>`;
+
+  tbodyLab.innerHTML = filteredLab.length ? `<tr><td colspan="5">Memuat hasil siLab...</td></tr>` : `<tr><td colspan="5">Belum ada permintaan lab tercatat.</td></tr>`;
+
+  const barisLab = await Promise.all(filteredLab.map(async (r) => {
+    let hasilTxt = "-";
+    if (r.silab_pasien_id) {
+      const h = await ambilStatusHasilSilab(r.silab_pasien_id);
+      if (h && h.hasil.length) {
+        hasilTxt = `<span class="badge ${BADGE_STATUS_SILAB[h.status] || "badge-menunggu"}">${h.status}</span> ` +
+          h.hasil.map(it => `${it.nama}: ${it.hasil}${it.satuan ? " " + it.satuan : ""}`).join(", ");
+      } else if (h) {
+        hasilTxt = `<span class="badge ${BADGE_STATUS_SILAB[h.status] || "badge-menunggu"}">${h.status}</span> Belum ada hasil.`;
+      } else {
+        hasilTxt = `<span style="color:var(--muted);">Gagal ambil dari siLab.</span>`;
+      }
+    }
+    return `
+      <tr>
+        <td>${new Date(r.created_at).toLocaleDateString("id-ID")}</td>
+        <td>${r.kunjungan_asal?.pasien?.nama || "-"}</td>
+        <td>${r.jenis_pemeriksaan}</td>
+        <td><span class="badge badge-${r.status === "selesai" ? "selesai" : "menunggu"}">${r.status}</span></td>
+        <td>${hasilTxt}</td>
+      </tr>
+    `;
+  }));
+
+  tbodyLab.innerHTML = barisLab.length ? barisLab.join("") : `<tr><td colspan="5">Belum ada permintaan lab tercatat.</td></tr>`;
 }
 
 // ---------- PENJARINGAN KESEHATAN ANAK SEKOLAH ----------
