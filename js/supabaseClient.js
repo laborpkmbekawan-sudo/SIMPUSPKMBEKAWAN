@@ -109,7 +109,7 @@ async function getProfilSaya() {
     .select(`
       *,
       klaster(nama, kode),
-      pustu(nama, tipe, wilayah),
+      pustu!profil_pegawai_pustu_id_fkey(nama, tipe, wilayah),
       pegawai_klaster(klaster_id, keterangan, klaster(nama, kode)),
       hak_akses(modul_kode, klaster_id, level)
     `)
