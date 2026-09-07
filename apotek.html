@@ -8,17 +8,18 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
-/* ================= REDESAIN DASHBOARD APOTEK (skema Navy/Orange) ================= */
+/* ================= REDESAIN DASHBOARD APOTEK (skema Hijau, senada login) ================= */
 /* Page-scoped — cuma nimpa tampilan Apotek, gak nyentuh css/style.css / halaman lain. */
-.dash-content, .topbar { --navy:#0f2942; --navy-2:#173b5e; --teal-a:#1c7d7f; --teal-2:#26a3a0; --orange:#e0793c; --plum:#6a4c93; }
+.dash-content, .topbar { --navy:#0b3b2e; --navy-2:#0f7a45; --teal-a:#0f5c3c; --teal-2:#16a36f; --orange:#e0793c; --plum:#6a4c93; }
 
 .sidebar {
-  background: linear-gradient(180deg, #0f2942 0%, #173b5e 100%) !important;
+  background: linear-gradient(180deg, #0b3b2e 0%, #0f7a45 100%) !important;
 }
-.sidebar nav a.active { border-left: 3px solid #e0793c !important; background: rgba(255,255,255,.09) !important; }
+.sidebar nav a.active { border-left: 3px solid #16a36f !important; background: rgba(255,255,255,.09) !important; }
 .sidebar nav a:hover { background: rgba(255,255,255,.06) !important; }
 
-.topbar h1 { color: var(--navy); }
+.topbar { background: linear-gradient(180deg, #0f5132 0%, #0b3b2e 100%) !important; }
+.topbar h1 { color: #ffffff; }
 
 .ph-group-title {
   font-size: 11px; font-weight: 700; letter-spacing: .06em; color: rgba(255,255,255,.45);
@@ -96,7 +97,7 @@
   font-size: 13.5px; font-weight: 600; color: #374151; background: #fff;
 }
 .jenis-tab:hover { border-color: var(--primary); }
-.jenis-tab.active { background: var(--navy-2, #173b5e); border-color: var(--navy-2, #173b5e); color: #fff; }
+.jenis-tab.active { background: var(--navy-2, #0f7a45); border-color: var(--navy-2, #0f7a45); color: #fff; }
 .jenis-tab-note { font-size: 11.5px; color: var(--muted); margin-left: 4px; }
 .so-link-note {
   font-size: 12px; color: #6b7280; background: #f4f6f8; border: 1px dashed var(--border); border-radius: 6px;
@@ -122,7 +123,7 @@
 /* ---- Kartu ringkasan resep selesai/diserahkan (gaya banner + timeline) ---- */
 .resep-selesai-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .resep-selesai-banner {
-  background: linear-gradient(135deg, #1c7d7f, #26a3a0); color: #fff; padding: 16px 20px;
+  background: linear-gradient(135deg, #0f5c3c, #16a36f); color: #fff; padding: 16px 20px;
   display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
 }
 .resep-selesai-banner h3 { margin: 0 0 4px; font-size: 17px; }
@@ -282,7 +283,7 @@
 .lap-summary-strip { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
 .lap-sum-card { flex: 1; min-width: 170px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 13px 16px; }
 .lap-sum-card .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
-.lap-sum-card .value { font-size: 17px; font-weight: 700; color: var(--navy-2, #173b5e); margin-top: 4px; }
+.lap-sum-card .value { font-size: 17px; font-weight: 700; color: var(--navy-2, #0f7a45); margin-top: 4px; }
 .lap-sum-card.warn .value { color: #e0793c; }
 .lap-sum-card.danger .value { color: #c0503f; }
 .lap-sum-card.ok .value { color: #2f9e5c; }
@@ -290,10 +291,10 @@
 .lap-status-pill.lengkap { background: #eafaee; color: #2f9e5c; }
 .lap-status-pill.proses { background: #fdf1e8; color: #e0793c; }
 .lap-status-pill.kosong { background: #fbe9e6; color: #c0503f; }
-.lap-link-btn { font-size: 11px; color: #1c7d7f; cursor: pointer; font-weight: 600; }
+.lap-link-btn { font-size: 11px; color: #0f5c3c; cursor: pointer; font-weight: 600; }
 .lap-segera { text-align: center; padding: 50px 20px; color: var(--muted); }
 .lap-segera .ic { font-size: 32px; margin-bottom: 10px; }
-.lap-segera .t { font-size: 14px; font-weight: 700; color: var(--navy-2, #173b5e); margin-bottom: 6px; }
+.lap-segera .t { font-size: 14px; font-weight: 700; color: var(--navy-2, #0f7a45); margin-bottom: 6px; }
 
 </style>
 </head>
@@ -381,7 +382,7 @@
       <div id="alertStok"><div class="ph-notif-row">Memuat...</div></div>
     </div>
 
-    <div class="card" style="--accent:#26a3a0">
+    <div class="card" style="--accent:#16a36f">
       <h2><span class="card-num">2</span>Menu Cepat</h2>
       <div class="ph-quick-grid">
         <div class="ph-quick-tile" onclick="gantiSubtab('pelayanan')">Verifikasi Resep</div>
@@ -395,7 +396,7 @@
       </div>
     </div>
 
-    <div class="card ph-chart-card" style="--accent:#173b5e">
+    <div class="card ph-chart-card" style="--accent:#0f7a45">
       <h2><span class="card-num">3</span>Ringkasan Resep Diserahkan (7 Hari Terakhir)</h2>
       <canvas id="chartRingkasan"></canvas>
       <div class="ph-info-grid" style="margin-top:12px;">
@@ -428,24 +429,24 @@
 
   <div class="ph-grid-3" style="grid-template-columns: 1.3fr 1fr 1fr;">
 
-    <div class="card ph-chart-card" style="--accent:#1c7d7f">
+    <div class="card ph-chart-card" style="--accent:#0f5c3c">
       <h2><span class="card-num">5</span>Grafik Pemakaian Obat — Top 5 (30 Hari Terakhir)</h2>
       <canvas id="chartPemakaian"></canvas>
     </div>
 
-    <div class="card" style="--accent:#26a3a0">
+    <div class="card" style="--accent:#16a36f">
       <h2><span class="card-num">6</span>Persentase Obat Generik</h2>
       <div class="ph-donut-wrap">
         <canvas id="chartGenerik"></canvas>
         <div class="ph-donut-legend">
-          <div class="row"><span class="sw" style="background:#26a3a0"></span> Generik <strong id="legGenerik">-</strong></div>
+          <div class="row"><span class="sw" style="background:#16a36f"></span> Generik <strong id="legGenerik">-</strong></div>
           <div class="row"><span class="sw" style="background:#e0793c"></span> Non Generik <strong id="legNonGenerik">-</strong></div>
         </div>
       </div>
       <p style="font-size:11px; color:#9ca3af; margin-top:10px;">Dihitung dari jumlah item obat di master data, bukan volume transaksi.</p>
     </div>
 
-    <div class="card" style="--accent:#173b5e">
+    <div class="card" style="--accent:#0f7a45">
       <h2><span class="card-num">7</span>Informasi Sistem</h2>
       <div class="ph-info-grid">
         <div class="ph-info-row"><span>Metode Stok</span><span>FEFO</span></div>
@@ -477,7 +478,7 @@
 
   <div id="panelEntrimanual" style="display:none;">
 
-  <div class="card" style="--accent:#173b5e">
+  <div class="card" style="--accent:#0f7a45">
     <h2><span class="card-num">1</span>Entri Resep Manual</h2>
     <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Buat resep langsung dari Farmasi buat pasien yang lagi berkunjung hari ini (di luar alur rekam medis). Ini terpisah dari Antrian Resep Pasien — resep yang disimpan di sini baru muncul di antrian setelah disimpan.</p>
     <div id="msgEntriResep"></div>
@@ -505,7 +506,7 @@
     <span class="jenis-tab-note">Tampilan dipisah, tapi tetap 1 tabel data — otomatis kepakai bareng di laporan Stok Opname & LPLPO.</span>
   </div>
 
-  <div class="card" style="--accent:#173b5e">
+  <div class="card" style="--accent:#0f7a45">
     <h2><span class="card-num">1</span><span id="judulFormObat">Tambah / Update Stok Obat</span></h2>
     <div id="msgObat"></div>
     <div class="grid-3">
@@ -678,7 +679,7 @@
     <div class="jenis-tab" id="ksTabBmhp" onclick="gantiTabKartustok('bmhp')">🧰 Kartu Stok BMHP</div>
   </div>
 
-  <div class="card" style="--accent:#1c7d7f">
+  <div class="card" style="--accent:#0f5c3c">
     <h2><span class="card-num">1</span><span id="judulKartustok">Kartu Stok Obat</span></h2>
     <p style="font-size:13px; color:#6b7280; margin-bottom:10px;">Riwayat keluar-masuk stok per item, dasar buat LPLPO & laporan (Obat & BMHP tetap terhubung ke laporan yang sama).</p>
     <div class="grid-2" style="margin-bottom:14px;">
@@ -751,7 +752,7 @@
 
   <div id="panelRacikan" style="display:none;">
 
-  <div class="card" style="--accent:#173b5e">
+  <div class="card" style="--accent:#0f7a45">
     <h2><span class="card-num">1</span>Buat Resep Racikan</h2>
     <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Campur beberapa obat dasar jadi satu puyer/kapsul racikan. Stok tiap obat dasar kepotong sesuai jumlah yang dipakai pas racikan diserahkan.</p>
     <div id="msgRacikan"></div>
@@ -795,7 +796,7 @@
 
   <div id="panelRiwayatobat" style="display:none;">
 
-  <div class="card" style="--accent:#26a3a0">
+  <div class="card" style="--accent:#16a36f">
     <h2><span class="card-num">1</span>Riwayat Obat Diserahkan</h2>
     <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Catatan obat yang sudah diserahkan ke pasien, bisa difilter per tanggal & nama pasien.</p>
     <div id="msgRiwayatObat"></div>
@@ -849,7 +850,7 @@
   <!-- ===== Sub-tab: Penerimaan dari Dinas Kesehatan (SBBK) ===== -->
   <div id="mutPanelSbbk">
 
-    <div class="card" style="--accent:#173b5e">
+    <div class="card" style="--accent:#0f7a45">
       <h2><span class="card-num">1</span>Buat Penerimaan SBBK Baru</h2>
       <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Stok baru bertambah setelah status disetel "Selesai" — sebelum itu data masih Draft/Diverifikasi, belum masuk stok resmi.</p>
       <div id="msgSbbk"></div>
@@ -971,7 +972,7 @@
       </div>
     </div>
 
-    <div class="card" style="--accent:#1c7d7f">
+    <div class="card" style="--accent:#0f5c3c">
       <h2><span class="card-num">2</span>Riwayat Mutasi Keluar</h2>
       <table>
         <thead><tr><th>Tanggal</th><th>Tujuan</th><th>Item</th><th>Penerima</th><th>Catatan</th></tr></thead>
@@ -985,7 +986,7 @@
   <!-- ===== Sub-tab: Mutasi Internal Antar Lokasi Simpan ===== -->
   <div id="mutPanelInternal" style="display:none;">
 
-    <div class="card" style="--accent:#26a3a0">
+    <div class="card" style="--accent:#16a36f">
       <h2><span class="card-num">1</span>Mutasi Internal Antar Lokasi Simpan</h2>
       <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Cuma pindah tempat simpan (misal gudang farmasi ⇄ ruang racik) — total stok Puskesmas tidak berubah, jadi tidak masuk Kartu Stok.</p>
       <div id="msgMutInternal"></div>
@@ -1031,7 +1032,7 @@
       <button type="button" class="btn-primary" onclick="simpanMutasiInternal()">Simpan Mutasi Internal</button>
     </div>
 
-    <div class="card" style="--accent:#173b5e">
+    <div class="card" style="--accent:#0f7a45">
       <h2><span class="card-num">2</span>Riwayat Mutasi Internal</h2>
       <table>
         <thead><tr><th>Tanggal</th><th>Item</th><th>Jumlah</th><th>Dari</th><th>Ke</th><th>Catatan</th></tr></thead>
@@ -1137,7 +1138,7 @@
   <!-- ===== Sub-tab: Riwayat Gabungan ===== -->
   <div id="mutPanelRiwayat" style="display:none;">
 
-    <div class="card" style="--accent:#1c7d7f">
+    <div class="card" style="--accent:#0f5c3c">
       <h2><span class="card-num">1</span>Riwayat Mutasi & Penerimaan (Gabungan)</h2>
       <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Log semua transaksi: penerimaan SBBK, mutasi keluar (klaster/Pustu), mutasi internal, dan retur.</p>
       <div class="grid-3" style="margin-bottom:14px;">
@@ -1181,7 +1182,7 @@
     <!-- ===== Sub-view: Laporan (kerja bulan berjalan) ===== -->
     <div id="lpViewLaporan">
 
-      <div class="card" style="--accent:#173b5e">
+      <div class="card" style="--accent:#0f7a45">
         <h2><span class="card-num">1</span>Header Laporan</h2>
         <div class="grid-3" style="margin-bottom:6px;">
           <div><label>Puskesmas</label><div style="font-size:13px; font-weight:600; color:var(--navy);">UPTD Puskesmas Bekawan</div></div>
@@ -1259,7 +1260,7 @@
 
     <!-- ===== Sub-view: Riwayat ===== -->
     <div id="lpViewRiwayat" style="display:none;">
-      <div class="card" style="--accent:#1c7d7f">
+      <div class="card" style="--accent:#0f5c3c">
         <h2><span class="card-num">1</span>Riwayat LPLPO</h2>
         <div class="grid-3" style="margin-bottom:14px;">
           <div>
@@ -1304,7 +1305,7 @@
   <!-- ===== 1. Data Stok & Ketersediaan Obat ===== -->
   <div id="lapPanelStok">
 
-    <div class="card" style="--accent:#173b5e">
+    <div class="card" style="--accent:#0f7a45">
       <h2><span class="card-num">1</span>Data Stok & Ketersediaan Obat</h2>
       <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Kartu stok, stok opname, register mutasi, dan pengelolaan obat expired/rusak — narik langsung dari data yang sudah tercatat.</p>
 
@@ -1322,7 +1323,7 @@
       </div>
     </div>
 
-    <div class="card" style="--accent:#1c7d7f">
+    <div class="card" style="--accent:#0f5c3c">
       <h2><span class="card-num">2</span>Dokumen & Register Wajib</h2>
       <table>
         <thead><tr><th>Dokumen / Laporan</th><th>Frekuensi</th><th>Update Terakhir</th><th>Status</th><th>Aksi</th></tr></thead>
@@ -1364,7 +1365,7 @@
   <!-- ===== 3–6. Segera dibangun ===== -->
   <div id="lapPanelFornas" style="display:none;">
 
-    <div class="card" style="--accent:#173b5e">
+    <div class="card" style="--accent:#0f7a45">
       <h2><span class="card-num">1</span>Kepatuhan Master Data Obat terhadap Fornas</h2>
       <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Item Obat (bukan BMHP — BMHP di luar cakupan Fornas) yang sudah dicocokkan ke Referensi Fornas lewat Master Data Obat.</p>
       <div class="lap-summary-strip">
@@ -1375,7 +1376,7 @@
       </div>
     </div>
 
-    <div class="card" style="--accent:#1c7d7f">
+    <div class="card" style="--accent:#0f5c3c">
       <h2><span class="card-num">2</span>Kepatuhan Peresepan terhadap Fornas</h2>
       <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Persentase item obat yang diresepkan & diserahkan pada periode terpilih yang termasuk Fornas.</p>
       <div class="grid-3" style="margin-bottom:14px;">
@@ -1447,7 +1448,7 @@
   </div>
   <div id="lapPanelEvaluasi" style="display:none;">
 
-    <div class="card" style="--accent:#26a3a0">
+    <div class="card" style="--accent:#16a36f">
       <h2><span class="card-num">1</span>10 Obat/BMHP Terbanyak Digunakan</h2>
       <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Rekap pemakaian (keluar ke pasien + mutasi ke klaster/Pustu) per periode — buat dasar perencanaan & lampiran LPLPO.</p>
 
@@ -1501,7 +1502,7 @@
       </table>
     </div>
 
-    <div class="card" style="--accent:#173b5e">
+    <div class="card" style="--accent:#0f7a45">
       <h2><span class="card-num">3</span>Indikator Peresepan Obat Rasional (POR)</h2>
       <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Standar Kepmenkes 128/MENKES/2004 & indikator inti WHO/INRUD — dihitung dari resep yang sudah diserahkan pada periode terpilih.</p>
 
@@ -1523,7 +1524,7 @@
       </p>
     </div>
 
-    <div class="card" style="--accent:#26a3a0">
+    <div class="card" style="--accent:#16a36f">
       <h2><span class="card-num">4</span>Rekap PIO (Pelayanan Informasi Obat)</h2>
       <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">Persentase obat yang sudah diberi edukasi/informasi cara pakai ke pasien saat diserahkan, per periode.</p>
 
@@ -2254,7 +2255,7 @@ async function muatRingkasanResep() {
       datasets: [{
         label: "Resep Diserahkan",
         data: Object.values(counts),
-        borderColor: "#173b5e",
+        borderColor: "#0f7a45",
         backgroundColor: "rgba(23,59,94,0.1)",
         tension: 0.35,
         fill: true,
@@ -2298,7 +2299,7 @@ async function muatGrafikPemakaian() {
       datasets: [{
         label: "Jumlah Keluar",
         data: top5.length ? top5.map(t => t[1]) : [0],
-        backgroundColor: "#1c7d7f",
+        backgroundColor: "#0f5c3c",
         borderRadius: 6
       }]
     },
@@ -2326,7 +2327,7 @@ function muatDonutGenerik(semuaObat) {
     type: "doughnut",
     data: {
       labels: ["Generik", "Non Generik"],
-      datasets: [{ data: [generik, nonGenerik], backgroundColor: ["#26a3a0", "#e0793c"], borderWidth: 0 }]
+      datasets: [{ data: [generik, nonGenerik], backgroundColor: ["#16a36f", "#e0793c"], borderWidth: 0 }]
     },
     options: { plugins: { legend: { display: false } }, cutout: "70%" }
   });
@@ -2392,7 +2393,7 @@ function cariFornasRef() {
   const match = fornasRefCache.find(f => labelFornasRef(f) === val);
   if (match) {
     hidden.value = match.id;
-    status.innerHTML = `<span style="color:#1c7d7f; font-weight:600;">✓ Cocok Fornas — ${match.kelas_terapi}</span>`;
+    status.innerHTML = `<span style="color:#0f5c3c; font-weight:600;">✓ Cocok Fornas — ${match.kelas_terapi}</span>`;
   } else {
     hidden.value = "";
     status.textContent = val ? "Tidak cocok referensi Fornas manapun (dianggap di luar Fornas)." : "Belum dicocokkan.";
@@ -2407,7 +2408,7 @@ function setFornasFieldDariObat(o) {
   if (ref) {
     cariInput.value = labelFornasRef(ref);
     hidden.value = ref.id;
-    status.innerHTML = `<span style="color:#1c7d7f; font-weight:600;">✓ Cocok Fornas — ${ref.kelas_terapi}</span>`;
+    status.innerHTML = `<span style="color:#0f5c3c; font-weight:600;">✓ Cocok Fornas — ${ref.kelas_terapi}</span>`;
   } else {
     cariInput.value = "";
     hidden.value = "";
@@ -2445,7 +2446,7 @@ function renderTabelObatFiltered() {
     const kategoriKelas = o.kategori && o.kategori !== "bebas" ? `badge-${o.kategori.replace("_terbatas","")}` : null;
     return `
     <tr>
-      <td>${o.nama_obat}${o.is_antibiotik ? ' <span class="badge" style="background:#fee2e2; color:#991b1b;">AB</span>' : ""}${o.fornas_ref_id ? ' <span class="badge" style="background:#e0f2f1; color:#1c7d7f;">Fornas</span>' : ""}${o.is_high_alert ? ' <span class="badge" style="background:#fef08a; color:#854d0e;" title="High Alert">⚠️ HA</span>' : ""}${o.is_lasa ? ` <span class="badge" style="background:#ede9fe; color:#5b21b6;" title="${o.lasa_pasangan ? 'Mirip: ' + o.lasa_pasangan : 'LASA'}">LASA</span>` : ""}${o.perlu_cold_chain ? ' <span class="badge" style="background:#dbeafe; color:#1e40af;" title="Cold Chain 2-8°C">❄️ CC</span>' : ""}</td>
+      <td>${o.nama_obat}${o.is_antibiotik ? ' <span class="badge" style="background:#fee2e2; color:#991b1b;">AB</span>' : ""}${o.fornas_ref_id ? ' <span class="badge" style="background:#e0f2f1; color:#0f5c3c;">Fornas</span>' : ""}${o.is_high_alert ? ' <span class="badge" style="background:#fef08a; color:#854d0e;" title="High Alert">⚠️ HA</span>' : ""}${o.is_lasa ? ` <span class="badge" style="background:#ede9fe; color:#5b21b6;" title="${o.lasa_pasangan ? 'Mirip: ' + o.lasa_pasangan : 'LASA'}">LASA</span>` : ""}${o.perlu_cold_chain ? ' <span class="badge" style="background:#dbeafe; color:#1e40af;" title="Cold Chain 2-8°C">❄️ CC</span>' : ""}</td>
       <td>${o.dosis || "-"}</td>
       <td>${kategoriKelas ? `<span class="badge ${kategoriKelas}">${LABEL_KATEGORI[o.kategori]}</span>` : (LABEL_KATEGORI[o.kategori] || "Bebas")}</td>
       <td>${o.satuan}</td>
@@ -3308,7 +3309,7 @@ function renderDetailResep(resep) {
           ${o.diserahkan ? `
             <div class="racikan-komponen-mini" style="width:100%;">Diserahkan: ${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul — Komponen dipotong: ${(o.komponen || []).map(k => `${k.nama_obat} (${k.jumlah_dipakai_aktual ?? k.jumlah_dipakai}${k.satuan ? " " + k.satuan : ""})`).join(", ")}</div>
             <span class="badge badge-selesai">Diserahkan</span>
-            ${o.pio_diberikan ? `<span class="badge" style="background:#e0f2f1; color:#1c7d7f;">PIO ✓</span>` : `<span class="badge" style="background:#fef3c7; color:#92400e;">PIO belum tercatat</span>`}
+            ${o.pio_diberikan ? `<span class="badge" style="background:#e0f2f1; color:#0f5c3c;">PIO ✓</span>` : `<span class="badge" style="background:#fef3c7; color:#92400e;">PIO belum tercatat</span>`}
             <button type="button" onclick='cetakEtiket(${JSON.stringify(resep.kunjungan?.pasien?.nama || "-")}, ${JSON.stringify(o)})'>Cetak Etiket</button>
           ` : `
             <div class="racikan-serah-block" style="width:100%;">
@@ -3340,7 +3341,7 @@ function renderDetailResep(resep) {
             </label>
             ${o.diganti ? `<div class="racikan-komponen-mini" style="width:100%; color:#92400e;">Diganti — diberikan: <strong>${o.nama_obat_diberikan}${o.dosis_diberikan ? " " + o.dosis_diberikan : ""}</strong>${o.alasan_ganti ? ` (${o.alasan_ganti})` : ""}</div>` : ""}
             <span class="badge badge-selesai">Diserahkan ${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}</span>
-            ${o.pio_diberikan ? `<span class="badge" style="background:#e0f2f1; color:#1c7d7f;">PIO ✓</span>` : `<span class="badge" style="background:#fef3c7; color:#92400e;">PIO belum tercatat</span>`}
+            ${o.pio_diberikan ? `<span class="badge" style="background:#e0f2f1; color:#0f5c3c;">PIO ✓</span>` : `<span class="badge" style="background:#fef3c7; color:#92400e;">PIO belum tercatat</span>`}
             <button type="button" onclick='cetakEtiket(${JSON.stringify(resep.kunjungan?.pasien?.nama || "-")}, ${JSON.stringify(o)})'>Cetak Etiket</button>
           ` : `
             <label style="flex:1;">
@@ -3416,7 +3417,7 @@ function renderDetailResepSelesai(resep) {
               const jumlah = isRacikan
                 ? `${o.jumlah_diserahkan ?? o.jumlah_bungkus} bungkus/kapsul`
                 : `${o.jumlah_diserahkan ?? o.jumlah}${o.satuan ? " " + o.satuan : ""}`;
-              return `<tr><td>${nama}</td><td><span class="badge" style="background:#e0f2f1; color:#1c7d7f;">${jenis}</span></td><td>${aturan}</td><td>${jumlah}</td></tr>`;
+              return `<tr><td>${nama}</td><td><span class="badge" style="background:#e0f2f1; color:#0f5c3c;">${jenis}</span></td><td>${aturan}</td><td>${jumlah}</td></tr>`;
             }).join("")}
           </tbody>
         </table>
@@ -5463,7 +5464,7 @@ async function muatTopObat() {
       <td>${r.satuan}</td>
       <td>
         <div style="background:#eef2f2; border-radius:4px; overflow:hidden; height:14px;">
-          <div style="background:${r.jenis === "bmhp" ? "#6a4c93" : "#1c7d7f"}; height:100%; width:${Math.round((r.total / maxTotal) * 100)}%;"></div>
+          <div style="background:${r.jenis === "bmhp" ? "#6a4c93" : "#0f5c3c"}; height:100%; width:${Math.round((r.total / maxTotal) * 100)}%;"></div>
         </div>
       </td>
     </tr>
