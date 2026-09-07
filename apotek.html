@@ -309,6 +309,188 @@
 .lap-segera .ic { font-size: 32px; margin-bottom: 10px; }
 .lap-segera .t { font-size: 14px; font-weight: 700; color: var(--navy-2, #0f7a45); margin-bottom: 6px; }
 
+
+/* ============================================================
+   SIMPUS BEKAWAN — REDESIGN APOTEK v2
+   VISUAL ONLY: tidak mengubah id, onclick, panel, atau JavaScript.
+   ============================================================ */
+:root{
+  --app-bg:#f4f7f8;
+  --surface:#ffffff;
+  --surface-2:#f8fafb;
+  --ink:#132238;
+  --muted:#667085;
+  --line:#e3e8ee;
+  --navy:#102f4a;
+  --navy-2:#174b69;
+  --green:#138a5b;
+  --green-2:#19a56d;
+  --green-soft:#e9f7f0;
+  --orange:#e4873d;
+  --orange-soft:#fff3e8;
+  --purple:#7653a8;
+  --purple-soft:#f3eef9;
+  --danger:#c84d4d;
+  --danger-soft:#fff0f0;
+  --shadow:0 10px 30px rgba(16,47,74,.07);
+  --shadow-sm:0 4px 14px rgba(16,47,74,.06);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%;background:var(--app-bg);color:var(--ink)}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;font-size:14px!important;line-height:1.5!important;overflow-x:hidden}
+
+/* ---------- APP SHELL ---------- */
+.app-shell{min-height:100vh!important;background:var(--app-bg)!important}
+.sidebar{
+  width:258px!important; background:linear-gradient(180deg,#102f4a 0%,#0d3c54 52%,#0d6b51 100%)!important;
+  box-shadow:8px 0 28px rgba(12,42,62,.10)!important; z-index:50!important;
+}
+.sidebar .brand{
+  min-height:78px!important;padding:18px 20px!important;display:flex!important;align-items:center!important;gap:11px!important;
+  border-bottom:1px solid rgba(255,255,255,.10)!important;
+}
+.sidebar .brand .dot{width:11px!important;height:11px!important;border-radius:50%!important;background:#44d39b!important;box-shadow:0 0 0 5px rgba(68,211,155,.13)!important;flex:none!important}
+.sidebar .brand strong{font-size:13px!important;line-height:1.35!important;letter-spacing:.02em!important;color:#fff!important}
+.sidebar nav{padding:12px 10px 20px!important}
+.sidebar nav a{
+  display:flex!important;align-items:center!important;gap:10px!important;min-height:42px!important;margin:2px 0!important;padding:9px 13px!important;
+  border-radius:9px!important;border-left:3px solid transparent!important;color:rgba(255,255,255,.78)!important;
+  font-size:13px!important;font-weight:500!important;transition:.18s ease!important;text-decoration:none!important;cursor:pointer!important;
+}
+.sidebar nav a:hover{background:rgba(255,255,255,.075)!important;color:#fff!important;transform:none!important}
+.sidebar nav a.active{background:rgba(68,211,155,.15)!important;color:#fff!important;border-left-color:#44d39b!important;font-weight:700!important}
+.ph-group-title{
+  padding:18px 13px 7px!important;font-size:10px!important;letter-spacing:.09em!important;color:rgba(255,255,255,.45)!important;
+  text-transform:uppercase!important;font-weight:800!important;line-height:1.2!important;
+}
+.ph-group-title:first-child{padding-top:7px!important;color:rgba(255,255,255,.60)!important}
+.ph-group-title .chev{font-size:10px!important;color:rgba(255,255,255,.65)!important}
+
+.main-wrap{min-width:0!important;background:var(--app-bg)!important}
+.topbar{
+  height:74px!important;min-height:74px!important;padding:0 30px!important;background:#fff!important;color:var(--ink)!important;
+  border-bottom:1px solid var(--line)!important;box-shadow:0 2px 12px rgba(16,47,74,.035)!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;position:sticky!important;top:0!important;z-index:30!important;
+}
+.topbar h1{margin:0!important;color:var(--ink)!important;font-size:20px!important;font-weight:750!important;letter-spacing:-.02em!important}
+.user-info{display:flex!important;align-items:center!important;gap:12px!important;color:var(--muted)!important;font-size:13px!important;font-weight:600!important}
+.user-info:before{content:'PF';display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--green-soft);color:var(--green);font-size:11px;font-weight:800}
+.user-info button{margin-left:4px!important;border:1px solid #d8e0e7!important;background:#fff!important;color:#334155!important;border-radius:8px!important;padding:8px 13px!important;font-weight:700!important;cursor:pointer!important}
+.user-info button:hover{background:#f7f9fa!important;border-color:#c7d1da!important}
+
+.dash-content{max-width:1500px!important;margin:0 auto!important;padding:28px 30px 48px!important;min-width:0!important}
+#panelBeranda:before{
+  content:'Kelola resep, stok, distribusi, dan laporan farmasi dalam satu tempat.';
+  display:block;color:var(--muted);font-size:13px;margin:-15px 0 22px;
+}
+
+/* ---------- CARDS ---------- */
+.card,.stat-card{
+  background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:14px!important;
+  box-shadow:var(--shadow-sm)!important;overflow:hidden!important;
+}
+.card{padding:22px!important;margin-bottom:18px!important;border-left:1px solid var(--line)!important}
+.card:hover{box-shadow:var(--shadow)!important}
+.card h2{margin:0 0 7px!important;color:var(--ink)!important;font-size:16px!important;line-height:1.35!important;letter-spacing:-.01em!important}
+.card h3{color:var(--ink)!important}
+.card p{color:var(--muted)!important}
+.card-num{width:28px!important;height:28px!important;border-radius:8px!important;background:var(--green)!important;font-size:11px!important;box-shadow:none!important}
+
+/* ---------- DASHBOARD STATS ---------- */
+.stat-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;margin-bottom:20px!important}
+.stat-card{padding:19px 20px!important;position:relative!important;overflow:hidden!important;border-left:4px solid var(--green)!important}
+.stat-card:after{content:'';position:absolute;right:-22px;top:-22px;width:90px;height:90px;border-radius:50%;background:var(--green-soft);opacity:.8}
+.stat-card:nth-child(2){border-left-color:var(--orange)!important}.stat-card:nth-child(2):after{background:var(--orange-soft)}
+.stat-card:nth-child(3){border-left-color:var(--purple)!important}.stat-card:nth-child(3):after{background:var(--purple-soft)}
+.stat-card .label{font-size:11px!important;text-transform:uppercase!important;letter-spacing:.06em!important;color:var(--muted)!important;font-weight:750!important}
+.stat-card .value{font-size:28px!important;line-height:1.1!important;font-weight:800!important;color:var(--ink)!important;margin-top:8px!important;position:relative!important;z-index:1}
+
+.ph-grid-3{gap:16px!important;margin-bottom:18px!important}
+.ph-notif-row{border:1px solid var(--line)!important;box-shadow:none!important;padding:12px 13px!important;background:var(--surface-2)!important}
+.ph-notif-row.danger{background:var(--danger-soft)!important;border-color:#f2d4d4!important}
+.ph-notif-row.warn{background:var(--orange-soft)!important;border-color:#f4ddc8!important}
+.ph-notif-row strong{font-size:18px!important;color:var(--ink)!important}
+.ph-quick-grid{gap:9px!important}
+.ph-quick-tile{background:var(--surface-2)!important;border:1px solid var(--line)!important;border-radius:10px!important;padding:13px 8px!important;font-weight:650!important;color:#344054!important;transition:.15s ease!important}
+.ph-quick-tile:hover{background:var(--green-soft)!important;border-color:#bfe7d3!important;transform:translateY(-1px)!important}
+
+/* ---------- TABLES ---------- */
+.card table{width:100%!important;border-collapse:separate!important;border-spacing:0!important;font-size:12.5px!important;display:table!important}
+.card table thead th{background:#f7f9fa!important;color:#667085!important;font-size:10.5px!important;text-transform:uppercase!important;letter-spacing:.045em!important;font-weight:800!important;padding:11px 12px!important;border-bottom:1px solid var(--line)!important;white-space:nowrap!important}
+.card table tbody td{padding:11px 12px!important;border-bottom:1px solid #edf0f3!important;color:#344054!important;vertical-align:middle!important;background:#fff!important}
+.card table tbody tr:hover td{background:#fbfcfc!important}
+.card table tbody tr:last-child td{border-bottom:none!important}
+.card > table,.lp-table-wrap{border:1px solid var(--line)!important;border-radius:10px!important;overflow:auto!important}
+
+/* ---------- FORM CONTROLS ---------- */
+label{font-size:11px!important;color:#475467!important;font-weight:700!important;display:block!important;margin-bottom:6px!important}
+input,select,textarea{font-family:inherit!important;max-width:100%!important;border:1px solid #d7dee6!important;background:#fff!important;color:#1d2939!important;border-radius:9px!important;min-height:40px!important;padding:9px 11px!important;outline:none!important;box-shadow:none!important}
+input:focus,select:focus,textarea:focus{border-color:#7bcda9!important;box-shadow:0 0 0 3px rgba(25,165,109,.10)!important}
+button{font-family:inherit!important;border-radius:8px!important;border:1px solid #d7dee6!important;background:#fff!important;color:#344054!important;font-weight:700!important;padding:9px 13px!important;cursor:pointer!important;transition:.15s ease!important}
+button:hover{border-color:#b8c5cf!important;background:#f8fafb!important}
+button.btn-primary,.btn-primary{background:var(--green)!important;border-color:var(--green)!important;color:#fff!important;box-shadow:0 3px 8px rgba(19,138,91,.15)!important}
+button.btn-primary:hover,.btn-primary:hover{background:#0f7950!important;border-color:#0f7950!important;transform:translateY(-1px)!important}
+.grid-2,.grid-3{gap:14px!important}
+
+/* ---------- TABS ---------- */
+.jenis-tab-row{gap:7px!important;padding:4px!important;background:#edf2f4!important;border:1px solid var(--line)!important;border-radius:11px!important;margin-bottom:16px!important;width:max-content!important;max-width:100%!important}
+.jenis-tab{border:0!important;border-radius:8px!important;padding:9px 14px!important;background:transparent!important;color:#667085!important;font-weight:750!important}
+.jenis-tab:hover{background:#fff!important;border-color:transparent!important}
+.jenis-tab.active{background:#fff!important;color:var(--green)!important;border:0!important;box-shadow:0 2px 7px rgba(16,47,74,.08)!important}
+.jenis-tab-note{font-size:11px!important;color:var(--muted)!important;padding:0 10px!important}
+.riwayat-tabs button{background:#fff!important}
+.riwayat-tabs button.active{background:var(--green)!important;border-color:var(--green)!important}
+
+/* ---------- QUEUE ---------- */
+.queue-layout{gap:16px!important}
+.queue-list{width:320px!important;padding-right:2px!important}
+.queue-item{border:1px solid var(--line)!important;border-radius:10px!important;padding:12px 14px!important;box-shadow:none!important}
+.queue-item:hover{border-color:#9ed9bf!important;background:#fbfefc!important}
+.queue-item.active{border-color:#72c9a1!important;background:var(--green-soft)!important;box-shadow:0 0 0 2px rgba(19,138,91,.05)!important}
+.queue-item .nama{font-size:13.5px!important}
+
+/* ---------- MUTASI / LPLPO DYNAMIC ROWS ---------- */
+.entri-obat-row,.mut-item-row{background:#f9fafb!important;border:1px solid var(--line)!important;border-radius:10px!important;padding:12px!important}
+.entri-obat-row-line{gap:8px!important}
+.entri-obat-row input,.entri-obat-row select,.mut-item-row input,.mut-item-row select{min-height:38px!important}
+.so-link-note{background:#f7f9fa!important;border-color:#dbe2e8!important}
+.lp-status-step{border-color:#dfe5ea!important}
+.lp-status-step.done{background:var(--green)!important;border-color:var(--green)!important}
+.lp-status-step.current{background:var(--orange)!important;border-color:var(--orange)!important}
+.lp-sum-card,.lap-sum-card{border:1px solid var(--line)!important;border-radius:11px!important;box-shadow:none!important}
+.lp-sum-card .val,.lap-sum-card .value{color:var(--green)!important}
+
+/* ---------- EMPTY / MESSAGES ---------- */
+.msg{border-radius:9px!important;padding:10px 12px!important;margin:8px 0 12px!important;font-size:12.5px!important}
+
+/* ---------- MOBILE ---------- */
+@media(max-width:1100px){
+  .sidebar{width:228px!important}
+  .dash-content{padding:24px 20px 40px!important}
+  .topbar{padding:0 20px!important}
+  .ph-grid-3{grid-template-columns:1fr!important}
+  .stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+  .sidebar{position:fixed!important;left:-258px!important;transition:left .2s ease!important}
+  .main-wrap{margin-left:0!important}
+  .topbar{height:auto!important;min-height:66px!important;padding:12px 15px!important;gap:10px!important}
+  .topbar h1{font-size:16px!important}
+  .user-info>span{display:none!important}
+  .dash-content{padding:18px 13px 35px!important}
+  .stat-grid{grid-template-columns:1fr!important}
+  .card{padding:17px!important;border-radius:12px!important}
+  .queue-list{width:100%!important;max-height:300px!important}
+  .jenis-tab-row{width:100%!important;overflow-x:auto!important;flex-wrap:nowrap!important}
+  .jenis-tab-note{display:none!important}
+  .grid-2,.grid-3{grid-template-columns:1fr!important}
+}
+
+/* cegah elemen panjang merusak lebar halaman */
+.card,.card *,.dash-content *{min-width:0}
+pre,code{max-width:100%;overflow:auto}
+
 </style>
 </head>
 <body>
