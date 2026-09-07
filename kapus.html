@@ -51,68 +51,81 @@
 .kap-hist-badge.rejected { background:#fde7e9; color:#c62836; }
 .tag-sync { display:inline-block; font-size:8.5px; font-weight:700; background:#eafaee; color:var(--green); padding:1px 6px; border-radius:8px; margin-left:4px; }
 </style>
+
+<style id="kapus-redesign">
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{--navy:#102f49;--navy2:#163c5b;--teal:#0d9d86;--teal2:#087966;--soft:#e9f8f4;--bg:#f4f7f8;--card:#fff;--line:#e1e8ec;--text:#18384a;--muted:#718795;--shadow:0 6px 20px rgba(24,56,74,.07)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,Arial,sans-serif;color:var(--text);background:var(--bg)}button,a{font:inherit}a{text-decoration:none;color:inherit;cursor:pointer}
+.app-shell{min-height:100vh;display:flex}.sidebar{width:250px!important;flex:0 0 250px;background:linear-gradient(180deg,var(--navy),#0d2941)!important;color:#dce9f1;position:fixed!important;inset:0 auto 0 0;z-index:30;display:flex;flex-direction:column;box-shadow:5px 0 18px rgba(12,35,53,.08);padding:0!important}.brand{height:84px;padding:18px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08)}.brand .logo{width:43px;height:43px;border:2px solid #66d5c1;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#66d5c1;font-size:19px;font-weight:800}.brand-text strong{display:block;color:#fff;font-size:15px;line-height:1.15}.brand-text span{display:block;color:#9fb8c8;font-size:10px;margin-top:4px}
+.nav{padding:18px 10px 24px;overflow:auto;flex:1}.nav-label,.ph-group-title{color:#7190a4;font-size:10px;font-weight:800;letter-spacing:.08em;padding:0 12px 8px;margin-top:14px}.nav-label:first-child{margin-top:0}.nav-item,.nav-toggle{width:100%;border:0;background:transparent;color:#dbe8ef;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;cursor:pointer;text-align:left;font-size:12.5px;font-weight:600;margin:2px 0}.nav-item:hover,.nav-toggle:hover{background:rgba(255,255,255,.07);color:#fff}.nav-item.active,.nav-sub a.active{background:rgba(38,91,123,.75);color:#fff;border-left:3px solid #17b99d;padding-left:9px}.nav-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:#9fc0d0;flex:none}.nav-item.active .nav-icon{color:#5ee0c7}.nav-toggle .chev{margin-left:auto;transition:.2s}.nav-toggle.open .chev{transform:rotate(180deg)}.nav-sub{display:none;padding:0 0 4px 24px}.nav-sub.open{display:block}.nav-sub a{display:block;padding:8px 10px;color:#a9bfcc;font-size:11.5px;border-radius:6px;margin:1px 0}.nav-sub a:hover{background:rgba(255,255,255,.06);color:#fff}.sidebar-bottom{padding:13px 16px;border-top:1px solid rgba(255,255,255,.08);color:#7893a5;font-size:10px;line-height:1.5}
+.main-wrap{margin-left:250px!important;min-width:0;flex:1;width:auto!important}.topbar{height:72px!important;background:#fff!important;border-bottom:1px solid var(--line)!important;display:flex!important;align-items:center;justify-content:space-between;padding:0 30px!important;position:sticky;top:0;z-index:20;box-shadow:none!important}.top-left{display:flex;align-items:center;gap:13px}.page-heading small{display:block;color:var(--muted);font-size:10.5px;margin-bottom:3px}.page-heading h1,.topbar h1{margin:0;color:var(--navy);font-size:18px;font-weight:800}.account{display:flex;align-items:center;gap:12px}.avatar{width:38px;height:38px;border-radius:50%;background:var(--soft);color:var(--teal2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;border:1px solid #c8ece4}.account-info{line-height:1.25}.account-info .name{font-size:12px;font-weight:700;color:var(--navy)}.account-info .role{font-size:10px;color:var(--muted);margin-top:3px}.btn-logout{border:1px solid #d8e2e7;background:#fff;color:#526b79;padding:8px 13px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer}.btn-logout:hover{background:#f5f8f9;color:var(--navy)}.mobile-menu{display:none;border:0;background:#fff;color:var(--navy);font-size:21px;cursor:pointer}
+.dash-content{padding:27px 30px 40px!important;max-width:1500px;margin:auto;min-width:0}.dash-content .card{background:#fff;border:1px solid var(--line)!important;border-radius:12px!important;box-shadow:var(--shadow)!important;overflow:hidden;margin-bottom:18px;padding:0!important}.dash-content .card h2{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);font-size:13px!important;color:var(--navy);font-weight:800}.dash-content .card h2 .card-num{display:inline-flex;width:28px;height:28px;border-radius:8px;align-items:center;justify-content:center;color:#fff;font-size:12px;margin-right:8px}.dash-content .tbl-wrap{padding:0 18px 16px}.dash-content table{width:100%;border-collapse:collapse}.dash-content th{text-align:left;padding:11px 8px;background:#f7f9fa;color:#6e8591;font-size:9.5px;letter-spacing:.04em;font-weight:800}.dash-content td{padding:12px 8px;border-bottom:1px solid #edf1f3;font-size:11.5px;color:#385766}.dash-content tr:last-child td{border-bottom:0}
+.kap-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}.kap-kpi-card{background:#fff!important;border:1px solid var(--line)!important;border-radius:12px!important;padding:17px 18px!important;box-shadow:var(--shadow)!important;border-left:4px solid var(--accent,#999)!important;min-height:105px}.kap-kpi-card .label{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600}.kap-kpi-card .value{font-size:28px;font-weight:800;color:var(--navy);margin-top:12px}.kap-kpi-card.warn .value{color:var(--orange)}.kap-kpi-card.danger .value{color:var(--red)}.kap-kpi-card.good .value{color:var(--green)}
+.kap-alert-row{display:flex;align-items:flex-start;gap:10px;padding:11px 18px;border-bottom:1px solid var(--line);font-size:12px}.kap-alert-row:last-child{border-bottom:none}.kap-kosong{text-align:center;padding:24px;color:var(--muted);font-size:12px}.kap-appr-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:12px 0}.kap-subtab-row{display:flex;gap:6px;margin:0 0 16px;border-bottom:2px solid var(--line);overflow:auto}.kap-subtab-btn{background:none;border:none;padding:10px 4px;margin-right:18px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}.kap-subtab-btn.active{color:var(--navy);border-bottom-color:var(--teal)}
+@media(max-width:1050px){.kap-kpi-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.sidebar{transform:translateX(-100%);transition:.22s}.sidebar.show{transform:translateX(0)}.main-wrap{margin-left:0!important}.mobile-menu{display:block}.topbar{padding:0 17px!important;height:64px!important}.account-info{display:none}.dash-content{padding:20px 16px 32px!important}.kap-kpi-grid{grid-template-columns:1fr 1fr;gap:10px}.kap-kpi-card{min-height:95px;padding:14px!important}.kap-kpi-card .value{font-size:24px}.sidebar-overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:25}}@media(max-width:480px){.kap-kpi-grid{grid-template-columns:1fr}.btn-logout{padding:7px 9px}.page-heading h1,.topbar h1{font-size:16px}}
+</style>
 </head>
 <body>
 
 <div class="app-shell">
 
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <span class="dot"></span>
-      <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+      <div class="logo">✚</div>
+      <div class="brand-text"><strong>SIMPUS BEKAWAN</strong><span>Sistem Informasi Manajemen Puskesmas</span></div>
     </div>
-    <nav>
-      <div class="ph-group-title">Kepala Puskesmas</div>
-      <a class="active" id="navDashboard" onclick="gantiSubtabKapus('dashboard')">Dashboard Eksekutif</a>
-      <a id="navApproval" onclick="gantiSubtabKapus('approval')">Persetujuan &amp; Otorisasi</a>
-      <a id="navKinerja" onclick="gantiSubtabKapus('kinerja')">Kinerja Pegawai</a>
-      <a id="navSdm" onclick="gantiSubtabKapus('sdm')">SDM Ringkas</a>
-      <a id="navKeuangan" onclick="gantiSubtabKapus('keuangan')">Laporan Keuangan</a>
-      <a id="navTren" onclick="gantiSubtabKapus('tren')">Tren Kunjungan</a>
-      <a id="navKia" onclick="gantiSubtabKapus('kia')">Program KIA</a>
-      <a id="navMenular" onclick="gantiSubtabKapus('menular')">Program Penyakit Menular</a>
-      <a id="navRanapUgd" onclick="gantiSubtabKapus('ranapugd')">Rekap Ranap &amp; UGD</a>
-      <a id="navKlaster3" onclick="gantiSubtabKapus('klaster3')">Program Dewasa &amp; Lansia</a>
-      <a id="navApotek" onclick="gantiSubtabKapus('apotek')">Rekap Apotek</a>
-      <a id="navSurvei" onclick="gantiSubtabKapus('survei')">Rekap Survei Kepuasan</a>
-      <a id="navGigi" onclick="gantiSubtabKapus('gigi')">Rekap Poli Gigi</a>
-      <a id="navMutu" onclick="gantiSubtabKapus('mutu')">Mutu &amp; Keselamatan Pasien</a>
-      <a id="navSurveilans" onclick="gantiSubtabKapus('surveilans')">Surveilans &amp; KLB</a>
-      <a id="navRisiko" onclick="gantiSubtabKapus('risiko')">Manajemen Risiko &amp; PPI/K3</a>
-      <a id="navKesling" onclick="gantiSubtabKapus('kesling')">Kesehatan Lingkungan</a>
-      <a id="navAnakRemaja" onclick="gantiSubtabKapus('anakremaja')">Anak Sekolah &amp; Remaja</a>
-      <a id="navLaporanDinas" onclick="gantiSubtabKapus('laporandinas')">Laporan ke Dinas</a>
+    <nav class="nav">
+      <div class="nav-label">EKSEKUTIF</div>
+      <button class="nav-toggle open" type="button" data-menu="eksekutif"><span class="nav-icon">▣</span><span>Dashboard & Manajemen</span><span class="chev">⌄</span></button>
+      <div class="nav-sub open" id="eksekutif">
+        <a id="navDashboard" class="active" onclick="gantiSubtabKapus('dashboard')">Dashboard Eksekutif</a>
+        <a id="navApproval" onclick="gantiSubtabKapus('approval')">Persetujuan & Otorisasi</a>
+        <a id="navKinerja" onclick="gantiSubtabKapus('kinerja')">Kinerja Pegawai</a>
+        <a id="navSdm" onclick="gantiSubtabKapus('sdm')">SDM Ringkas</a>
+        <a id="navKeuangan" onclick="gantiSubtabKapus('keuangan')">Laporan Keuangan</a>
+      </div>
 
-      <div class="ph-group-title">Keamanan</div>
-      <a id="navAudit" onclick="gantiSubtabKapus('audit')">Audit / Keamanan</a>
+      <div class="nav-label">PELAYANAN & PROGRAM</div>
+      <button class="nav-toggle" type="button" data-menu="program"><span class="nav-icon">▦</span><span>Program Pelayanan</span><span class="chev">⌄</span></button>
+      <div class="nav-sub" id="program">
+        <a id="navTren" onclick="gantiSubtabKapus('tren')">Tren Kunjungan</a>
+        <a id="navKia" onclick="gantiSubtabKapus('kia')">Program KIA</a>
+        <a id="navMenular" onclick="gantiSubtabKapus('menular')">Program Penyakit Menular</a>
+        <a id="navRanapUgd" onclick="gantiSubtabKapus('ranapugd')">Rekap Rawat Inap & UGD</a>
+        <a id="navKlaster3" onclick="gantiSubtabKapus('klaster3')">Program Dewasa & Lansia</a>
+        <a id="navApotek" onclick="gantiSubtabKapus('apotek')">Rekap Apotek</a>
+        <a id="navGigi" onclick="gantiSubtabKapus('gigi')">Rekap Poli Gigi</a>
+      </div>
 
-      <div class="ph-group-title">Modul Lain</div>
-      <a href="index.html">Pendaftaran</a>
-      <a href="rekam-medis.html">Rekam Medis</a>
-      <a href="apotek.html">Apotek</a>
-      <a href="ugd.html">UGD</a>
-      <a href="ranap.html">Rawat Inap</a>
-      <a href="klaster1.html">Klaster 1</a>
-      <a href="klaster2.html">Klaster 2</a>
-      <a href="klaster3.html">Klaster 3</a>
-      <a href="klaster4.html">Klaster 4</a>
-      <a href="gigi.html">Poli Gigi</a>
-      <a href="pustu.html">Pustu</a>
-      <a href="pengaturan.html">Pengaturan</a>
-      <a href="kasir.html">Kasir</a>
-      <a href="papan-antrian.html">Papan Antrian</a>
-      <a href="pemegang-program.html">Pemegang Program</a>
+      <div class="nav-label">MUTU & PENGAWASAN</div>
+      <button class="nav-toggle" type="button" data-menu="mutu"><span class="nav-icon">✓</span><span>Mutu & Pengawasan</span><span class="chev">⌄</span></button>
+      <div class="nav-sub" id="mutu">
+        <a id="navSurvei" onclick="gantiSubtabKapus('survei')">Survei Kepuasan</a>
+        <a id="navMutu" onclick="gantiSubtabKapus('mutu')">Mutu & Keselamatan Pasien</a>
+        <a id="navSurveilans" onclick="gantiSubtabKapus('surveilans')">Surveilans & KLB</a>
+        <a id="navRisiko" onclick="gantiSubtabKapus('risiko')">Manajemen Risiko & PPI/K3</a>
+        <a id="navKesling" onclick="gantiSubtabKapus('kesling')">Kesehatan Lingkungan</a>
+        <a id="navAnakRemaja" onclick="gantiSubtabKapus('anakremaja')">Anak Sekolah & Remaja</a>
+        <a id="navLaporanDinas" onclick="gantiSubtabKapus('laporandinas')">Laporan ke Dinas</a>
+      </div>
+
+      <div class="nav-label">KEAMANAN</div>
+      <a class="nav-item" id="navAudit" onclick="gantiSubtabKapus('audit')"><span class="nav-icon">⌁</span><span>Audit / Keamanan</span></a>
+
+      <div class="nav-label">MODUL LAIN</div>
+      <button class="nav-toggle" type="button" data-menu="modul"><span class="nav-icon">☰</span><span>Modul SIMPUS</span><span class="chev">⌄</span></button>
+      <div class="nav-sub" id="modul">
+        <a href="admin.html">Admin Utama</a><a href="index.html">Pendaftaran</a><a href="rekam-medis.html">Rekam Medis</a><a href="apotek.html">Apotek</a><a href="ugd.html">UGD</a><a href="ranap.html">Rawat Inap</a><a href="klaster1.html">Klaster 1</a><a href="klaster2.html">Klaster 2</a><a href="klaster3.html">Klaster 3</a><a href="klaster4.html">Klaster 4</a><a href="gigi.html">Poli Gigi</a><a href="pustu.html">Pustu</a><a href="pengaturan.html">Pengaturan</a><a href="kasir.html">Kasir</a><a href="papan-antrian.html">Papan Antrian</a><a href="pemegang-program.html">Pemegang Program</a>
+      </div>
     </nav>
+    <div class="sidebar-bottom">Akses eksekutif untuk pemantauan, persetujuan, dan evaluasi layanan.<br>UPTD Puskesmas Bekawan</div>
   </aside>
 
   <div class="main-wrap">
 
     <div class="topbar">
-      <h1>Dashboard Eksekutif</h1>
-      <div class="user-info">
-        <span id="namaUser">Memuat...</span>
-        <button onclick="logout()">Keluar</button>
-      </div>
+      <div class="top-left"><button class="mobile-menu" id="mobileMenu" type="button">☰</button><div class="page-heading"><small>SIMPUS / Eksekutif</small><h1>Dashboard Eksekutif</h1></div></div>
+      <div class="account"><div class="avatar" id="avatarKapus">K</div><div class="account-info"><div class="name" id="namaUser">Memuat...</div><div class="role">Kepala Puskesmas</div></div><button class="btn-logout" onclick="logout()">Keluar</button></div>
     </div>
 
     <div class="dash-content">
@@ -2677,6 +2690,21 @@ async function muatRingkasanAkunKapus() {
       }).join("")
     : `<div class="kap-kosong">Tidak ada akun nonaktif saat ini.</div>`;
 }
+</script>
+
+<script id="kapus-layout-script">
+(function(){
+  document.querySelectorAll('.nav-toggle').forEach(btn=>btn.addEventListener('click',()=>{
+    const id=btn.dataset.menu, sub=document.getElementById(id);
+    if(!sub) return; sub.classList.toggle('open'); btn.classList.toggle('open');
+  }));
+  const side=document.getElementById('sidebar');
+  const mobile=document.getElementById('mobileMenu');
+  if(mobile) mobile.addEventListener('click',()=>side.classList.toggle('show'));
+  document.querySelectorAll('.nav-sub a, .nav-item').forEach(a=>a.addEventListener('click',()=>{if(window.innerWidth<=760) side.classList.remove('show')}));
+  const nameEl=document.getElementById('namaUser'), avatar=document.getElementById('avatarKapus');
+  if(nameEl && avatar){ const obs=new MutationObserver(()=>{ const n=(nameEl.textContent||'K').trim(); if(n && n!=='Memuat...') avatar.textContent=n.charAt(0).toUpperCase(); }); obs.observe(nameEl,{childList:true,subtree:true}); }
+})();
 </script>
 </body>
 </html>
