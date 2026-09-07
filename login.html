@@ -4,50 +4,319 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login - SIMPUS UPTD Puskesmas Bekawan</title>
-<link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --lg-green-dark:#0f5132;
+    --lg-green:#0f7a45;
+    --lg-green-2:#16a36f;
+    --lg-green-light:#e6f6ec;
+    --lg-navy:#0b3b2e;
+    --lg-text:#1f2d27;
+    --lg-muted:#6b7c74;
+    --lg-border:#e1e8e3;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+
+  body{
+    font-family:"Inter",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#eef3f6;
+    padding:24px;
+  }
+
+  .login-shell{
+    width:100%;
+    max-width:1180px;
+    min-height:640px;
+    background:#fff;
+    border-radius:28px;
+    overflow:hidden;
+    display:grid;
+    grid-template-columns:1.05fr 1fr;
+    box-shadow:0 30px 60px -20px rgba(15,90,50,0.25);
+  }
+
+  /* ---------- LEFT PANEL ---------- */
+  .login-hero{
+    position:relative;
+    background:linear-gradient(180deg,#bfe3f5 0%,#dff0f7 42%,#eaf6ee 62%);
+    padding:48px 44px 0 44px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+
+  .hero-top{position:relative;z-index:3;}
+
+  .brand-row{display:flex;align-items:center;gap:16px;margin-bottom:22px;}
+
+  .brand-hex{
+    width:66px;height:66px;flex-shrink:0;
+    filter:drop-shadow(0 4px 8px rgba(15,90,50,0.15));
+  }
+
+  .brand-title h1{
+    font-size:30px;font-weight:800;color:var(--lg-navy);letter-spacing:0.5px;line-height:1.1;
+  }
+  .brand-title p{
+    font-size:14.5px;font-weight:600;color:var(--lg-green);line-height:1.35;margin-top:2px;
+  }
+
+  .brand-divider{width:56px;height:4px;background:var(--lg-green);border-radius:4px;margin:6px 0 22px 0;}
+
+  .puskesmas-name{font-size:26px;font-weight:800;color:var(--lg-navy);margin-bottom:10px;}
+  .tagline{font-size:15px;color:#2f4a3d;line-height:1.5;max-width:320px;font-weight:500;}
+
+  .hero-illustration{
+    position:relative;
+    flex:1;
+    margin-top:28px;
+    z-index:1;
+    min-height:220px;
+  }
+
+  .hero-illustration svg{width:100%;height:100%;display:block;position:absolute;bottom:0;left:0;}
+
+  .feature-row{
+    position:relative;z-index:3;
+    display:flex;
+    gap:26px;
+    padding:20px 4px 26px 4px;
+    color:#fff;
+    flex-wrap:wrap;
+  }
+  .feature-item{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;}
+  .feature-item svg{width:20px;height:20px;flex-shrink:0;}
+
+  /* ---------- RIGHT PANEL ---------- */
+  .login-form-side{
+    padding:64px 56px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+
+  .login-form-side h2{
+    font-size:28px;font-weight:800;color:var(--lg-navy);margin-bottom:10px;
+  }
+  .login-form-side .welcome-sub{
+    font-size:14.5px;color:var(--lg-muted);line-height:1.6;margin-bottom:34px;max-width:360px;
+  }
+
+  #msgBox .msg{
+    padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;font-weight:600;
+  }
+  #msgBox .msg-error{background:#fdecec;color:#b3261e;border:1px solid #f6c6c4;}
+  #msgBox .msg-success{background:var(--lg-green-light);color:var(--lg-green-dark);border:1px solid #bfe3cf;}
+
+  .field{
+    position:relative;
+    margin-bottom:18px;
+  }
+  .field .icon{
+    position:absolute;left:18px;top:50%;transform:translateY(-50%);
+    width:20px;height:20px;color:#94a3a8;pointer-events:none;
+  }
+  .field input{
+    width:100%;
+    padding:16px 46px 16px 50px;
+    border:1.5px solid var(--lg-border);
+    border-radius:12px;
+    font-size:15px;
+    font-family:inherit;
+    color:var(--lg-text);
+    background:#fbfdfc;
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .field input::placeholder{color:#9aa8a2;}
+  .field input:focus{
+    border-color:var(--lg-green-2);
+    box-shadow:0 0 0 3px rgba(22,163,111,0.14);
+    background:#fff;
+  }
+  .toggle-pass{
+    position:absolute;right:16px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;color:var(--lg-green-dark);
+    width:22px;height:22px;padding:0;display:flex;align-items:center;justify-content:center;
+  }
+  .toggle-pass svg{width:20px;height:20px;}
+
+  .btn-login{
+    width:100%;
+    padding:16px;
+    margin-top:8px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(180deg,var(--lg-green-2),var(--lg-green-dark));
+    color:#fff;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    box-shadow:0 10px 20px -8px rgba(15,90,50,0.55);
+    transition:transform .12s, box-shadow .12s, opacity .12s;
+  }
+  .btn-login:hover{transform:translateY(-1px);box-shadow:0 14px 24px -8px rgba(15,90,50,0.6);}
+  .btn-login:active{transform:translateY(0);}
+  .btn-login:disabled{opacity:.65;cursor:not-allowed;transform:none;}
+  .btn-login svg{width:18px;height:18px;}
+
+  .login-footer{
+    margin-top:auto;
+    padding-top:48px;
+    text-align:center;
+    font-size:12.5px;
+    color:var(--lg-muted);
+  }
+  .login-footer .links span{color:var(--lg-green-dark);font-weight:600;}
+  .login-footer .links{margin-bottom:6px;}
+  .login-footer .sep{margin:0 8px;color:#c7d2cd;}
+
+  @media (max-width: 900px){
+    .login-shell{grid-template-columns:1fr;}
+    .login-hero{display:none;}
+    .login-form-side{padding:40px 26px;}
+  }
+</style>
 </head>
 <body>
 
-<div class="login-wrap">
-  <div class="login-box">
-    <h1>SIMPUS</h1>
-    <p class="subtitle" style="font-weight:700; letter-spacing:0.5px;">UPTD PUSKESMAS BEKAWAN</p>
-    <p class="subtitle" style="margin-bottom:24px;">Sistem Informasi Manajemen Puskesmas</p>
+<div class="login-shell">
+
+  <!-- LEFT: brand / hero -->
+  <div class="login-hero">
+    <div class="hero-top">
+      <div class="brand-row">
+        <svg class="brand-hex" viewBox="0 0 100 100">
+          <polygon points="50,3 93,26 93,74 50,97 7,74 7,26" fill="#eefaf3" stroke="#0f7a45" stroke-width="4"/>
+          <rect x="44" y="27" width="12" height="46" rx="3" fill="#0f7a45"/>
+          <rect x="27" y="44" width="46" height="12" rx="3" fill="#0f7a45"/>
+          <circle cx="50" cy="50" r="8" fill="#eefaf3" stroke="#0f7a45" stroke-width="3"/>
+        </svg>
+        <div class="brand-title">
+          <h1>SIMPUS</h1>
+          <p>Sistem Informasi Manajemen<br>Puskesmas</p>
+        </div>
+      </div>
+      <div class="brand-divider"></div>
+      <div class="puskesmas-name">Puskesmas Bekawan</div>
+      <div class="tagline">Melayani dengan Hati,<br>Menuju Masyarakat Sehat</div>
+    </div>
+
+    <div class="hero-illustration">
+      <svg viewBox="0 0 600 380" preserveAspectRatio="xMidYMax slice">
+        <path d="M0,300 C120,260 200,340 320,300 C440,260 520,320 600,290 L600,380 L0,380 Z" fill="#0f5c3c"/>
+        <path d="M0,320 C140,290 240,360 360,320 C460,290 540,340 600,310 L600,380 L0,380 Z" fill="#0f7a45"/>
+        <g>
+          <polygon points="150,190 300,120 450,190" fill="#1f8f5c"/>
+          <rect x="170" y="188" width="260" height="120" fill="#f3f8f3" stroke="#d8e6dd" stroke-width="2"/>
+          <rect x="270" y="150" width="60" height="18" fill="#0f5c3c"/>
+          <rect x="185" y="215" width="55" height="55" fill="#dfeee6" stroke="#bcd6c6" stroke-width="2"/>
+          <rect x="272" y="215" width="55" height="93" fill="#dfeee6" stroke="#bcd6c6" stroke-width="2"/>
+          <rect x="360" y="215" width="55" height="55" fill="#dfeee6" stroke="#bcd6c6" stroke-width="2"/>
+          <rect x="296" y="98" width="6" height="55" fill="#9aa8a2"/>
+          <path d="M302,98 L332,108 L302,118 Z" fill="#d94b4b"/>
+          <polygon points="200,110 300,60 400,110" fill="none" stroke="#1f8f5c" stroke-width="5" opacity="0.35"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M17 11a4 4 0 1 0 0-8"/><path d="M1 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/><path d="M17 21v-2a4 4 0 0 0-3-3.87"/></svg>
+        Pelayanan Pasien
+      </div>
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>
+        Manajemen Puskesmas
+      </div>
+      <div class="feature-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        Laporan dan Monitoring
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: form -->
+  <div class="login-form-side">
+    <h2>Selamat Datang</h2>
+    <p class="welcome-sub">Silakan masuk ke akun Anda untuk mengakses Sistem Informasi Puskesmas Bekawan</p>
 
     <div id="msgBox"></div>
 
-    <form id="loginForm">
-      <label>Email</label>
-      <input type="email" id="email" required placeholder="nama@puskesmas.id">
+    <form id="loginForm" autocomplete="off">
+      <div class="field">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        <input type="text" id="email" required placeholder="Username" autocomplete="username">
+      </div>
 
-      <label>Password</label>
-      <input type="password" id="password" required placeholder="••••••••">
+      <div class="field">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        <input type="password" id="password" required placeholder="Password" autocomplete="current-password">
+        <button type="button" class="toggle-pass" id="togglePass" aria-label="Tampilkan password">
+          <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
 
-      <button type="submit" class="btn-primary" style="width:100%; margin-top:8px;">Masuk</button>
+      <button type="submit" class="btn-login" id="btnLogin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        Login
+      </button>
     </form>
+
+    <div class="login-footer">
+      <div class="links">
+        <span>Puskesmas Bekawan</span> <span class="sep">|</span> Kabupaten Indragiri Hilir <span class="sep">|</span> Provinsi Riau
+      </div>
+      <div>&copy; 2025. Semua hak cipta dilindungi.</div>
+    </div>
   </div>
+
 </div>
 
 <script src="js/supabaseClient.js"></script>
 <script>
+const togglePass = document.getElementById("togglePass");
+const passInput = document.getElementById("password");
+const eyeIcon = document.getElementById("eyeIcon");
+togglePass.addEventListener("click", () => {
+  const isHidden = passInput.type === "password";
+  passInput.type = isHidden ? "text" : "password";
+  eyeIcon.innerHTML = isHidden
+    ? '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12a21.86 21.86 0 0 1 5.06-6.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>';
+});
+
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
   const msgBox = document.getElementById("msgBox");
+  const btnLogin = document.getElementById("btnLogin");
   msgBox.innerHTML = "";
+  btnLogin.disabled = true;
 
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
   if (error) {
     msgBox.innerHTML = `<div class="msg msg-error">Login gagal: ${error.message}</div>`;
+    btnLogin.disabled = false;
     try {
       await supabaseClient.from("percobaan_login_gagal").insert({
         email_dicoba: email, alasan: error.message, perangkat: navigator.userAgent
       });
-    } catch (e) {
-      console.error("Gagal catat percobaan login gagal:", e.message);
+    } catch (e2) {
+      console.error("Gagal catat percobaan login gagal:", e2.message);
     }
     return;
   }
@@ -55,7 +324,6 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   window.location.href = "index.html";
 });
 
-// Kalau sudah login, langsung ke dashboard
 (async () => {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session) window.location.href = "index.html";
