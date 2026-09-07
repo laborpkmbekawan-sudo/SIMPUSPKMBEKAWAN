@@ -58,6 +58,8 @@
       <div class="ph-group-title">Kepala Puskesmas</div>
       <a class="active" id="navDashboard" onclick="gantiSubtabKapus('dashboard')">Dashboard Eksekutif</a>
       <a id="navApproval" onclick="gantiSubtabKapus('approval')">Persetujuan &amp; Otorisasi</a>
+      <a id="navKinerja" onclick="gantiSubtabKapus('kinerja')">Kinerja Pegawai</a>
+      <a id="navSdm" onclick="gantiSubtabKapus('sdm')">SDM Ringkas</a>
 
       <div class="ph-group-title">Modul Lain</div>
       <a href="index.html">Pendaftaran</a>
@@ -179,6 +181,80 @@
 
       </div>
 
+      <!-- ============ KINERJA PEGAWAI ============ -->
+      <div id="panelKinerja" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap penilaian kinerja terbaru tiap pegawai. Input &amp; kelola penilaian tetap di Klaster 1 &rarr; Kepegawaian (SDM); di sini khusus buat pantauan Kepala Puskesmas.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Pegawai Sudah Dinilai</div><div class="value" id="kkiSudahDinilai">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Belum Pernah Dinilai</div><div class="value" id="kkiBelumDinilai">0</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">Kategori Kurang</div><div class="value" id="kkiKurang">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#6a4c93;"><div class="label">Rata² Nilai Terakhir</div><div class="value" id="kkiRata">-</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Rekap Penilaian Terbaru per Pegawai</h2>
+          <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+            <select id="kkiFilterKategori" onchange="renderTabelKinerja()" style="max-width:220px;">
+              <option value="">Semua Kategori</option>
+              <option value="kurang">Kurang saja</option>
+              <option value="cukup">Cukup saja</option>
+              <option value="baik">Baik saja</option>
+              <option value="sangat_baik">Sangat Baik saja</option>
+              <option value="__belum">Belum Pernah Dinilai</option>
+            </select>
+          </div>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Nama</th><th>Jabatan</th><th>Unit</th><th>Periode Terakhir</th><th>Kategori</th><th>Nilai</th><th>Tanggal</th><th></th></tr></thead>
+              <tbody id="kapTbodyKinerja"><tr><td colspan="8">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============ SDM RINGKAS ============ -->
+      <div id="panelSdm" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Gambaran umum kondisi SDM lintas unit. Kelola data pegawai, STR/SIP, dan diklat tetap di Klaster 1 &rarr; Kepegawaian (SDM).</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Pegawai Aktif</div><div class="value" id="ksrPegawaiAktif">0</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">STR/SIP Sudah Kadaluarsa</div><div class="value" id="ksrKadaluarsa">0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">STR/SIP &lt;90 Hari Lagi</div><div class="value" id="ksrSegera">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#6a4c93;"><div class="label">Belum Pernah Diklat</div><div class="value" id="ksrBelumDiklat">0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#1c7d7f;">
+          <h2><span class="card-num" style="background:#1c7d7f;">1</span> Rekap Pegawai per Unit</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Unit</th><th>Jumlah Pegawai Aktif</th></tr></thead>
+              <tbody id="kapTbodyUnitSdm"><tr><td colspan="2">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#c0503f;">
+          <h2><span class="card-num" style="background:#c0503f;">2</span> STR/SIP Perlu Perhatian</h2>
+          <p style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">Sudah kadaluarsa atau kurang dari 90 hari lagi. Diurutkan yang paling mendesak.</p>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Nama</th><th>Jabatan</th><th>Dokumen</th><th>Nomor</th><th>Berlaku Sampai</th><th>Status</th></tr></thead>
+              <tbody id="kapTbodyStrSip"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">3</span> Pegawai Belum Pernah Ikut Diklat</h2>
+          <div id="kapListBelumDiklat"><div class="kap-kosong">Memuat...</div></div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </div>
@@ -201,17 +277,19 @@ let profilSaya = null;
 })();
 
 function gantiSubtabKapus(tab) {
-  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval" };
-  const navMap = { dashboard: "navDashboard", approval: "navApproval" };
+  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm" };
+  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm" };
   Object.values(panelMap).forEach(id => document.getElementById(id).style.display = "none");
   Object.values(navMap).forEach(id => document.getElementById(id).classList.remove("active"));
   document.getElementById(panelMap[tab]).style.display = "block";
   document.getElementById(navMap[tab]).classList.add("active");
 
-  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi" };
+  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas" };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Kepala Puskesmas";
 
   if (tab === "approval") muatApprovalLplpo();
+  if (tab === "kinerja") muatKinerjaPegawai();
+  if (tab === "sdm") muatSdmRingkas();
 }
 
 function gantiTabApproval(tab) {
@@ -518,6 +596,194 @@ async function muatRiwayatReviewLaporan() {
       </tr>
     `;
   }).join("");
+}
+
+// ================================================================
+// KINERJA PEGAWAI (rekap lintas pegawai, read-only — CRUD di Klaster 1)
+// ================================================================
+const LABEL_KATEGORI_KINERJA = { sangat_baik: "Sangat Baik", baik: "Baik", cukup: "Cukup", kurang: "Kurang" };
+let daftarKinerjaGabungan = [];
+
+async function muatKinerjaPegawai() {
+  const tbody = document.getElementById("kapTbodyKinerja");
+  tbody.innerHTML = `<tr><td colspan="8">Memuat...</td></tr>`;
+
+  const [pegawaiRes, dkRes, kinerjaRes] = await Promise.all([
+    supabaseClient.from("profil_pegawai").select("id, nama, klaster_id, pustu_id, klaster(nama), pustu(nama)").eq("aktif", true),
+    supabaseClient.from("data_kepegawaian").select("pegawai_id, jabatan"),
+    supabaseClient.from("penilaian_kinerja_pegawai").select("pegawai_id, periode, kategori, nilai, tanggal").order("tanggal", { ascending: false })
+  ]);
+
+  const pegawai = pegawaiRes.data || [];
+  const dataKepeg = dkRes.data || [];
+  const kinerja = kinerjaRes.data || [];
+
+  // Ambil penilaian TERBARU saja per pegawai (sudah di-order desc, jadi ambil yang pertama ketemu)
+  const terakhirPerPegawai = {};
+  kinerja.forEach(k => { if (!terakhirPerPegawai[k.pegawai_id]) terakhirPerPegawai[k.pegawai_id] = k; });
+
+  daftarKinerjaGabungan = pegawai.map(p => {
+    const dk = dataKepeg.find(d => d.pegawai_id === p.id);
+    const unit = p.klaster ? p.klaster.nama : (p.pustu ? `Pustu ${p.pustu.nama}` : "Induk");
+    return { pegawai: p, jabatan: dk ? dk.jabatan : "-", unit, terakhir: terakhirPerPegawai[p.id] || null };
+  });
+
+  // ---- KPI ----
+  const sudahDinilai = daftarKinerjaGabungan.filter(d => d.terakhir);
+  const belumDinilai = daftarKinerjaGabungan.filter(d => !d.terakhir);
+  const kurang = sudahDinilai.filter(d => d.terakhir.kategori === "kurang");
+  const rataRata = sudahDinilai.length
+    ? (sudahDinilai.reduce((s, d) => s + (Number(d.terakhir.nilai) || 0), 0) / sudahDinilai.length).toFixed(1)
+    : "-";
+
+  document.getElementById("kkiSudahDinilai").textContent = sudahDinilai.length;
+  document.getElementById("kkiBelumDinilai").textContent = belumDinilai.length;
+  document.getElementById("kkiKurang").textContent = kurang.length;
+  document.getElementById("kkiRata").textContent = rataRata;
+
+  renderTabelKinerja();
+}
+
+function renderTabelKinerja() {
+  const tbody = document.getElementById("kapTbodyKinerja");
+  const filter = document.getElementById("kkiFilterKategori").value;
+
+  let list = daftarKinerjaGabungan;
+  if (filter === "__belum") list = list.filter(d => !d.terakhir);
+  else if (filter) list = list.filter(d => d.terakhir && d.terakhir.kategori === filter);
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted);">Tidak ada data untuk filter ini.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(d => {
+    const t = d.terakhir;
+    const badge = t ? `<span class="kap-hist-badge ${t.kategori === "kurang" ? "rejected" : t.kategori === "cukup" ? "diajukan" : "approved"}">${LABEL_KATEGORI_KINERJA[t.kategori] || t.kategori}</span>` : `<span class="kap-hist-badge draft">Belum Dinilai</span>`;
+    return `
+      <tr>
+        <td>${d.pegawai.nama}</td>
+        <td>${d.jabatan}</td>
+        <td>${d.unit}</td>
+        <td>${t ? t.periode : "-"}</td>
+        <td>${badge}</td>
+        <td>${t && t.nilai != null ? t.nilai : "-"}</td>
+        <td>${t ? new Date(t.tanggal).toLocaleDateString("id-ID") : "-"}</td>
+        <td><button type="button" class="btn-secondary" onclick="lihatRiwayatKinerja('${d.pegawai.id}', this)">Riwayat</button></td>
+      </tr>
+      <tr id="rwKinerja-${d.pegawai.id}" style="display:none;"><td colspan="8" id="rwKinerjaIsi-${d.pegawai.id}"></td></tr>
+    `;
+  }).join("");
+}
+
+async function lihatRiwayatKinerja(pegawaiId, btn) {
+  const row = document.getElementById(`rwKinerja-${pegawaiId}`);
+  const sudahTampil = row.style.display === "table-row";
+  document.querySelectorAll("[id^='rwKinerja-']").forEach(el => el.style.display = "none");
+  if (sudahTampil) return;
+
+  const isi = document.getElementById(`rwKinerjaIsi-${pegawaiId}`);
+  isi.innerHTML = "Memuat riwayat...";
+  row.style.display = "table-row";
+
+  const { data, error } = await supabaseClient.from("penilaian_kinerja_pegawai")
+    .select("periode, kategori, nilai, catatan, tanggal")
+    .eq("pegawai_id", pegawaiId).order("tanggal", { ascending: false });
+
+  if (error) { isi.innerHTML = `<div class="msg msg-error">Gagal muat: ${error.message}</div>`; return; }
+  if (!data || data.length === 0) { isi.innerHTML = `<div class="kap-kosong">Belum ada riwayat penilaian.</div>`; return; }
+
+  isi.innerHTML = `
+    <table style="width:100%; font-size:11.8px;">
+      <thead><tr><th>Periode</th><th>Kategori</th><th>Nilai</th><th>Tanggal</th><th>Catatan</th></tr></thead>
+      <tbody>
+        ${data.map(r => `<tr><td>${r.periode}</td><td>${LABEL_KATEGORI_KINERJA[r.kategori] || r.kategori}</td><td>${r.nilai ?? "-"}</td><td>${new Date(r.tanggal).toLocaleDateString("id-ID")}</td><td>${r.catatan || "-"}</td></tr>`).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+// ================================================================
+// SDM RINGKAS (overview lintas unit, read-only — kelola di Klaster 1)
+// ================================================================
+async function muatSdmRingkas() {
+  document.getElementById("kapTbodyUnitSdm").innerHTML = `<tr><td colspan="2">Memuat...</td></tr>`;
+  document.getElementById("kapTbodyStrSip").innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+  document.getElementById("kapListBelumDiklat").innerHTML = `<div class="kap-kosong">Memuat...</div>`;
+
+  const [pegawaiRes, dkRes, diklatRes] = await Promise.all([
+    supabaseClient.from("profil_pegawai").select("id, nama, klaster_id, pustu_id, klaster(nama), pustu(nama)").eq("aktif", true),
+    supabaseClient.from("data_kepegawaian").select("pegawai_id, jabatan, no_str, str_berlaku_sampai, no_sip, sip_berlaku_sampai"),
+    supabaseClient.from("riwayat_diklat_pegawai").select("pegawai_id")
+  ]);
+
+  const pegawai = pegawaiRes.data || [];
+  const dataKepeg = dkRes.data || [];
+  const pernahDiklatSet = new Set((diklatRes.data || []).map(d => d.pegawai_id));
+
+  document.getElementById("ksrPegawaiAktif").textContent = pegawai.length;
+
+  // ---- Rekap per unit ----
+  const perUnit = {};
+  pegawai.forEach(p => {
+    const unit = p.klaster ? p.klaster.nama : (p.pustu ? `Pustu ${p.pustu.nama}` : "Induk (Belum Ada Klaster)");
+    perUnit[unit] = (perUnit[unit] || 0) + 1;
+  });
+  const tbodyUnit = document.getElementById("kapTbodyUnitSdm");
+  const unitNama = Object.keys(perUnit).sort((a, b) => perUnit[b] - perUnit[a]);
+  tbodyUnit.innerHTML = unitNama.length
+    ? unitNama.map(u => `<tr><td>${u}</td><td>${perUnit[u]}</td></tr>`).join("")
+    : `<tr><td colspan="2" style="text-align:center; color:var(--muted);">Belum ada data.</td></tr>`;
+
+  // ---- STR/SIP perlu perhatian ----
+  const hariIni = new Date();
+  const batasSegera = new Date(); batasSegera.setDate(hariIni.getDate() + 90);
+  let strSipPerhatian = [];
+
+  dataKepeg.forEach(dk => {
+    const p = pegawai.find(x => x.id === dk.pegawai_id);
+    if (!p) return; // pegawai nonaktif, skip
+    [
+      { label: "STR", nomor: dk.no_str, tgl: dk.str_berlaku_sampai },
+      { label: "SIP", nomor: dk.no_sip, tgl: dk.sip_berlaku_sampai }
+    ].forEach(dok => {
+      if (!dok.tgl) return;
+      const tglBerlaku = new Date(dok.tgl);
+      if (tglBerlaku <= batasSegera) {
+        strSipPerhatian.push({
+          nama: p.nama, jabatan: dk.jabatan || "-", dokumen: dok.label, nomor: dok.nomor || "-",
+          tgl: dok.tgl, sudahLewat: tglBerlaku < hariIni
+        });
+      }
+    });
+  });
+  strSipPerhatian.sort((a, b) => new Date(a.tgl) - new Date(b.tgl));
+
+  document.getElementById("ksrKadaluarsa").textContent = strSipPerhatian.filter(s => s.sudahLewat).length;
+  document.getElementById("ksrSegera").textContent = strSipPerhatian.filter(s => !s.sudahLewat).length;
+
+  const tbodyStrSip = document.getElementById("kapTbodyStrSip");
+  tbodyStrSip.innerHTML = strSipPerhatian.length
+    ? strSipPerhatian.map(s => `
+        <tr>
+          <td>${s.nama}</td><td>${s.jabatan}</td><td>${s.dokumen}</td><td>${s.nomor}</td>
+          <td>${new Date(s.tgl).toLocaleDateString("id-ID")}</td>
+          <td><span class="kap-hist-badge ${s.sudahLewat ? "rejected" : "diajukan"}">${s.sudahLewat ? "Sudah Kadaluarsa" : "Segera Kadaluarsa"}</span></td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="6" style="text-align:center; color:var(--muted);">Tidak ada STR/SIP yang perlu perhatian.</td></tr>`;
+
+  // ---- Belum pernah diklat ----
+  const belumDiklat = pegawai.filter(p => !pernahDiklatSet.has(p.id));
+  document.getElementById("ksrBelumDiklat").textContent = belumDiklat.length;
+
+  const listBox = document.getElementById("kapListBelumDiklat");
+  listBox.innerHTML = belumDiklat.length
+    ? belumDiklat.map(p => {
+        const unit = p.klaster ? p.klaster.nama : (p.pustu ? `Pustu ${p.pustu.nama}` : "Induk");
+        return `<div class="kap-alert-row"><span class="ic">🎓</span><div><strong>${p.nama}</strong> — ${unit}<div class="t">Belum ada riwayat diklat tercatat</div></div></div>`;
+      }).join("")
+    : `<div class="kap-kosong">Semua pegawai aktif sudah pernah ikut diklat.</div>`;
 }
 </script>
 </body>
