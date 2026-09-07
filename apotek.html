@@ -18,6 +18,19 @@
 .sidebar nav a.active { border-left: 3px solid #16a36f !important; background: rgba(255,255,255,.09) !important; }
 .sidebar nav a:hover { background: rgba(255,255,255,.06) !important; }
 
+.ph-group-title{
+  cursor:pointer; display:flex; align-items:center; justify-content:space-between;
+  user-select:none;
+}
+.ph-group-title .chev{
+  font-size:10px; transition:transform .18s ease; opacity:.6;
+}
+.ph-group-title.closed .chev{ transform:rotate(-90deg); }
+.ph-group-body{
+  overflow:hidden; max-height:600px; transition:max-height .22s ease;
+}
+.ph-group-body.closed{ max-height:0; }
+
 .topbar { background: linear-gradient(180deg, #0f5132 0%, #0b3b2e 100%) !important; }
 .topbar h1 { color: #ffffff; }
 
@@ -312,23 +325,30 @@
     <div class="ph-group-title">Petugas Farmasi</div>
     <a class="active" id="navBeranda" onclick="gantiSubtab('beranda')">Dashboard</a>
 
-    <div class="ph-group-title">Pelayanan Obat & Resep</div>
+    <div class="ph-group-title" onclick="toggleGroup(this)">Pelayanan Obat & Resep <span class="chev">▾</span></div>
+    <div class="ph-group-body">
     <a id="navPelayanan" onclick="gantiSubtab('pelayanan')">Verifikasi & Penyerahan Resep</a>
     <a id="navEntrimanual" onclick="gantiSubtab('entrimanual')">Entri Resep Manual</a>
     <a id="navRacikan" onclick="gantiSubtab('racikan')">Racikan Obat</a>
     <a id="navRiwayatobat" onclick="gantiSubtab('riwayatobat')">Riwayat Obat Pasien</a>
+    </div>
 
-    <div class="ph-group-title">Pengelolaan Stok</div>
+    <div class="ph-group-title" onclick="toggleGroup(this)">Pengelolaan Stok <span class="chev">▾</span></div>
+    <div class="ph-group-body">
     <a id="navStok" onclick="gantiSubtab('stok')">Master Data Obat</a>
     <a id="navKartustok" onclick="gantiSubtab('kartustok')">Kartu Stok Digital</a>
     <a id="navStokopname" onclick="gantiSubtab('stokopname')">Stok Opname</a>
     <a id="navMutasi" onclick="gantiSubtab('mutasi')">Mutasi & Penerimaan</a>
+    </div>
 
-    <div class="ph-group-title">Pengadaan & Laporan</div>
+    <div class="ph-group-title" onclick="toggleGroup(this)">Pengadaan & Laporan <span class="chev">▾</span></div>
+    <div class="ph-group-body">
     <a id="navLplpo" onclick="gantiSubtab('lplpo')">LPLPO</a>
     <a id="navLaporan" onclick="gantiSubtab('laporan')">Laporan</a>
+    </div>
 
-    <div class="ph-group-title">Modul Lain</div>
+    <div class="ph-group-title closed" onclick="toggleGroup(this)">Modul Lain <span class="chev">▾</span></div>
+    <div class="ph-group-body closed">
     <a href="index.html">Pendaftaran</a>
     <a href="rekam-medis.html">Rekam Medis</a>
     <a href="ugd.html">UGD</a>
@@ -341,8 +361,9 @@
     <a href="pustu.html">Pustu</a>
     <a href="pengaturan.html">Pengaturan</a>
     <a href="kasir.html">Kasir</a>
-          <a href="papan-antrian.html">Papan Antrian</a>
+    <a href="papan-antrian.html">Papan Antrian</a>
     <a href="kapus.html">Kepala Puskesmas</a>
+    </div>
     </nav>
   </aside>
 
@@ -1998,6 +2019,15 @@ async function muatRiwayatObatApotek() {
       </tr>
     `;
   }).join("");
+}
+
+// ---------- Accordion menu sidebar ----------
+function toggleGroup(el) {
+  el.classList.toggle("closed");
+  const body = el.nextElementSibling;
+  if (body && body.classList.contains("ph-group-body")) {
+    body.classList.toggle("closed");
+  }
 }
 
 // ---------- Sub-tab Beranda / Pelayanan / Stok ----------
