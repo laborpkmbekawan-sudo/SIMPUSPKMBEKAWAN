@@ -6,6 +6,7 @@
 <title>Kepala Puskesmas - SIMPUS Bekawan</title>
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
 .kap-kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
 .kap-kpi-card { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; border-left:4px solid var(--accent,#999); }
@@ -31,6 +32,11 @@
 .kap-appr-detail table { width:100%; font-size:11.8px; }
 .kap-appr-detail th { text-align:left; background:#f0f5f6; padding:6px 8px; font-size:10px; text-transform:uppercase; color:var(--navy); }
 .kap-appr-detail td { padding:6px 8px; border-bottom:1px solid var(--border); }
+
+.kap-chart-card canvas { max-height: 260px; }
+.kap-progress-bar { width:100%; height:8px; background:#eef1f3; border-radius:4px; overflow:hidden; }
+.kap-progress-bar > div { height:100%; background:var(--teal-a,#1c7d7f); }
+.kap-progress-bar.over > div { background:var(--red,#c0503f); }
 
 .kap-subtab-row { display:flex; gap:6px; margin-bottom:16px; border-bottom:2px solid var(--border); }
 .kap-subtab-btn { background:none; border:none; padding:9px 4px; margin-right:18px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; }
@@ -60,6 +66,8 @@
       <a id="navApproval" onclick="gantiSubtabKapus('approval')">Persetujuan &amp; Otorisasi</a>
       <a id="navKinerja" onclick="gantiSubtabKapus('kinerja')">Kinerja Pegawai</a>
       <a id="navSdm" onclick="gantiSubtabKapus('sdm')">SDM Ringkas</a>
+      <a id="navKeuangan" onclick="gantiSubtabKapus('keuangan')">Laporan Keuangan</a>
+      <a id="navTren" onclick="gantiSubtabKapus('tren')">Tren Kunjungan</a>
 
       <div class="ph-group-title">Modul Lain</div>
       <a href="index.html">Pendaftaran</a>
@@ -255,6 +263,69 @@
 
       </div>
 
+      <!-- ============ LAPORAN KEUANGAN ============ -->
+      <div id="panelKeuangan" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Rekap realisasi anggaran, read-only. Input transaksi &amp; pos anggaran tetap di Klaster 1 &rarr; Keuangan.</p>
+
+        <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center;">
+          <label style="font-size:12px; color:var(--muted);">Tahun:</label>
+          <select id="kukFilterTahun" onchange="muatLaporanKeuangan()" style="max-width:140px;"></select>
+        </div>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Total Pagu Anggaran</div><div class="value" id="kukTotalPagu">Rp 0</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Total Realisasi</div><div class="value" id="kukTotalRealisasi">Rp 0</div></div>
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">% Realisasi</div><div class="value" id="kukPersenRealisasi">0%</div></div>
+          <div class="kap-kpi-card danger" style="--accent:#c0503f;"><div class="label">Pos Melebihi Pagu</div><div class="value" id="kukOverbudget">0</div></div>
+        </div>
+
+        <div class="card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Rekap Realisasi per Sumber Dana</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Sumber Dana</th><th>Pagu</th><th>Realisasi</th><th>%</th><th>Sisa</th><th></th></tr></thead>
+              <tbody id="kapTbodySumberDana"><tr><td colspan="6">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="--accent:#1c7d7f;">
+          <h2><span class="card-num" style="background:#1c7d7f;">2</span> Transaksi Terbaru</h2>
+          <div class="tbl-wrap" style="overflow:auto;">
+            <table>
+              <thead><tr><th>Tanggal</th><th>Jenis</th><th>Sumber Dana</th><th>Uraian</th><th>Jumlah</th></tr></thead>
+              <tbody id="kapTbodyTransaksi"><tr><td colspan="5">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============ TREN KUNJUNGAN ============ -->
+      <div id="panelTren" style="display:none;">
+
+        <p style="font-size:12px; color:var(--muted); margin:-6px 0 16px;">Pola kunjungan 30 hari terakhir, ditarik dari data operasional harian.</p>
+
+        <div class="kap-kpi-grid">
+          <div class="kap-kpi-card good" style="--accent:#26a3a0;"><div class="label">Total Kunjungan (30 Hari)</div><div class="value" id="ktrTotal">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#173b5e;"><div class="label">Rata² per Hari</div><div class="value" id="ktrRata">0</div></div>
+          <div class="kap-kpi-card" style="--accent:#6a4c93;"><div class="label">Hari Tersibuk</div><div class="value" id="ktrTersibuk" style="font-size:15px;">-</div></div>
+          <div class="kap-kpi-card warn" style="--accent:#e0793c;"><div class="label">Porsi BPJS</div><div class="value" id="ktrPersenBpjs">0%</div></div>
+        </div>
+
+        <div class="card kap-chart-card" style="--accent:#173b5e;">
+          <h2><span class="card-num" style="background:#173b5e;">1</span> Kunjungan Harian — BPJS vs Umum</h2>
+          <canvas id="chartTrenHarian"></canvas>
+        </div>
+
+        <div class="card kap-chart-card" style="--accent:#1c7d7f;">
+          <h2><span class="card-num" style="background:#1c7d7f;">2</span> Kunjungan per Klaster/Unit (30 Hari)</h2>
+          <canvas id="chartTrenKlaster"></canvas>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </div>
@@ -277,19 +348,21 @@ let profilSaya = null;
 })();
 
 function gantiSubtabKapus(tab) {
-  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm" };
-  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm" };
+  const panelMap = { dashboard: "panelDashboard", approval: "panelApproval", kinerja: "panelKinerja", sdm: "panelSdm", keuangan: "panelKeuangan", tren: "panelTren" };
+  const navMap = { dashboard: "navDashboard", approval: "navApproval", kinerja: "navKinerja", sdm: "navSdm", keuangan: "navKeuangan", tren: "navTren" };
   Object.values(panelMap).forEach(id => document.getElementById(id).style.display = "none");
   Object.values(navMap).forEach(id => document.getElementById(id).classList.remove("active"));
   document.getElementById(panelMap[tab]).style.display = "block";
   document.getElementById(navMap[tab]).classList.add("active");
 
-  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas" };
+  const judul = { dashboard: "Dashboard Eksekutif", approval: "Persetujuan & Otorisasi", kinerja: "Kinerja Pegawai", sdm: "SDM Ringkas", keuangan: "Laporan Keuangan", tren: "Tren Kunjungan" };
   document.querySelector(".topbar h1").textContent = judul[tab] || "Kepala Puskesmas";
 
   if (tab === "approval") muatApprovalLplpo();
   if (tab === "kinerja") muatKinerjaPegawai();
   if (tab === "sdm") muatSdmRingkas();
+  if (tab === "keuangan") muatLaporanKeuangan();
+  if (tab === "tren") muatTrenKunjungan();
 }
 
 function gantiTabApproval(tab) {
@@ -784,6 +857,181 @@ async function muatSdmRingkas() {
         return `<div class="kap-alert-row"><span class="ic">🎓</span><div><strong>${p.nama}</strong> — ${unit}<div class="t">Belum ada riwayat diklat tercatat</div></div></div>`;
       }).join("")
     : `<div class="kap-kosong">Semua pegawai aktif sudah pernah ikut diklat.</div>`;
+}
+
+// ================================================================
+// LAPORAN KEUANGAN (rekap realisasi anggaran, read-only — CRUD di Klaster 1)
+// ================================================================
+function formatRupiah(angka) {
+  return "Rp " + Math.round(angka || 0).toLocaleString("id-ID");
+}
+
+function isiFilterTahunKeuangan() {
+  const sel = document.getElementById("kukFilterTahun");
+  if (sel.options.length > 0) return;
+  const tahunSekarang = new Date().getFullYear();
+  for (let t = tahunSekarang; t >= tahunSekarang - 4; t--) {
+    sel.innerHTML += `<option value="${t}">${t}</option>`;
+  }
+}
+
+async function muatLaporanKeuangan() {
+  isiFilterTahunKeuangan();
+  const tahun = Number(document.getElementById("kukFilterTahun").value) || new Date().getFullYear();
+
+  document.getElementById("kapTbodySumberDana").innerHTML = `<tr><td colspan="6">Memuat...</td></tr>`;
+  document.getElementById("kapTbodyTransaksi").innerHTML = `<tr><td colspan="5">Memuat...</td></tr>`;
+
+  const [posRes, transRes] = await Promise.all([
+    supabaseClient.from("anggaran_pos").select("id, sumber_dana, nama_pos, jumlah_anggaran").eq("tahun", tahun),
+    supabaseClient.from("transaksi_keuangan").select("tanggal, jenis, sumber_dana, anggaran_pos_id, uraian, jumlah").gte("tanggal", `${tahun}-01-01`).lte("tanggal", `${tahun}-12-31`).order("tanggal", { ascending: false })
+  ]);
+
+  const pos = posRes.data || [];
+  const transaksi = transRes.data || [];
+  const pengeluaran = transaksi.filter(t => t.jenis === "pengeluaran");
+
+  // ---- Rekap per sumber dana ----
+  const perSumber = {};
+  pos.forEach(p => {
+    if (!perSumber[p.sumber_dana]) perSumber[p.sumber_dana] = { pagu: 0, realisasi: 0 };
+    perSumber[p.sumber_dana].pagu += Number(p.jumlah_anggaran) || 0;
+  });
+  pengeluaran.forEach(t => {
+    if (!perSumber[t.sumber_dana]) perSumber[t.sumber_dana] = { pagu: 0, realisasi: 0 };
+    perSumber[t.sumber_dana].realisasi += Number(t.jumlah) || 0;
+  });
+
+  const totalPagu = Object.values(perSumber).reduce((s, v) => s + v.pagu, 0);
+  const totalRealisasi = Object.values(perSumber).reduce((s, v) => s + v.realisasi, 0);
+  const overbudget = Object.values(perSumber).filter(v => v.pagu > 0 && v.realisasi > v.pagu).length;
+
+  document.getElementById("kukTotalPagu").textContent = formatRupiah(totalPagu);
+  document.getElementById("kukTotalRealisasi").textContent = formatRupiah(totalRealisasi);
+  document.getElementById("kukPersenRealisasi").textContent = totalPagu > 0 ? Math.round((totalRealisasi / totalPagu) * 100) + "%" : "-";
+  document.getElementById("kukOverbudget").textContent = overbudget;
+
+  const tbodySumber = document.getElementById("kapTbodySumberDana");
+  const namaSumber = Object.keys(perSumber);
+  tbodySumber.innerHTML = namaSumber.length
+    ? namaSumber.map(s => {
+        const v = perSumber[s];
+        const persen = v.pagu > 0 ? Math.round((v.realisasi / v.pagu) * 100) : 0;
+        const over = v.pagu > 0 && v.realisasi > v.pagu;
+        return `
+          <tr>
+            <td>${s}</td>
+            <td>${formatRupiah(v.pagu)}</td>
+            <td>${formatRupiah(v.realisasi)}</td>
+            <td style="min-width:110px;">
+              <div class="kap-progress-bar ${over ? "over" : ""}"><div style="width:${Math.min(persen, 100)}%;"></div></div>
+              <span style="font-size:11px;">${persen}%</span>
+            </td>
+            <td>${formatRupiah(v.pagu - v.realisasi)}</td>
+            <td>${over ? `<span class="kap-hist-badge rejected">Melebihi Pagu</span>` : ""}</td>
+          </tr>
+        `;
+      }).join("")
+    : `<tr><td colspan="6" style="text-align:center; color:var(--muted);">Belum ada pos anggaran untuk tahun ${tahun}.</td></tr>`;
+
+  const tbodyTrans = document.getElementById("kapTbodyTransaksi");
+  const transTerbaru = transaksi.slice(0, 10);
+  tbodyTrans.innerHTML = transTerbaru.length
+    ? transTerbaru.map(t => `
+        <tr>
+          <td>${new Date(t.tanggal).toLocaleDateString("id-ID")}</td>
+          <td><span class="kap-hist-badge ${t.jenis === "pengeluaran" ? "diajukan" : "approved"}">${t.jenis === "pengeluaran" ? "Pengeluaran" : "Penerimaan"}</span></td>
+          <td>${t.sumber_dana}</td>
+          <td>${t.uraian}</td>
+          <td>${formatRupiah(t.jumlah)}</td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="5" style="text-align:center; color:var(--muted);">Belum ada transaksi tahun ${tahun}.</td></tr>`;
+}
+
+// ================================================================
+// TREN KUNJUNGAN (30 hari terakhir)
+// ================================================================
+let chartTrenHarian = null, chartTrenKlaster = null;
+
+async function muatTrenKunjungan() {
+  const tigaPuluhHariLalu = new Date(); tigaPuluhHariLalu.setDate(tigaPuluhHariLalu.getDate() - 29); tigaPuluhHariLalu.setHours(0, 0, 0, 0);
+  const tglMulai = tigaPuluhHariLalu.toISOString().slice(0, 10);
+
+  const { data, error } = await supabaseClient
+    .from("kunjungan")
+    .select("tanggal, jenis_bayar, klaster_id, klaster(nama)")
+    .neq("status", "batal")
+    .gte("tanggal", tglMulai);
+
+  const kunjungan = error ? [] : (data || []);
+
+  // ---- Siapkan label 30 hari ----
+  const labels = [];
+  const perHari = {};
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(tigaPuluhHariLalu); d.setDate(d.getDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    labels.push(d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit" }));
+    perHari[key] = { bpjs: 0, umum: 0 };
+  }
+
+  let totalBpjs = 0, totalUmum = 0;
+  const perKlaster = {};
+  kunjungan.forEach(k => {
+    if (perHari[k.tanggal]) {
+      if (k.jenis_bayar === "BPJS") { perHari[k.tanggal].bpjs++; totalBpjs++; }
+      else { perHari[k.tanggal].umum++; totalUmum++; }
+    }
+    const namaK = k.klaster ? k.klaster.nama : "Tanpa Klaster";
+    perKlaster[namaK] = (perKlaster[namaK] || 0) + 1;
+  });
+
+  const total = kunjungan.length;
+  const dataHarian = Object.values(perHari);
+  const totalPerHariArr = dataHarian.map(h => h.bpjs + h.umum);
+  const idxTersibuk = totalPerHariArr.indexOf(Math.max(...totalPerHariArr));
+
+  document.getElementById("ktrTotal").textContent = total;
+  document.getElementById("ktrRata").textContent = (total / 30).toFixed(1);
+  document.getElementById("ktrTersibuk").textContent = total > 0 ? `${labels[idxTersibuk]} (${totalPerHariArr[idxTersibuk]})` : "-";
+  document.getElementById("ktrPersenBpjs").textContent = total > 0 ? Math.round((totalBpjs / total) * 100) + "%" : "0%";
+
+  // ---- Chart harian ----
+  const ctxHarian = document.getElementById("chartTrenHarian");
+  if (typeof Chart === "undefined") {
+    ctxHarian.insertAdjacentHTML("afterend", "<p style='font-size:12px;color:var(--muted)'>Grafik gagal dimuat (koneksi ke Chart.js diblokir).</p>");
+  } else {
+    if (chartTrenHarian) chartTrenHarian.destroy();
+    chartTrenHarian = new Chart(ctxHarian, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          { label: "BPJS", data: dataHarian.map(h => h.bpjs), borderColor: "#173b5e", backgroundColor: "rgba(23,59,94,0.1)", tension: 0.35, fill: true, pointRadius: 2 },
+          { label: "Umum", data: dataHarian.map(h => h.umum), borderColor: "#e0793c", backgroundColor: "rgba(224,121,60,0.1)", tension: 0.35, fill: true, pointRadius: 2 }
+        ]
+      },
+      options: { plugins: { legend: { display: true, position: "bottom" } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+  }
+
+  // ---- Chart per klaster ----
+  const ctxKlaster = document.getElementById("chartTrenKlaster");
+  const namaKlaster = Object.keys(perKlaster).sort((a, b) => perKlaster[b] - perKlaster[a]);
+  if (typeof Chart === "undefined") {
+    ctxKlaster.insertAdjacentHTML("afterend", "<p style='font-size:12px;color:var(--muted)'>Grafik gagal dimuat (koneksi ke Chart.js diblokir).</p>");
+  } else {
+    if (chartTrenKlaster) chartTrenKlaster.destroy();
+    chartTrenKlaster = new Chart(ctxKlaster, {
+      type: "bar",
+      data: {
+        labels: namaKlaster,
+        datasets: [{ label: "Jumlah Kunjungan", data: namaKlaster.map(n => perKlaster[n]), backgroundColor: "#1c7d7f" }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+  }
 }
 </script>
 </body>
