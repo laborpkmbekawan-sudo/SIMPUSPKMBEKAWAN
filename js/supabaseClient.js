@@ -219,18 +219,19 @@ async function panggilAdmin(action, payload) {
 // "rekam_medis" (misal Kapus, KTU, Bendahara BOK) otomatis dapat tambahan
 // akses ke rekam-medis.html, walau role dasarnya bukan dokter/perawat/bidan.
 // ============================================================
+// Paket akses bawaan HANYA buat role yang emang 1 fungsi khusus (admin lihat
+// semua, kapus/pemegang-program cuma 1 halaman). Role klinis/petugas LAINNYA
+// (dokter, perawat, bidan, farmasi, petugas, staff, klaster1, dst) TIDAK lagi
+// dapet paket bawaan lebar -- akses mereka 100% ditentuin dari "Klaster
+// Tambahan"/"Hak Akses Modul" yang di-set admin per-orang di pengaturan.html.
 const AKSES_HALAMAN = {
   admin: ["admin.html", "index.html", "rekam-medis.html", "apotek.html", "ugd.html", "ranap.html", "klaster1.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "kasir.html", "papan-antrian.html", "pustu.html", "kapus.html", "pemegang-program.html"],
-  petugas: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html", "papan-antrian.html"],
-  staff: ["index.html", "rekam-medis.html", "pengaturan.html", "kasir.html", "papan-antrian.html"],
-  dokter: ["rekam-medis.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
-  perawat: ["rekam-medis.html", "ugd.html", "ranap.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
-  bidan: ["rekam-medis.html", "ugd.html", "klaster2.html", "klaster3.html", "klaster4.html", "gigi.html", "pengaturan.html", "papan-antrian.html"],
-  farmasi: ["apotek.html", "pengaturan.html", "papan-antrian.html"],
-  klaster1: ["klaster1.html", "pengaturan.html", "papan-antrian.html"],
   kepala_puskesmas: ["kapus.html"],
   pemegang_program: ["pemegang-program.html"]
 };
+// Halaman universal yang boleh dibuka SEMUA pegawai berapapun role-nya
+// (ganti password sendiri, liat papan antrian) -- bukan modul sensitif.
+const AKSES_HALAMAN_DEFAULT = ["pengaturan.html", "papan-antrian.html"];
 
 // Peta modul_kode (di tabel hak_akses) -> halaman .html yang dibuka.
 // Tambah baris hak_akses baru buat pegawai manapun (role apa aja: bidan,
@@ -267,7 +268,7 @@ function halamanIzinUntuk(profil) {
   // walau role dasarnya dokter/perawat/bidan/dst.
   if (profil.pustu_id) return ["pustu.html"];
 
-  const izin = new Set(AKSES_HALAMAN[profil.role] || []);
+  const izin = new Set(AKSES_HALAMAN[profil.role] || AKSES_HALAMAN_DEFAULT);
 
   // Tambahan generik: tiap modul_kode di hak_akses pegawai ini otomatis
   // buka halaman yang sesuai, apapun role dasarnya.
@@ -302,5 +303,35 @@ function sesuaikanTabNav(profil) {
     const href = a.getAttribute("href");
     if (!href) return; // subtab internal (onclick, tanpa href) — bukan link antar modul, jangan disembunyikan
     if (!izin.includes(href)) a.style.display = "none";
+  });
+}
+
+// Level tertinggi yang dipunya pegawai ini buat 1 modul_kode (atau beberapa
+// alias modul_kode sekaligus, misal klaster1 lama disebut "manajemen").
+// Admin selalu "penuh". Balikin null kalau emang gak ada hak akses granular
+// modul itu (berarti akses cuma dari role/AKSES_HALAMAN, dianggap "lihat" doang
+// di pemanggil).
+function levelUntukModul(profil, modulKodeAtauArray) {
+  if (!profil) return null;
+  if (profil.role === "admin") return "penuh";
+  const daftarKode = Array.isArray(modulKodeAtauArray) ? modulKodeAtauArray : [modulKodeAtauArray];
+  let terbaik = null;
+  daftarKode.forEach(kode => {
+    ((profil.hakAksesPeta || {})[kode] || []).forEach(h => {
+      if (!terbaik || LEVEL_URUTAN[h.level] > LEVEL_URUTAN[terbaik]) terbaik = h.level;
+    });
+  });
+  return terbaik;
+}
+
+// Sembunyikan elemen (biasanya tab/link "Laporan Internal", "Laporan ke
+// Dinas", dst) yang cuma boleh diliat kalau level pegawai buat modul ini
+// "penuh". Panggil sekali per halaman modul, abis sesuaikanTabNav().
+function terapkanLevelUI(profil, modulKodeAtauArray, idElemenButuhPenuh) {
+  const level = profil && profil.role === "admin" ? "penuh" : (levelUntukModul(profil, modulKodeAtauArray) || "lihat");
+  const cukup = level === "penuh";
+  (idElemenButuhPenuh || []).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = cukup ? "" : "none";
   });
 }

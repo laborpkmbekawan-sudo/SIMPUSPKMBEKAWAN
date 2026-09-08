@@ -253,6 +253,7 @@ let laporanCache = null;
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "kasir.html");
   sesuaikanTabNav(profilSaya);
+  terapkanLevelUI(profilSaya, "kasir", ["kasirTab-laporan"]);
   if (profilSaya) document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
 
   await muatStatusShift();

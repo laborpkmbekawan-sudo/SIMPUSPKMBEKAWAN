@@ -772,6 +772,7 @@ let koordinasiIntervalUgd = null;
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "ugd.html");
   sesuaikanTabNav(profilSaya);
+  terapkanLevelUI(profilSaya, "ugd", ["navLaporanInternal","navLaporanDinas"]);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
   }

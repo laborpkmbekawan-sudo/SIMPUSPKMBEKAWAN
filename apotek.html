@@ -2111,6 +2111,7 @@ let riwayatRangeAktif = "harian"; // filter riwayat pasien: harian/mingguan/bula
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "apotek.html");
   sesuaikanTabNav(profilSaya);
+  terapkanLevelUI(profilSaya, "apotek", ["navLaporan"]);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
     document.getElementById("infoUser").textContent = `${profilSaya.nama}`;

@@ -897,6 +897,7 @@ let kunjunganRanapTerpilihUbahStatus = null;
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "ranap.html");
   sesuaikanTabNav(profilSaya);
+  terapkanLevelUI(profilSaya, "ranap", ["navLaporanInternal","navLaporanDinas"]);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
   }

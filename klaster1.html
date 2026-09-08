@@ -2524,6 +2524,7 @@ let daftarKlasterGlobal = [];
   profilSaya = profil;
   cekAksesHalaman(profil, "klaster1.html");
   sesuaikanTabNav(profil);
+  terapkanLevelUI(profil, ["klaster1","manajemen"], ["navLaporanInternal","navLaporanDinas"]);
   if (profil) document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;
 
   await muatKlasterUntukSelect();
