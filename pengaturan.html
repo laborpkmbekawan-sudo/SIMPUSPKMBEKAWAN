@@ -371,6 +371,17 @@ function tutupEdit() {
   pegawaiEdit = null;
 }
 
+// Peta kode klaster -> modul_kode (buat auto-isi Hak Akses pas nambah Klaster Tambahan).
+// Kalau kode klasternya gak ada di peta ini, modul_kode dikosongin, admin isi manual.
+const KODE_KLASTER_KE_MODUL = {
+  K1: "manajemen", K2: "klaster2", K3: "klaster3", K4: "klaster4",
+  "LK-UGD": "ugd", "LK-VK": "ranap", RI: "ranap", FARMASI: "apotek"
+};
+function modulDariKlasterId(klasterId) {
+  const k = daftarKlasterGlobal.find(x => String(x.id) === String(klasterId));
+  return (k && KODE_KLASTER_KE_MODUL[k.kode]) || "";
+}
+
 function opsiKlaster(selectedId) {
   return daftarKlasterGlobal.map(k => `<option value="${k.id}" ${String(k.id) === String(selectedId) ? "selected" : ""}>${k.kode} — ${k.nama}</option>`).join("");
 }
@@ -379,7 +390,7 @@ function renderBarisKlaster(list) {
   const el = document.getElementById("daftarKlasterTambahan");
   el.innerHTML = list.map((row, i) => `
     <div class="grid-2" data-idx-klaster="${i}">
-      <select onchange="daftarKlasterTambahanState[${i}].klaster_id=parseInt(this.value)">${opsiKlaster(row.klaster_id)}</select>
+      <select onchange="ubahKlasterTambahan(${i}, this.value)">${opsiKlaster(row.klaster_id)}</select>
       <div style="display:flex; gap:8px;">
         <input type="text" placeholder="Keterangan (opsional)" value="${row.keterangan || ""}" oninput="daftarKlasterTambahanState[${i}].keterangan=this.value" style="margin-bottom:0;">
         <button type="button" class="btn-secondary" onclick="hapusBarisKlaster(${i})">Hapus</button>
@@ -391,14 +402,31 @@ function renderBarisKlaster(list) {
 
 function tambahBarisKlaster() {
   const list = window.daftarKlasterTambahanState || [];
-  list.push({ klaster_id: daftarKlasterGlobal[0]?.id || null, keterangan: "" });
+  const klasterId = daftarKlasterGlobal[0]?.id || null;
+  list.push({ klaster_id: klasterId, keterangan: "" });
   renderBarisKlaster(list);
+
+  // otomatis nambah baris Hak Akses Modul yang sejajar, modul_kode udah ketebak
+  const hakList = window.daftarHakAksesState || [];
+  hakList.push({ modul_kode: modulDariKlasterId(klasterId), klaster_id: klasterId, level: "lihat" });
+  renderBarisHakAkses(hakList);
 }
 
 function hapusBarisKlaster(i) {
   const list = window.daftarKlasterTambahanState || [];
   list.splice(i, 1);
   renderBarisKlaster(list);
+}
+
+function ubahKlasterTambahan(i, val) {
+  const klasterId = val ? parseInt(val) : null;
+  daftarKlasterTambahanState[i].klaster_id = klasterId;
+  // sinkron ke baris Hak Akses sejajar (index sama), biar modul_kode ikut kepilih
+  if (window.daftarHakAksesState && window.daftarHakAksesState[i]) {
+    window.daftarHakAksesState[i].modul_kode = modulDariKlasterId(klasterId);
+    window.daftarHakAksesState[i].klaster_id = klasterId;
+    renderBarisHakAkses(window.daftarHakAksesState);
+  }
 }
 
 function renderBarisHakAkses(list) {
