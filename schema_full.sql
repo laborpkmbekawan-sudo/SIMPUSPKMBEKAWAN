@@ -4721,3 +4721,63 @@ create index if not exists idx_lab_bumil_pustu_silab_pasien on lab_bumil_pustu(s
 -- ============================================================
 -- SELESAI section 107. Idempotent, aman diulang.
 -- ============================================================
+
+-- ============================================================
+-- 108. FIX — hapus FK nyangkut di hak_akses.modul_kode
+--     modul_kode didesain bebas teks (dicocokin manual di JS,
+--     bukan lookup ke tabel modul), tapi ada constraint FK lama
+--     ("hak_akses_modul_kode_fkey") masih nempel di database dan
+--     nolak kode modul yang gak ada di tabel referensi itu
+--     (makanya "klaster1" gagal disimpan). Aman diulang.
+-- ============================================================
+
+alter table hak_akses drop constraint if exists hak_akses_modul_kode_fkey;
+
+-- ============================================================
+-- SELESAI section 108. Idempotent, aman diulang.
+-- ============================================================
+
+-- ============================================================
+-- 109. MIGRASI MODEL AKSES: role gak lagi otomatis kasih paket
+--     bawaan lebar (dokter/perawat/bidan/petugas/staff/farmasi).
+--     Supaya SEMUA akun yang UDAH ADA gak mendadak keblokir pas
+--     kode baru naik, section ini generate baris hak_akses
+--     eksplisit yang PERSIS niru akses lama tiap role, level
+--     'penuh' (biar gak ada fitur yang ilang, termasuk Laporan).
+--
+--     Abis ini jalan, admin BEBAS ngurangin/nyesuain hak akses
+--     tiap pegawai lewat pengaturan.html kayak biasa -- baris
+--     yang di-generate di sini cuma titik awal ("sama kayak
+--     kemarin"), bukan kunci permanen.
+--
+--     Aman diulang -- skip baris yang udah ada (gak dobel-dobel).
+--     Staff Pustu (pustu_id keisi) dilewatin, soalnya mereka udah
+--     otomatis kekunci ke pustu.html doang, gak kepengaruh sama
+--     perubahan ini.
+-- ============================================================
+
+insert into hak_akses (pegawai_id, modul_kode, level)
+select p.id, m.modul_kode, 'penuh'
+from profil_pegawai p
+cross join (values
+  ('petugas', 'pendaftaran'), ('petugas', 'rekam_medis'), ('petugas', 'kasir'),
+  ('staff',   'pendaftaran'), ('staff',   'rekam_medis'), ('staff',   'kasir'),
+  ('dokter',  'rekam_medis'), ('dokter',  'ugd'), ('dokter',  'ranap'),
+  ('dokter',  'klaster2'),    ('dokter',  'klaster3'), ('dokter', 'klaster4'), ('dokter', 'gigi'),
+  ('perawat', 'rekam_medis'), ('perawat', 'ugd'), ('perawat', 'ranap'),
+  ('perawat', 'klaster2'),    ('perawat', 'klaster3'), ('perawat', 'klaster4'), ('perawat', 'gigi'),
+  ('bidan',   'rekam_medis'), ('bidan',   'ugd'),
+  ('bidan',   'klaster2'),    ('bidan',   'klaster3'), ('bidan', 'klaster4'), ('bidan', 'gigi'),
+  ('farmasi', 'apotek'),
+  ('klaster1','klaster1')
+) as m(role_lama, modul_kode)
+where p.role = m.role_lama
+  and p.pustu_id is null
+  and not exists (
+    select 1 from hak_akses h
+    where h.pegawai_id = p.id and h.modul_kode = m.modul_kode
+  );
+
+-- ============================================================
+-- SELESAI section 109. Idempotent, aman diulang.
+-- ============================================================
