@@ -304,6 +304,10 @@ function renderShiftBar() {
 }
 
 async function bukaShiftKasir() {
+  if (!bolehLayani(profilSaya, "kasir")) {
+    alert("Akun kamu cuma boleh lihat di Kasir, gak bisa buka shift.");
+    return;
+  }
   const raw = document.getElementById("shiftCashAwal").value.replace(/\D/g, "");
   const cashAwal = raw ? Number(raw) : 0;
 
@@ -569,6 +573,10 @@ function hitungKembalianKasir() {
 async function prosesPembayaran() {
   const msgBox = document.getElementById("msgTagihan");
   if (!shiftAktif) { msgBox.innerHTML = `<div class="msg msg-error">Buka shift kasir dulu (lihat bagian atas halaman) sebelum proses pembayaran.</div>`; return; }
+  if (!bolehLayani(profilSaya, "kasir")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Kasir, gak bisa proses pembayaran.</div>`;
+    return;
+  }
 
   const idTerpilih = Array.from(document.querySelectorAll(".chkTagihanItem:checked")).map(cb => cb.value);
   if (!idTerpilih.length) { msgBox.innerHTML = `<div class="msg msg-error">Centang minimal 1 tagihan dulu.</div>`; return; }
@@ -869,6 +877,10 @@ async function muatTutupShift() {
 
 async function tutupShiftSubmit(totalTransaksi, totalPemasukan, totalTunai, totalNonTunai) {
   const msgBox = document.getElementById("msgTutupShift");
+  if (!bolehLayani(profilSaya, "kasir")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Kasir, gak bisa tutup shift.</div>`;
+    return;
+  }
   if (!confirm("Tutup shift sekarang? Pastikan cash fisik sudah dihitung dan dicocokkan.")) return;
 
   const rawCash = document.getElementById("tsCashAkhir").value.replace(/\D/g, "");

@@ -1771,6 +1771,7 @@ let profilSaya = null;
   profilSaya = profil;
   cekAksesHalaman(profil, "index.html");
   sesuaikanTabNav(profil);
+  terapkanLevelUI(profil, "pendaftaran", ["navLaporan"]);
   if (profil) {
     document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;
   }
@@ -1795,6 +1796,10 @@ let koordinasiInterval = null;
 function gantiSubtabPendaftaran(tab) {
   if (tab === "audit" && (!profilSaya || profilSaya.role !== "admin")) {
     alert("Cuma admin yang boleh buka Audit / Keamanan.");
+    return;
+  }
+  if (tab === "laporan" && !bolehLaporan(profilSaya, "pendaftaran")) {
+    alert("Akun kamu belum punya akses Laporan di modul Pendaftaran.");
     return;
   }
   SUBTAB_PENDAFTARAN.forEach(t => {
@@ -3602,6 +3607,12 @@ function pilihAnggotaKeluarga(index) {
 document.getElementById("formPasienBaru").addEventListener("submit", async (e) => {
   e.preventDefault();
   const msgBox = document.getElementById("msgBox");
+
+  if (!bolehLayani(profilSaya, "pendaftaran")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat, gak boleh daftarkan pasien baru. Hubungi admin.</div>`;
+    return;
+  }
+
   const nik = document.getElementById("pNik").value.trim();
 
   if (!/^\d{16}$/.test(nik)) {
@@ -3751,6 +3762,10 @@ function turunkanJenisBayar(jenisPasien) {
 
 async function buatKunjungan() {
   const msgBox = document.getElementById("msgBox");
+  if (!bolehLayani(profilSaya, "pendaftaran")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat, gak boleh daftarkan kunjungan. Hubungi admin.</div>`;
+    return;
+  }
   if (!pasienTerpilih) {
     msgBox.innerHTML = `<div class="msg msg-error">Pilih atau daftarkan pasien dulu.</div>`;
     return;

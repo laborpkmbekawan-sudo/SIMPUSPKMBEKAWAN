@@ -139,119 +139,26 @@ async function getProfilSaya() {
   return data;
 }
 
-// ============================================================
-// MESIN RBAC PUSAT
-// Urutan level: lihat(1) < layani(2) < penuh(3).
-// Semua modul WAJIB pake bolehLihat()/bolehLayani()/bolehLaporan()/bolehAksi()
-// di bawah -- jangan cek profil.role langsung di HTML modul buat nentuin
-// boleh-input-atau-tidak (nav-hiding doang gak cukup, ini yang nentuin beneran
-// boleh submit/insert/update atau tidak).
-// ============================================================
+// Urutan level hak akses, dipakai buat bandingkan cukup/gak nya
 const LEVEL_URUTAN = { lihat: 1, layani: 2, penuh: 3 };
 
-// Role yang otomatis dapet level "layani" bawaan di klaster tempat dia
-// ditugaskan (klasterIds), per modul_kode -- gantiin baked-in role check yang
-// dulu cuma ada lokal di rekam-medis.html (bisaLayani), sekarang berlaku pusat
-// buat modul manapun yang manggil bolehLayani()/bolehAksi(). Hak akses
-// granular (hak_akses table) tetap bisa NAIKIN ke "penuh" atau kasih akses
-// lintas klaster di atas bawaan ini.
-const ROLE_LAYANI_BAWAAN = {
-  rekam_medis: ["dokter", "perawat", "bidan"],
-  ugd: ["dokter", "perawat", "bidan"],
-  ranap: ["dokter", "perawat", "bidan"],
-  gigi: ["dokter", "perawat", "bidan"],
-  // klaster1 SENGAJA gak ada di sini -- klaster1 = modul Manajemen (surat,
-  // keuangan, kepegawaian, aset, mutu), bukan poli klinis. Gak ada role yang
-  // "otomatis" boleh layani di situ; akses murni dari hak_akses granular yang
-  // di-set admin manual di pengaturan.html (KTU/bendahara/dst).
-  klaster2: ["dokter", "perawat", "bidan"],
-  klaster3: ["dokter", "perawat", "bidan"],
-  klaster4: ["dokter", "perawat", "bidan"],
-  apotek: ["farmasi"],
-  kasir: ["petugas", "staff"],
-  pendaftaran: ["petugas", "staff"],
-};
-
-// Level tertinggi dari hak_akses granular buat 1 modul (atau beberapa alias
-// modul_kode sekaligus), opsional dibatasi ke 1 klaster. klaster_id null di
-// baris hak_akses artinya berlaku semua klaster. Kalau klasterId gak dikasih
-// (undefined), semua baris ikut dihitung tanpa filter klaster.
-function levelDariHakAkses(profil, modulKodeAtauArray, klasterId) {
-  const daftarKode = Array.isArray(modulKodeAtauArray) ? modulKodeAtauArray : [modulKodeAtauArray];
-  let terbaik = null;
-  daftarKode.forEach(kode => {
-    ((profil.hakAksesPeta || {})[kode] || []).forEach(h => {
-      if (h.klaster_id !== null && klasterId !== undefined && h.klaster_id !== klasterId) return;
-      if (!terbaik || LEVEL_URUTAN[h.level] > LEVEL_URUTAN[terbaik]) terbaik = h.level;
-    });
-  });
-  return terbaik;
-}
-
-// Level EFEKTIF pegawai buat 1 modul (opsional di 1 klaster tertentu):
-// gabungan role bawaan (ROLE_LAYANI_BAWAAN, cuma nyala kalau klasterId cocok
-// klaster tugas pegawai) + hak akses granular (bisa nimpa ke level lebih
-// tinggi). Balikin null kalau gak punya akses sama sekali ke modul ini.
-function levelEfektifModul(profil, modulKodeAtauArray, klasterId) {
-  if (!profil) return null;
-  if (profil.role === "admin") return "penuh";
-
-  const daftarKode = Array.isArray(modulKodeAtauArray) ? modulKodeAtauArray : [modulKodeAtauArray];
-  let terbaik = null;
-
-  daftarKode.forEach(kode => {
-    const roleBawaan = ROLE_LAYANI_BAWAAN[kode] || [];
-    if (roleBawaan.includes(profil.role)) {
-      const cocokKlaster = klasterId === undefined || (profil.klasterIds || []).includes(klasterId);
-      if (cocokKlaster) terbaik = "layani";
-    }
-  });
-
-  const dariHak = levelDariHakAkses(profil, daftarKode, klasterId);
-  if (dariHak && (!terbaik || LEVEL_URUTAN[dariHak] > LEVEL_URUTAN[terbaik])) terbaik = dariHak;
-
-  return terbaik;
-}
-
-// Dipanggil sebelum nampilin data pasien/rekam -- minimal level "lihat".
-function bolehLihat(profil, modulKode, klasterId) {
-  if (!profil) return false;
-  if (profil.role === "admin") return true;
-  return levelEfektifModul(profil, modulKode, klasterId) !== null;
-}
-
-// Dipanggil sebelum ngizinin submit/insert/update data pelayanan (isi rekam
-// medis, resep, tindakan, dst) -- minimal level "layani".
-function bolehLayani(profil, modulKode, klasterId) {
-  if (!profil) return false;
-  const level = levelEfektifModul(profil, modulKode, klasterId);
-  return !!level && LEVEL_URUTAN[level] >= LEVEL_URUTAN.layani;
-}
-
-// Dipanggil sebelum nampilin/ngizinin Laporan Internal & Laporan ke Dinas --
-// wajib level "penuh".
-function bolehLaporan(profil, modulKode, klasterId) {
-  if (!profil) return false;
-  return levelEfektifModul(profil, modulKode, klasterId) === "penuh";
-}
-
-// Versi generik, buat kasus yang minLevel-nya gak baku (lihat/layani/penuh).
-function bolehAksi(profil, modulKode, klasterId, minLevel = "lihat") {
-  if (!profil) return false;
-  if (profil.role === "admin") return true;
-  const level = levelEfektifModul(profil, modulKode, klasterId);
-  return !!level && LEVEL_URUTAN[level] >= LEVEL_URUTAN[minLevel];
-}
-
-// --- Kompatibilitas mundur, biar kode lama yang masih manggil nama lama gak
-// error. JANGAN dipake buat kode baru -- pake 4 fungsi bolehX() di atas. ---
+// Cek apakah pegawai punya hak akses ke modul tertentu (opsional: di klaster tertentu),
+// minimal level tertentu. Admin selalu lolos.
 function cekHakAkses(profil, modulKode, klasterId, minLevel = "lihat") {
-  return bolehAksi(profil, modulKode, klasterId, minLevel);
+  if (!profil) return false;
+  if (profil.role === "admin") return true;
+
+  const daftar = (profil.hakAksesPeta || {})[modulKode] || [];
+  const cocok = daftar.find(h => h.klaster_id === null || h.klaster_id === klasterId);
+  if (!cocok) return false;
+  return LEVEL_URUTAN[cocok.level] >= LEVEL_URUTAN[minLevel];
 }
+
+// Cek apakah pegawai punya hak akses ke modul tertentu, di klaster manapun
 function punyaAksesModul(profil, modulKode) {
   if (!profil) return false;
   if (profil.role === "admin") return true;
-  return levelEfektifModul(profil, modulKode) !== null;
+  return ((profil.hakAksesPeta || {})[modulKode] || []).length > 0;
 }
 
 async function logout() {
@@ -399,18 +306,30 @@ function sesuaikanTabNav(profil) {
   });
 }
 
-// Kompatibilitas mundur -- dulu levelUntukModul cuma ngitung dari hak_akses
-// (gak ikut role bawaan). Sekarang delegasi ke levelEfektifModul (klasterId
-// undefined = gak difilter per klaster, sama kayak perilaku lama).
+// Level tertinggi yang dipunya pegawai ini buat 1 modul_kode (atau beberapa
+// alias modul_kode sekaligus, misal klaster1 lama disebut "manajemen").
+// Admin selalu "penuh". Balikin null kalau emang gak ada hak akses granular
+// modul itu (berarti akses cuma dari role/AKSES_HALAMAN, dianggap "lihat" doang
+// di pemanggil).
 function levelUntukModul(profil, modulKodeAtauArray) {
-  return levelEfektifModul(profil, modulKodeAtauArray);
+  if (!profil) return null;
+  if (profil.role === "admin") return "penuh";
+  const daftarKode = Array.isArray(modulKodeAtauArray) ? modulKodeAtauArray : [modulKodeAtauArray];
+  let terbaik = null;
+  daftarKode.forEach(kode => {
+    ((profil.hakAksesPeta || {})[kode] || []).forEach(h => {
+      if (!terbaik || LEVEL_URUTAN[h.level] > LEVEL_URUTAN[terbaik]) terbaik = h.level;
+    });
+  });
+  return terbaik;
 }
 
 // Sembunyikan elemen (biasanya tab/link "Laporan Internal", "Laporan ke
 // Dinas", dst) yang cuma boleh diliat kalau level pegawai buat modul ini
 // "penuh". Panggil sekali per halaman modul, abis sesuaikanTabNav().
 function terapkanLevelUI(profil, modulKodeAtauArray, idElemenButuhPenuh) {
-  const cukup = bolehLaporan(profil, modulKodeAtauArray);
+  const level = profil && profil.role === "admin" ? "penuh" : (levelUntukModul(profil, modulKodeAtauArray) || "lihat");
+  const cukup = level === "penuh";
   (idElemenButuhPenuh || []).forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = cukup ? "" : "none";

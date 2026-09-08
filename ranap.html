@@ -1205,6 +1205,10 @@ function batalkanAdmisi() {
 document.getElementById("formAdmisiPasienBaru").addEventListener("submit", async (e) => {
   e.preventDefault();
   const msgBox = document.getElementById("msgAdmisiRanap");
+  if (!bolehLayani(profilSaya, "ranap")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat, gak bisa admisi pasien Rawat Inap.</div>`;
+    return;
+  }
   const nik = document.getElementById("admisiNik").value.trim();
 
   if (!/^\d{16}$/.test(nik)) {
@@ -1381,6 +1385,10 @@ async function simpanCppt() {
 
   if (!kunjunganRanapId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
   if (!catatan) { msgBox.innerHTML = `<div class="msg msg-error">Isi catatan perkembangan dulu.</div>`; return; }
+  if (!bolehLayani(profilSaya, "ranap")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat, gak bisa isi CPPT.</div>`;
+    return;
+  }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   const { error } = await supabaseClient.from("asuhan_ranap").insert({
@@ -1415,6 +1423,10 @@ async function simpanVitalRanap() {
   const msgBox = document.getElementById("msgVitalRanap");
   const kunjunganRanapId = document.getElementById("asuhanPilihPasien").value;
   if (!kunjunganRanapId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!bolehLayani(profilSaya, "ranap")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat, gak bisa input vital sign.</div>`;
+    return;
+  }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   const { error } = await supabaseClient.from("observasi_ranap").insert({
@@ -1469,6 +1481,10 @@ async function simpanVisiteRanap() {
 
   if (!kunjunganRanapId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
   if (!catatan) { msgBox.innerHTML = `<div class="msg msg-error">Isi catatan visite dulu.</div>`; return; }
+  if (!bolehLayani(profilSaya, "ranap")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat, gak bisa isi visite.</div>`;
+    return;
+  }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   const evaluasi = document.getElementById("visiteEvaluasi").value;
@@ -1524,6 +1540,10 @@ async function simpanDischargeRanap() {
   const msgBox = document.getElementById("msgDischargeRanap");
   const kunjunganRanapId = document.getElementById("dischargePilihPasien").value;
   if (!kunjunganRanapId) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!bolehLayani(profilSaya, "ranap")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat, gak bisa proses discharge.</div>`;
+    return;
+  }
 
   const statusPemulangan = document.getElementById("dischargeStatus").value;
   const isFinal = statusPemulangan !== "Rencana";
@@ -1905,6 +1925,10 @@ async function simpanSoapRanap() {
   const kunjunganRanapId = document.getElementById("rmRanapPilihPasien").value;
   const p = pasienAktifCacheRmRanap.find(x => x.id === kunjunganRanapId);
   if (!p) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!bolehLayani(profilSaya, "ranap")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat, gak bisa isi SOAP.</div>`;
+    return;
+  }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   const payload = {
@@ -1974,6 +1998,10 @@ async function simpanResepRanap() {
   const p = pasienAktifCacheRmRanap.find(x => x.id === kunjunganRanapId);
   if (!p) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
   if (!daftarResepRanapBaru.length) { msgBox.innerHTML = `<div class="msg msg-error">Tambah minimal 1 obat dulu.</div>`; return; }
+  if (!bolehLayani(profilSaya, "ranap")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat, gak bisa buat resep.</div>`;
+    return;
+  }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   const { error } = await supabaseClient.from("resep").insert({
@@ -2304,6 +2332,10 @@ async function tambahJadwalObatRanap() {
   const kunjunganRanapId = document.getElementById("rmRanapPilihPasien").value;
   const p = pasienAktifCacheRmRanap.find(x => x.id === kunjunganRanapId);
   if (!p) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!bolehLayani(profilSaya, "ranap")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat, gak bisa tambah jadwal obat.</div>`;
+    return;
+  }
 
   const jenis = document.getElementById("jadwalRanapJenis").value;
   const tanggal = document.getElementById("jadwalRanapTanggal").value;

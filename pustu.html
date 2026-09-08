@@ -931,6 +931,7 @@ const LABEL_JENIS_LAYANAN = {
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "pustu.html");
   sesuaikanTabNav(profilSaya);
+  terapkanLevelUI(profilSaya, "pustu", ["navLaporanInternal","navLaporanDinas"]);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
   }
@@ -1172,6 +1173,7 @@ function pilihPasienPT(p, konteks) {
 // ---------- PELAYANAN DASAR PUSTU ----------
 async function simpanPelayananPT() {
   const msgBox = document.getElementById("msgPTPelayanan");
+  if (!bolehLayani(profilSaya, "pustu")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Pustu, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihPT) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
   if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
 
@@ -1373,6 +1375,7 @@ async function muatStokPustu() {
 
 async function simpanPemakaianStokPustu() {
   const msgBox = document.getElementById("msgStokPemakaian");
+  if (!bolehLayani(profilSaya, "pustu")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Pustu, gak bisa simpan data.</div>`; return; }
   const obatId = document.getElementById("skObat").value;
   const jumlah = parseInt(document.getElementById("skJumlah").value, 10);
   const referensi = document.getElementById("skReferensi").value.trim() || null;
@@ -1424,6 +1427,7 @@ function hitungSelisihOpnamePustu(obatId) {
 
 async function simpanOpnamePustu() {
   const msgBox = document.getElementById("msgOpnamePustu");
+  if (!bolehLayani(profilSaya, "pustu")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Pustu, gak bisa simpan data.</div>`; return; }
   if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
 
   const inputs = document.querySelectorAll(".op-fisik");
@@ -1484,6 +1488,7 @@ function tambahBarisPermintaan() {
 
 async function simpanPermintaanPustu() {
   const msgBox = document.getElementById("msgPermintaan");
+  if (!bolehLayani(profilSaya, "pustu")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Pustu, gak bisa buat permintaan.</div>`; return; }
   if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
 
   const rows = document.querySelectorAll("#pmItemRows > div");
@@ -1645,6 +1650,7 @@ async function muatPosyanduBalita() {
 
 async function simpanPosyanduBalita() {
   const msgBox = document.getElementById("msgPosyanduBalita");
+  if (!bolehLayani(profilSaya, "pustu")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Pustu, gak bisa simpan data.</div>`; return; }
   if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
 
   const tanggal = document.getElementById("pbTanggal").value;
@@ -1716,6 +1722,7 @@ async function muatPosyanduLansia() {
 
 async function simpanPosyanduLansia() {
   const msgBox = document.getElementById("msgPosyanduLansia");
+  if (!bolehLayani(profilSaya, "pustu")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Pustu, gak bisa simpan data.</div>`; return; }
   if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
 
   const tanggal = document.getElementById("plsTanggal").value;
@@ -1827,6 +1834,7 @@ function bukaFormRujukan(index) {
 
 async function simpanRujukanResmi() {
   const msgBox = document.getElementById("msgRujukanBuat");
+  if (!bolehLayani(profilSaya, "pustu")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Pustu, gak bisa buat rujukan.</div>`; return; }
   const r = window._rjTerpilih;
   const alasan = document.getElementById("rjAlasan").value.trim();
   if (!r) { msgBox.innerHTML = `<div class="msg msg-error">Pilih kunjungan dulu.</div>`; return; }
@@ -1856,6 +1864,7 @@ async function simpanRujukanResmi() {
 // ============================================================
 async function simpanLabBumil() {
   const msgBox = document.getElementById("msgLabBumilSimpan");
+  if (!bolehLayani(profilSaya, "pustu")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Pustu, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihPT) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
   if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
 
@@ -1930,6 +1939,7 @@ async function muatDaftarLabBumil() {
 }
 
 async function tandaiDikirimLabBumil(id) {
+  if (!bolehLayani(profilSaya, "pustu")) { alert("Akun kamu cuma boleh lihat di Pustu, gak bisa ubah status."); return; }
   const { error } = await supabaseClient.from("lab_bumil_pustu")
     .update({ status: "dikirim_ke_induk", tanggal_kirim: new Date().toISOString().split("T")[0] }).eq("id", id);
   if (error) { alert("Gagal update status: " + error.message); return; }
@@ -2175,6 +2185,7 @@ async function muatLaporanDinas() {
 // ---------- DATA SASARAN POSYANDU (S & K buat SKDN akurat) ----------
 async function simpanSasaranPosyandu() {
   const msgBox = document.getElementById("msgPosyanduSasaran");
+  if (!bolehLayani(profilSaya, "pustu")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Pustu, gak bisa simpan data.</div>`; return; }
   if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
 
   const nama = document.getElementById("psNama").value.trim();
@@ -2231,6 +2242,7 @@ async function muatSasaranPosyandu() {
 }
 
 async function toggleAktifSasaran(id, aktifBaru) {
+  if (!bolehLayani(profilSaya, "pustu")) { alert("Akun kamu cuma boleh lihat di Pustu, gak bisa ubah data."); return; }
   const { error } = await supabaseClient.from("posyandu_sasaran").update({ aktif: aktifBaru }).eq("id", id);
   if (error) { alert("Gagal update: " + error.message); return; }
   await muatSasaranPosyandu();
@@ -2257,6 +2269,7 @@ const LABEL_STATUS_JADWAL = { terjadwal: "Terjadwal", selesai: "Selesai", batal:
 
 async function simpanJadwalPosyandu() {
   const msgBox = document.getElementById("msgJadwalPosyandu");
+  if (!bolehLayani(profilSaya, "pustu")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Pustu, gak bisa simpan data.</div>`; return; }
   if (!pustuAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Belum ada Pustu aktif.</div>`; return; }
 
   const namaPosyandu = document.getElementById("jpNamaPosyandu").value.trim();
@@ -2327,12 +2340,14 @@ function jamSingkatTanggalPT(tgl) {
 }
 
 async function ubahStatusJadwalPosyandu(id, statusBaru) {
+  if (!bolehLayani(profilSaya, "pustu")) { alert("Akun kamu cuma boleh lihat di Pustu, gak bisa ubah status."); return; }
   const { error } = await supabaseClient.from("jadwal_posyandu").update({ status: statusBaru }).eq("id", id);
   if (error) { alert("Gagal update status: " + error.message); return; }
   await muatJadwalPosyandu();
 }
 
 async function hapusJadwalPosyandu(id) {
+  if (!bolehLayani(profilSaya, "pustu")) { alert("Akun kamu cuma boleh lihat di Pustu, gak bisa hapus jadwal."); return; }
   if (!confirm("Hapus jadwal ini?")) return;
   const { error } = await supabaseClient.from("jadwal_posyandu").delete().eq("id", id);
   if (error) { alert("Gagal hapus: " + error.message); return; }

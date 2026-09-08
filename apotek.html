@@ -3177,6 +3177,11 @@ async function simpanResepManual() {
   const msgBox = document.getElementById("msgEntriResep");
   msgBox.innerHTML = "";
 
+  if (!bolehLayani(profilSaya, "apotek")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Apotek, gak bisa input resep.</div>`;
+    return;
+  }
+
   const kunjunganId = document.getElementById("entriKunjunganSelect").value;
   if (!kunjunganId) {
     msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien/kunjungan dulu.</div>`;
@@ -3280,6 +3285,11 @@ function tambahBarisKomponenRacikan() {
 async function simpanResepRacikan() {
   const msgBox = document.getElementById("msgRacikan");
   msgBox.innerHTML = "";
+
+  if (!bolehLayani(profilSaya, "apotek")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Apotek, gak bisa input racikan.</div>`;
+    return;
+  }
 
   const kunjunganId = document.getElementById("racikanKunjunganSelect").value;
   const namaRacikan = document.getElementById("racikanNama").value.trim();
@@ -3722,6 +3732,11 @@ async function muatRiwayatObatPasien(pasienId, resepIniId) {
 async function konfirmasiObatDiserahkan(resepId, itemIndex, tombolEl) {
   const msgBox = document.getElementById("msgResep");
   msgBox.innerHTML = "";
+
+  if (!bolehLayani(profilSaya, "apotek")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Apotek, gak bisa serahkan obat.</div>`;
+    return;
+  }
 
   // Ambil ulang data resep terbaru (hindari race condition kalau ada 2 petugas buka bareng).
   const { data: resep, error: errAmbil } = await supabaseClient

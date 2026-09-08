@@ -1905,6 +1905,7 @@ function batalkanTandaiHamil() {
 
 async function simpanKehamilan() {
   const msgBox = document.getElementById("msgTandaiHamil");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihHamil) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const hpht = document.getElementById("hamilHpht").value || null;
@@ -2058,6 +2059,7 @@ async function muatRiwayatAnc() {
 
 async function simpanAnc() {
   const msgBox = document.getElementById("msgAnc");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!kehamilanTerpilihAnc) { msgBox.innerHTML = `<div class="msg msg-error">Pilih ibu hamil dulu.</div>`; return; }
 
   const risiko = Array.from(document.querySelectorAll(".ancRisiko:checked")).map(c => c.value);
@@ -2134,6 +2136,7 @@ async function muatRiwayatImunisasi() {
 
 async function simpanImunisasi() {
   const msgBox = document.getElementById("msgImun");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!kehamilanTerpilihImun) { msgBox.innerHTML = `<div class="msg msg-error">Pilih ibu hamil dulu.</div>`; return; }
 
   const jenis = document.getElementById("imunJenis").value;
@@ -2193,6 +2196,7 @@ function toggleJenisPersalinan() {
 
 async function simpanPersalinan() {
   const msgBox = document.getElementById("msgPersalinan");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!kehamilanTerpilihPersalinan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih ibu hamil dulu.</div>`; return; }
 
   const tanggal = document.getElementById("persalinanTanggal").value;
@@ -2339,6 +2343,7 @@ async function muatRiwayatNifas() {
 
 async function simpanNifas() {
   const msgBox = document.getElementById("msgNifas");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!kehamilanTerpilihNifas) { msgBox.innerHTML = `<div class="msg msg-error">Pilih ibu nifas dulu.</div>`; return; }
 
   const tahap = document.getElementById("nifasTahap").value;
@@ -2496,6 +2501,7 @@ async function ambilAtauBuatKunjunganK2HariIni(pasien) {
 
 async function simpanRujukanK2() {
   const msgBox = document.getElementById("rjkK2MsgBox");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!kehamilanTerpilihRujukanK2) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const jenis = document.getElementById("rjkK2Jenis").value;
@@ -2687,6 +2693,7 @@ async function muatRiwayatKn() {
 
 async function simpanKn() {
   const msgBox = document.getElementById("msgKn");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihKn) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tahap = document.getElementById("knTahap").value;
@@ -2813,6 +2820,7 @@ async function muatRiwayatTumbuh() {
 
 async function simpanTumbuhKembang() {
   const msgBox = document.getElementById("msgTumbuh");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihTumbuh) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("tumbuhTanggal").value;
@@ -2926,6 +2934,7 @@ async function muatRiwayatImunDasar() {
 
 async function simpanImunDasar() {
   const msgBox = document.getElementById("msgImunDasar");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihImunDasar) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const antigen = document.getElementById("imunDasarAntigen").value;
@@ -3032,6 +3041,7 @@ async function muatRiwayatVitA() {
 
 async function simpanVitA() {
   const msgBox = document.getElementById("msgVitA");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihVitA) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const dosis = document.getElementById("vitADosis").value;
@@ -3154,6 +3164,7 @@ async function muatRiwayatMtbs() {
 
 async function simpanMtbs() {
   const msgBox = document.getElementById("msgMtbs");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihMtbs) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const jenis = document.getElementById("mtbsJenis").value;
@@ -3275,6 +3286,7 @@ function toggleJenisRjkUmum() {
 
 async function simpanRjkUmum() {
   const msgBox = document.getElementById("msgRjkUmum");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihRjkUmum) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
   if (!kunjunganAsalRjkUmumId) { msgBox.innerHTML = `<div class="msg msg-error">Data kunjungan belum siap, coba pilih ulang pasien.</div>`; return; }
 
@@ -3346,6 +3358,7 @@ async function simpanRjkUmum() {
 
 async function ajukanLabUmum() {
   const msgBox = document.getElementById("msgLabUmum");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihRjkUmum) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
   if (!kunjunganAsalRjkUmumId) { msgBox.innerHTML = `<div class="msg msg-error">Data kunjungan belum siap, coba pilih ulang pasien.</div>`; return; }
 
@@ -3563,6 +3576,7 @@ async function muatRiwayatJaring() {
 
 async function simpanJaring() {
   const msgBox = document.getElementById("msgJaring");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihJaring) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("jaringTanggal").value;
@@ -3673,6 +3687,7 @@ async function muatRiwayatBias() {
 
 async function simpanBias() {
   const msgBox = document.getElementById("msgBias");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihBias) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const antigen = document.getElementById("biasAntigen").value;
@@ -3784,6 +3799,7 @@ async function muatRiwayatPkpr() {
 
 async function simpanPkpr() {
   const msgBox = document.getElementById("msgPkpr");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihPkpr) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("pkprTanggal").value;
@@ -3904,6 +3920,7 @@ async function muatRiwayatBerkala() {
 
 async function simpanBerkala() {
   const msgBox = document.getElementById("msgBerkala");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihBerkala) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("berkalaTanggal").value;
@@ -4017,6 +4034,7 @@ async function muatRiwayatTtd() {
 
 async function simpanTtd() {
   const msgBox = document.getElementById("msgTtd");
+  if (!bolehLayani(profilSaya, "klaster2")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 2, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihTtd) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("ttdTanggal").value;

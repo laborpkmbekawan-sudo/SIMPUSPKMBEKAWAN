@@ -1237,6 +1237,10 @@ async function simpanTindakan() {
   const msgBox = document.getElementById("msgTindTindakan");
   if (!kunjunganTerpilihTindakan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
   if (!daftarTindakanBaru.length) { msgBox.innerHTML = `<div class="msg msg-error">Tambah minimal 1 tindakan dulu.</div>`; return; }
+  if (!bolehLayani(profilSaya, "ugd")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di UGD, gak bisa input tindakan.</div>`;
+    return;
+  }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   const { data: dataTindakan, error } = await supabaseClient.from("tindakan_medis").insert({
@@ -1380,6 +1384,10 @@ async function simpanResepEmergency() {
   const msgBox = document.getElementById("msgTindResep");
   if (!kunjunganTerpilihTindakan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
   if (!daftarResepBaru.length) { msgBox.innerHTML = `<div class="msg msg-error">Tambah minimal 1 obat dulu.</div>`; return; }
+  if (!bolehLayani(profilSaya, "ugd")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di UGD, gak bisa buat resep.</div>`;
+    return;
+  }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   const { data: dataResep, error } = await supabaseClient.from("resep").insert({
@@ -2099,6 +2107,10 @@ document.getElementById("formSoapRmUgd").addEventListener("submit", async (e) =>
   e.preventDefault();
   const msgBox = document.getElementById("msgRmUgdSoap");
   if (!kunjunganTerpilihRmUgd) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
+  if (!bolehLayani(profilSaya, "ugd")) {
+    msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di UGD, gak bisa isi rekam medis.</div>`;
+    return;
+  }
 
   const payload = {
     kunjungan_id: kunjunganTerpilihRmUgd.kunjungan_id,

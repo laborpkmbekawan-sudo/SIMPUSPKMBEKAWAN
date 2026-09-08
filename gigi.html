@@ -985,6 +985,7 @@ async function klikGigi(nomor) {
 
 async function ubahStatusGigi(nomor, statusBaru) {
   const msgBox = document.getElementById("ggOdontoMsg");
+  if (!bolehLayani(profilSaya, "gigi")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Poli Gigi, gak bisa ubah odontogram.</div>`; return; }
   const { error } = await supabaseClient.from("odontogram_gigi").upsert({
     pasien_id: pasienTerpilihGG.id,
     nomor_gigi: nomor,
@@ -1029,6 +1030,7 @@ async function muatRiwayatPeriksaGG() {
 
 async function simpanPeriksaGG() {
   const msgBox = document.getElementById("msgGGPeriksa");
+  if (!bolehLayani(profilSaya, "gigi")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Poli Gigi, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihGG) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("ggTanggal").value;
@@ -1147,6 +1149,7 @@ async function muatRiwayatTindGG() {
 
 async function simpanTindakanGG() {
   const msgBox = document.getElementById("msgTind");
+  if (!bolehLayani(profilSaya, "gigi")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Poli Gigi, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihTind) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("tindTanggal").value;
@@ -1193,6 +1196,7 @@ async function simpanTindakanGG() {
 // ---------- PROMOTIF & PREVENTIF ----------
 async function simpanPromoGG() {
   const msgBox = document.getElementById("msgPromoGG");
+  if (!bolehLayani(profilSaya, "gigi")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Poli Gigi, gak bisa simpan data.</div>`; return; }
   const tanggal = document.getElementById("promoTanggal").value;
   const jenis = document.getElementById("promoJenis").value;
   const sekolah = document.getElementById("promoSekolah").value.trim();
@@ -1367,12 +1371,14 @@ async function muatRiwayatRujukanGG() {
 }
 
 async function ubahStatusRujukanGG(id, status) {
+  if (!bolehLayani(profilSaya, "gigi")) { alert("Akun kamu cuma boleh lihat di Poli Gigi, gak bisa ubah status."); return; }
   const { error } = await supabaseClient.from("rujukan_lab_gigi").update({ status }).eq("id", id);
   if (error) { alert("Gagal ubah status: " + error.message); return; }
   await muatRiwayatRujukanGG();
 }
 
 async function isiHasilRujukanGG(id) {
+  if (!bolehLayani(profilSaya, "gigi")) { alert("Akun kamu cuma boleh lihat di Poli Gigi, gak bisa isi hasil rujukan."); return; }
   const baris = (await supabaseClient.from("rujukan_lab_gigi").select("hasil").eq("id", id).single()).data;
   const hasilBaru = prompt("Isi hasil rujukan/pemeriksaan lab:", baris?.hasil || "");
   if (hasilBaru === null) return;
@@ -1384,6 +1390,7 @@ async function isiHasilRujukanGG(id) {
 
 async function simpanRujukanGG() {
   const msgBox = document.getElementById("msgRujukanGG");
+  if (!bolehLayani(profilSaya, "gigi")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Poli Gigi, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihRujukanGG) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("rujGGTanggal").value;
@@ -1654,6 +1661,7 @@ function exportDinasUkgsCsv() {
 }
 
 async function tandaiKirimDinasGG(jenisLaporan) {
+  if (!bolehLaporan(profilSaya, "gigi")) { alert("Akun kamu gak punya hak kirim laporan Poli Gigi."); return; }
   const cache = jenisLaporan === "Laporan UKGS" ? dinasUkgsCache : dinasGGCache;
   if (!cache.dari || !cache.sampai) { alert("Tampilkan rekap dulu sebelum tandai terkirim."); return; }
 

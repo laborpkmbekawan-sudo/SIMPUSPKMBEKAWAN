@@ -1692,6 +1692,7 @@ async function muatRiwayatTb() {
 
 async function simpanTb() {
   const msgBox = document.getElementById("msgTb");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihTb) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("tbTanggal").value;
@@ -1745,6 +1746,7 @@ async function muatKartuOat() {
 
 async function simpanOat() {
   const msgBox = document.getElementById("msgOat");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihTb) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("oatTanggal").value;
@@ -1796,6 +1798,7 @@ async function muatKontak() {
 
 async function simpanKontak() {
   const msgBox = document.getElementById("msgKontak");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihTb) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const nama = document.getElementById("kontakNama").value.trim();
@@ -1922,6 +1925,7 @@ async function muatRiwayatKusta() {
 
 async function simpanKusta() {
   const msgBox = document.getElementById("msgKusta");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihKusta) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("kustaTanggal").value;
@@ -1975,6 +1979,7 @@ async function muatKartuMdt() {
 
 async function simpanMdt() {
   const msgBox = document.getElementById("msgMdt");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihKusta) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("mdtTanggal").value;
@@ -2093,6 +2098,7 @@ async function muatRiwayatHiv() {
 
 async function simpanHiv() {
   const msgBox = document.getElementById("msgHiv");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihHiv) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("hivTanggal").value;
@@ -2144,6 +2150,7 @@ async function muatKartuArv() {
 
 async function simpanArv() {
   const msgBox = document.getElementById("msgArv");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihHiv) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("arvTanggal").value;
@@ -2254,6 +2261,7 @@ async function muatRiwayatHep() {
 
 async function simpanHep() {
   const msgBox = document.getElementById("msgHep");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihHep) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("hepTanggal").value;
@@ -2366,6 +2374,7 @@ async function muatRiwayatMal() {
 
 async function simpanMal() {
   const msgBox = document.getElementById("msgMal");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihMal) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("malTanggal").value;
@@ -2476,6 +2485,7 @@ async function muatRiwayatIspa() {
 
 async function simpanIspa() {
   const msgBox = document.getElementById("msgIspa");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihIspa) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("ispaTanggal").value;
@@ -2588,6 +2598,7 @@ async function muatRiwayatDia() {
 
 async function simpanDia() {
   const msgBox = document.getElementById("msgDia");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihDia) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("diaTanggal").value;
@@ -2699,6 +2710,7 @@ async function muatRiwayatImun() {
 
 async function simpanImun() {
   const msgBox = document.getElementById("msgImun");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihImun) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("imunTanggal").value;
@@ -2869,6 +2881,7 @@ function ubahAngkaItemSkdr(itemId, kolom, nilai) {
 
 async function simpanItemSkdr() {
   const msgBox = document.getElementById("msgSkdr");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   msgBox.innerHTML = `<div class="msg msg-success">Menyimpan...</div>`;
 
   try {
@@ -2890,6 +2903,7 @@ async function simpanItemSkdr() {
 }
 
 async function tandaiTerkirimSkdr() {
+  if (!bolehLaporan(profilSaya, "klaster4")) { alert("Akun kamu gak punya hak kirim laporan Klaster 4."); return; }
   if (!confirm(`Tandai laporan SKDR minggu ${skdrAktif.minggu_ke}/${skdrAktif.tahun} sebagai terkirim ke Dinas Kesehatan?`)) return;
 
   const { error } = await supabaseClient.from("skdr_mingguan")
@@ -2965,6 +2979,7 @@ function bukaFormKlbBaru() {
 
 async function simpanKlbBaru() {
   const msgBox = document.getElementById("msgKlbBaru");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   const judul = document.getElementById("klbJudul").value.trim();
   const jenisPenyakit = document.getElementById("klbJenisPenyakit").value.trim();
   const tanggalDitemukan = document.getElementById("klbTanggalDitemukan").value;
@@ -3038,6 +3053,7 @@ async function bukaDetailKlb(id) {
 }
 
 async function ubahStatusKlb(status) {
+  if (!bolehLayani(profilSaya, "klaster4")) { alert("Akun kamu cuma boleh lihat di Klaster 4, gak bisa ubah status."); return; }
   if (!klbAktifId) return;
   const { error } = await supabaseClient.from("klb_kejadian").update({ status, updated_at: new Date().toISOString() }).eq("id", klbAktifId);
   if (error) { document.getElementById("msgKlbDetail").innerHTML = `<div class="msg msg-error">Gagal ubah status: ${error.message}</div>`; return; }
@@ -3071,6 +3087,7 @@ async function muatTindakanKlb() {
 
 async function simpanTindakanKlb() {
   const msgBox = document.getElementById("msgKlbTindakan");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!klbAktifId) { msgBox.innerHTML = `<div class="msg msg-error">Buka kejadian KLB dulu.</div>`; return; }
 
   const tanggal = document.getElementById("klbTindakanTanggal").value;
@@ -3094,6 +3111,7 @@ async function simpanTindakanKlb() {
 // ---------- KESEHATAN LINGKUNGAN ----------
 async function simpanKesling() {
   const msgBox = document.getElementById("msgKesling");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   const tanggal = document.getElementById("keslingTanggal").value;
   const jenis = document.getElementById("keslingJenis").value;
   const namaSasaran = document.getElementById("keslingNamaSasaran").value.trim();
@@ -3157,6 +3175,7 @@ async function muatRiwayatKesling() {
 }
 
 async function ubahTindakLanjutKesling(id, status) {
+  if (!bolehLayani(profilSaya, "klaster4")) { alert("Akun kamu cuma boleh lihat di Klaster 4, gak bisa ubah status."); return; }
   const { error } = await supabaseClient.from("inspeksi_kesling").update({ tindak_lanjut_status: status, updated_at: new Date().toISOString() }).eq("id", id);
   if (error) { alert("Gagal ubah status: " + error.message); }
   await muatRiwayatKesling();
@@ -3233,6 +3252,7 @@ function exportDinasProgramCsv() {
 }
 
 async function tandaiKirimDinasProgram() {
+  if (!bolehLaporan(profilSaya, "klaster4")) { alert("Akun kamu gak punya hak kirim laporan Klaster 4."); return; }
   if (!dinasProgramCache.rekap.length && dinasProgramCache.total === 0) {
     if (!confirm("Rekap kosong (tidak ada kasus di periode ini). Tetap tandai terkirim?")) return;
   }
@@ -3362,6 +3382,7 @@ function exportDinasKeslingCsv() {
 }
 
 async function tandaiKirimDinasKesling() {
+  if (!bolehLaporan(profilSaya, "klaster4")) { alert("Akun kamu gak punya hak kirim laporan Klaster 4."); return; }
   if (!dinasKeslingCache.rekap.length && !confirm("Rekap kosong. Tetap tandai terkirim?")) return;
   const periodeLabel = `${dinasKeslingCache.dari} s.d. ${dinasKeslingCache.sampai}`;
   const { error } = await supabaseClient.from("laporan_dinas_kirim").insert({
@@ -3671,6 +3692,7 @@ async function muatRiwayatRujukan() {
 }
 
 async function ubahStatusRujukanK4(id, status) {
+  if (!bolehLayani(profilSaya, "klaster4")) { alert("Akun kamu cuma boleh lihat di Klaster 4, gak bisa ubah status."); return; }
   const { error } = await supabaseClient.from("rujukan_lab_k4").update({ status }).eq("id", id);
   if (error) { alert("Gagal ubah status: " + error.message); return; }
   await muatRiwayatRujukan();
@@ -3678,6 +3700,7 @@ async function ubahStatusRujukanK4(id, status) {
 
 async function simpanRujukanK4() {
   const msgBox = document.getElementById("msgRujukan");
+  if (!bolehLayani(profilSaya, "klaster4")) { msgBox.innerHTML = `<div class="msg msg-error">Akun kamu cuma boleh lihat di Klaster 4, gak bisa simpan data.</div>`; return; }
   if (!pasienTerpilihRujukan) { msgBox.innerHTML = `<div class="msg msg-error">Pilih pasien dulu.</div>`; return; }
 
   const tanggal = document.getElementById("rujTanggal").value;

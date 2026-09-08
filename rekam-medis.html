@@ -991,19 +991,11 @@ async function muatAntrian() {
 }
 
 // Cek apakah profil ini bisa MENGISI rekam medis (bukan cuma lihat) di klaster
-// tempat pasien ini terdaftar. Dokter/perawat/bidan yang klaster-nya cocok:
-// otomatis bisa. Selain itu, cek hak_akses granular (level "layani"/"penuh").
+// tempat pasien ini terdaftar. Delegasi ke mesin RBAC pusat (supabaseClient.js)
+// -- dokter/perawat/bidan di klaster tugasnya otomatis "layani" (ROLE_LAYANI_BAWAAN),
+// hak_akses granular bisa naikin ke "penuh"/lintas klaster.
 function bisaLayani(profil, klasterId) {
-  if (profil.role === "admin") return true;
-
-  if (["dokter", "perawat", "bidan"].includes(profil.role) &&
-      (profil.klasterIds || []).includes(klasterId)) {
-    return true;
-  }
-
-  const hakRM = (profil.hakAksesPeta || {})["rekam_medis"] || [];
-  const cocok = hakRM.find(h => h.klaster_id === null || h.klaster_id === klasterId);
-  return !!cocok && (cocok.level === "layani" || cocok.level === "penuh");
+  return bolehLayani(profil, "rekam_medis", klasterId);
 }
 
 function bukaFormRM(kunjungan, bisaIsi = true) {
