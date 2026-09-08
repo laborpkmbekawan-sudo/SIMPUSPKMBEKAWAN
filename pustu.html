@@ -930,6 +930,7 @@ const LABEL_JENIS_LAYANAN = {
 
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "pustu.html");
+  sesuaikanTabNav(profilSaya);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
   }

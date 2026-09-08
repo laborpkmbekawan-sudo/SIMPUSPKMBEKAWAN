@@ -771,6 +771,7 @@ let koordinasiIntervalUgd = null;
 
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "ugd.html");
+  sesuaikanTabNav(profilSaya);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
   }

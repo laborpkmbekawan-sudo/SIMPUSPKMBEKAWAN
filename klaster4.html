@@ -1501,6 +1501,7 @@ let klasterK4IdCache = null;
 
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "klaster4.html");
+  sesuaikanTabNav(profilSaya);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
   }

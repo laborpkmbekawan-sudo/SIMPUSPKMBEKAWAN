@@ -1630,6 +1630,7 @@ let klasterK2IdCache = null;
 
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "klaster2.html");
+  sesuaikanTabNav(profilSaya);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
   }

@@ -96,6 +96,7 @@ let paDipanggilTerakhir = {}; // klaster_id -> no_antrian terakhir yang sudah di
   if (!session) return;
   const profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "papan-antrian.html");
+  sesuaikanTabNav(profilSaya);
 
   jalankanJam();
   setInterval(jalankanJam, 1000);
