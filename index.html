@@ -15,6 +15,7 @@
     <div class="brand">
       <span class="dot"></span>
       <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+      <div class="brand-sub" id="brandAkun">Akun: memuat…</div>
     </div>
     <nav>
       <div class="ph-group-title">Menu Utama</div>
@@ -32,22 +33,7 @@
       <a id="navLaporan" onclick="gantiSubtabPendaftaran('laporan')">Laporan</a>
       <a id="navAudit" onclick="gantiSubtabPendaftaran('audit')">Audit / Keamanan</a>
 
-      <div class="ph-group-title">Modul Lain</div>
-      <a href="rekam-medis.html">Rekam Medis</a>
-      <a href="apotek.html">Apotek</a>
-      <a href="ugd.html">UGD</a>
-      <a href="ranap.html">Rawat Inap</a>
-      <a href="klaster1.html">Klaster 1</a>
-      <a href="klaster2.html">Klaster 2</a>
-      <a href="klaster3.html">Klaster 3</a>
-    <a href="klaster4.html">Klaster 4</a>
-    <a href="gigi.html">Poli Gigi</a>
-      <a href="pustu.html">Pustu</a>
-    <a href="pengaturan.html">Pengaturan</a>
-    <a href="kasir.html">Kasir</a>
-          <a href="papan-antrian.html">Papan Antrian</a>
-    <a href="kapus.html">Kepala Puskesmas</a>
-    <a href="pemegang-program.html">Pemegang Program</a>
+      <div id="sidebarModulLain"></div>
     </nav>
   </aside>
 
@@ -1758,7 +1744,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="js/supabaseClient.js?v=2"></script>
+<script src="js/supabaseClient.js?v=3"></script>
 <script>
 let pasienTerpilih = null;
 let profilSaya = null;
@@ -1771,7 +1757,8 @@ let profilSaya = null;
     const profil = await getProfilSaya();
     profilSaya = profil;
     cekAksesHalaman(profil, "index.html");
-    sesuaikanTabNav(profil);
+    renderSidebarDinamis(profil, "index.html", document.getElementById("sidebarModulLain"));
+    tampilkanAkunDiBrand(profil);
     terapkanLevelUI(profil, "pendaftaran", ["navLaporan"]);
     if (profil) {
       document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;

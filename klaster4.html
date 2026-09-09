@@ -46,6 +46,7 @@
     <div class="brand">
       <span class="dot"></span>
       <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+      <div class="brand-sub" id="brandAkun">Akun: memuat…</div>
     </div>
 
     <nav>
@@ -68,21 +69,7 @@
     <a id="navLaporanDinas" onclick="gantiSubtabK4('laporan-dinas')">Laporan ke Dinas Kesehatan</a>
     <a id="navAudit" onclick="gantiSubtabK4('audit')">Audit / Keamanan</a>
 
-    <div class="ph-group-title">Modul Lain</div>
-    <a href="index.html">Pendaftaran</a>
-    <a href="rekam-medis.html">Rekam Medis</a>
-    <a href="apotek.html">Apotek</a>
-    <a href="ugd.html">UGD</a>
-    <a href="ranap.html">Rawat Inap</a>
-    <a href="klaster1.html">Klaster 1</a>
-    <a href="klaster2.html">Klaster 2</a>
-    <a href="klaster3.html">Klaster 3</a>
-    <a href="gigi.html">Poli Gigi</a>
-    <a href="pustu.html">Pustu</a>
-    <a href="pengaturan.html">Pengaturan</a>
-    <a href="kasir.html">Kasir</a>
-          <a href="papan-antrian.html">Papan Antrian</a>
-    <a href="kapus.html">Kepala Puskesmas</a>
+    <div id="sidebarModulLain"></div>
     </nav>
   </aside>
 
@@ -1489,7 +1476,7 @@
   </div>
 </div>
 
-<script src="js/supabaseClient.js?v=2"></script>
+<script src="js/supabaseClient.js?v=3"></script>
 <script src="js/silabClient.js"></script>
 <script>
 let profilSaya = null;
@@ -1501,7 +1488,8 @@ let klasterK4IdCache = null;
 
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "klaster4.html");
-  sesuaikanTabNav(profilSaya);
+  renderSidebarDinamis(profilSaya, "klaster4.html", document.getElementById("sidebarModulLain"));
+    tampilkanAkunDiBrand(profilSaya);
   terapkanLevelUI(profilSaya, "klaster4", ["navLaporanInternal","navLaporanDinas"]);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;

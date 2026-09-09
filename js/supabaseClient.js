@@ -411,6 +411,74 @@ function sesuaikanTabNav(profil) {
   });
 }
 
+// ================= Sidebar dinamis (nama pegawai + menu sesuai akses) =================
+// Ganti sistem lama (daftar link statis di tiap file .html, lalu disembunyiin satu-satu
+// pakai sesuaikanTabNav). Sekarang: satu registry di sini, tiap halaman cuma render
+// container kosong, isi menu "Modul Lain" digenerate sesuai izin akun yang login --
+// biar gak numpuk & gak keliatan berantakan pas lagi kebuka penuh.
+const MENU_LAIN_REGISTRY = [
+  { halaman: "index.html", label: "Pendaftaran", ikon: "📝", grup: "Menu Utama" },
+  { halaman: "rekam-medis.html", label: "Rekam Medis", ikon: "🗂️", grup: "Menu Utama" },
+  { halaman: "klaster1.html", label: "Klaster 1 — Manajemen", ikon: "🏥", grup: "Menu Utama" },
+  { halaman: "klaster2.html", label: "Klaster 2 — Ibu, Anak & Remaja", ikon: "🤰", grup: "Menu Utama" },
+  { halaman: "klaster3.html", label: "Klaster 3 — Dewasa & Lansia", ikon: "🩺", grup: "Menu Utama" },
+  { halaman: "klaster4.html", label: "Klaster 4 — Penyakit Menular", ikon: "🦠", grup: "Menu Utama" },
+  { halaman: "gigi.html", label: "Poli Gigi", ikon: "🦷", grup: "Menu Utama" },
+  { halaman: "ugd.html", label: "UGD", ikon: "🚑", grup: "Lintas Klaster" },
+  { halaman: "ranap.html", label: "Rawat Inap", ikon: "🛏️", grup: "Lintas Klaster" },
+  { halaman: "apotek.html", label: "Apotek", ikon: "💊", grup: "Lintas Klaster" },
+  { halaman: "kasir.html", label: "Kasir", ikon: "💳", grup: "Lintas Klaster" },
+  { halaman: "pustu.html", label: "Pustu", ikon: "📡", grup: "Lintas Klaster" },
+  { halaman: "kapus.html", label: "Kepala Puskesmas", ikon: "📋", grup: "Manajemen" },
+  { halaman: "pemegang-program.html", label: "Pemegang Program", ikon: "📊", grup: "Manajemen" },
+  { halaman: "admin.html", label: "Admin", ikon: "⚙️", grup: "Manajemen" },
+  { halaman: "pengaturan.html", label: "Pengaturan Akun", ikon: "🔧", grup: "Lainnya" },
+  { halaman: "papan-antrian.html", label: "Papan Antrian", ikon: "📺", grup: "Lainnya" }
+];
+
+// Render menu "modul lain" ke satu container kosong (<div id="sidebarModulLain">),
+// cuma nampilin halaman yang profil ini emang punya izin (halamanIzinUntuk), dikelompokin
+// per grup, dan gak nampilin link ke halaman yang lagi dibuka sekarang (halamanAktif).
+function renderSidebarDinamis(profil, halamanAktif, containerEl) {
+  if (!containerEl) return;
+  const izin = profil ? halamanIzinUntuk(profil) : [];
+  const perGrup = {};
+  MENU_LAIN_REGISTRY.forEach(item => {
+    if (item.halaman === halamanAktif) return;
+    if (!izin.includes(item.halaman)) return;
+    (perGrup[item.grup] = perGrup[item.grup] || []).push(item);
+  });
+  const urutanGrup = ["Menu Utama", "Lintas Klaster", "Manajemen", "Lainnya"];
+  let html = "";
+  urutanGrup.forEach(grup => {
+    const items = perGrup[grup];
+    if (!items || !items.length) return;
+    html += `<div class="ph-group-title">${grup}</div>`;
+    items.forEach(item => {
+      html += `<a href="${item.halaman}"><span class="nav-ic">${item.ikon}</span> ${item.label}</a>`;
+    });
+  });
+  containerEl.innerHTML = html || `<div class="ph-group-title">Modul Lain</div><a style="opacity:.5;cursor:default;">Belum ada akses modul lain</a>`;
+}
+
+// Isi baris kecil di bawah judul brand sidebar dengan nama + role akun yang login
+// (contoh: "Akun: Ayu Lestari — Bidan"), biar tiap akun langsung keliatan lagi login
+// sebagai siapa tanpa harus liat topbar dulu.
+function tampilkanAkunDiBrand(profil) {
+  const el = document.getElementById("brandAkun");
+  if (!el) return;
+  el.textContent = profil ? `Akun: ${profil.nama} — ${labelRole(profil.role)}` : "Akun: —";
+}
+
+function labelRole(role) {
+  const peta = {
+    admin: "Admin", dokter: "Dokter", perawat: "Perawat", bidan: "Bidan",
+    farmasi: "Farmasi", petugas: "Petugas", staff: "Staff",
+    kepala_puskesmas: "Kepala Puskesmas", pemegang_program: "Pemegang Program"
+  };
+  return peta[role] || role;
+}
+
 // Kompatibilitas mundur -- dulu levelUntukModul cuma ngitung dari hak_akses
 // (gak ikut role bawaan). Sekarang delegasi ke levelEfektifModul (klasterId
 // undefined = gak difilter per klaster, sama kayak perilaku lama).

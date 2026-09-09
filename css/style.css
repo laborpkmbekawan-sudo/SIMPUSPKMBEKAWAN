@@ -306,6 +306,9 @@ tr:hover td { background: #fafcfc; }
 }
 .ph-group-title:first-of-type { margin-top: 4px; }
 
+.nav-ic { display: inline-block; width: 18px; text-align: center; margin-right: 3px; }
+.sidebar .brand-sub { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 3px; line-height: 1.3; }
+
 .main-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
 .dash-content { max-width: 1400px; width: 100%; margin: 0 auto; padding: 20px 24px 40px; }

@@ -43,45 +43,33 @@
   <aside class="sidebar">
     <div class="brand">
       <span class="dot"></span>
-      <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+      <div>
+        <strong>UPTD PUSKESMAS BEKAWAN<br>SIMPUS</strong>
+        <div class="brand-sub" id="brandAkun">Akun: memuat…</div>
+      </div>
     </div>
 
     <nav>
     <div class="ph-group-title">Klaster 2 — Ibu, Anak &amp; Remaja</div>
-    <a class="active" id="navDashboard" onclick="gantiSubtabK2('dashboard')">Dashboard</a>
+    <a class="active" id="navDashboard" onclick="gantiSubtabK2('dashboard')"><span class="nav-ic">▣</span> Dashboard</a>
 
     <div class="ph-group-title">Pelayanan</div>
-    <a id="navIbu" onclick="gantiSubtabK2('ibu')">Ibu Hamil, Bersalin &amp; Nifas</a>
-    <a id="navBayiBalita" onclick="gantiSubtabK2('bayi-balita')">Bayi &amp; Balita</a>
-    <a id="navAnakSekolah" onclick="gantiSubtabK2('anak-sekolah')">Anak Prasekolah &amp; Usia Sekolah</a>
-    <a id="navRemaja" onclick="gantiSubtabK2('remaja')">Remaja</a>
+    <a id="navIbu" onclick="gantiSubtabK2('ibu')"><span class="nav-ic">🤰</span> Ibu Hamil, Bersalin &amp; Nifas</a>
+    <a id="navBayiBalita" onclick="gantiSubtabK2('bayi-balita')"><span class="nav-ic">👶</span> Bayi &amp; Balita</a>
+    <a id="navAnakSekolah" onclick="gantiSubtabK2('anak-sekolah')"><span class="nav-ic">🎒</span> Anak Prasekolah &amp; Usia Sekolah</a>
+    <a id="navRemaja" onclick="gantiSubtabK2('remaja')"><span class="nav-ic">🧑</span> Remaja</a>
 
     <div class="ph-group-title">Data &amp; Rujukan</div>
-    <a id="navKohort" onclick="gantiSubtabK2('kohort')">Kohort &amp; Register</a>
-    <a id="navRujukan" onclick="gantiSubtabK2('rujukan')">Rujukan &amp; Permintaan Lab</a>
-    <a id="navRm" onclick="gantiSubtabK2('rm')">Rekam Medis &amp; Resep</a>
+    <a id="navKohort" onclick="gantiSubtabK2('kohort')"><span class="nav-ic">📋</span> Kohort &amp; Register</a>
+    <a id="navRujukan" onclick="gantiSubtabK2('rujukan')"><span class="nav-ic">🔁</span> Rujukan &amp; Permintaan Lab</a>
+    <a id="navRm" onclick="gantiSubtabK2('rm')"><span class="nav-ic">🗂️</span> Rekam Medis &amp; Resep</a>
 
     <div class="ph-group-title">Laporan &amp; Audit</div>
-    <a id="navLaporanInternal" onclick="gantiSubtabK2('laporan-internal')">Laporan Internal</a>
-    <a id="navLaporanDinas" onclick="gantiSubtabK2('laporan-dinas')">Laporan ke Dinas Kesehatan</a>
-    <a id="navAudit" onclick="gantiSubtabK2('audit')">Audit / Keamanan</a>
+    <a id="navLaporanInternal" onclick="gantiSubtabK2('laporan-internal')"><span class="nav-ic">📄</span> Laporan Internal</a>
+    <a id="navLaporanDinas" onclick="gantiSubtabK2('laporan-dinas')"><span class="nav-ic">📤</span> Laporan ke Dinas Kesehatan</a>
+    <a id="navAudit" onclick="gantiSubtabK2('audit')"><span class="nav-ic">🔒</span> Audit / Keamanan</a>
 
-    <div class="ph-group-title">Modul Lain</div>
-    <a href="index.html">Pendaftaran</a>
-    <a href="rekam-medis.html">Rekam Medis</a>
-    <a href="apotek.html">Apotek</a>
-    <a href="ugd.html">UGD</a>
-    <a href="ranap.html">Rawat Inap</a>
-    <a href="klaster1.html">Klaster 1</a>
-    <a href="klaster3.html">Klaster 3</a>
-    <a href="klaster4.html">Klaster 4</a>
-    <a href="gigi.html">Poli Gigi</a>
-    <a href="pustu.html">Pustu</a>
-    <a href="pengaturan.html">Pengaturan</a>
-    <a href="kasir.html">Kasir</a>
-          <a href="papan-antrian.html">Papan Antrian</a>
-    <a href="kapus.html">Kepala Puskesmas</a>
-    <a href="pemegang-program.html">Pemegang Program</a>
+    <div id="sidebarModulLain"><!-- diisi JS: renderSidebarDinamis(), cuma nampilin modul yg akun ini punya akses --></div>
     </nav>
   </aside>
 
@@ -1617,7 +1605,7 @@
   </div>
 </div>
 
-<script src="js/supabaseClient.js?v=2"></script>
+<script src="js/supabaseClient.js?v=3"></script>
 <script src="js/silabClient.js"></script>
 <script>
 let profilSaya = null;
@@ -1630,8 +1618,9 @@ let klasterK2IdCache = null;
 
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "klaster2.html");
-  sesuaikanTabNav(profilSaya);
   terapkanLevelUI(profilSaya, "klaster2", ["navLaporanInternal","navLaporanDinas"]);
+  renderSidebarDinamis(profilSaya, "klaster2.html", document.getElementById("sidebarModulLain"));
+  tampilkanAkunDiBrand(profilSaya);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
   }
