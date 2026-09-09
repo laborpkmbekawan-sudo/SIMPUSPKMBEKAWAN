@@ -1758,36 +1758,45 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="js/supabaseClient.js"></script>
+<script src="js/supabaseClient.js?v=2"></script>
 <script>
 let pasienTerpilih = null;
 let profilSaya = null;
 
 (async () => {
-  const session = await wajibLogin();
-  if (!session) return;
+  try {
+    const session = await wajibLogin();
+    if (!session) return;
 
-  const profil = await getProfilSaya();
-  profilSaya = profil;
-  cekAksesHalaman(profil, "index.html");
-  sesuaikanTabNav(profil);
-  terapkanLevelUI(profil, "pendaftaran", ["navLaporan"]);
-  if (profil) {
-    document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;
+    const profil = await getProfilSaya();
+    profilSaya = profil;
+    cekAksesHalaman(profil, "index.html");
+    sesuaikanTabNav(profil);
+    terapkanLevelUI(profil, "pendaftaran", ["navLaporan"]);
+    if (profil) {
+      document.getElementById("namaUser").textContent = `${profil.nama} (${profil.role})`;
+    }
+
+    // Subtab Audit/Keamanan cuma buat admin — sembunyikan link-nya, dan
+    // kalau ada yang coba nyelonong lewat gantiSubtabPendaftaran('audit')
+    // manual, blokir juga di dalam fungsi itu sendiri.
+    if (!profil || profil.role !== "admin") {
+      const navAudit = document.getElementById("navAudit");
+      if (navAudit) navAudit.style.display = "none";
+    }
+  } catch (err) {
+    // Kalau tahap login/profil gagal, jangan biarin sisa init (muat data
+    // dashboard dst) ikut macet diam-diam — tetep log biar kelacak.
+    console.error("Gagal inisialisasi profil/akses index.html:", err);
   }
 
-  // Subtab Audit/Keamanan cuma buat admin — sembunyikan link-nya, dan
-  // kalau ada yang coba nyelonong lewat gantiSubtabPendaftaran('audit')
-  // manual, blokir juga di dalam fungsi itu sendiri.
-  if (!profil || profil.role !== "admin") {
-    const navAudit = document.getElementById("navAudit");
-    if (navAudit) navAudit.style.display = "none";
-  }
-
-  await muatKlaster();
-  await muatAntrian();
-  await muatDashboardRingkas();
-  await muatTarifAdministrasi();
+  // Tiap pemuatan data dipisah try/catch sendiri-sendiri: kalau salah satu
+  // query gagal (network/RLS/dll), yang lain tetap jalan, dan errornya
+  // kelihatan di console — bukan macet bisu di "Memuat...".
+  try { await muatKlaster(); } catch (err) { console.error("muatKlaster gagal:", err); }
+  try { await muatAntrian(); } catch (err) { console.error("muatAntrian gagal:", err); }
+  try { await muatDashboardRingkas(); } catch (err) { console.error("muatDashboardRingkas gagal:", err); }
+  try { await muatTarifAdministrasi(); } catch (err) { console.error("muatTarifAdministrasi gagal:", err); }
 })();
 
 const SUBTAB_PENDAFTARAN = ["dashboard", "identifikasi", "skrining", "koordinasi", "rujukan", "kerahasiaan", "survei", "laporan", "audit"];
@@ -1847,32 +1856,44 @@ function gantiSubtabPendaftaran(tab) {
 
 async function muatDashboardRingkas() {
   const today = new Date().toISOString().split("T")[0];
+  const tbodyRingkas = document.getElementById("dbTabelRingkasKlaster");
+  const tbodyAktif = document.getElementById("dbTabelAntrianAktif");
 
   const { data, error } = await supabaseClient
     .from("kunjungan")
     .select("*, klaster(nama, kode)")
     .eq("tanggal", today);
 
-  if (!error && data) {
-    const total = data.length;
-    const menunggu = data.filter(k => k.status === "menunggu").length;
-    const darurat = data.filter(k => k.is_prioritas && k.status === "menunggu").length;
-    document.getElementById("dbStatTotal").textContent = total;
-    document.getElementById("dbStatMenunggu").textContent = menunggu;
-    document.getElementById("dbStatDarurat").textContent = darurat;
+  if (error) {
+    // Dulu di sini gak ada else — kalau query gagal, tabel dibiarin
+    // macet di "Memuat..." selamanya tanpa jejak. Sekarang kasih tau
+    // jelas + log biar gampang ketauan penyebabnya lain kali.
+    console.error("muatDashboardRingkas: gagal ambil data kunjungan:", error);
+    if (tbodyRingkas) tbodyRingkas.innerHTML = `<tr><td colspan="5">Gagal memuat data (${error.message || "cek console"}). Coba refresh halaman.</td></tr>`;
+    if (tbodyAktif) tbodyAktif.innerHTML = `<tr><td colspan="3">Gagal memuat data (${error.message || "cek console"}). Coba refresh halaman.</td></tr>`;
+    document.getElementById("dbStatKontrol").textContent = "-";
+    return;
+  }
 
-    const grup = {};
-    data.forEach(k => {
-      const key = k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "Tanpa Klaster";
-      if (!grup[key]) grup[key] = { total: 0, menunggu: 0, dipanggil: 0, selesai: 0 };
-      grup[key].total++;
-      if (k.status === "menunggu") grup[key].menunggu++;
-      else if (k.status === "dipanggil") grup[key].dipanggil++;
-      else grup[key].selesai++;
-    });
+  const total = data.length;
+  const menunggu = data.filter(k => k.status === "menunggu").length;
+  const darurat = data.filter(k => k.is_prioritas && k.status === "menunggu").length;
+  document.getElementById("dbStatTotal").textContent = total;
+  document.getElementById("dbStatMenunggu").textContent = menunggu;
+  document.getElementById("dbStatDarurat").textContent = darurat;
 
-    const tbodyRingkas = document.getElementById("dbTabelRingkasKlaster");
-    const namaKlaster = Object.keys(grup);
+  const grup = {};
+  data.forEach(k => {
+    const key = k.klaster ? `${k.klaster.kode} — ${k.klaster.nama}` : "Tanpa Klaster";
+    if (!grup[key]) grup[key] = { total: 0, menunggu: 0, dipanggil: 0, selesai: 0 };
+    grup[key].total++;
+    if (k.status === "menunggu") grup[key].menunggu++;
+    else if (k.status === "dipanggil") grup[key].dipanggil++;
+    else grup[key].selesai++;
+  });
+
+  const namaKlaster = Object.keys(grup);
+  if (tbodyRingkas) {
     tbodyRingkas.innerHTML = namaKlaster.length ? namaKlaster.map(k => `
       <tr>
         <td>${k}</td>
@@ -1882,8 +1903,9 @@ async function muatDashboardRingkas() {
         <td>${grup[k].selesai}</td>
       </tr>
     `).join("") : `<tr><td colspan="5">Belum ada kunjungan hari ini.</td></tr>`;
+  }
 
-    const tbodyAktif = document.getElementById("dbTabelAntrianAktif");
+  if (tbodyAktif) {
     tbodyAktif.innerHTML = namaKlaster.length ? namaKlaster.map(k => {
       const dipanggil = data.filter(x => (x.klaster ? `${x.klaster.kode} — ${x.klaster.nama}` : "Tanpa Klaster") === k && x.status === "dipanggil");
       const noBerjalan = dipanggil.length ? dipanggil[dipanggil.length - 1].no_antrian : "-";
@@ -1891,7 +1913,13 @@ async function muatDashboardRingkas() {
     }).join("") : `<tr><td colspan="3">Belum ada antrian hari ini.</td></tr>`;
   }
 
-  await muatKontrolJatuhTempo(today);
+  try {
+    await muatKontrolJatuhTempo(today);
+  } catch (err) {
+    console.error("muatKontrolJatuhTempo gagal:", err);
+    const tbodyKontrol = document.getElementById("dbTabelKontrolJatuhTempo");
+    if (tbodyKontrol) tbodyKontrol.innerHTML = `<tr><td colspan="4">Gagal memuat data. Coba refresh halaman.</td></tr>`;
+  }
 }
 
 async function muatKontrolJatuhTempo(today) {

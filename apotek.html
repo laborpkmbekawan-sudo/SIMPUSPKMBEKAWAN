@@ -2094,7 +2094,7 @@ pre,code{max-width:100%;overflow:auto}
 
 </div>
 
-<script src="js/supabaseClient.js"></script>
+<script src="js/supabaseClient.js?v=2"></script>
 <script>
 let profilSaya = null;
 let chartRingkasan = null, chartPemakaian = null, chartGenerik = null;
@@ -2217,6 +2217,10 @@ function toggleGroup(el) {
 
 // ---------- Sub-tab Beranda / Pelayanan / Stok ----------
 function gantiSubtab(tab) {
+  if (tab === "laporan" && !bolehLaporan(profilSaya, "apotek")) {
+    alert("Akun kamu belum punya akses Laporan di modul Apotek.");
+    return;
+  }
   ["beranda", "pelayanan", "entrimanual", "stok", "kartustok", "stokopname", "racikan", "riwayatobat", "mutasi", "lplpo", "laporan"].forEach(t => {
     document.getElementById("panel" + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? "block" : "none";
     const nav = document.getElementById("nav" + t.charAt(0).toUpperCase() + t.slice(1));

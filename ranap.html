@@ -883,7 +883,7 @@ tr.ranap-row-clickable:hover td { background:#f7fafb; }
   </div>
 </div>
 
-<script src="js/supabaseClient.js"></script>
+<script src="js/supabaseClient.js?v=2"></script>
 <script src="js/silabClient.js"></script>
 <script>
 let profilSaya = null;
@@ -891,18 +891,30 @@ let pasienTerpilihAdmisi = null;
 let kunjunganRanapTerpilihUbahStatus = null;
 
 (async () => {
-  const session = await wajibLogin();
-  if (!session) return;
+  try {
+    const session = await wajibLogin();
+    if (!session) return;
 
-  profilSaya = await getProfilSaya();
-  cekAksesHalaman(profilSaya, "ranap.html");
-  sesuaikanTabNav(profilSaya);
-  terapkanLevelUI(profilSaya, "ranap", ["navLaporanInternal","navLaporanDinas"]);
-  if (profilSaya) {
-    document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+    profilSaya = await getProfilSaya();
+    cekAksesHalaman(profilSaya, "ranap.html");
+    sesuaikanTabNav(profilSaya);
+    terapkanLevelUI(profilSaya, "ranap", ["navLaporanInternal","navLaporanDinas"]);
+    if (profilSaya) {
+      document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+    }
+  } catch (err) {
+    console.error("Gagal inisialisasi profil/akses ranap.html:", err);
   }
 
-  await muatDashboardRanap();
+  try {
+    await muatDashboardRanap();
+  } catch (err) {
+    console.error("muatDashboardRanap gagal:", err);
+    const tbody = document.getElementById("tabelPasienAktifRanap");
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6">Gagal memuat data. Coba refresh halaman.</td></tr>`;
+    const listAlert = document.getElementById("listAlertRisikoRanap");
+    if (listAlert) listAlert.innerHTML = `<p style="color:var(--muted); font-size:13px;">Gagal memuat data.</p>`;
+  }
 })();
 
 // ---------- Sub-tab nav ----------
@@ -911,6 +923,10 @@ function idPartRanap(tab) {
   return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
 }
 function gantiSubtabRanap(tab) {
+  if ((tab === "laporan-internal" || tab === "laporan-dinas") && !bolehLaporan(profilSaya, "ranap")) {
+    alert("Akun kamu belum punya akses Laporan di modul Rawat Inap.");
+    return;
+  }
   SUBTAB_RANAP.forEach(t => {
     const idPart = idPartRanap(t);
     const panel = document.getElementById("panel" + idPart);
