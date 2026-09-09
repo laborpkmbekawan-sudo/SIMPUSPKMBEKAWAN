@@ -376,7 +376,16 @@ function halamanIzinUntuk(profil) {
 // Panggil setelah getProfilSaya(). Kalau role gak punya izin ke halaman ini,
 // otomatis dilempar ke halaman yang sesuai role-nya.
 function cekAksesHalaman(profil, halamanIni) {
-  if (!profil) return;
+  if (!profil) {
+    // Dulu di sini cuma "return" -- diam aja. Efeknya: kalau profil gagal
+    // dimuat (network/DB kedip), TIDAK ADA pengecekan akses sama sekali,
+    // dan sesuaikanTabNav() (di bawah) ikut nganggur juga -> semua link
+    // modul kelihatan tanpa saringan. Sekarang fail CLOSED: kasih tau
+    // jelas + log, jangan diam-diam biarin halaman kebuka polos.
+    console.error("cekAksesHalaman: profil gagal dimuat, akses tidak bisa diverifikasi.");
+    alert("Gagal memuat data akun kamu. Coba refresh halaman (F5). Kalau berulang terus, hubungi admin.");
+    return;
+  }
   const izin = halamanIzinUntuk(profil);
   if (izin.includes(halamanIni)) return;
 
@@ -390,8 +399,11 @@ function cekAksesHalaman(profil, halamanIni) {
 
 // Sembunyikan tab navigasi yang gak diizinkan buat role ini
 function sesuaikanTabNav(profil) {
-  if (!profil) return;
-  const izin = halamanIzinUntuk(profil);
+  // Kalau profil null (gagal dimuat), izin = [] -> SEMUA link modul lain
+  // disembunyikan (fail closed). Dulu function ini "return" langsung kalau
+  // profil null, yang artinya BIARIN SEMUA LINK KELIHATAN -- itu yang bikin
+  // Poli Gigi dkk nongol padahal harusnya kesaring.
+  const izin = profil ? halamanIzinUntuk(profil) : [];
   document.querySelectorAll(".tab-nav a, .sidebar nav a").forEach(a => {
     const href = a.getAttribute("href");
     if (!href) return; // subtab internal (onclick, tanpa href) — bukan link antar modul, jangan disembunyikan
