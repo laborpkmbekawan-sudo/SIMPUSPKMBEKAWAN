@@ -107,6 +107,9 @@ tr.ugd-row-clickable:hover td { background:#f7fafb; }
     <a href="apotek.html">Apotek</a>
     <a href="ranap.html">Rawat Inap</a>
     <a href="klaster1.html">Klaster 1</a>
+    <a href="klaster2.html">Klaster 2</a>
+    <a href="klaster3.html">Klaster 3</a>
+    <a href="klaster4.html">Klaster 4</a>
     <a href="pustu.html">Pustu</a>
     <a href="pengaturan.html">Pengaturan</a>
     <a href="kasir.html">Kasir</a>
@@ -766,18 +769,30 @@ let pasienTerpilihUgd = null;
 let koordinasiIntervalUgd = null;
 
 (async () => {
-  const session = await wajibLogin();
-  if (!session) return;
+  try {
+    const session = await wajibLogin();
+    if (!session) return;
 
-  profilSaya = await getProfilSaya();
-  cekAksesHalaman(profilSaya, "ugd.html");
-  sesuaikanTabNav(profilSaya);
-  terapkanLevelUI(profilSaya, "ugd", ["navLaporanInternal","navLaporanDinas"]);
-  if (profilSaya) {
-    document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+    profilSaya = await getProfilSaya();
+    cekAksesHalaman(profilSaya, "ugd.html");
+    sesuaikanTabNav(profilSaya);
+    terapkanLevelUI(profilSaya, "ugd", ["navLaporanInternal","navLaporanDinas"]);
+    if (profilSaya) {
+      document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
+    }
+  } catch (err) {
+    console.error("Gagal inisialisasi profil/akses ugd.html:", err);
   }
 
-  await muatDashboardUgd();
+  try {
+    await muatDashboardUgd();
+  } catch (err) {
+    console.error("muatDashboardUgd gagal:", err);
+    const tbody = document.getElementById("tabelPasienAktifUgd");
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6">Gagal memuat data. Coba refresh halaman.</td></tr>`;
+    const alertDiv = document.getElementById("listAlertPrioritas");
+    if (alertDiv) alertDiv.innerHTML = `<p style="color:var(--muted); font-size:13px;">Gagal memuat data.</p>`;
+  }
 })();
 
 // ---------- Sub-tab nav ----------
@@ -786,6 +801,10 @@ function idPartUgd(tab) {
   return tab.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
 }
 function gantiSubtabUgd(tab) {
+  if ((tab === "laporan-internal" || tab === "laporan-dinas") && !bolehLaporan(profilSaya, "ugd")) {
+    alert("Akun kamu belum punya akses Laporan di modul UGD.");
+    return;
+  }
   SUBTAB_UGD.forEach(t => {
     const idPart = idPartUgd(t);
     const panel = document.getElementById("panel" + idPart);
