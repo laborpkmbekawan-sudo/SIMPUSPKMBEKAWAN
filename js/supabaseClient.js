@@ -4,8 +4,8 @@
 // - Buka project Supabase > Project Settings > API
 // - Copy "Project URL" dan "anon public" key
 // ============================================================
-const SUPABASE_URL = "https://njkwpictaipmhazhfmnd.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qa3dwaWN0YWlwbWhhemhmbW5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwNjQ5NDcsImV4cCI6MjEwMjY0MDk0N30.sSp8NrfMZmxCnncfc6NSrKmv3USRzNoS5Z9dokz6lMY";
+const SUPABASE_URL = "https://xdqejpyrrrnhhiqfoxsk.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkcWVqcHlycnJuaGhpcWZveHNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NTExMzIsImV4cCI6MjEwNDUyNzEzMn0.2b4e9UOfEIijpzaehkIlExRZUDmGU12pAAVZ3fmmEt4";
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

@@ -72,7 +72,7 @@ serve(async (req) => {
           .select(`
             id, nama, nip, role, klaster_id, pustu_id, aktif, created_at,
             klaster(nama, kode),
-            pustu(nama, tipe),
+            pustu:pustu_id(nama, tipe),
             pegawai_klaster(klaster_id, keterangan, klaster(nama, kode)),
             hak_akses(id, modul_kode, klaster_id, level)
           `)

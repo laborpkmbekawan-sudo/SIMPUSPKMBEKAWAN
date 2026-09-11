@@ -530,23 +530,7 @@ pre,code{max-width:100%;overflow:auto}
     </div>
 
     <div class="ph-group-title closed" onclick="toggleGroup(this)">Modul Lain <span class="chev">▾</span></div>
-    <div class="ph-group-body closed">
-    <a href="index.html">Pendaftaran</a>
-    <a href="rekam-medis.html">Rekam Medis</a>
-    <a href="ugd.html">UGD</a>
-    <a href="ranap.html">Rawat Inap</a>
-    <a href="klaster1.html">Klaster 1</a>
-    <a href="klaster2.html">Klaster 2</a>
-    <a href="klaster3.html">Klaster 3</a>
-    <a href="klaster4.html">Klaster 4</a>
-    <a href="gigi.html">Poli Gigi</a>
-    <a href="pustu.html">Pustu</a>
-    <a href="pengaturan.html">Pengaturan</a>
-    <a href="kasir.html">Kasir</a>
-    <a href="papan-antrian.html">Papan Antrian</a>
-    <a href="kapus.html">Kepala Puskesmas</a>
-    <a href="pemegang-program.html">Pemegang Program</a>
-    </div>
+    <div class="ph-group-body closed" id="sidebarModulLain"></div>
     </nav>
   </aside>
 
@@ -2111,6 +2095,7 @@ let riwayatRangeAktif = "harian"; // filter riwayat pasien: harian/mingguan/bula
   profilSaya = await getProfilSaya();
   cekAksesHalaman(profilSaya, "apotek.html");
   sesuaikanTabNav(profilSaya);
+  renderSidebarDinamis(profilSaya, "apotek.html", document.getElementById("sidebarModulLain"));
   terapkanLevelUI(profilSaya, "apotek", ["navLaporan"]);
   if (profilSaya) {
     document.getElementById("namaUser").textContent = `${profilSaya.nama} (${profilSaya.role})`;
